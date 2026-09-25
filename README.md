@@ -1,5 +1,5 @@
 <p align="center">
-  <img src=".github/assets/banner.svg" alt="Darb — Saudi Startup Feasibility & Risk Intelligence Platform" width="100%">
+  <img src=".github/assets/banner.png" alt="Darb — Saudi Startup Feasibility & Risk Intelligence Platform" width="100%">
 </p>
 
 <p align="center">
