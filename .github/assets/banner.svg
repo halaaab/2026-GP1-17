@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="400" viewBox="0 0 1280 400" role="img" aria-label="Darb — Saudi Startup Feasibility and Risk Intelligence Platform">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#071A24"/>
+      <stop offset="1" stop-color="#0E2F3A"/>
+    </linearGradient>
+    <linearGradient id="road" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#3FB8A6"/>
+      <stop offset="1" stop-color="#E7B75F"/>
+    </linearGradient>
+    <pattern id="dots" width="28" height="28" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.2" fill="#FFFFFF" fill-opacity="0.06"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="400" rx="24" fill="url(#bg)"/>
+  <rect width="1280" height="400" rx="24" fill="url(#dots)"/>
+
+  <path d="M 660 360 C 800 360, 820 260, 920 260 S 1040 160, 1120 160 S 1200 90, 1236 80"
+        fill="none" stroke="url(#road)" stroke-width="14" stroke-linecap="round" stroke-opacity="0.25"/>
+  <path d="M 660 360 C 800 360, 820 260, 920 260 S 1040 160, 1120 160 S 1200 90, 1236 80"
+        fill="none" stroke="url(#road)" stroke-width="3" stroke-linecap="round" stroke-dasharray="2 12"/>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="17" fill="#CFE3E8" text-anchor="middle">
+    <circle cx="700" cy="357" r="9" fill="#071A24" stroke="#3FB8A6" stroke-width="3"/>
+    <text x="700" y="330">Idea</text>
+    <circle cx="920" cy="260" r="9" fill="#071A24" stroke="#7FBF95" stroke-width="3"/>
+    <text x="920" y="233">Assess</text>
+    <circle cx="1120" cy="160" r="9" fill="#071A24" stroke="#C3BA6D" stroke-width="3"/>
+    <text x="1120" y="133">Roadmap</text>
+    <circle cx="1236" cy="80" r="11" fill="#E7B75F"/>
+    <text x="1206" y="56">Launch</text>
+  </g>
+
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="80" y="185" font-size="104" font-weight="700" fill="#FFFFFF" letter-spacing="-2">Darb</text>
+    <text x="355" y="185" font-size="80" font-weight="700" fill="#E7B75F" font-family="Noto Naskh Arabic, Geeza Pro, Segoe UI, Tahoma, sans-serif">دَرب</text>
+    <text x="84" y="240" font-size="28" fill="#DCEBEF">Saudi Startup Feasibility &amp; Risk Intelligence Platform</text>
+    <text x="84" y="285" font-size="19" fill="#8FB3BD">From idea to launch — assess, benchmark, and navigate Saudi regulations.</text>
+    <text x="84" y="350" font-size="15" fill="#6D96A1" letter-spacing="1">IT496 GRADUATION PROJECT · KING SAUD UNIVERSITY · 2026</text>
+  </g>
+</svg>
