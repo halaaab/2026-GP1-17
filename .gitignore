@@ -9,6 +9,7 @@ datasets/survival-model/raw/*
 
 # Private partner data: never uploaded
 datasets/**/zid*
+datasets/**/crunchbase*
 
 # Research papers: list links, don't upload PDFs
 resources/papers/*.pdf

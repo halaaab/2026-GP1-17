@@ -1,17 +1,17 @@
 # Datasets (Data Layer)
 
-Darb uses several datasets across the system. Each gets its own folder here, organized by what it powers.
+Darb uses several datasets across the system. Each has its own folder, organized by what it powers. All data is prepared in advance and loaded into the data layer; it is not fetched from third parties during normal operation.
 
-| Folder | Dataset | Used by | Sources |
+| Folder | Dataset | Used by | Source |
 |---|---|---|---|
-| `survival-model/` | Historical startup outcomes | Feasibility model | TBD |
-| `regulatory-requirements/` | Saudi Regulatory Master Dataset | Founder Roadmap Agent | Team-built |
-| `idea-similarity/` | Startup profiles for similarity search | Idea similarity engine | TBD |
-| `incubators-accelerators/` | Saudi incubators & accelerators | Incubators & Accelerators Explorer | TBD |
-| `market-indicators/` | Monsha'at Business Atlas indicators | Market insights | Monsha'at |
+| `survival-model/` | Historical company-level startup data | Survival Prediction Model → FIS & Analysis | Zid (under discussion) or Crunchbase |
+| `market-indicators/` | Saudi market indicators by economic activity and year | Survival Prediction Model, Saudi Market Insights | Monsha'at Business Atlas |
+| `regulatory-requirements/` | Saudi regulatory & licensing knowledge base | Founder Roadmap Agent, Regulatory & Licensing Explorer | Official Saudi government sources |
+| `idea-similarity/` | Saudi startup corpus with vector embeddings | Idea Similarity Engine, Startup Landscape Explorer | TBD |
+| `incubators-accelerators/` | Incubator & accelerator records | Incubators & Accelerators Explorer | TBD |
 
 ## Rules
 1. **One folder per dataset**, each with a README: purpose, what uses it, source, license.
-2. **`survival-model/` has `raw/` and `processed/`** because it goes through a cleaning pipeline before training. Raw files are never edited and are not committed (licensing and GitHub's 100 MB file limit).
+2. **`survival-model/` has `raw/` and `processed/`** because it goes through a preprocessing pipeline before training. Raw files are never edited and are not committed (licensing and GitHub's 100 MB file limit).
 3. **The other datasets are stored directly in their folder.**
-4. **Private partner data is never committed**, even processed.
+4. **Private partner data (Zid) is never committed**, even processed.
