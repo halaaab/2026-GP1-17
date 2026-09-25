@@ -73,22 +73,6 @@ Only assessment and roadmap generation use LLM reasoning; explorers, history, re
 └── resources/    # Research papers + project docs (proposal, sprints 0–5)
 ```
 
-## Launch Instructions
-
-> The application is under development. Commands will be added here as each part of the first increment is implemented.
-
-**Prerequisites**
-- Node.js (LTS) and npm — frontend and agent layer
-- Python 3 — ML/AI services
-- A Supabase project and an OpenAI API key
-
-**Setup**
-```bash
-git clone https://github.com/halaaab/2026-GP1-G17.git
-cd 2026-GP1-G17
-cp backend/.env.example backend/.env   # add your keys
-```
-
 ## Documentation
 
 | Document | Location |
