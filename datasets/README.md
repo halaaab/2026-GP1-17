@@ -1,6 +1,6 @@
 # Datasets (Data Layer)
 
-Darb uses several datasets across the system. Each has its own folder, organized by what it powers. All data is prepared in advance and loaded into the data layer; it is not fetched from third parties during normal operation.
+Darb uses several datasets across the system. Each has its own folder, organized by what it powers. All data is prepared in advance and loaded into the data layer.
 
 | Folder | Dataset | Used by | Source |
 |---|---|---|---|
@@ -10,8 +10,4 @@ Darb uses several datasets across the system. Each has its own folder, organized
 | `idea-similarity/` | Saudi startup corpus with vector embeddings | Idea Similarity Engine, Startup Landscape Explorer | TBD |
 | `incubators-accelerators/` | Incubator & accelerator records | Incubators & Accelerators Explorer | TBD |
 
-## Rules
-1. **One folder per dataset**, each with a README: purpose, what uses it, source, license.
-2. **`survival-model/` has `raw/` and `processed/`** because it goes through a preprocessing pipeline before training. Raw files are never edited and are not committed (licensing and GitHub's 100 MB file limit).
-3. **The other datasets are stored directly in their folder.**
-4. **Private partner data (Zid) is never committed**, even processed.
+
