@@ -14,7 +14,6 @@ PDFs are not uploaded (copyright). Each paper is linked below; BibTeX entries ar
 | Paper | Year | Link | Relevance to Darb |
 |---|---|---|---|
 | Orrensalo, Brush & Nikou — *Entrepreneurs' Information-Seeking Behaviors in the Digital Age* | 2024 | [DOI](https://doi.org/10.1080/00472778.2022.2100896) | Founders must judge and apply information, not just find it |
-| Toane & Shujah — *Campus entrepreneurs' research habits and needs* | 2024 | [DOI](https://doi.org/10.1108/RSR-01-2024-0001) | Entrepreneurs' research needs |
 | Alhajri & Aloud — *Institutional Environment and Saudi Female Digital Entrepreneurs* | 2025 | [DOI](https://doi.org/10.1057/s41599-025-04686-2) | Saudi evidence: knowledge, not regulation availability, is the constraint |
 | Petersen, Hansen & Houlberg — *The Administrative Burden of Doing Business with the Government* | 2024 | [DOI](https://doi.org/10.1111/padm.12904) | Learning costs of determining which requirements apply |
 
