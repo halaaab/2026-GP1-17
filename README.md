@@ -78,7 +78,7 @@ Only assessment and roadmap generation use LLM reasoning; explorers, history, re
 | Document | Location |
 |---|---|
 | Proposal | [`resources/docs/proposal/`](resources/docs/proposal/) |
-| Sprint 0 report & design diagrams | [`resources/docs/sprint-0/`](resources/docs/sprint-0/) |
+| Sprint 0 report & design document | [`resources/docs/sprint-0/`](resources/docs/sprint-0/) |
 | Sprint 1–5 reports | [`sprint-1/`](resources/docs/sprint-1/) · [`sprint-2/`](resources/docs/sprint-2/) · [`sprint-3/`](resources/docs/sprint-3/) · [`sprint-4/`](resources/docs/sprint-4/) · [`sprint-5/`](resources/docs/sprint-5/) |
 | Datasets | [`datasets/README.md`](datasets/README.md) |
 | Research papers | [`resources/papers/`](resources/papers/) |
