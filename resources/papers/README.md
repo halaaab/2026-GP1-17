@@ -1,6 +1,6 @@
 # Research Papers
 
-PDFs are not uploaded (copyright). Each paper is linked below; BibTeX entries are in `references.bib`.
+PDFs are not uploaded (copyright). Each paper is linked below.
 
 ## Venture outcome prediction
 
