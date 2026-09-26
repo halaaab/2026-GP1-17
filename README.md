@@ -70,7 +70,7 @@ Only assessment and roadmap generation use LLM reasoning; explorers, history, re
 ├── frontend/     # Next.js web application
 ├── backend/      # Mastra agents + FastAPI ML/AI services
 ├── datasets/     # Data layer — see datasets/README.md
-└── resources/    # Research papers + project docs (proposal, sprints 0–5)
+└── resources/    # Research papers + project docs (proposal, sprint reports & diagrams)
 ```
 
 ## Documentation
@@ -78,7 +78,7 @@ Only assessment and roadmap generation use LLM reasoning; explorers, history, re
 | Document | Location |
 |---|---|
 | Proposal | [`resources/docs/proposal/`](resources/docs/proposal/) |
-| Sprint reports | [`resources/docs/sprint-0/`](resources/docs/sprint-0/) … [`sprint-5/`](resources/docs/sprint-5/) |
+| Sprint 0 report & design diagrams | [`resources/docs/sprint-0/`](resources/docs/sprint-0/) |
 | Datasets | [`datasets/README.md`](datasets/README.md) |
 | Research papers | [`resources/papers/`](resources/papers/) |
 
