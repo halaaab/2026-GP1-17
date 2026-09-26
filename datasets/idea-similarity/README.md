@@ -1,6 +1,12 @@
-# Idea Similarity Corpus
+# Idea Similarity Dataset
 
-- **Purpose:** Saudi startup profiles and their vector embeddings, searched to find ventures similar to a founder's idea and sector.
-- **Used by:** Idea Similarity Engine → Similar Startup Recommendations; Saudi Startup Landscape Explorer
-- **Storage:** Supabase (vector storage)
-- **Source(s):** TBD
+Validated startup profiles used to compare a founder’s idea with existing businesses.
+
+- **Used by:** Idea Similarity Engine and Startup Landscape Explorer
+- **Sources:** EcosystemSA and publicly available entrepreneurship websites
+- **Format:** Structured startup records prepared for semantic search
+- **Status:** Validated initial dataset
+
+The primary similarity fields are startup name, description, sector, target market, products, services, and tags.
+
+Missing values are left blank and are not inferred.

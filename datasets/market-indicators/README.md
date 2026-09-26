@@ -1,8 +1,12 @@
-# Saudi Market Indicators
+# Market Indicators Dataset
 
-- **Purpose:** Saudi market context for the four target sectors, using a common set of attributes so the sector can be a single model input.
-- **Used by:** Survival Prediction Model (as features), Saudi Market Insights
-- **Source:** Monsha'at Business Atlas — https://atlas.monshaat.gov.sa
-- **Attributes:** establishment count · establishment growth rate · sector employee count · average wage · establishment-size distribution
-- **Matched by:** economic activity (ISIC Rev. 4) and business entry year
-- **Sectors:** AI & Software · Food & Beverages · Fashion · Furniture
+Saudi market indicators organized by economic activity and year.
+
+- **Used by:** Saudi Market Insights and Survival Prediction Model
+- **Primary source:** Monsha’at Business Atlas
+- **Format:** Structured economic and market indicators
+- **Status:** In preparation
+
+The dataset supports market analysis, economic comparisons, and model features.
+
+Source values are preserved without unsupported inference.

@@ -1,17 +1,13 @@
-# Datasets (Data Layer)
+# Datasets
 
-Darb uses several datasets across the system. Each has its own folder, organized by what it powers. All data is prepared in advance and loaded into the data layer; it is not fetched from third parties during normal operation.
+Raw, validated data used by Darb’s models and exploration tools.
 
 | Folder | Dataset | Used by | Source |
 |---|---|---|---|
-| `survival-model/` | Historical company-level startup data | Survival Prediction Model → FIS & Analysis | Zid (under discussion) or Crunchbase |
-| `market-indicators/` | Saudi market indicators by economic activity and year | Survival Prediction Model, Saudi Market Insights | Monsha'at Business Atlas |
-| `regulatory-requirements/` | Saudi regulatory & licensing knowledge base | Founder Roadmap Agent, Regulatory & Licensing Explorer | Official Saudi government sources |
-| `idea-similarity/` | Saudi startup corpus with vector embeddings | Idea Similarity Engine, Startup Landscape Explorer | TBD |
-| `incubators-accelerators/` | Incubator & accelerator records | Incubators & Accelerators Explorer | TBD |
+| `survival-model/` | Historical startup data | Survival Prediction Model | Zid or Crunchbase |
+| `market-indicators/` | Saudi market indicators | Market Insights | Monsha’at Business Atlas |
+| `regulatory-requirements/` | Saudi regulatory and licensing data | Founder Roadmap Agent | Official Saudi government sources |
+| `idea-similarity/` | Startup profiles | Idea Similarity Engine | EcosystemSA and public entrepreneurship websites |
+| `incubators-accelerators/` | Incubator and accelerator profiles | Incubators & Accelerators Explorer | EcosystemSA and public entrepreneurship websites |
 
-## Rules
-1. **One folder per dataset**, each with a README: purpose, what uses it, source, license.
-2. **`survival-model/` has `raw/` and `processed/`** because it goes through a preprocessing pipeline before training. Raw files are never edited and are not committed (licensing and GitHub's 100 MB file limit).
-3. **The other datasets are stored directly in their folder.**
-4. **Private partner data (Zid) is never committed**, even processed.
+> Data is provided in its validated raw form. Missing values are not inferred.
