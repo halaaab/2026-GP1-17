@@ -1,6 +1,12 @@
-# Saudi Regulatory Requirements
+# Regulatory Requirements Dataset
 
-- **Purpose:** Structured knowledge base of requirements for starting a business in Saudi Arabia.
-- **Used by:** Founder Roadmap Agent (regulatory retrieval), Regulatory & Licensing Explorer
-- **Source:** Compiled by the team from official Saudi government sources (e.g. Ministry of Commerce, Balady, ZATCA, HRSD, SFDA)
-- **Each requirement records:** responsible authority · applicability conditions · triggering venture attributes (e.g. economic activity, legal form, staffing, import/manufacturing) · dependencies · business stage · official source
+Saudi regulatory, licensing, and compliance information for entrepreneurs.
+
+- **Used by:** Founder Roadmap Agent and Regulatory & Licensing Explorer
+- **Sources:** Official Saudi government websites
+- **Format:** Structured regulatory and licensing records
+- **Status:** In preparation
+
+Requirements may change over time and should be verified against the linked official source.
+
+Missing information is not inferred.
