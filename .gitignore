@@ -25,5 +25,6 @@ venv/
 # Operating system and editor files
 .DS_Store
 Thumbs.db
-.vscode/
+.vscode/*
+!.vscode/settings.json
 .idea/
