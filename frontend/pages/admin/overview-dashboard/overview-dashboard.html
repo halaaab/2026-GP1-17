@@ -1,0 +1,26 @@
+<!doctype html>
+<!--
+  ADMIN OVERVIEW (the admin's home page after signing in)
+  Empty for now: only the admin sidebar and header, which shared/layout.js adds.
+  shared/guard.js keeps the page for admins who passed the sign-in code.
+  The dashboard content goes inside <main>.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb — Admin console</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="overview-dashboard.css">
+</head>
+<body data-layout="admin" data-page="overview" data-title="admin.overview">
+
+  <main>
+    <!-- The overview dashboard goes here -->
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="overview-dashboard.js"></script>
+</body>
+</html>

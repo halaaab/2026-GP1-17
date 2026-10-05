@@ -4,7 +4,7 @@ import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import '../../../shared/guard.js';
 import {
-  say, label, scoreBand, whenText, chatLink, roadmapFor, messageCount, getAssessments,
+  say, label, scoreBand, whenText, chatLink, getAssessments,
 } from '../../../shared/assessments.js';
 
 const rows = document.querySelector('#rows');
@@ -26,7 +26,7 @@ function showRows() {
   rows.innerHTML = visible.map((assessment) => {
     const isAssessed = Boolean(assessment.score);
     const kind = isAssessed
-      ? t('history.kindAssessment').replace('{n}', messageCount(assessment))
+      ? t('history.kindAssessment').replace('{n}', assessment.messages)
       : t('history.kindConversation');
 
     return `
@@ -43,7 +43,7 @@ function showRows() {
         </td>
         <td class="hide-small">
           ${isAssessed
-            ? `<a class="history-link" href="${chatLink(assessment.id, 'roadmap')}">${t('history.steps').replace('{n}', roadmapFor(assessment).length)}</a>`
+            ? `<a class="history-link" href="${chatLink(assessment.id, 'roadmap')}">${t('history.viewRoadmap')}</a>`
             : '<span class="text-3">—</span>'}
         </td>
         <td class="hide-small text-2">${whenText(assessment.updated)}</td>
@@ -63,7 +63,10 @@ function showRows() {
     row.cells[1].textContent = [assessment.sector, assessment.city].filter(Boolean).map(label).join(' · ') || '—';
   });
 
-  document.querySelector('#empty').hidden = visible.length > 0;
+  // nothing to show: either the founder has no ideas yet, or the search found none
+  const empty = document.querySelector('#empty');
+  empty.hidden = visible.length > 0;
+  empty.textContent = t(assessments.length === 0 ? 'history.none' : 'history.empty');
 }
 
 document.querySelector('#filter').addEventListener('click', (event) => {
