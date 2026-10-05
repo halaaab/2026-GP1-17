@@ -28,7 +28,7 @@ Open the `frontend` folder in VS Code, right-click `index.html` and choose **Ope
 | `shared/guard.js` | Keeps founder pages for founders and admin pages for admins; makes logout work |
 | `shared/auth.js` | Sign up, sign in, log out, reset password |
 | `shared/supabase.js` | The one connection to the database |
-| `shared/assessments.js` | The founder's assessments for the chat and history pages. **Sample data for now**; the agents and the database plug in here later. |
+| `shared/assessments.js` | The founder's ideas, assessments and messages for the chat and history pages, saved in Supabase. Similar startups, market numbers and the roadmap come from the real dataset tables; the **score** is a sample until the model is connected. |
 | `shared/ui.js` | Pop-up messages, dialogs, side panels, searchable dropdowns |
 | `shared/components.html` | **Open this page to see every component and copy its HTML.** |
 
