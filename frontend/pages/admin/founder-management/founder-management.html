@@ -1,0 +1,125 @@
+<!doctype html>
+<!--
+  FOUNDER MANAGEMENT (admin console)
+  Every founder account: search, filter by status, and a side panel to
+  see one founder's details, deactivate / activate it, or delete it.
+  The rows come from the admin_list_founders() database function (migration 0004).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="founder-management.css">
+</head>
+<body data-layout="admin" data-page="founders" data-title="admin.founders">
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="founders.title"></h2>
+        <p class="text-2" data-i18n="founders.sub"></p>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="founders.search" data-i18n-aria-label="founders.search">
+      </label>
+      <div class="founder-filters" id="filter">
+        <button type="button" class="pill is-active" data-filter="all" data-i18n="founders.all"></button>
+        <button type="button" class="pill" data-filter="active" data-i18n="founders.active"></button>
+        <button type="button" class="pill" data-filter="deactivated" data-i18n="founders.deactivated"></button>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <table class="table founder-table">
+        <thead>
+          <tr>
+            <th data-i18n="founders.founder"></th>
+            <th data-i18n="founders.field"></th>
+            <th class="hide-small" data-i18n="founders.joined"></th>
+            <th class="hide-small" data-i18n="founders.assessments"></th>
+          </tr>
+        </thead>
+        <!-- founder-management.js adds one row for each founder -->
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="empty founder-empty" id="empty" hidden></p>
+    </div>
+
+    <!-- One founder's details. founder-management.js fills it. -->
+    <aside class="panel" id="founder-panel" aria-labelledby="panel-name">
+      <div class="panel-head">
+        <div class="panel-person">
+          <span class="avatar founder-avatar-lg" id="panel-avatar"></span>
+          <div>
+            <h3 class="modal-title" id="panel-name"></h3>
+            <p class="text-3 panel-email" id="panel-email"></p>
+          </div>
+        </div>
+        <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
+      </div>
+
+      <div class="panel-body">
+        <div class="tile founder-field-tile">
+          <div>
+            <span class="text-3" data-i18n="founders.field"></span>
+            <strong class="founder-tile-value" id="panel-field"></strong>
+          </div>
+          <span class="founder-field-icon" id="panel-field-icon"></span>
+        </div>
+
+        <div class="founder-tiles">
+          <div class="tile">
+            <span class="text-3" data-i18n="founders.status"></span>
+            <strong class="founder-tile-value" id="panel-status"></strong>
+          </div>
+          <div class="tile">
+            <span class="text-3" data-i18n="founders.joined"></span>
+            <strong class="founder-tile-value" id="panel-joined"></strong>
+          </div>
+          <div class="tile">
+            <span class="text-3" data-i18n="founders.assessments"></span>
+            <strong class="founder-tile-value" id="panel-assessments">—</strong>
+          </div>
+          <div class="tile">
+            <span class="text-3" data-i18n="founders.language"></span>
+            <strong class="founder-tile-value" id="panel-language"></strong>
+          </div>
+        </div>
+
+        <div class="founder-reports-head">
+          <h4 class="founder-reports-title" data-i18n="founders.reports"></h4>
+          <span class="text-3" id="panel-report-count"></span>
+        </div>
+        <!-- PDF reports: there is no reports table yet, so this stays empty for now -->
+        <ul class="founder-reports" id="panel-reports"></ul>
+        <p class="text-3 founder-reports-empty" id="panel-reports-empty" data-i18n="founders.noReports"></p>
+      </div>
+
+      <div class="panel-foot founder-panel-foot">
+        <button type="button" class="btn btn-secondary" id="status-button"></button>
+        <button type="button" class="btn btn-danger-soft" data-modal-open="delete-modal" data-i18n="founders.delete"></button>
+      </div>
+    </aside>
+
+    <dialog class="modal" id="delete-modal">
+      <h3 class="modal-title" data-i18n="founders.deleteTitle"></h3>
+      <p class="text-2" id="delete-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal-close data-i18n="founders.cancel"></button>
+        <button type="button" class="btn btn-danger" id="delete-confirm" data-i18n="founders.delete"></button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="founder-management.js"></script>
+</body>
+</html>
