@@ -1,0 +1,70 @@
+<!doctype html>
+<!--
+  HISTORY
+  Every idea the founder has discussed with Darb: finished assessments and
+  conversations that are not finished yet. Each row opens its conversation,
+  its score, its roadmap or its report.
+  The rows come from shared/assessments.js.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="history.css">
+</head>
+<body data-layout="founder" data-page="history">
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="history.title"></h2>
+        <p class="text-2" data-i18n="history.sub"></p>
+      </div>
+      <a class="btn btn-primary" href="../chatbot/chatbot.html" data-i18n="nav.newAssessment"></a>
+    </div>
+
+    <div class="toolbar">
+      <div class="segmented" id="filter">
+        <button type="button" class="segmented-item is-active" data-filter="all" data-i18n="history.all"></button>
+        <button type="button" class="segmented-item" data-filter="assessed" data-i18n="history.assessed"></button>
+        <button type="button" class="segmented-item" data-filter="conversation" data-i18n="history.conversations"></button>
+      </div>
+      <label class="search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="history.search" data-i18n-aria-label="history.search">
+      </label>
+    </div>
+
+    <div class="table-card">
+      <table class="table history-table">
+        <thead>
+          <tr>
+            <th data-i18n="history.idea"></th>
+            <th class="hide-small" data-i18n="history.sectorCity"></th>
+            <th data-i18n="history.score"></th>
+            <th class="hide-small" data-i18n="history.roadmap"></th>
+            <th class="hide-small" data-i18n="history.updated"></th>
+            <th></th>
+          </tr>
+        </thead>
+        <!-- history.js adds one row for each idea -->
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="empty" id="empty" data-i18n="history.empty" hidden></p>
+    </div>
+
+    <!-- what the score colors mean -->
+    <div class="legend">
+      <span class="chip chip-dot chip-good">70–100 · <span data-i18n="score.band.good"></span></span>
+      <span class="chip chip-dot chip-warn">40–69 · <span data-i18n="score.band.warn"></span></span>
+      <span class="chip chip-dot chip-risk">0–39 · <span data-i18n="score.band.risk"></span></span>
+    </div>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="history.js"></script>
+</body>
+</html>

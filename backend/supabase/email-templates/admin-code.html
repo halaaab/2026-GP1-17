@@ -1,0 +1,41 @@
+<!-- Darb "your sign-in code" message (the second step of the admin login).
+     Paste into Supabase: Authentication → Emails → Templates → Magic Link → Body (Source).
+     Subject:  Your Darb sign-in code · رمز تسجيل الدخول إلى دَرب -->
+<div style="margin:0;padding:32px 16px;background:#F7F9FB;font-family:Arial,Helvetica,sans-serif;color:#0F2438;">
+  <div style="max-width:520px;margin:0 auto;background:#FFFFFF;border:1px solid #E6ECF1;border-radius:16px;overflow:hidden;">
+
+    <!-- The banner: email-banner.jpg, uploaded to the public-assets bucket in Supabase Storage. -->
+    <img src="https://pgodmkrtwthjfstxqhfa.supabase.co/storage/v1/object/public/public-assets/email-banner.jpg" alt="Darb" width="520" style="display:block;width:100%;height:auto;border:0;font-size:22px;font-weight:bold;color:#1B4467;">
+
+    <div dir="rtl" style="padding:28px 28px 8px;text-align:right;">
+      <h1 style="margin:0 0 12px;font-size:22px;">رمز تسجيل الدخول</h1>
+      <p style="margin:0;font-size:15px;line-height:1.8;color:#5B6B7B;">
+        أدخل هذا الرمز في صفحة تسجيل الدخول إلى دَرب للمتابعة.
+      </p>
+    </div>
+
+    <!-- The 6-digit code -->
+    <div style="padding:16px 28px;text-align:center;">
+      <div dir="ltr" style="display:inline-block;padding:14px 26px;background:#EEF3F8;border-radius:12px;font-size:32px;font-weight:bold;letter-spacing:8px;color:#1B4467;">
+        {{ .Token }}
+      </div>
+    </div>
+
+    <div style="padding:8px 28px 28px;">
+      <h1 style="margin:0 0 12px;font-size:22px;">Your sign-in code</h1>
+      <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#5B6B7B;">
+        Enter this code on the Darb sign-in page to continue.
+      </p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#8A97A4;">
+        The code works once and expires soon. If you did not try to sign in, someone may know your password: please change it.
+      </p>
+      <p dir="rtl" style="margin:8px 0 0;font-size:13px;line-height:1.8;color:#8A97A4;text-align:right;">
+        يُستخدم الرمز مرة واحدة وتنتهي صلاحيته قريبًا. إذا لم تحاول تسجيل الدخول فقد يكون أحدهم يعرف كلمة مرورك: يرجى تغييرها.
+      </p>
+    </div>
+
+    <div style="padding:16px 28px;border-top:1px solid #EEF2F6;font-size:12px;color:#8A97A4;text-align:center;">
+      © 2026 Darb · King Saud University
+    </div>
+  </div>
+</div>

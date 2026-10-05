@@ -39,7 +39,6 @@ function errorKey(error) {
   if (message.includes('already registered'))        return 'error.emailTaken';
   if (message.includes('email not confirmed'))       return 'error.notConfirmed';
   if (message.includes('rate limit') || error?.status === 429) return 'error.tooMany';
-  if (message.includes('totp') || message.includes('mfa')) return 'error.code';
   if (message.includes('security purposes'))         return 'error.tooMany';
   if (message.includes('different from the old'))     return 'error.samePassword';
   if (message.includes('password'))                  return 'error.password';
@@ -231,57 +230,45 @@ export async function updatePassword(newPassword) {
 }
 
 /* ---------- Two-step sign-in for admins ----------
-   After the password, an admin enters a 6-digit code from an authenticator app
-   on their phone (Google Authenticator, Microsoft Authenticator...).
-   Supabase calls this "MFA" with a "TOTP factor". */
+   After the password, Darb emails the admin a 6-digit code and the admin
+   types it in. Supabase calls this an "email OTP" (one-time password). */
+
+/* How this browser signed in, read from the session: 'password', 'otp', 'oauth'... */
+async function signInMethods() {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) return [];
+
+  // the session token has three parts joined by dots; the middle one holds the details
+  const middle = data.session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
+  const details = JSON.parse(atob(middle));
+  return (details.amr || []).map((entry) => entry.method);
+}
 
 /* Where the signed-in admin stands:
-     'done'   the code was entered in this session
-     'code'   the phone is set up; ask for a code
-     'setup'  no phone set up yet; show the QR code */
+     'done'  the emailed code was entered in this session
+     'code'  only the password so far; a code is still needed */
 export async function getSecondStep() {
-  const level = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (level.data && level.data.currentLevel === 'aal2') {
-    return 'done';
-  }
-
-  const factors = await supabase.auth.mfa.listFactors();
-  const phoneIsSetUp = factors.data && factors.data.totp.length > 0;
-  return phoneIsSetUp ? 'code' : 'setup';
+  const methods = await signInMethods();
+  return methods.includes('otp') || methods.includes('magiclink') ? 'done' : 'code';
 }
 
-/* Starts the one-time setup. Returns the QR code to scan and the same key as text. */
-export async function startAuthenticatorSetup() {
-  // throw away setups that were started earlier but never finished
-  const factors = await supabase.auth.mfa.listFactors();
-  const unfinished = (factors.data ? factors.data.all : []).filter((factor) => factor.status !== 'verified');
-  for (const factor of unfinished) {
-    await supabase.auth.mfa.unenroll({ factorId: factor.id });
-  }
+/* Emails a new 6-digit code. Supabase allows one email per minute for each address. */
+export async function sendEmailCode(email) {
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false },   // never creates an account
+  });
 
-  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Darb admin' });
   if (error) {
     console.error('Supabase said:', error.status, error.message);
-    return { ok: false, error: 'error.twoStepOff' };
+    return { ok: false, error: error.status === 429 ? 'error.codeWait' : 'error.codeNotSent' };
   }
-
-  return { ok: true, factorId: data.id, qrCode: data.totp.qr_code, key: data.totp.secret };
+  return { ok: true };
 }
 
-/* Checks a 6-digit code. Pass the factorId from startAuthenticatorSetup during setup;
-   leave it out at a normal sign-in and the admin's phone is looked up. */
-export async function checkCode(code, factorId) {
-  let id = factorId;
-
-  if (!id) {
-    const factors = await supabase.auth.mfa.listFactors();
-    id = factors.data && factors.data.totp[0] ? factors.data.totp[0].id : null;
-  }
-  if (!id) {
-    return { ok: false, error: 'error.twoStepOff' };
-  }
-
-  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: id, code });
+/* Checks the 6-digit code from the email */
+export async function checkCode(email, code) {
+  const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
   if (error) {
     return { ok: false, error: 'error.code' };
   }
@@ -316,7 +303,7 @@ export async function getAccount() {
   const user = data.user;
 
   // Is this an admin? After migration 0003 the admins table can only be read once the
-  // second step (the phone code) is passed, so we first ask a small database function
+  // second step (the emailed code) is passed, so we first ask a small database function
   // that answers yes or no at any time. Before that migration, the function does not
   // exist and we simply read the table as before.
   const admin = await supabase.from('admins').select('*').eq('admin_id', user.id).maybeSingle();
@@ -346,7 +333,7 @@ export async function goToHomePage() {
   sessionStorage.removeItem('darb-next');
 
   if (account.role === 'admin') {
-    // an admin must pass the phone code before any admin page opens
+    // an admin must enter the emailed code before any admin page opens
     const step = await getSecondStep();
     if (step === 'done') {
       window.location.href = wanted || ROOT + PAGES.adminHome;

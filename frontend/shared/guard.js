@@ -25,6 +25,7 @@
 
 import { getAccount, getCurrentUser, getSecondStep, logOut } from './auth.js';
 import { setSidebarUser } from './layout.js';
+import { showSidebarHistory } from './assessments.js';
 
 // Address of the frontend/ folder, so links work from any page depth
 const ROOT = new URL('..', import.meta.url).href;
@@ -74,7 +75,7 @@ if (account.role === 'founder' && account.profile.status === 'deactivated') {
   }
 }
 
-// An admin page also needs the second step: the code from the admin's phone.
+// An admin page also needs the second step: the code Darb emailed to the admin.
 // Without it, the admin goes back to the admin login, which asks for the code.
 if (allowed && neededRole === 'admin' && (await getSecondStep()) !== 'done') {
   allowed = false;
@@ -88,5 +89,10 @@ if (allowed) {
   if (account.profile) {
     const user = await getCurrentUser();
     setSidebarUser(account.profile.full_name, account.role === 'admin' ? user.email : '');
+  }
+
+  // founder pages list the founder's past assessments in the sidebar
+  if (neededRole === 'founder') {
+    showSidebarHistory();
   }
 }

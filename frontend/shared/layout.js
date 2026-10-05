@@ -1,7 +1,5 @@
 /* ==========================================================
    Layout: builds the sidebar, header and footer around a page.
-  
-
    How to use it in a page:
 
      <body data-layout="founder" data-page="startups" data-title="nav.startups">
@@ -75,6 +73,7 @@ const CONTACT = {
 const PAGES = {
   home:          'index.html',
   chatbot:       'pages/founder/chatbot/chatbot.html',
+  history:       'pages/founder/history/history.html',
   profile:       'pages/founder/profile/profile.html',
   login:         'pages/auth/login/login.html',
   signUp:        'pages/auth/sign-up/sign-up.html',
@@ -107,9 +106,23 @@ const ICON_PATHS = {
   arrowUp:   '<path d="M12 19V5M5 12l7-7 7 7"/>',
   spark:     '<path d="M12 3l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5-5.5-2 5.5-2z"/>',
   chevrons:  '<path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/>',
+  clock:     '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  close:     '<path d="M6 6l12 12M18 6 6 18"/>',
+  check:     '<path d="m5 12 5 5 9-10"/>',
+  plus:      '<path d="M12 5v14M5 12h14"/>',
+  search:    '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  download:  '<path d="M12 4v11"/><path d="m7 11 5 5 5-5"/><path d="M5 20h14"/>',
+  external:  '<path d="M8 16 16 8"/><path d="M9 8h7v7"/>',
+  chevron:   '<path d="m9 6 6 6-6 6"/>',
+  map:       '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
+  flag:      '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
 };
 
-function icon(name) {
+/* A small line icon. Pages can use it too:
+     import { icon } from '../../../shared/layout.js';
+     button.innerHTML = icon('download');
+   The names are the keys of ICON_PATHS above. */
+export function icon(name) {
   return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON_PATHS[name]}</svg>`;
 }
 
@@ -169,9 +182,14 @@ function founderSidebar(activePage) {
       <span data-i18n="nav.newAssessment"></span>
     </a>
 
+    <a class="nav-item ${activePage === 'history' ? 'is-active' : ''}" href="${ROOT}${PAGES.history}">
+      ${icon('clock')}
+      <span data-i18n="nav.history"></span>
+    </a>
+
     ${menuGroups(FOUNDER_MENU, activePage)}
 
-    <!-- Past assessments. The chatbot page fills this list. -->
+    <!-- Past assessments. shared/assessments.js fills this list. -->
     <div class="sidebar-scroll" id="sidebar-history">
       <p class="sidebar-empty" data-i18n="nav.historyEmpty"></p>
     </div>
