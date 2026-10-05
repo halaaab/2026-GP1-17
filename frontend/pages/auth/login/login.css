@@ -1,0 +1,23 @@
+/* Sign-in page only.
+   Shared pieces (inputs, buttons, the split photo layout) are in shared/shared.css. */
+
+/* the fields arrive one after another when the page opens */
+.auth-title,
+.auth-sub,
+#login-form > *,
+.login-or,
+#google-button,
+.auth-switch {
+  animation: fade-up 0.7s var(--ease) both;
+}
+.auth-sub                    { animation-delay: 0.08s; }
+#google-button               { animation-delay: 0.16s; }
+.login-or                    { animation-delay: 0.22s; }
+#login-form > :nth-child(1)  { animation-delay: 0.3s; }
+#login-form > :nth-child(2)  { animation-delay: 0.38s; }
+#login-form > :nth-child(3)  { animation-delay: 0.46s; }
+.auth-switch                 { animation-delay: 0.54s; }
+
+.login-or {
+  margin-block: 24px;
+}
