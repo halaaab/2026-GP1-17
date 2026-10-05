@@ -1,27 +1,28 @@
-/* The assessment panel: slides in beside the chat and shows one assessment
-   in six tabs (Overview, Score, Similar, Market, Roadmap, Report).
+/* The assessment: a full page that takes the place of the chat and shows one
+   assessment in five tabs (Score, Similar startups, Market, Roadmap, Report).
 
    chatbot.js opens it:
      import { openPanel } from './panel.js';
      openPanel(assessment, 'score');
 
-   Each tab is one function below that returns HTML. The numbers come from
-   shared/assessments.js (sample data today, the agents later). */
+   Each tab is one function below that returns HTML. The startups, market numbers
+   and roadmap are in assessment.result, loaded by loadResult() in shared/assessments.js. */
 
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import {
-  say, label, scoreBand, whenText, roadmapFor,
-  SCORE_FACTORS, SIMILAR_STARTUPS, MARKET,
+  say, label, scoreBand, whenText, SCORE_FACTORS,
 } from '../../../shared/assessments.js';
 
-const TABS = ['overview', 'score', 'similar', 'market', 'roadmap', 'report'];
-const STARTUP_PAGE = '../startups/startup-details/startup-details.html';
+const TABS = ['score', 'similar', 'market', 'roadmap', 'report'];
+
+// the Darb logo, for the top of the report
+const LOGO = new URL('../../../assets/images/%20Darb-logo-horizontal.png', import.meta.url).href;
 
 const panel = document.querySelector('#assess');
 
 let assessment = null;       // the assessment being shown
-let currentTab = 'overview';
+let currentTab = 'score';
 let roadmapView = 'list';    // 'list' or 'diagram'
 
 /* Founders type the idea title themselves, so it is made safe before it goes into HTML */
@@ -33,13 +34,15 @@ function safe(text) {
 
 /* ---------- Open, close, switch tab ---------- */
 
-export function openPanel(assessmentToShow, tab = 'overview') {
+export function openPanel(assessmentToShow, tab = 'score') {
   assessment = assessmentToShow;
-  currentTab = TABS.includes(tab) ? tab : 'overview';
+  currentTab = TABS.includes(tab) ? tab : 'score';
 
   drawPanel();
   panel.classList.add('is-open');
-  document.body.classList.add('assess-open');
+  document.body.classList.add('assess-open');   // chatbot.css hides the chat while this is on
+  window.scrollTo(0, 0);
+  playScore(currentTab === 'report');
 }
 
 export function closePanel() {
@@ -47,31 +50,30 @@ export function closePanel() {
   document.body.classList.remove('assess-open');
 }
 
-function showTab(tab) {
+function showTab(tab, withoutAnimation = false) {
   currentTab = tab;
   drawPanel();
-  panel.querySelector('.assess-body').scrollTop = 0;
+  window.scrollTo(0, 0);
+  // the report is a document, so its score is shown at once, without counting up
+  playScore(withoutAnimation || tab === 'report');
 }
 
 function drawPanel() {
-  const when = t('panel.updated').replace('{when}', whenText(assessment.updated));
+  const facts = ['sector', 'city'].map((field) => safe(label(assessment[field]))).join(' · ');
 
   panel.innerHTML = `
     <div class="assess-head">
-      <div class="assess-heading">
-        <h2 class="assess-title">${t('chat.cardTitle')}</h2>
-        <p class="assess-sub">${safe(say(assessment.title))} · ${when}</p>
-      </div>
+      <button type="button" class="assess-back" data-close>${icon('arrowBack')} ${t('assess.back')}</button>
       <button type="button" class="btn btn-secondary btn-sm" data-export>${icon('download')} ${t('panel.export')}</button>
-      <button type="button" class="btn-icon" data-close aria-label="${t('panel.close')}">${icon('close')}</button>
     </div>
 
-    <div class="assess-tabs">
-      <div class="segmented" role="tablist">
-        ${TABS.map((tab) => `
-          <button type="button" role="tab" class="segmented-item ${tab === currentTab ? 'is-active' : ''}" data-tab="${tab}">${t(`tab.${tab}`)}</button>`).join('')}
-      </div>
-    </div>
+    <h2 class="assess-title">${safe(say(assessment.title))}</h2>
+    <p class="assess-sub">${facts}</p>
+
+    <nav class="assess-nav" role="tablist">
+      ${TABS.map((tab) => `
+        <button type="button" role="tab" class="assess-tab ${tab === currentTab ? 'is-active' : ''}" data-tab="${tab}">${t(`tab.${tab}`)}</button>`).join('')}
+    </nav>
 
     <div class="assess-body">
       ${TAB_CONTENT[currentTab]()}
@@ -81,53 +83,72 @@ function drawPanel() {
 
 /* ---------- Pieces used by more than one tab ---------- */
 
-/* The half-circle gauge with the score inside */
-function gauge(score) {
-  const arcLength = 251.3;                       // length of the half circle drawn below
-  const angle = Math.PI * (score / 100);
-  const knobX = 100 - 80 * Math.cos(angle);
-  const knobY = 100 - 80 * Math.sin(angle);
-
-  return `
-    <div class="gauge is-${scoreBand(score)}" dir="ltr">
-      <svg viewBox="0 0 200 112" aria-hidden="true">
-        <defs>
-          <linearGradient id="gauge-colors" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0" class="gauge-stop-risk"/><stop offset="0.5" class="gauge-stop-warn"/><stop offset="1" class="gauge-stop-good"/>
-          </linearGradient>
-        </defs>
-        <path class="gauge-track" d="M20 100 A80 80 0 0 1 180 100"/>
-        <path class="gauge-arc" d="M20 100 A80 80 0 0 1 180 100" stroke="url(#gauge-colors)" stroke-dasharray="${arcLength}" stroke-dashoffset="${arcLength * (1 - score / 100)}"/>
-        <circle class="gauge-knob" cx="${knobX.toFixed(1)}" cy="${knobY.toFixed(1)}" r="9"/>
-      </svg>
-      <strong class="gauge-number">${score}</strong>
-    </div>`;
-}
-
-function scoreHead() {
+/* The score on its path: a big number, and a line from 0 to 100 with a marker on it.
+   The line has three parts, one for each score band (0–39, 40–69, 70–100).
+   It always runs from 0 on the left to 100 on the right (dir="ltr"), in Arabic too,
+   the way number lines and charts are normally drawn.
+   The number and the marker start at 0; playScore() moves them to the score. */
+function scoreOnPath() {
   const band = scoreBand(assessment.score);
 
   return `
-    <div class="score-head">
-      ${gauge(assessment.score)}
-      <div>
-        <span class="chip chip-${band}">${t(`score.band.${band}`)}</span>
-        <h3 class="score-title">${t('score.title')}</h3>
-        <p class="text-2">${t('score.about')}</p>
+    <div class="fis is-${band}">
+      <p class="fis-label">${t('score.title')}</p>
+      <p class="fis-number"><strong data-score="${assessment.score}">0</strong><span>${t('score.outOf')}</span></p>
+      <p class="fis-sentence">${t(`score.sentence.${band}`)}</p>
+
+      <div class="fis-path" dir="ltr">
+        <span class="fis-part is-risk"></span><span class="fis-part is-warn"></span><span class="fis-part is-good"></span>
+        <span class="fis-marker" data-marker></span>
+      </div>
+      <div class="fis-scale" dir="ltr" aria-hidden="true">
+        <span>0</span><span>100</span>
       </div>
     </div>`;
 }
 
-/* Sector, city and revenue model as three small tiles */
-function facts() {
+/* Counts the number up and slides the marker along the path.
+   withoutAnimation = put both at the score straight away (used before printing). */
+function playScore(withoutAnimation = false) {
+  const number = panel.querySelector('[data-score]');
+  const marker = panel.querySelector('[data-marker]');
+  if (!number) return;
+
+  const score = Number(number.dataset.score);
+
+  if (withoutAnimation) {
+    number.textContent = score;
+    marker.style.transition = 'none';
+    marker.style.insetInlineStart = `${score}%`;
+    return;
+  }
+
+  const started = performance.now();
+  const duration = 900;   // milliseconds
+
+  // the browser draws the marker at 0 first, then moves it (chatbot.css animates the move)
+  requestAnimationFrame(() => { marker.style.insetInlineStart = `${score}%`; });
+
+  function tick(now) {
+    const progress = Math.min((now - started) / duration, 1);
+    number.textContent = Math.round(score * progress);
+    if (progress < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+/* Survival potential, risk level and sector viability, side by side */
+function readings() {
+  const band = scoreBand(assessment.score);
+  const riskLevel = { good: 'low', warn: 'medium', risk: 'high' }[band];
+  const sectorIsGood = assessment.factors[3] >= -1;
+
   return `
-    <div class="facts">
-      ${['sector', 'city', 'model'].map((field) => `
-        <div class="tile">
-          <span class="fact-label">${t(`chat.field.${field}`)}</span>
-          <strong>${safe(label(assessment[field]))}</strong>
-        </div>`).join('')}
-    </div>`;
+    <dl class="readings">
+      <div><dt>${t('score.survival')}</dt><dd class="is-${band}">${t(`survival.${band}`)}</dd></div>
+      <div><dt>${t('score.risk')}</dt><dd class="is-${band}">${t(`level.${riskLevel}`)}</dd></div>
+      <div><dt>${t('score.sector')}</dt><dd class="is-${sectorIsGood ? 'good' : 'warn'}">${t(sectorIsGood ? 'sector.favourable' : 'sector.challenging')}</dd></div>
+    </dl>`;
 }
 
 function sectionTitle(title, sub = '') {
@@ -138,130 +159,69 @@ function sectionTitle(title, sub = '') {
     </div>`;
 }
 
-/* ---------- Tab: Overview ---------- */
+/* ---------- Tab: Score ---------- */
 
-function overviewTab() {
-  const factors = assessment.factors;
-  const best = factors.indexOf(Math.max(...factors));
-  const worst = factors.indexOf(Math.min(...factors));
-  const steps = roadmapFor(assessment).length;
+/* One list of factors: the ones that push the score up, or the ones that pull it down */
+function factorList(title, wanted) {
+  const rows = assessment.factors
+    .map((change, index) => ({ change, name: SCORE_FACTORS[index] }))
+    .filter((factor) => (wanted === 'up' ? factor.change >= 0 : factor.change < 0))
+    .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
 
   return `
-    ${scoreHead()}
-    ${facts()}
-
-    <div class="insights">
-      <div class="card insight is-good">
-        <span class="insight-kind">${t('insight.strength')}</span>
-        <strong>${t(SCORE_FACTORS[best])}</strong>
-      </div>
-      <div class="card insight is-risk">
-        <span class="insight-kind">${t('insight.risk')}</span>
-        <strong>${t(SCORE_FACTORS[worst])}</strong>
-      </div>
-      <div class="card insight is-info">
-        <span class="insight-kind">${t('insight.consider')}</span>
-        <strong>${t('insight.considerText')}</strong>
-      </div>
-    </div>
-
-    ${sectionTitle(t('overview.inside'))}
-    <div class="inside">
-      ${insideLink('score', t('score.built'))}
-      ${insideLink('similar', t('overview.similar').replace('{n}', SIMILAR_STARTUPS.length))}
-      ${insideLink('market', t('overview.market'))}
-      ${insideLink('roadmap', t('overview.roadmap').replace('{n}', steps))}
-      ${insideLink('report', t('overview.report'))}
+    <div class="moves">
+      <h3 class="moves-title">${title}</h3>
+      ${rows.length === 0 ? `<p class="text-3">${t('score.none')}</p>` : ''}
+      <ul>
+        ${rows.map((factor) => `
+          <li>
+            <span class="moves-value is-${wanted}" dir="ltr">${factor.change >= 0 ? '+' : '−'}${Math.abs(factor.change)}</span>
+            <span title="${t(`${factor.name}.why`)}">${t(factor.name)}</span>
+          </li>`).join('')}
+      </ul>
     </div>`;
 }
 
-function insideLink(tab, text) {
-  return `<button type="button" class="inside-link" data-tab="${tab}"><span>${text}</span>${icon('chevron')}</button>`;
+function scoreTab() {
+  return `
+    ${scoreOnPath()}
+    ${readings()}
+
+    <div class="moves-grid">
+      ${factorList(t('score.up'), 'up')}
+      ${factorList(t('score.down'), 'down')}
+    </div>`;
 }
 
-/* ---------- Tab: Score ---------- */
+/* Shown in a tab when the database has nothing for this idea's sector */
+function nothingYet() {
+  return `<p class="empty">${t('result.empty')}</p>`;
+}
 
-function scoreTab() {
-  const band = scoreBand(assessment.score);
-  const riskLevel = { good: 'low', warn: 'medium', risk: 'high' }[band];
-  const sectorIsGood = assessment.factors[3] >= -1;
-
-  // each row starts where the row before it ended, like steps of a staircase
-  let total = 50;
-  const rows = assessment.factors.map((change, index) => {
-    const from = Math.min(total, total + change);
-    total += change;
-    return `
-      <div class="wf-row">
-        <span class="wf-name">${t(SCORE_FACTORS[index])}</span>
-        <span class="wf-track"><span class="wf-fill ${change >= 0 ? 'is-good' : 'is-risk'}" style="inset-inline-start: ${from}%; width: ${Math.max(Math.abs(change), 1.5)}%"></span></span>
-        <span class="wf-value ${change >= 0 ? 'is-good' : 'is-risk'}" dir="ltr">${change >= 0 ? '+' : '−'}${Math.abs(change)}</span>
-      </div>`;
-  }).join('');
-
-  return `
-    ${scoreHead()}
-
-    <div class="card">
-      <h3 class="section-title">${t('score.built')}</h3>
-      <div class="wf">
-        <div class="wf-row">
-          <span class="wf-name is-light">${t('score.average')}</span>
-          <span class="wf-track"><span class="wf-fill is-average" style="inset-inline-start: 0; width: 50%"></span></span>
-          <span class="wf-value is-light">50</span>
-        </div>
-        ${rows}
-        <div class="wf-row wf-total">
-          <span class="wf-name">${t('score.yours')}</span>
-          <span class="wf-track"><span class="wf-fill is-${band}" style="inset-inline-start: 0; width: ${assessment.score}%"></span></span>
-          <span class="wf-value is-${band}">${assessment.score}</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="facts">
-      <div class="tile"><span class="fact-label">${t('score.survival')}</span><strong>${t(`score.band.${band}`)}</strong></div>
-      <div class="tile"><span class="fact-label">${t('score.risk')}</span><strong>${t(`level.${riskLevel}`)}</strong></div>
-      <div class="tile"><span class="fact-label">${t('score.sector')}</span><strong>${t(sectorIsGood ? 'sector.favourable' : 'sector.challenging')}</strong></div>
-    </div>
-
-    ${sectionTitle(t('score.keyFactors'))}
-    <ul class="factors">
-      ${assessment.factors.map((change, index) => `
-        <li>
-          <span class="chip ${change >= 0 ? 'chip-good' : 'chip-risk'}" dir="ltr">${change >= 0 ? '+' : '−'}${Math.abs(change)}</span>
-          <div>
-            <strong>${t(SCORE_FACTORS[index])}</strong>
-            <p class="text-2">${t(`${SCORE_FACTORS[index]}.why`)}</p>
-          </div>
-        </li>`).join('')}
-    </ul>`;
+/* A long description is cut after a few lines' worth of text */
+function shorten(text, length = 220) {
+  return text.length > length ? `${text.slice(0, length).trim()}…` : text;
 }
 
 /* ---------- Tab: Similar startups ---------- */
 
 function similarTab() {
+  const startups = assessment.result.similar;
+
   return `
     ${sectionTitle(t('similar.title'), t('similar.sub'))}
+    ${startups.length === 0 ? nothingYet() : ''}
     <div class="similar">
-      ${SIMILAR_STARTUPS.map((startup, index) => `
-        <article class="card startup">
+      ${startups.map((startup) => `
+        <article class="startup">
           <div class="startup-top">
-            <span class="startup-rank">${index + 1}</span>
-            <div class="startup-name">
-              <strong>${say(startup.name)}</strong>
-              <span class="text-3">${label(startup.city)} · ${t('similar.founded').replace('{year}', startup.year)}</span>
-            </div>
-            <span class="chip chip-dot ${startup.status === 'operating' ? 'chip-good' : 'chip-risk'}">${t(`status.${startup.status}`)}</span>
+            <strong>${safe(startup.name)}</strong>
+            <span class="text-3">${safe([startup.sector, startup.region, startup.stage].filter(Boolean).join(' · '))}</span>
           </div>
-          <p class="text-2">${say(startup.about)}</p>
-          <div class="startup-match">
-            <div class="bar"><div class="bar-fill" style="width: ${startup.match}%"></div></div>
-            <span><strong>${startup.match}%</strong> ${t('similar.match')}</span>
-          </div>
+          <p class="text-2" dir="auto">${safe(shorten(startup.about))}</p>
           <div class="startup-actions">
             <button type="button" class="btn btn-secondary btn-sm" data-ask="${startup.id}">${t('similar.ask')}</button>
-            <a class="btn btn-ghost btn-sm" href="${STARTUP_PAGE}">${t('similar.view')}</a>
+            ${startup.website ? `<a class="btn btn-ghost btn-sm" href="${safe(startup.website)}" target="_blank" rel="noopener">${t('similar.website')} ${icon('external')}</a>` : ''}
           </div>
         </article>`).join('')}
     </div>`;
@@ -269,43 +229,54 @@ function similarTab() {
 
 /* ---------- Tab: Market ---------- */
 
-function marketTiles() {
+function showNumber(number) {
+  if (number.isPercent) return `${number.value > 0 ? '+' : ''}${number.value}%`;
+  return Number(number.value).toLocaleString('en');
+}
+
+function marketNumbers(market) {
   return `
     <div class="kpis">
-      ${MARKET.tiles.map((tile) => `
+      ${market.numbers.map((number) => `
         <div class="tile">
-          <span class="fact-label">${t(tile.label)}</span>
-          <span class="tile-value" dir="ltr">${tile.value}</span>
+          <span class="fact-label">${t(number.label)}</span>
+          <span class="tile-value" dir="ltr">${showNumber(number)}</span>
+        </div>`).join('')}
+    </div>`;
+}
+
+function marketSource(market) {
+  const text = t('market.source').replace('{year}', market.year);
+  return market.sourceUrl
+    ? `<a class="link market-source" href="${safe(market.sourceUrl)}" target="_blank" rel="noopener">${text}</a>`
+    : `<p class="text-3 market-source">${text}</p>`;
+}
+
+/* Micro, small, medium and large enterprises as four bars */
+function marketSizes(market) {
+  if (market.sizes.length === 0) return '';
+
+  return `
+    <div class="sizes">
+      <h3 class="section-title">${t('market.sizeTitle')}</h3>
+      ${market.sizes.map((size) => `
+        <div class="size-row">
+          <span>${t(size.label)}</span>
+          <div class="bar"><div class="bar-fill" style="width: ${size.value}%"></div></div>
+          <strong dir="ltr">${size.value}%</strong>
         </div>`).join('')}
     </div>`;
 }
 
 function marketTab() {
-  const highest = Math.max(...MARKET.years.map((point) => point.value));
+  const market = assessment.result.market;
+  if (!market) return `${sectionTitle(t('market.title'))}${nothingYet()}`;
 
   return `
-    ${sectionTitle(t('market.title'))}
-    <div class="tile activity">
-      <span class="fact-label">${t('market.activity')}</span>
-      <strong>${say(MARKET.activity)}</strong>
-    </div>
-
-    ${marketTiles()}
-
-    <div class="card">
-      <h3 class="section-title">${t('market.chart')}</h3>
-      <div class="chart" dir="ltr">
-        ${MARKET.years.map((point) => `
-          <div class="chart-column">
-            <span class="chart-value">${point.value}</span>
-            <span class="chart-bar" style="height: ${(point.value / highest) * 100}%"></span>
-            <span class="chart-year">${point.year}</span>
-          </div>`).join('')}
-      </div>
-    </div>
-
-    <p class="text-3 market-source">${t('market.source')}</p>
-    <button type="button" class="btn btn-secondary btn-sm" data-tab="overview">${t('market.back')}</button>`;
+    ${sectionTitle(t('market.title'), `${t('market.activity')}: ${safe(say(market.activity))} · ${market.year}`)}
+    ${marketNumbers(market)}
+    ${marketSizes(market)}
+    ${marketSource(market)}`;
 }
 
 /* ---------- Tab: Roadmap ---------- */
@@ -314,19 +285,32 @@ function typeChip(step) {
   return `<span class="chip ${step.type === 'mandatory' ? 'chip-navy' : 'chip-warn'}">${t(`roadmap.${step.type}`)}</span>`;
 }
 
+/* The address without "https://" and the page: https://business.sa/x → business.sa */
+function siteName(address) {
+  try {
+    return new URL(address).hostname.replace('www.', '');
+  } catch {
+    return '';
+  }
+}
+
 /* The roadmap as a numbered list. chatbot.js shows the same list inside the chat. */
 export function roadmapList(forAssessment) {
+  const steps = forAssessment.result.roadmap;
+  if (steps.length === 0) return nothingYet();
+
   return `
     <ol class="rm-list">
-      ${roadmapFor(forAssessment).map((step, index) => `
+      ${steps.map((step, index) => `
         <li class="rm-step">
           <span class="rm-number">${index + 1}</span>
           <div class="rm-text">
-            <div class="rm-title"><strong>${say(step.title)}</strong>${typeChip(step)}</div>
-            <p class="text-2">${say(step.authority)}</p>
+            <div class="rm-title"><strong>${safe(say(step.title))}</strong>${typeChip(step)}</div>
+            <p class="rm-authority">${safe(step.authority)}</p>
+            <p class="text-2" dir="auto">${safe(step.guidance)}</p>
             <div class="rm-links">
-              <a class="rm-action" href="${step.link}" target="_blank" rel="noopener">${say(step.action)} ${icon('external')}</a>
-              <span class="chip" dir="ltr">${step.source}</span>
+              ${step.link ? `<a class="rm-action" href="${safe(step.link)}" target="_blank" rel="noopener">${t('roadmap.apply')} ${icon('external')}</a>` : ''}
+              ${step.source ? `<a class="chip" dir="ltr" href="${safe(step.source)}" target="_blank" rel="noopener">${siteName(step.source)}</a>` : ''}
             </div>
           </div>
         </li>`).join('')}
@@ -335,17 +319,20 @@ export function roadmapList(forAssessment) {
 
 /* The same steps as a diagram: cards on both sides of one line, from top to bottom */
 function roadmapDiagram() {
+  const steps = assessment.result.roadmap;
+  if (steps.length === 0) return nothingYet();
+
   return `
     <div class="rm-diagram">
       <span class="chip chip-dot rm-start">${t('roadmap.start')}</span>
       <ol class="rm-wave">
-        ${roadmapFor(assessment).map((step, index) => `
+        ${steps.map((step, index) => `
           <li>
             <span class="rm-number">${index + 1}</span>
             <div class="card rm-card">
               ${typeChip(step)}
-              <strong>${say(step.title)}</strong>
-              <span class="text-3">${say(step.authority)}</span>
+              <strong>${safe(say(step.title))}</strong>
+              <span class="text-3">${safe(step.authority)}</span>
             </div>
           </li>`).join('')}
       </ol>
@@ -354,7 +341,7 @@ function roadmapDiagram() {
 }
 
 function roadmapTab() {
-  const steps = roadmapFor(assessment).length;
+  const steps = assessment.result.roadmap.length;
 
   return `
     <div class="rm-head">
@@ -367,13 +354,15 @@ function roadmapTab() {
     ${roadmapView === 'list' ? roadmapList(assessment) : roadmapDiagram()}`;
 }
 
-/* ---------- Tab: Report (everything in one view; this is what Export PDF prints) ---------- */
+/* ---------- Tab: Report ----------
+   Everything in one document. This is what Export PDF prints, so it is written
+   like a paper report: the logo and date on top, then four numbered sections. */
 
-function reportSection(tab, title, content) {
+function reportSection(number, tab, title, content) {
   return `
     <section class="report-section">
       <div class="report-head">
-        <h3 class="section-title">${title}</h3>
+        <h3><span class="report-number">${number}</span>${title}</h3>
         <button type="button" class="link report-link" data-tab="${tab}">${t('report.view')}</button>
       </div>
       ${content}
@@ -381,35 +370,57 @@ function reportSection(tab, title, content) {
 }
 
 function reportTab() {
-  const similar = `
-    <ul class="report-list">
-      ${SIMILAR_STARTUPS.map((startup) => `
-        <li>
-          <strong>${say(startup.name)}</strong>
-          <span class="text-3">${label(startup.city)} · ${t(`status.${startup.status}`)}</span>
-          <span class="report-match" dir="ltr">${startup.match}%</span>
-        </li>`).join('')}
-    </ul>`;
+  const { similar, market, roadmap } = assessment.result;
+  const facts = ['sector', 'city', 'model'].map((field) => safe(label(assessment[field]))).join(' · ');
+  const today = new Date().toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const roadmap = `
-    <ol class="report-steps">
-      ${roadmapFor(assessment).map((step) => `<li><strong>${say(step.title)}</strong> ${typeChip(step)}</li>`).join('')}
-    </ol>`;
+  const score = `
+    ${scoreOnPath()}
+    ${readings()}
+    <div class="moves-grid">
+      ${factorList(t('score.up'), 'up')}
+      ${factorList(t('score.down'), 'down')}
+    </div>`;
+
+  const marketPart = !market ? nothingYet() : `
+    <p class="report-line">${t('market.activity')}: <strong>${safe(say(market.activity))}</strong> · ${market.year}</p>
+    ${marketNumbers(market)}
+    ${marketSizes(market)}
+    ${marketSource(market)}`;
+
+  const startups = similar.length === 0 ? nothingYet() : `
+    <div class="report-startups">
+      ${similar.map((startup) => `
+        <div class="report-startup">
+          <strong>${safe(startup.name)}</strong>
+          <span class="text-3">${safe([startup.sector, startup.region, startup.stage].filter(Boolean).join(' · '))}</span>
+          <p class="text-2" dir="auto">${safe(shorten(startup.about, 180))}</p>
+        </div>`).join('')}
+    </div>`;
 
   return `
-    <div class="report-title">
-      <h3>${t('report.title')}</h3>
-      <p class="text-2">${safe(say(assessment.title))} · ${whenText(assessment.updated)}</p>
-    </div>
+    <div class="report">
+      <header class="report-cover">
+        <img src="${LOGO}" alt="Darb">
+        <div>
+          <strong>${t('report.title')}</strong>
+          <span>${today}</span>
+        </div>
+      </header>
 
-    ${reportSection('score', t('score.title'), scoreHead() + facts())}
-    ${reportSection('market', t('market.title'), marketTiles())}
-    ${reportSection('similar', t('similar.title'), similar)}
-    ${reportSection('roadmap', t('roadmap.title'), roadmap)}`;
+      <div class="report-idea">
+        <h3>${safe(say(assessment.title))}</h3>
+        <p class="text-2">${facts}</p>
+      </div>
+
+      ${reportSection(1, 'score', t('score.title'), score)}
+      ${reportSection(2, 'market', t('market.title'), marketPart)}
+      ${reportSection(3, 'similar', t('similar.title'), startups)}
+      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapList(assessment))}
+    </div>`;
 }
 
 const TAB_CONTENT = {
-  overview: overviewTab,
   score:    scoreTab,
   similar:  similarTab,
   market:   marketTab,
@@ -438,14 +449,14 @@ panel.addEventListener('click', (event) => {
   // Export PDF: show the report and open the browser's print window,
   // where the founder chooses "Save as PDF". chatbot.css hides everything else on paper.
   if (event.target.closest('[data-export]')) {
-    showTab('report');
+    showTab('report', true);   // true = no counting animation, so the paper shows the final score
     window.print();
   }
 
   // "Ask about it" on a startup card: tell the chat which startup the next question is about
   const askButton = event.target.closest('[data-ask]');
   if (askButton) {
-    const startup = SIMILAR_STARTUPS.find((item) => item.id === askButton.dataset.ask);
+    const startup = assessment.result.similar.find((item) => item.id === askButton.dataset.ask);
     document.dispatchEvent(new CustomEvent('darb:ask-startup', { detail: startup }));
   }
 });
@@ -456,5 +467,8 @@ document.addEventListener('keydown', (event) => {
 
 // the panel is text in the current language, so draw it again when the language changes
 document.addEventListener('darb:language', () => {
-  if (assessment && panel.classList.contains('is-open')) drawPanel();
+  if (assessment && panel.classList.contains('is-open')) {
+    drawPanel();
+    playScore(currentTab === 'report');
+  }
 });

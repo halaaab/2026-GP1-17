@@ -18,9 +18,12 @@
      - shows the signed-in person's name at the bottom of the sidebar
      - makes the sidebar's logout button work
 
-   In your page's own JavaScript, wait for the guard before loading data:
-     import { account } from '../../../shared/guard.js';
+   To know who is signed in from your page's own JavaScript, ask auth.js:
+     import { getAccount } from '../../../shared/auth.js';
+     const account = await getAccount();
      console.log(account.profile.full_name);
+   (Do not import "account" from this file: Safari can run your page's file
+   before the guard has finished, and the value would not be ready.)
    ========================================================== */
 
 import { getAccount, getCurrentUser, getSecondStep, logOut } from './auth.js';
