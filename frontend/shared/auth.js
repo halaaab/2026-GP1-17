@@ -125,6 +125,14 @@ export async function signUp({ email, password, fullName, username, userType, de
   return { ok: true, needsEmailConfirmation: !data.session };
 }
 
+/* Is this username still free? The database answers yes or no (migration 0004).
+   If the question itself fails, the answer is "yes" so sign-up is never blocked by it;
+   the database still refuses a username that is really taken. */
+export async function isUsernameFree(username) {
+  const { data, error } = await supabase.rpc('username_is_free', { wanted: username });
+  return error ? true : data;
+}
+
 /* For people who signed in with Google: they have an account but no row in
    the users table yet. This creates the row from their answers. */
 export async function completeProfile({ fullName, username, userType, details }) {
