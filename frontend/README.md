@@ -28,6 +28,7 @@ Open the `frontend` folder in VS Code, right-click `index.html` and choose **Ope
 | `shared/guard.js` | Keeps founder pages for founders and admin pages for admins; makes logout work |
 | `shared/auth.js` | Sign up, sign in, log out, reset password |
 | `shared/supabase.js` | The one connection to the database |
+| `shared/assessments.js` | The founder's assessments for the chat and history pages. **Sample data for now**; the agents and the database plug in here later. |
 | `shared/ui.js` | Pop-up messages, dialogs, side panels, searchable dropdowns |
 | `shared/components.html` | **Open this page to see every component and copy its HTML.** |
 
@@ -56,5 +57,4 @@ To add a link to a sidebar, add one line to `FOUNDER_MENU` or `ADMIN_MENU` at th
 - Admin login: `pages/admin/admin-login/admin-login.html`. It is not linked from the landing page on purpose.
 - Admins have no sign-up page. To add one, create the user in Supabase (Authentication → Users → Add user, with Auto Confirm), then run in the SQL Editor:
   `select public.make_admin('email', 'Full Name', 'username');`
-- Admins sign in with two steps: the password, then a 6-digit code from an authenticator app (Google Authenticator, Microsoft Authenticator...). The first sign-in shows a QR code to connect the app.
-- If an admin loses their phone, the query at the end of `backend/supabase/migrations/0003_admin_two_step.sql` lets them connect a new one.
+- Admins sign in with two steps: the password, then a 6-digit code that Darb emails to them. The email text is `backend/supabase/email-templates/admin-code.html`.

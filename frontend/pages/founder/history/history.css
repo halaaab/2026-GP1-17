@@ -1,0 +1,55 @@
+/* History page only. The table, toolbar and chips come from shared/shared.css. */
+
+.history-table td {
+  vertical-align: middle;
+}
+
+/* the score and roadmap cells are links into the assessment */
+.history-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-nav);
+  font-weight: 700;
+}
+.history-link:hover {
+  color: var(--teal-text);
+}
+.history-link .chip {
+  min-width: 36px;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.history-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* Phones: keep the idea, its score and the button */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  /* shared.css keeps tables wide on a phone so they scroll sideways;
+     with three columns left, this one fits the screen */
+  .history-table {
+    min-width: 0;
+  }
+  .history-table td,
+  .history-table th {
+    padding-inline: 10px;
+  }
+  .toolbar .search {
+    max-width: none;
+  }
+}

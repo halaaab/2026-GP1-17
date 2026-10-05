@@ -1211,6 +1211,13 @@ html[dir="rtl"] .panel.is-open {
   color: var(--text);
   font-weight: 700;
 }
+/* A long name in the sidebar is cut with "…" instead of wrapping */
+.nav-item-text {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* The middle of the sidebar: takes the free space and scrolls if the list is long */
 .sidebar-scroll {
