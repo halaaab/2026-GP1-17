@@ -1,11 +1,6 @@
 /* Founder management page only. The table, toolbar, chips, panel and modal
    come from shared/shared.css. */
 
-.founder-filters {
-  display: flex;
-  gap: 8px;
-}
-
 /* ---------- Table ---------- */
 
 .founder-row {
@@ -24,6 +19,29 @@
   align-items: center;
   gap: 12px;
 }
+
+/* the Assessments number sits in the middle of its column */
+.founder-table .founder-count {
+  text-align: center;
+}
+
+/* the edit and delete icons at the end of each row */
+.founder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.btn-icon.is-danger:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* one pastel color per user type (table chip and side panel) */
+.chip.type-student        { background: var(--type-student-tint);  color: var(--type-student-text); }
+.chip.type-entrepreneur   { background: var(--type-founder-tint);  color: var(--type-founder-text); }
+.chip.type-business_owner { background: var(--type-owner-tint);    color: var(--type-owner-text); }
+.chip.type-investor       { background: var(--type-investor-tint); color: var(--type-investor-text); }
+.chip.type-other          { background: var(--type-other-tint);    color: var(--type-other-text); }
 
 .founder-empty {
   margin: 16px;
@@ -45,19 +63,25 @@
   overflow-wrap: anywhere;
 }
 
+/* edit and close buttons, top corner of the panel */
+.founder-panel-tools {
+  display: flex;
+  gap: 2px;
+}
+
 .founder-avatar-lg {
   width: 48px;
   height: 48px;
   font-size: 15px;
 }
 
-.founder-field-tile {
+.founder-type-tile {
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
-.founder-field-icon {
+.founder-type-icon {
   display: inline-flex;
   color: var(--teal-text);
 }
@@ -115,15 +139,19 @@
   border-color: var(--risk);
 }
 
-/* Phones: keep the founder and the field */
+/* Delete pop-up: the red icon above the title, as in the design */
+.founder-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* Phones: keep the founder, the status and the buttons */
 @media (max-width: 640px) {
   .hide-small {
     display: none;
   }
   .founder-table {
     min-width: 0;
-  }
-  .toolbar .search {
-    max-width: none;
   }
 }

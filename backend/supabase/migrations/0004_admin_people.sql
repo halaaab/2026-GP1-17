@@ -12,7 +12,10 @@
 
 -- 1. Founders page: every founder with their email.
 --    From JS:  supabase.rpc('admin_list_founders')
-create or replace function public.admin_list_founders()
+--    An older version may already exist with other columns; "create or replace"
+--    cannot change the columns, so it is dropped first.
+drop function if exists public.admin_list_founders();
+create function public.admin_list_founders()
 returns table (
   user_id                 uuid,
   full_name               text,
@@ -52,7 +55,8 @@ grant  execute on function public.admin_list_founders() to authenticated;
 
 -- 2. Admins page: every admin with their email and last sign-in.
 --    From JS:  supabase.rpc('admin_list_admins')
-create or replace function public.admin_list_admins()
+drop function if exists public.admin_list_admins();
+create function public.admin_list_admins()
 returns table (
   admin_id        uuid,
   full_name       text,

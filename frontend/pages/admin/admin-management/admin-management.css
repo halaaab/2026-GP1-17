@@ -41,7 +41,4 @@
   .admins-table {
     min-width: 0;
   }
-  .admins-toolbar .search {
-    max-width: none;
-  }
 }

@@ -2,8 +2,9 @@
 <!--
   FOUNDER MANAGEMENT (admin console)
   Every founder account: search, filter by status, and a side panel to
-  see one founder's details, deactivate / activate it, or delete it.
-  The rows come from the admin_list_founders() database function (migration 0004).
+  see one founder's details, edit them, deactivate / activate the account, or delete it.
+  The rows come from the admin_list_founders() database function (migrations 0004 and 0007).
+  Edits are saved by admin_update_founder() (migration 0009).
 -->
 <html lang="en" dir="ltr">
 <head>
@@ -23,16 +24,14 @@
       </div>
     </div>
 
-    <div class="toolbar">
+    <div class="toolbar" id="filter">
       <label class="search">
         <span id="search-icon"></span>
         <input type="search" id="search" data-i18n-placeholder="founders.search" data-i18n-aria-label="founders.search">
       </label>
-      <div class="founder-filters" id="filter">
-        <button type="button" class="pill is-active" data-filter="all" data-i18n="founders.all"></button>
-        <button type="button" class="pill" data-filter="active" data-i18n="founders.active"></button>
-        <button type="button" class="pill" data-filter="deactivated" data-i18n="founders.deactivated"></button>
-      </div>
+      <button type="button" class="pill is-active" data-filter="all" data-i18n="founders.all"></button>
+      <button type="button" class="pill" data-filter="active" data-i18n="founders.active"></button>
+      <button type="button" class="pill" data-filter="deactivated" data-i18n="founders.deactivated"></button>
     </div>
 
     <div class="table-card">
@@ -40,18 +39,22 @@
         <thead>
           <tr>
             <th data-i18n="founders.founder"></th>
-            <th data-i18n="founders.field"></th>
+            <th class="hide-small" data-i18n="founders.userType"></th>
             <th class="hide-small" data-i18n="founders.joined"></th>
-            <th class="hide-small" data-i18n="founders.assessments"></th>
+            <th class="hide-small founder-count" data-i18n="founders.assessments"></th>
+            <th data-i18n="founders.status"></th>
+            <th data-i18n-aria-label="founders.actions"></th>
           </tr>
         </thead>
         <!-- founder-management.js adds one row for each founder -->
         <tbody id="rows"></tbody>
       </table>
-      <p class="empty founder-empty" id="empty" hidden></p>
+      <!-- shows a spinner while loading, then "no match" / "no founders" / the load error -->
+      <p class="empty founder-empty" id="empty"><span class="spinner"></span></p>
     </div>
 
-    <!-- One founder's details. founder-management.js fills it. -->
+    <!-- One founder's details. founder-management.js fills it.
+         It has two modes: "view" (the details) and "edit" (a form). -->
     <aside class="panel" id="founder-panel" aria-labelledby="panel-name">
       <div class="panel-head">
         <div class="panel-person">
@@ -61,16 +64,20 @@
             <p class="text-3 panel-email" id="panel-email"></p>
           </div>
         </div>
-        <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
+        <div class="founder-panel-tools">
+          <button type="button" class="btn-icon" id="panel-edit" data-i18n-aria-label="founders.edit"></button>
+          <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
+        </div>
       </div>
 
-      <div class="panel-body">
-        <div class="tile founder-field-tile">
+      <!-- View mode -->
+      <div class="panel-body" id="panel-view">
+        <div class="tile founder-type-tile">
           <div>
-            <span class="text-3" data-i18n="founders.field"></span>
-            <strong class="founder-tile-value" id="panel-field"></strong>
+            <span class="text-3" data-i18n="founders.userType"></span>
+            <strong class="founder-tile-value" id="panel-type"></strong>
           </div>
-          <span class="founder-field-icon" id="panel-field-icon"></span>
+          <span class="founder-type-icon" id="panel-type-icon"></span>
         </div>
 
         <div class="founder-tiles">
@@ -84,7 +91,7 @@
           </div>
           <div class="tile">
             <span class="text-3" data-i18n="founders.assessments"></span>
-            <strong class="founder-tile-value" id="panel-assessments">—</strong>
+            <strong class="founder-tile-value" id="panel-assessments"></strong>
           </div>
           <div class="tile">
             <span class="text-3" data-i18n="founders.language"></span>
@@ -101,13 +108,68 @@
         <p class="text-3 founder-reports-empty" id="panel-reports-empty" data-i18n="founders.noReports"></p>
       </div>
 
-      <div class="panel-foot founder-panel-foot">
+      <!-- Edit mode -->
+      <form class="panel-body form" id="panel-form" novalidate hidden>
+        <div class="field">
+          <label class="label" for="edit-name" data-i18n="founders.fullName"></label>
+          <input class="input" id="edit-name" type="text" autocomplete="off" required>
+          <p class="field-error" id="edit-name-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="edit-username" data-i18n="founders.username"></label>
+          <input class="input" id="edit-username" type="text" autocomplete="off" dir="ltr" required>
+          <p class="field-error" id="edit-username-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="edit-email" data-i18n="founders.email"></label>
+          <input class="input" id="edit-email" type="email" dir="ltr" disabled>
+          <p class="field-hint" data-i18n="founders.emailHint"></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="edit-type" data-i18n="founders.userType"></label>
+          <select class="input" id="edit-type">
+            <option value="student" data-i18n="signup.student"></option>
+            <option value="entrepreneur" data-i18n="signup.entrepreneur"></option>
+            <option value="business_owner" data-i18n="signup.owner"></option>
+            <option value="investor" data-i18n="signup.investor"></option>
+            <option value="other" data-i18n="signup.other"></option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label class="label" for="edit-language" data-i18n="founders.language"></label>
+            <select class="input" id="edit-language">
+              <option value="ar" data-i18n="founders.arabic"></option>
+              <option value="en" data-i18n="founders.english"></option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="edit-status" data-i18n="founders.status"></label>
+            <select class="input" id="edit-status">
+              <option value="active" data-i18n="founders.activeOne"></option>
+              <option value="deactivated" data-i18n="founders.deactivatedOne"></option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+      <div class="panel-foot founder-panel-foot" id="foot-view">
         <button type="button" class="btn btn-secondary" id="status-button"></button>
-        <button type="button" class="btn btn-danger-soft" data-modal-open="delete-modal" data-i18n="founders.delete"></button>
+        <button type="button" class="btn btn-danger-soft" id="panel-delete" data-i18n="founders.delete"></button>
+      </div>
+
+      <div class="panel-foot founder-panel-foot" id="foot-edit" hidden>
+        <button type="button" class="btn btn-secondary" id="edit-cancel" data-i18n="founders.cancel"></button>
+        <button type="submit" class="btn btn-primary" form="panel-form" id="edit-save" data-i18n="founders.save"></button>
       </div>
     </aside>
 
     <dialog class="modal" id="delete-modal">
+      <span class="empty-icon founder-delete-icon" id="delete-icon"></span>
       <h3 class="modal-title" data-i18n="founders.deleteTitle"></h3>
       <p class="text-2" id="delete-text"></p>
       <div class="modal-actions">

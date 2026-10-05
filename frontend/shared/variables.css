@@ -41,6 +41,14 @@
   --warn: #E0B23E;  --warn-text: #9A6A12;  --warn-tint: #FBF4E3;
   --gauge: linear-gradient(90deg, #D64545, #EBC94F 50%, #2F9E6E);
 
+  /* user types (pastel chips on the admin Founders page). No green or red:
+     those mean active / deactivated next to them. */
+  --type-student-tint:  #EFEAFB;  --type-student-text:  #6A4FB3;   /* lavender */
+  --type-founder-tint:  #FDEDE2;  --type-founder-text:  #9E5320;   /* peach: entrepreneur */
+  --type-owner-tint:    #E4F0FB;  --type-owner-text:    #285F94;   /* sky blue: business owner */
+  --type-investor-tint: #FBE8F1;  --type-investor-text: #A0406F;   /* pink */
+  --type-other-tint:    #FAF2D8;  --type-other-text:    #7E6214;   /* butter yellow */
+
   /* gradients */
   --gradient-brand: linear-gradient(135deg, #2C8FB8, #1B4467);   /* primary buttons, avatar, highlights */
   --gradient-aurora:                                            /* soft glow behind hero / auth / home */
