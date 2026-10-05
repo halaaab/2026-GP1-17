@@ -44,6 +44,30 @@ function showCodeText() {
 }
 document.addEventListener('darb:language', showCodeText);
 
+/* Supabase sends one code per minute to an address. After a code is requested,
+   "Send a new code" waits and counts down, so nobody asks again too early. */
+const RESEND_WAIT = 60;   // seconds
+let resendTimer = null;
+
+function startResendWait() {
+  let secondsLeft = RESEND_WAIT;
+  clearInterval(resendTimer);
+  resendButton.disabled = true;
+
+  const tick = () => {
+    if (secondsLeft <= 0) {
+      clearInterval(resendTimer);
+      resendButton.disabled = false;
+      resendButton.textContent = t('adminLogin.resend');
+      return;
+    }
+    resendButton.textContent = `${t('adminLogin.resend')} (${secondsLeft})`;
+    secondsLeft -= 1;
+  };
+  tick();
+  resendTimer = setInterval(tick, 1000);
+}
+
 /* ---------- When the page opens ---------- */
 
 const account = await getAccount();
@@ -113,6 +137,7 @@ loginForm.addEventListener('submit', async (event) => {
   showAlert('code-info', '');
   showAlert('code-error', sent.ok ? '' : sent.error);
   showScreen('code');
+  startResendWait();
 });
 
 /* ---------- 2. The 6-digit code ---------- */
@@ -161,6 +186,7 @@ resendButton.addEventListener('click', async () => {
 
   if (sent.ok) {
     showAlert('code-info', 'adminLogin.resent');
+    startResendWait();
   } else {
     showAlert('code-error', sent.error);
   }
