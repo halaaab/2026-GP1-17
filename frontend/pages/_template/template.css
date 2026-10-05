@@ -1,0 +1,7 @@
+/* Styles for this page only.
+   Use tokens from shared/variables.css, for example var(--text-2) or var(--r-md).
+   If two pages need the same style, move it to shared/shared.css. */
+
+.template-subtitle {
+  margin: 4px 0 0;
+}
