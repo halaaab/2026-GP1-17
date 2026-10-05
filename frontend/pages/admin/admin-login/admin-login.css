@@ -1,0 +1,67 @@
+/* Admin login page only.
+   Shared pieces (inputs, buttons, screens, the split layout) are in shared/shared.css. */
+
+/* on wide screens the note is already on the side panel, so hide the copy under the form */
+@media (min-width: 961px) {
+  [data-screen="login"] .auth-switch {
+    display: none;
+  }
+}
+
+/* ---------- Two-step setup ---------- */
+
+.setup-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0 0 24px;
+  padding-inline-start: 20px;
+  font-size: 14.5px;
+  color: var(--text-nav);
+}
+.setup-steps li::marker {
+  font-weight: 800;
+  color: var(--navy);
+}
+
+/* the QR code to scan */
+.qr {
+  display: block;
+  width: 176px;
+  height: 176px;
+  margin-top: 12px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: #fff;
+}
+.setup-manual {
+  margin: 10px 0 0;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+.setup-manual code {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  font-size: 12px;
+  word-break: break-all;
+}
+
+/* the box for the 6 digits: large, spaced out and centered */
+.code-input {
+  height: 56px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+
+/* a link that is really a button ("Sign in with a different account") */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}

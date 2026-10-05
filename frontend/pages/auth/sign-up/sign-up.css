@@ -1,0 +1,272 @@
+/* Sign-up page only.
+   Shared pieces (inputs, buttons, the split photo layout) are in shared/shared.css. */
+
+/* ---------- The path at the top: three stops joined by a line ---------- */
+
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 36px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.steps-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color var(--dur);
+}
+/* the line between two stops */
+.steps-item + .steps-item::before {
+  content: '';
+  width: 32px;
+  height: 3px;
+  margin-inline-end: 2px;
+  border-radius: var(--r-pill);
+  /* the line fills with color when the stop after it is reached */
+  background: linear-gradient(90deg, var(--teal), var(--navy)) 0 0 / 0% 100% no-repeat, var(--border);
+  transition: background-size 0.6s var(--ease);
+}
+html[dir="rtl"] .steps-item + .steps-item::before {
+  background-position: 100% 0, 0 0;
+}
+.steps-dot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  font-size: 13px;
+  transition: background var(--dur), border-color var(--dur), color var(--dur), transform var(--dur) var(--ease);
+}
+.steps-item.is-current,
+.steps-item.is-done {
+  color: var(--text);
+}
+.steps-item.is-current::before,
+.steps-item.is-done::before {
+  background-size: 100% 100%, auto;
+}
+.steps-item.is-current .steps-dot {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+  transform: scale(1.1);
+}
+.steps-item.is-done .steps-dot {
+  border-color: var(--teal);
+  background: var(--teal);
+  color: #fff;
+}
+
+/* ---------- One question at a time ---------- */
+
+.step {
+  display: none;
+}
+.step.is-active {
+  display: block;
+  animation: step-in 0.55s var(--ease) both;
+}
+/* a new question slides in from the side you are moving toward.
+   sign-up.js sets --from to 1 (forward) or -1 (back). */
+@keyframes step-in {
+  from { opacity: 0; transform: translateX(calc(var(--from, 1) * 36px)); }
+  to   { opacity: 1; transform: none; }
+}
+html[dir="rtl"] .step.is-active {
+  animation-name: step-in-rtl;
+}
+@keyframes step-in-rtl {
+  from { opacity: 0; transform: translateX(calc(var(--from, 1) * -36px)); }
+  to   { opacity: 1; transform: none; }
+}
+
+.step-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 28px;
+}
+.step-actions .btn-primary {
+  min-width: 160px;
+}
+
+/* ---------- Step 1: the four choices ---------- */
+
+.choices {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.choice {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 18px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    border-color var(--dur),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.choice strong {
+  font-size: 16px;
+}
+.choice:hover {
+  border-color: var(--text-3);
+  transform: translateY(-2px);
+}
+/* the real radio button is hidden; the whole card is the button */
+.choice input {
+  position: absolute;
+  opacity: 0;
+}
+.choice-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: var(--bg-muted);
+  color: var(--text-nav);
+  transition: background var(--dur), color var(--dur);
+}
+/* the chosen card */
+.choice:has(input:checked) {
+  border-color: var(--navy);
+  box-shadow: 0 0 0 4px var(--navy-tint), var(--shadow-float);
+}
+.choice:has(input:checked) .choice-icon {
+  background: var(--navy);
+  color: #fff;
+}
+.choice:has(input:focus-visible) {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* ---------- Details step ---------- */
+
+/* small title above each group of questions: "Residence Information", "Student Information"... */
+.details-title {
+  margin: 28px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 15px;
+  font-weight: 800;
+}
+.auth-title + .details-title,
+.alert + .details-title {
+  margin-top: 24px;
+}
+
+/* Yes / No: two buttons, one can be chosen */
+.yes-no {
+  display: flex;
+  gap: 8px;
+}
+.yes-no label {
+  flex: 1;
+  cursor: pointer;
+}
+.yes-no input {
+  position: absolute;
+  opacity: 0;
+}
+.yes-no span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  font-size: 14px;
+  font-weight: 700;
+  transition: border-color var(--dur-fast), background var(--dur-fast), color var(--dur-fast);
+}
+.yes-no label:hover span {
+  border-color: var(--text-3);
+}
+.yes-no input:checked + span {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+.yes-no input:focus-visible + span {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* the fifth card ("Other") takes the full width under the other four */
+.choice:nth-child(5) {
+  grid-column: 1 / -1;
+}
+
+/* ---------- Done ---------- */
+
+.done-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+  border-radius: 20px;
+  background: var(--teal-tint);
+  color: var(--teal-text);
+}
+
+#google-area {
+  margin-bottom: 20px;
+}
+.account-or {
+  margin-block: 24px 20px;
+}
+#google-area .divider-text {
+  margin-top: 20px;
+}
+
+@media (max-width: 640px) {
+  .steps {
+    margin-bottom: 24px;
+  }
+  .steps-item + .steps-item::before {
+    width: 14px;
+  }
+  /* on a phone only the current stop shows its name */
+  .steps-item:not(.is-current) > span:last-child {
+    display: none;
+  }
+  .choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* on a phone a choice is a row: icon, then the two lines of text */
+  .choice {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 14px;
+    align-items: center;
+    padding: 14px;
+  }
+  .choice-icon {
+    grid-row: span 2;
+    margin-bottom: 0;
+  }
+  .step-actions .btn {
+    flex: 1;
+  }
+}
