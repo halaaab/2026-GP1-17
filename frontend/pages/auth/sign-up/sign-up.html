@@ -1,0 +1,459 @@
+<!doctype html>
+<!--
+  SIGN UP
+  A short conversation instead of one long form: one question at a time.
+  A small path at the top shows where you are.
+    Step 1  academic or professional status      (saved as user_type)
+    Step 2  full name and username
+    Step 3  where they live, then the questions for the status chosen in step 1
+    Step 4  email and password
+    Done    "check your inbox"
+
+  People who signed in with Google also come here: they answer steps 1 to 3
+  and skip step 4, because Google already gave us their email.
+
+  The side panel with the live demo comes from shared/layout.js (data-layout="auth").
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb — Sign up</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="sign-up.css">
+  <script>
+    // Coming back from Google, or already signed in: keep the form hidden until
+    // the page knows where to send the person, so it never flashes on screen.
+    var comingBack = location.hash.indexOf('access_token') > -1 || location.search.indexOf('code=') > -1;
+    var signedIn = Object.keys(localStorage).some(function (key) { return key.indexOf('sb-') === 0 && key.indexOf('-auth-token') > -1; });
+    if (comingBack || signedIn) document.documentElement.classList.add('is-checking');
+  </script>
+</head>
+<body data-layout="auth">
+
+  <main>
+
+    <!-- The path: one stop per question. sign-up.js marks the stops that are done. -->
+    <ol class="steps" id="steps" aria-hidden="true">
+      <li class="steps-item is-current"><span class="steps-dot">1</span><span data-i18n="signup.stepYou"></span></li>
+      <li class="steps-item"><span class="steps-dot">2</span><span data-i18n="signup.stepName"></span></li>
+      <li class="steps-item"><span class="steps-dot">3</span><span data-i18n="signup.stepDetails"></span></li>
+      <li class="steps-item" id="account-stop"><span class="steps-dot">4</span><span data-i18n="signup.stepAccount"></span></li>
+    </ol>
+
+    <form id="sign-up-form" novalidate>
+
+      <!-- ============ Step 1: who are you? ============ -->
+      <section class="step is-active" data-step="0">
+        <h1 class="auth-title" data-i18n="signup.q1"></h1>
+        <p class="auth-sub" data-i18n="signup.q1sub"></p>
+
+        <!-- Fastest way in. Hidden for people who already came through Google. -->
+        <div id="google-area">
+          <button type="button" class="btn btn-secondary btn-lg btn-block btn-google" id="google-button">
+            <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.2c0-.800-.100-1.5-.200-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.5-2.7c-1 .700-2.3 1.1-3.8 1.1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8l3.6-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.600 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>
+            <span data-i18n="auth.google"></span>
+          </button>
+          <div class="divider-text" data-i18n="auth.or"></div>
+        </div>
+
+        <div class="choices" role="radiogroup">
+          <label class="choice">
+            <input type="radio" name="userType" value="student">
+            <span class="choice-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span>
+            <strong data-i18n="signup.student"></strong>
+            <span class="text-2" data-i18n="signup.studentText"></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="userType" value="entrepreneur">
+            <span class="choice-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z"/></svg></span>
+            <strong data-i18n="signup.entrepreneur"></strong>
+            <span class="text-2" data-i18n="signup.entrepreneurText"></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="userType" value="business_owner">
+            <span class="choice-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9l1.5-5h15L21 9"/><path d="M4 9v11h16V9"/><path d="M9 20v-6h6v6"/></svg></span>
+            <strong data-i18n="signup.owner"></strong>
+            <span class="text-2" data-i18n="signup.ownerText"></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="userType" value="investor">
+            <span class="choice-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span>
+            <strong data-i18n="signup.investor"></strong>
+            <span class="text-2" data-i18n="signup.investorText"></span>
+          </label>
+          <label class="choice">
+            <input type="radio" name="userType" value="other">
+            <span class="choice-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg></span>
+            <strong data-i18n="signup.other"></strong>
+            <span class="text-2" data-i18n="signup.otherText"></span>
+          </label>
+        </div>
+        <p class="field-error" data-error-for="userType" hidden></p>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-primary btn-lg" data-next data-i18n="auth.continue"></button>
+        </div>
+      </section>
+
+      <!-- ============ Step 2: name ============ -->
+      <section class="step" data-step="1">
+        <h1 class="auth-title" id="name-title" data-i18n="signup.q2"></h1>
+        <p class="auth-sub" data-i18n="signup.q2sub"></p>
+
+        <div class="form">
+          <div class="field">
+            <label class="label" for="fullName" data-i18n="auth.fullName"></label>
+            <input class="input" id="fullName" name="fullName" type="text" autocomplete="name" data-i18n-placeholder="auth.fullNamePlaceholder">
+            <p class="field-error" data-error-for="fullName" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="username" data-i18n="auth.username"></label>
+            <input class="input" id="username" name="username" type="text" autocomplete="username" dir="ltr" data-i18n-placeholder="auth.usernamePlaceholder">
+            <p class="field-hint" data-i18n="auth.usernameHint"></p>
+            <p class="field-error" data-error-for="username" hidden></p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-ghost btn-lg" data-back data-i18n="auth.back"></button>
+          <button type="button" class="btn btn-primary btn-lg" data-next data-i18n="auth.continue"></button>
+        </div>
+      </section>
+
+      <!-- ============ Step 3: where the person lives, then the questions for their category ============
+           How the fields work (sign-up.js reads these attributes, so a new field needs no new JavaScript):
+             data-column      the column of the users table the answer is saved to
+             data-required    the field must be filled in when it is showing
+             data-show-when   the field shows only when another answer has a certain value,
+                              for example  data-show-when="country=SA"
+                              ("!=" means "is not", and "&" joins two conditions)
+             data-searchable  turns a dropdown into one you can type in to search (shared/ui.js)
+           A field that is hidden is emptied and is not checked. -->
+      <section class="step" data-step="2">
+        <h1 class="auth-title" data-i18n="signup.q1"></h1>
+
+        <div class="alert alert-risk" id="details-error" hidden></div>
+
+        <!-- Residence: asked for every category -->
+        <h2 class="details-title" data-i18n="signup.residence"></h2>
+        <div class="form">
+          <div class="field">
+            <label class="label is-required" for="country" data-i18n="signup.country"></label>
+            <!-- the list of countries is filled in by sign-up.js, in the page's language -->
+            <select class="input" id="country" name="country" data-column="country_code" data-required data-searchable></select>
+            <p class="field-error" data-error-for="country" hidden></p>
+          </div>
+          <div class="field" data-show-when="country=SA">
+            <label class="label is-required" for="region" data-i18n="signup.region"></label>
+            <select class="input" id="region" name="region" data-column="region" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="riyadh" data-i18n="signup.region.riyadh"></option>
+              <option value="makkah" data-i18n="signup.region.makkah"></option>
+              <option value="madinah" data-i18n="signup.region.madinah"></option>
+              <option value="eastern" data-i18n="signup.region.eastern"></option>
+              <option value="qassim" data-i18n="signup.region.qassim"></option>
+              <option value="asir" data-i18n="signup.region.asir"></option>
+              <option value="tabuk" data-i18n="signup.region.tabuk"></option>
+              <option value="hail" data-i18n="signup.region.hail"></option>
+              <option value="northern_borders" data-i18n="signup.region.northern_borders"></option>
+              <option value="jazan" data-i18n="signup.region.jazan"></option>
+              <option value="najran" data-i18n="signup.region.najran"></option>
+              <option value="baha" data-i18n="signup.region.baha"></option>
+              <option value="jawf" data-i18n="signup.region.jawf"></option>
+            </select>
+            <p class="field-error" data-error-for="region" hidden></p>
+          </div>
+        </div>
+
+        <!-- The title of the category's own questions (sign-up.js sets the words) -->
+        <h2 class="details-title" id="details-title"></h2>
+
+        <!-- Student -->
+        <div class="form details" data-for="student" hidden>
+          <div class="field">
+            <label class="label is-required" for="fieldOfStudy" data-i18n="signup.fieldOfStudy"></label>
+            <select class="input" id="fieldOfStudy" name="fieldOfStudy" data-column="field_of_study" data-required data-searchable>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="computer_science" data-i18n="signup.study.computer_science"></option>
+              <option value="information_technology" data-i18n="signup.study.information_technology"></option>
+              <option value="information_systems" data-i18n="signup.study.information_systems"></option>
+              <option value="software_engineering" data-i18n="signup.study.software_engineering"></option>
+              <option value="computer_engineering" data-i18n="signup.study.computer_engineering"></option>
+              <option value="artificial_intelligence" data-i18n="signup.study.artificial_intelligence"></option>
+              <option value="data_science" data-i18n="signup.study.data_science"></option>
+              <option value="cybersecurity" data-i18n="signup.study.cybersecurity"></option>
+              <option value="business_administration" data-i18n="signup.study.business_administration"></option>
+              <option value="entrepreneurship" data-i18n="signup.study.entrepreneurship"></option>
+              <option value="finance" data-i18n="signup.study.finance"></option>
+              <option value="accounting" data-i18n="signup.study.accounting"></option>
+              <option value="marketing" data-i18n="signup.study.marketing"></option>
+              <option value="engineering" data-i18n="signup.study.engineering"></option>
+              <option value="health_sciences" data-i18n="signup.study.health_sciences"></option>
+              <option value="law" data-i18n="signup.study.law"></option>
+              <option value="design" data-i18n="signup.study.design"></option>
+              <option value="other" data-i18n="signup.study.other"></option>
+            </select>
+            <p class="field-error" data-error-for="fieldOfStudy" hidden></p>
+          </div>
+          <div class="field" data-show-when="fieldOfStudy=other">
+            <label class="label is-required" for="fieldOfStudyOther" data-i18n="signup.fieldOfStudyOther"></label>
+            <input class="input" id="fieldOfStudyOther" name="fieldOfStudyOther" type="text" maxlength="80" data-column="field_of_study" data-required>
+            <p class="field-error" data-error-for="fieldOfStudyOther" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label is-required" for="academicLevel" data-i18n="signup.academicLevel"></label>
+            <select class="input" id="academicLevel" name="academicLevel" data-column="education_level" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="diploma" data-i18n="signup.level.diploma"></option>
+              <option value="bachelor" data-i18n="signup.level.bachelor"></option>
+              <option value="master" data-i18n="signup.level.master"></option>
+              <option value="phd" data-i18n="signup.level.phd"></option>
+              <option value="other" data-i18n="signup.level.other"></option>
+            </select>
+            <p class="field-error" data-error-for="academicLevel" hidden></p>
+          </div>
+          <div class="field">
+            <span class="label is-required" data-i18n="signup.priorQuestion"></span>
+            <div class="yes-no" role="radiogroup">
+              <label><input type="radio" name="studentExperience" value="yes" data-column="has_prior_venture" data-type="yes-no" data-required><span data-i18n="signup.yes"></span></label>
+              <label><input type="radio" name="studentExperience" value="no" data-column="has_prior_venture" data-type="yes-no" data-required><span data-i18n="signup.no"></span></label>
+            </div>
+            <p class="field-error" data-error-for="studentExperience" hidden></p>
+          </div>
+          <div class="field" data-show-when="studentExperience=yes">
+            <label class="label is-required" for="studentSector" data-i18n="signup.projectSector"></label>
+            <select class="input" id="studentSector" name="studentSector" data-column="project_sector" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="ai_software" data-i18n="signup.sector.ai_software"></option>
+              <option value="ecommerce" data-i18n="signup.sector.ecommerce"></option>
+              <option value="fintech" data-i18n="signup.sector.fintech"></option>
+              <option value="food_beverage" data-i18n="signup.sector.food_beverage"></option>
+              <option value="other" data-i18n="signup.sector.other"></option>
+            </select>
+            <p class="field-error" data-error-for="studentSector" hidden></p>
+          </div>
+          <div class="field" data-show-when="studentSector=other">
+            <label class="label is-required" for="studentSectorOther" data-i18n="signup.projectSectorOther"></label>
+            <input class="input" id="studentSectorOther" name="studentSectorOther" type="text" maxlength="80" data-column="project_sector" data-required>
+            <p class="field-error" data-error-for="studentSectorOther" hidden></p>
+          </div>
+          <div class="field" data-show-when="studentExperience=yes">
+            <label class="label is-required" for="studentStage" data-i18n="signup.projectStage"></label>
+            <select class="input" id="studentStage" name="studentStage" data-column="project_stage" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="idea" data-i18n="signup.stage.idea"></option>
+              <option value="validation" data-i18n="signup.stage.validation"></option>
+              <option value="prototype" data-i18n="signup.stage.prototype"></option>
+              <option value="launch" data-i18n="signup.stage.launch"></option>
+              <option value="revenue" data-i18n="signup.stage.revenue"></option>
+              <option value="growth" data-i18n="signup.stage.growth"></option>
+            </select>
+            <p class="field-error" data-error-for="studentStage" hidden></p>
+          </div>
+        </div>
+
+        <!-- Entrepreneur -->
+        <div class="form details" data-for="entrepreneur" hidden>
+          <div class="field">
+            <label class="label is-required" for="entrepreneurSector" data-i18n="signup.projectSector"></label>
+            <select class="input" id="entrepreneurSector" name="entrepreneurSector" data-column="project_sector" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="ai_software" data-i18n="signup.sector.ai_software"></option>
+              <option value="ecommerce" data-i18n="signup.sector.ecommerce"></option>
+              <option value="fintech" data-i18n="signup.sector.fintech"></option>
+              <option value="food_beverage" data-i18n="signup.sector.food_beverage"></option>
+              <option value="other" data-i18n="signup.sector.other"></option>
+            </select>
+            <p class="field-error" data-error-for="entrepreneurSector" hidden></p>
+          </div>
+          <div class="field" data-show-when="entrepreneurSector=other">
+            <label class="label is-required" for="entrepreneurSectorOther" data-i18n="signup.projectSectorOther"></label>
+            <input class="input" id="entrepreneurSectorOther" name="entrepreneurSectorOther" type="text" maxlength="80" data-column="project_sector" data-required>
+            <p class="field-error" data-error-for="entrepreneurSectorOther" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label is-required" for="entrepreneurStage" data-i18n="signup.projectStage"></label>
+            <select class="input" id="entrepreneurStage" name="entrepreneurStage" data-column="project_stage" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="idea" data-i18n="signup.stage.idea"></option>
+              <option value="validation" data-i18n="signup.stage.validation"></option>
+              <option value="prototype" data-i18n="signup.stage.prototype"></option>
+              <option value="launch" data-i18n="signup.stage.launch"></option>
+              <option value="revenue" data-i18n="signup.stage.revenue"></option>
+              <option value="growth" data-i18n="signup.stage.growth"></option>
+            </select>
+            <p class="field-error" data-error-for="entrepreneurStage" hidden></p>
+          </div>
+        </div>
+
+        <!-- Business owner -->
+        <div class="form details" data-for="business_owner" hidden>
+          <div class="field">
+            <label class="label is-required" for="businessSector" data-i18n="signup.businessSector"></label>
+            <select class="input" id="businessSector" name="businessSector" data-column="current_business_sector" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="ai_software" data-i18n="signup.sector.ai_software"></option>
+              <option value="ecommerce" data-i18n="signup.sector.ecommerce"></option>
+              <option value="fintech" data-i18n="signup.sector.fintech"></option>
+              <option value="food_beverage" data-i18n="signup.sector.food_beverage"></option>
+              <option value="other" data-i18n="signup.sector.other"></option>
+            </select>
+            <p class="field-error" data-error-for="businessSector" hidden></p>
+          </div>
+          <div class="field" data-show-when="businessSector=other">
+            <label class="label is-required" for="businessSectorOther" data-i18n="signup.businessSectorOther"></label>
+            <input class="input" id="businessSectorOther" name="businessSectorOther" type="text" maxlength="80" data-column="current_business_sector" data-required>
+            <p class="field-error" data-error-for="businessSectorOther" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label is-required" for="businessAge" data-i18n="signup.businessAge"></label>
+            <select class="input" id="businessAge" name="businessAge" data-column="business_age" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="lt1" data-i18n="signup.age.lt1"></option>
+              <option value="1_3" data-i18n="signup.age.1_3"></option>
+              <option value="4_5" data-i18n="signup.age.4_5"></option>
+              <option value="gt5" data-i18n="signup.age.gt5"></option>
+            </select>
+            <p class="field-error" data-error-for="businessAge" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label is-required" for="businessSize" data-i18n="signup.businessSize"></label>
+            <select class="input" id="businessSize" name="businessSize" data-column="business_size" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="micro" data-i18n="signup.size.micro"></option>
+              <option value="small" data-i18n="signup.size.small"></option>
+              <option value="medium" data-i18n="signup.size.medium"></option>
+              <option value="large" data-i18n="signup.size.large"></option>
+            </select>
+            <p class="field-error" data-error-for="businessSize" hidden></p>
+          </div>
+        </div>
+
+        <!-- Investor -->
+        <div class="form details" data-for="investor" hidden>
+          <div class="field">
+            <label class="label is-required" for="investorType" data-i18n="signup.investorType"></label>
+            <select class="input" id="investorType" name="investorType" data-column="investor_type" data-required>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="individual" data-i18n="signup.itype.individual"></option>
+              <option value="vc_fund" data-i18n="signup.itype.vc_fund"></option>
+              <option value="investment_company" data-i18n="signup.itype.investment_company"></option>
+              <option value="corporate_arm" data-i18n="signup.itype.corporate_arm"></option>
+              <option value="other" data-i18n="signup.itype.other"></option>
+            </select>
+            <p class="field-error" data-error-for="investorType" hidden></p>
+          </div>
+          <div class="field" data-show-when="investorType=other">
+            <label class="label is-required" for="investorTypeOther" data-i18n="signup.investorTypeOther"></label>
+            <input class="input" id="investorTypeOther" name="investorTypeOther" type="text" maxlength="80" data-column="investor_type" data-required>
+            <p class="field-error" data-error-for="investorTypeOther" hidden></p>
+          </div>
+          <div class="field" data-show-when="investorType!=individual&investorType!=">
+            <label class="label is-required" for="investorEntity" data-i18n="signup.entity"></label>
+            <select class="input" id="investorEntity" name="investorEntity" data-column="organisation_name" data-required data-searchable>
+              <option value="" data-i18n="signup.select"></option>
+              <option value="STV" data-i18n="signup.entity.0"></option>
+              <option value="Sanabil Investments" data-i18n="signup.entity.1"></option>
+              <option value="Saudi Venture Capital Company (SVC)" data-i18n="signup.entity.2"></option>
+              <option value="Raed Ventures" data-i18n="signup.entity.3"></option>
+              <option value="Wa’ed Ventures" data-i18n="signup.entity.4"></option>
+              <option value="Impact46" data-i18n="signup.entity.5"></option>
+              <option value="Merak Capital" data-i18n="signup.entity.6"></option>
+              <option value="Nama Ventures" data-i18n="signup.entity.7"></option>
+              <option value="Vision Ventures" data-i18n="signup.entity.8"></option>
+              <option value="Hala Ventures" data-i18n="signup.entity.9"></option>
+              <option value="other" data-i18n="signup.entity.10"></option>
+            </select>
+            <p class="field-error" data-error-for="investorEntity" hidden></p>
+          </div>
+          <div class="field" data-show-when="investorEntity=other">
+            <label class="label is-required" for="investorEntityOther" data-i18n="signup.entityName"></label>
+            <input class="input" id="investorEntityOther" name="investorEntityOther" type="text" maxlength="80" data-column="organisation_name" data-required>
+            <p class="field-error" data-error-for="investorEntityOther" hidden></p>
+          </div>
+        </div>
+
+        <!-- Other -->
+        <div class="form details" data-for="other" hidden>
+          <div class="field">
+            <label class="label is-required" for="statusOther" data-i18n="signup.statusOther"></label>
+            <input class="input" id="statusOther" name="statusOther" type="text" maxlength="80" data-column="status_description" data-required>
+            <p class="field-error" data-error-for="statusOther" hidden></p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-ghost btn-lg" data-back data-i18n="auth.back"></button>
+          <!-- "Continue" for email sign-up, "Finish" for people who came through Google -->
+          <button type="button" class="btn btn-primary btn-lg" id="details-next" data-next data-i18n="auth.continue"></button>
+        </div>
+      </section>
+
+      <!-- ============ Step 4: email and password ============ -->
+      <section class="step" data-step="3">
+        <h1 class="auth-title" data-i18n="signup.q3"></h1>
+        <p class="auth-sub" data-i18n="signup.q3sub"></p>
+
+        <div class="alert alert-risk" id="form-error" hidden></div>
+
+        <div class="form">
+          <div class="field">
+            <label class="label" for="email" data-i18n="auth.email"></label>
+            <input class="input" id="email" name="email" type="email" autocomplete="email" dir="ltr" data-i18n-placeholder="auth.emailPlaceholder">
+            <p class="field-error" data-error-for="email" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="password" data-i18n="auth.password"></label>
+            <div class="input-group">
+              <input class="input" id="password" name="password" type="password" autocomplete="new-password" dir="ltr" data-i18n-placeholder="auth.passwordPlaceholder">
+              <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="auth.showPassword">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+              </button>
+            </div>
+            <!-- each rule gets a tick as soon as the password meets it -->
+            <ul class="rules" id="rules">
+              <li data-rule="length" data-i18n="reset.rule1"></li>
+              <li data-rule="lower" data-i18n="reset.rule2"></li>
+              <li data-rule="upper" data-i18n="reset.rule3"></li>
+              <li data-rule="number" data-i18n="reset.rule4"></li>
+              <li data-rule="symbol" data-i18n="reset.rule5"></li>
+            </ul>
+            <p class="field-error" data-error-for="password" hidden></p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn btn-ghost btn-lg" data-back data-i18n="auth.back"></button>
+          <button type="submit" class="btn btn-primary btn-lg" id="submit-button" data-i18n="signup.create"></button>
+        </div>
+
+        <!-- Google can replace the email and password. The answers above are kept. -->
+        <div class="divider-text account-or" data-i18n="auth.or"></div>
+        <button type="button" class="btn btn-secondary btn-lg btn-block btn-google" id="google-instead">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.5 12.2c0-.800-.100-1.5-.200-2.2H12v4.2h5.9a5 5 0 0 1-2.2 3.3v2.7h3.5c2.1-1.9 3.3-4.7 3.3-8z"/><path fill="#34A853" d="M12 23c3 0 5.5-1 7.3-2.7l-3.5-2.7c-1 .700-2.3 1.1-3.8 1.1-2.9 0-5.3-1.9-6.2-4.5H2.2v2.8A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.8 14.1a6.6 6.6 0 0 1 0-4.2V7.1H2.2a11 11 0 0 0 0 9.8l3.6-2.8z"/><path fill="#EA4335" d="M12 5.4c1.6 0 3.1.600 4.2 1.6l3.1-3.1A11 11 0 0 0 2.2 7.1l3.6 2.8C6.7 7.3 9.1 5.4 12 5.4z"/></svg>
+          <span data-i18n="signup.googleInstead"></span>
+        </button>
+      </section>
+
+      <!-- ============ Done: check your inbox ============ -->
+      <section class="step" data-step="4">
+        <span class="done-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg></span>
+        <h1 class="auth-title" data-i18n="signup.doneTitle"></h1>
+        <p class="auth-sub"><span data-i18n="signup.doneText"></span> <strong id="done-email" dir="ltr"></strong>. <span data-i18n="signup.doneHint"></span></p>
+        <div class="step-actions">
+          <a class="btn btn-primary btn-lg" href="../login/login.html" data-i18n="auth.login"></a>
+        </div>
+      </section>
+
+    </form>
+
+    <p class="auth-switch" id="have-account"><span data-i18n="auth.haveAccount"></span> <a class="link" href="../login/login.html" data-i18n="auth.login"></a></p>
+
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="sign-up.js"></script>
+</body>
+</html>

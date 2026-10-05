@@ -1,0 +1,576 @@
+<!doctype html>
+<!--
+  LANDING PAGE
+  - Top bar and footer: built by shared/layout.js (data-layout="public").
+  - Text: translations/en.json and ar.json, keys starting with "landing.".
+  - Styles for this page only: index.css.   Motion for this page only: index.js.
+  - An element with data-reveal fades in when it scrolls into view.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb — Startup Feasibility for Saudi Founders</title>
+  <link rel="stylesheet" href="shared/shared.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body data-layout="public">
+
+  <!-- thin line at the top that fills as you scroll: the "path" -->
+  <div class="scroll-path" aria-hidden="true"></div>
+
+  <main class="landing">
+
+    <!-- ================= HERO ================= -->
+    <section class="hero" id="top">
+      <!-- Background photo of Riyadh, faded so the text stays easy to read.
+           The picture is set in index.css (assets/images/hero-riyadh.jpg). -->
+      <div class="hero-photo" aria-hidden="true"></div>
+      <!-- Morning haze that lifts off the city when the page opens -->
+      <div class="hero-haze" aria-hidden="true"></div>
+
+      <div class="container hero-inner">
+        <div class="hero-text">
+          <span class="chip chip-teal hero-chip" data-i18n="landing.badgeText"></span>
+          <h1 class="headline hero-title">
+            <span class="line"><span data-i18n="landing.heroA"></span></span>
+            <span class="line"><span class="accent" data-i18n="landing.heroB"></span></span>
+          </h1>
+          <p class="lead hero-lead" data-i18n="landing.heroSub"></p>
+          <!-- The prompt box types example ideas by itself (index.js). Clicking it goes to sign up. -->
+          <a class="glass composer" href="pages/auth/sign-up/sign-up.html" data-i18n-aria-label="landing.ctaPrimary">
+            <p class="composer-text"><span id="typed"></span><span class="caret"></span></p>
+            <span class="composer-row">
+              <span class="pill"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3 6.3 2.2-6.3 2.2L12 19l-2.2-6.3-6.3-2.2 6.3-2.2z"/></svg><span data-i18n="landing.chatStatus"></span></span>
+              <span class="composer-send"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span>
+            </span>
+          </a>
+          <ul class="ticks hero-ticks">
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.ticks.0"></span></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.ticks.1"></span></li>
+            <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.ticks.2"></span></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SOURCES STRIP ================= -->
+    <section class="container" data-reveal>
+      <div class="strip">
+        <span class="eyebrow strip-label" data-i18n="landing.sourcesStrip"></span>
+        <!-- dir="ltr" keeps the scrolling direction the same in Arabic -->
+        <div class="marquee" dir="ltr">
+          <div class="marquee-track">
+          <span class="marquee-item"><b>MoC</b><span data-i18n="landing.sources.0.name"></span></span>
+          <span class="marquee-item"><b>MSH</b><span data-i18n="landing.sources.1.name"></span></span>
+          <span class="marquee-item"><b>ZATCA</b><span data-i18n="landing.sources.2.name"></span></span>
+          <span class="marquee-item"><b>BLD</b><span data-i18n="landing.sources.3.name"></span></span>
+          <span class="marquee-item"><b>HRSD</b><span data-i18n="landing.sources.4.name"></span></span>
+          <span class="marquee-item"><b>GOSI</b><span data-i18n="landing.sources.5.name"></span></span>
+          <span class="marquee-item"><b>SDAIA</b><span data-i18n="landing.sources.6.name"></span></span>
+          <span class="marquee-item"><b>SFDA</b><span data-i18n="landing.sources.7.name"></span></span>
+          <span class="marquee-item"><b>SASO</b><span data-i18n="landing.sources.8.name"></span></span>
+          <span class="marquee-item"><b>SAIP</b><span data-i18n="landing.sources.9.name"></span></span>
+          <span class="marquee-item"><b>CST</b><span data-i18n="landing.sources.10.name"></span></span>
+          <span class="marquee-item"><b>SPL</b><span data-i18n="landing.sources.11.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>MoC</b><span data-i18n="landing.sources.0.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>MSH</b><span data-i18n="landing.sources.1.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>ZATCA</b><span data-i18n="landing.sources.2.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>BLD</b><span data-i18n="landing.sources.3.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>HRSD</b><span data-i18n="landing.sources.4.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>GOSI</b><span data-i18n="landing.sources.5.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>SDAIA</b><span data-i18n="landing.sources.6.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>SFDA</b><span data-i18n="landing.sources.7.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>SASO</b><span data-i18n="landing.sources.8.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>SAIP</b><span data-i18n="landing.sources.9.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>CST</b><span data-i18n="landing.sources.10.name"></span></span>
+          <span class="marquee-item" aria-hidden="true"><b>SPL</b><span data-i18n="landing.sources.11.name"></span></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FEATURES ================= -->
+    <section class="container section-head" id="features" data-reveal>
+      <p class="eyebrow" data-i18n="landing.featKicker"></p>
+      <h2 class="headline headline-lg" data-i18n="landing.featTitle"></h2>
+      <p class="lead" data-i18n="landing.featSub"></p>
+    </section>
+
+    <!-- 1. Interactive analysis -->
+    <section class="container split" id="assistant">
+      <div class="split-text" data-reveal>
+        <span class="tag"><span class="tag-dot"></span><span data-i18n="landing.f1tag"></span></span>
+        <h3 class="headline headline-md" data-i18n="landing.f1t"></h3>
+        <p class="lead" data-i18n="landing.f1b"></p>
+        <ul class="ticks ticks-column">
+          <li style="--i: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.f1points.0"></span></li>
+          <li style="--i: 1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.f1points.1"></span></li>
+          <li style="--i: 2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.f1points.2"></span></li>
+        </ul>
+      </div>
+      <div class="card chat-card" data-reveal aria-hidden="true">
+        <div class="chat-head">
+          <span class="avatar"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3 6.3 2.2-6.3 2.2L12 19l-2.2-6.3-6.3-2.2 6.3-2.2z"/></svg></span>
+          <div><strong data-i18n="landing.chatName"></strong><span class="text-3" data-i18n="landing.chatStatus"></span></div>
+        </div>
+        <div class="chat-body">
+          <div class="bubble bubble-bot" style="--i: 0" data-i18n="landing.cv1"></div>
+          <div class="bubble bubble-user" style="--i: 1" data-i18n="landing.cv2"></div>
+          <div class="bubble bubble-bot" style="--i: 2" data-i18n="landing.cv3"></div>
+          <div class="bubble bubble-user" style="--i: 3" data-i18n="landing.cv4"></div>
+          <div class="bubble bubble-bot typing" style="--i: 4"><i></i><i></i><i></i></div>
+        </div>
+        <div class="chat-tools">
+          <span class="eyebrow" data-i18n="landing.cvTools"></span>
+          <span class="tool"><i></i><span data-i18n="landing.cvToolList.0"></span></span>
+          <span class="tool"><i></i><span data-i18n="landing.cvToolList.1"></span></span>
+          <span class="tool"><i></i><span data-i18n="landing.cvToolList.2"></span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Founder Intelligence Score -->
+    <section class="container">
+      <div class="section-head" data-reveal>
+        <span class="tag"><span class="tag-dot"></span><span data-i18n="landing.f2tag"></span></span>
+        <h3 class="headline headline-md" data-i18n="landing.f2t"></h3>
+        <p class="lead" data-i18n="landing.f2b"></p>
+      </div>
+      <div class="score-grid">
+        <!-- The gauge fills and counts up to 72 when it scrolls into view -->
+        <div class="card gauge-card" data-reveal id="gauge">
+          <span class="eyebrow" data-i18n="landing.fisLabel"></span>
+          <div class="gauge" dir="ltr">
+            <svg viewBox="0 0 200 118" aria-hidden="true">
+              <defs><linearGradient id="gauge-colors" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#D64545"/><stop offset="0.5" stop-color="#EBC94F"/><stop offset="1" stop-color="#2F9E6E"/></linearGradient></defs>
+              <path d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="#E6ECF1" stroke-width="16" stroke-linecap="round"/>
+              <path id="gauge-arc" d="M20 100 A80 80 0 0 1 180 100" fill="none" stroke="url(#gauge-colors)" stroke-width="16" stroke-linecap="round" stroke-dasharray="251.3" stroke-dashoffset="70.4"/>
+              <circle id="gauge-knob" cx="150.9" cy="38.3" r="11" fill="#ffffff" stroke="#22895B" stroke-width="5"/>
+            </svg>
+            <span class="gauge-number" id="gauge-number">72</span>
+          </div>
+          <div class="gauge-scale" dir="ltr"><span data-i18n="landing.gaugeLow"></span><span data-i18n="landing.gaugeHigh"></span></div>
+          <span class="chip chip-good" data-i18n="landing.promising"></span>
+          <p class="text-2" data-i18n="landing.gaugeNote"></p>
+        </div>
+        <div class="card" data-reveal style="--i: 1">
+          <div class="wf-head"><strong data-i18n="landing.wfTitle"></strong><span class="chip" data-i18n="landing.example"></span></div>
+          <div class="waterfall">
+            <div class="wf-row">
+              <span data-i18n="landing.waterfall.0.label"></span>
+              <div class="wf-track"><div class="wf-bar wf-base" style="inset-inline-start: 0%; width: 50%; --i: 0"></div></div>
+              <span class="wf-value wf-value-base">50</span>
+            </div>
+            <div class="wf-row">
+              <span data-i18n="landing.waterfall.1.label"></span>
+              <div class="wf-track"><div class="wf-bar wf-up" style="inset-inline-start: 50%; width: 14%; --i: 1"></div></div>
+              <span class="wf-value wf-value-up">+14</span>
+            </div>
+            <div class="wf-row">
+              <span data-i18n="landing.waterfall.2.label"></span>
+              <div class="wf-track"><div class="wf-bar wf-up" style="inset-inline-start: 64%; width: 12%; --i: 2"></div></div>
+              <span class="wf-value wf-value-up">+12</span>
+            </div>
+            <div class="wf-row">
+              <span data-i18n="landing.waterfall.3.label"></span>
+              <div class="wf-track"><div class="wf-bar wf-down" style="inset-inline-start: 73%; width: 3%; --i: 3"></div></div>
+              <span class="wf-value wf-value-down">−3</span>
+            </div>
+            <div class="wf-row">
+              <span data-i18n="landing.waterfall.4.label"></span>
+              <div class="wf-track"><div class="wf-bar wf-down" style="inset-inline-start: 72%; width: 1.5%; --i: 4"></div></div>
+              <span class="wf-value wf-value-down">−1</span>
+            </div>
+            <div class="wf-row wf-row-final">
+              <span data-i18n="landing.waterfall.5.label"></span>
+              <div class="wf-track"><div class="wf-bar wf-final" style="inset-inline-start: 0%; width: 72%; --i: 5"></div></div>
+              <span class="wf-value wf-value-final">72</span>
+            </div>
+          </div>
+          <div class="wf-legend">
+            <span><i class="wf-up"></i><span data-i18n="landing.wfUp"></span></span>
+            <span><i class="wf-down"></i><span data-i18n="landing.wfDown"></span></span>
+            <span class="text-3" data-i18n="landing.exampleNote"></span>
+          </div>
+        </div>
+      </div>
+      <div class="insights">
+        <div class="card insight" data-reveal style="--i: 0">
+          <span class="insight-dot insight-good"></span>
+          <div><span class="text-3" data-i18n="landing.insights.0.k"></span><strong data-i18n="landing.insights.0.v"></strong></div>
+        </div>
+        <div class="card insight" data-reveal style="--i: 1">
+          <span class="insight-dot insight-risk"></span>
+          <div><span class="text-3" data-i18n="landing.insights.1.k"></span><strong data-i18n="landing.insights.1.v"></strong></div>
+        </div>
+        <div class="card insight" data-reveal style="--i: 2">
+          <span class="insight-dot insight-info"></span>
+          <div><span class="text-3" data-i18n="landing.insights.2.k"></span><strong data-i18n="landing.insights.2.v"></strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Similar startups -->
+    <section class="container split">
+      <div class="split-text" data-reveal>
+        <span class="tag"><span class="tag-dot"></span><span data-i18n="landing.f3tag"></span></span>
+        <h3 class="headline headline-md" data-i18n="landing.f3t"></h3>
+        <p class="lead" data-i18n="landing.f3b"></p>
+        <ul class="ticks ticks-column">
+          <li style="--i: 0"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.f3points.0"></span></li>
+          <li style="--i: 1"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.f3points.1"></span></li>
+          <li style="--i: 2"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.f3points.2"></span></li>
+        </ul>
+      </div>
+      <div class="similar-stack" data-reveal aria-hidden="true">
+        <div class="card similar-card" style="--i: 0">
+          <div class="similar-top"><span class="rank">1</span><div class="lines"><span></span><span></span></div></div>
+          <div class="chips"><span class="chip chip-warn" data-i18n="landing.similar.0.tag"></span><span class="chip" data-i18n="landing.similar.0.city"></span><span class="chip chip-good" data-i18n="landing.similar.0.status"></span></div>
+          <div class="similar-match"><span class="text-3" data-i18n="landing.matchLabel"></span><div class="bar"><div class="bar-fill" style="width: 88%"></div></div></div>
+        </div>
+        <div class="card similar-card" style="--i: 1">
+          <div class="similar-top"><span class="rank">2</span><div class="lines"><span></span><span></span></div></div>
+          <div class="chips"><span class="chip chip-warn" data-i18n="landing.similar.1.tag"></span><span class="chip" data-i18n="landing.similar.1.city"></span><span class="chip chip-navy" data-i18n="landing.similar.1.status"></span></div>
+          <div class="similar-match"><span class="text-3" data-i18n="landing.matchLabel"></span><div class="bar"><div class="bar-fill" style="width: 74%"></div></div></div>
+        </div>
+        <div class="card similar-card" style="--i: 2">
+          <div class="similar-top"><span class="rank">3</span><div class="lines"><span></span><span></span></div></div>
+          <div class="chips"><span class="chip chip-warn" data-i18n="landing.similar.2.tag"></span><span class="chip" data-i18n="landing.similar.2.city"></span><span class="chip chip-risk" data-i18n="landing.similar.2.status"></span></div>
+          <div class="similar-match"><span class="text-3" data-i18n="landing.matchLabel"></span><div class="bar"><div class="bar-fill" style="width: 63%"></div></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Establishment roadmap: the line draws itself as you scroll -->
+    <section class="container">
+      <div class="section-head" data-reveal>
+        <span class="tag"><span class="tag-dot"></span><span data-i18n="landing.f5tag"></span></span>
+        <h3 class="headline headline-md" data-i18n="landing.f5t"></h3>
+        <p class="lead" data-i18n="landing.f5b"></p>
+      </div>
+      <div class="road" id="road">
+        <div class="road-line" aria-hidden="true"><div class="road-fill"></div></div>
+        <ol class="road-steps">
+          <li class="road-step">
+            <span class="road-dot"><span data-i18n="landing.journey.0.n"></span></span>
+            <div class="card road-card">
+              <strong data-i18n="landing.journey.0.title"></strong>
+              <span class="text-3" data-i18n="landing.journey.0.auth"></span>
+            </div>
+          </li>
+          <li class="road-step">
+            <span class="road-dot"><span data-i18n="landing.journey.1.n"></span></span>
+            <div class="card road-card">
+              <strong data-i18n="landing.journey.1.title"></strong>
+              <span class="text-3" data-i18n="landing.journey.1.auth"></span>
+            </div>
+          </li>
+          <li class="road-step">
+            <span class="road-dot"><span data-i18n="landing.journey.2.n"></span></span>
+            <div class="card road-card">
+              <strong data-i18n="landing.journey.2.title"></strong>
+              <span class="text-3" data-i18n="landing.journey.2.auth"></span>
+            </div>
+          </li>
+          <li class="road-step">
+            <span class="road-dot"><span data-i18n="landing.journey.3.n"></span></span>
+            <div class="card road-card">
+              <strong data-i18n="landing.journey.3.title"></strong>
+              <span class="text-3" data-i18n="landing.journey.3.auth"></span>
+            </div>
+          </li>
+          <li class="road-step">
+            <span class="road-dot"><span data-i18n="landing.journey.4.n"></span></span>
+            <div class="card road-card">
+              <strong data-i18n="landing.journey.4.title"></strong>
+              <span class="text-3" data-i18n="landing.journey.4.auth"></span>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- 5. Report -->
+    <section class="container" data-reveal>
+      <div class="card report">
+        <div class="report-art" aria-hidden="true">
+          <div class="report-page"><span></span><span></span><span></span><span></span><b>PDF</b></div>
+        </div>
+        <div class="report-text">
+          <span class="tag"><span class="tag-dot"></span><span data-i18n="landing.f6tag"></span></span>
+          <h3 class="headline headline-md" data-i18n="landing.f6t"></h3>
+          <p class="lead" data-i18n="landing.f6b"></p>
+          <div class="chips">
+            <span class="chip chip-navy" data-i18n="landing.f6chips.0"></span>
+            <span class="chip chip-navy" data-i18n="landing.f6chips.1"></span>
+            <span class="chip chip-navy" data-i18n="landing.f6chips.2"></span>
+            <span class="chip chip-navy" data-i18n="landing.f6chips.3"></span>
+            <span class="chip chip-navy" data-i18n="landing.f6chips.4"></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= EXPLORERS ================= -->
+    <section class="container section-head" id="explore" data-reveal>
+      <p class="eyebrow" data-i18n="landing.exKicker"></p>
+      <h2 class="headline headline-lg" data-i18n="landing.exTitle"></h2>
+      <p class="lead" data-i18n="landing.exSub"></p>
+    </section>
+
+    <!-- Three explorers in one place. Pick one on the side and its preview shows beside it.
+         They also change by themselves every few seconds (index.js). -->
+    <section class="container x-explore" id="explorers" data-reveal>
+      <div class="x-item is-active" data-x="0">
+        <div class="x-tab">
+          <button type="button" class="x-head" aria-expanded="true">
+            <span class="x-number">01</span>
+            <span class="headline x-title" data-i18n="landing.x1t"></span>
+          </button>
+          <!-- shown only while this explorer is selected -->
+          <div class="x-more"><div>
+            <p class="lead" data-i18n="landing.x1b"></p>
+            <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x1cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div></div>
+          <!-- fills while this explorer is on show, then the next one opens -->
+          <span class="x-timer" aria-hidden="true"></span>
+        </div>
+        <div class="x-panel">
+      <div class="card mock" aria-hidden="true">
+        <div class="mock-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span data-i18n="landing.searchStartups"></span></div>
+        <div class="chips">
+          <span class="pill is-active" data-i18n="landing.chips1.0.label"></span>
+          <span class="pill" data-i18n="landing.chips1.1.label"></span>
+          <span class="pill" data-i18n="landing.chips1.2.label"></span>
+          <span class="pill" data-i18n="landing.chips1.3.label"></span>
+        </div>
+        <div class="mock-tiles">
+          <div class="tile mock-tile">
+            <div class="lines"><span></span><span></span></div>
+            <div class="chips"><span class="chip chip-navy" data-i18n="landing.tiles.0.tag"></span><span class="chip" data-i18n="landing.tiles.0.city"></span></div>
+          </div>
+          <div class="tile mock-tile">
+            <div class="lines"><span></span><span></span></div>
+            <div class="chips"><span class="chip chip-warn" data-i18n="landing.tiles.1.tag"></span><span class="chip" data-i18n="landing.tiles.1.city"></span></div>
+          </div>
+          <div class="tile mock-tile">
+            <div class="lines"><span></span><span></span></div>
+            <div class="chips"><span class="chip chip-teal" data-i18n="landing.tiles.2.tag"></span><span class="chip" data-i18n="landing.tiles.2.city"></span></div>
+          </div>
+          <div class="tile mock-tile">
+            <div class="lines"><span></span><span></span></div>
+            <div class="chips"><span class="chip chip" data-i18n="landing.tiles.3.tag"></span><span class="chip" data-i18n="landing.tiles.3.city"></span></div>
+          </div>
+        </div>
+      </div>
+        </div>
+      </div>
+
+      <div class="x-item" data-x="1">
+        <div class="x-tab">
+          <button type="button" class="x-head" aria-expanded="false">
+            <span class="x-number">02</span>
+            <span class="headline x-title" data-i18n="landing.x2t"></span>
+          </button>
+          <!-- shown only while this explorer is selected -->
+          <div class="x-more"><div>
+            <p class="lead" data-i18n="landing.x2b"></p>
+            <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x2cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div></div>
+          <!-- fills while this explorer is on show, then the next one opens -->
+          <span class="x-timer" aria-hidden="true"></span>
+        </div>
+        <div class="x-panel">
+      <div class="programs" aria-hidden="true">
+        <div class="card program-card" style="--i: 0">
+          <span class="program-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3 6.3 2.2-6.3 2.2L12 19l-2.2-6.3-6.3-2.2 6.3-2.2z"/></svg></span>
+          <div class="program-text"><div class="lines"><span></span></div><div class="chips"><span class="chip chip-teal" data-i18n="landing.programs.0.type"></span><span class="chip" data-i18n="landing.programs.0.stage"></span></div></div>
+        </div>
+        <div class="card program-card" style="--i: 1">
+          <span class="program-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3 6.3 2.2-6.3 2.2L12 19l-2.2-6.3-6.3-2.2 6.3-2.2z"/></svg></span>
+          <div class="program-text"><div class="lines"><span></span></div><div class="chips"><span class="chip chip-teal" data-i18n="landing.programs.1.type"></span><span class="chip" data-i18n="landing.programs.1.stage"></span></div></div>
+        </div>
+        <div class="card program-card" style="--i: 2">
+          <span class="program-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.2 6.3 6.3 2.2-6.3 2.2L12 19l-2.2-6.3-6.3-2.2 6.3-2.2z"/></svg></span>
+          <div class="program-text"><div class="lines"><span></span></div><div class="chips"><span class="chip chip-teal" data-i18n="landing.programs.2.type"></span><span class="chip" data-i18n="landing.programs.2.stage"></span></div></div>
+        </div>
+      </div>
+        </div>
+      </div>
+
+      <div class="x-item" data-x="2">
+        <div class="x-tab">
+          <button type="button" class="x-head" aria-expanded="false">
+            <span class="x-number">03</span>
+            <span class="headline x-title" data-i18n="landing.x3t"></span>
+          </button>
+          <!-- shown only while this explorer is selected -->
+          <div class="x-more"><div>
+            <p class="lead" data-i18n="landing.x3b"></p>
+            <ul class="ticks ticks-column">
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.x3points.0"></span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.x3points.1"></span></li>
+              <li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg><span data-i18n="landing.x3points.2"></span></li>
+            </ul>
+            <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x3cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div></div>
+          <!-- fills while this explorer is on show, then the next one opens -->
+          <span class="x-timer" aria-hidden="true"></span>
+        </div>
+        <div class="x-panel">
+      <div class="req-demo" aria-hidden="true">
+        <div class="card req-list">
+          <div class="req-row">
+            <span class="req-abbr">MoC</span>
+            <div class="req-text"><strong data-i18n="landing.reqs.0.title"></strong><span class="text-3" data-i18n="landing.reqs.0.auth"></span></div>
+            <span class="chip chip-navy" data-i18n="landing.reqs.0.status"></span>
+          </div>
+          <div class="req-row">
+            <span class="req-abbr">ZATCA</span>
+            <div class="req-text"><strong data-i18n="landing.reqs.1.title"></strong><span class="text-3" data-i18n="landing.reqs.1.auth"></span></div>
+            <span class="chip chip-navy" data-i18n="landing.reqs.1.status"></span>
+          </div>
+          <div class="req-row">
+            <span class="req-abbr">BLD</span>
+            <div class="req-text"><strong data-i18n="landing.reqs.2.title"></strong><span class="text-3" data-i18n="landing.reqs.2.auth"></span></div>
+            <span class="chip chip-navy" data-i18n="landing.reqs.2.status"></span>
+          </div>
+          <div class="req-row">
+            <span class="req-abbr">SFDA</span>
+            <div class="req-text"><strong data-i18n="landing.reqs.3.title"></strong><span class="text-3" data-i18n="landing.reqs.3.auth"></span></div>
+            <span class="chip chip-warn" data-i18n="landing.reqs.3.status"></span>
+          </div>
+        </div>
+        <span class="req-note"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg><span data-i18n="landing.officialLink"></span></span>
+      </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= TRUSTED SOURCES ================= -->
+    <section class="container" id="sources">
+      <div class="section-head" data-reveal>
+        <p class="eyebrow" data-i18n="landing.srcKicker"></p>
+        <h2 class="headline headline-lg" data-i18n="landing.srcTitle"></h2>
+        <p class="lead" data-i18n="landing.srcSub"></p>
+      </div>
+      <div class="sources-grid">
+        <div class="source" data-reveal style="--i: 0">
+          <span class="source-abbr">MoC</span>
+          <div><strong data-i18n="landing.sources.0.name"></strong><span class="text-3" data-i18n="landing.sources.0.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 1">
+          <span class="source-abbr">MSH</span>
+          <div><strong data-i18n="landing.sources.1.name"></strong><span class="text-3" data-i18n="landing.sources.1.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 2">
+          <span class="source-abbr">ZATCA</span>
+          <div><strong data-i18n="landing.sources.2.name"></strong><span class="text-3" data-i18n="landing.sources.2.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 3">
+          <span class="source-abbr">BLD</span>
+          <div><strong data-i18n="landing.sources.3.name"></strong><span class="text-3" data-i18n="landing.sources.3.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 0">
+          <span class="source-abbr">HRSD</span>
+          <div><strong data-i18n="landing.sources.4.name"></strong><span class="text-3" data-i18n="landing.sources.4.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 1">
+          <span class="source-abbr">GOSI</span>
+          <div><strong data-i18n="landing.sources.5.name"></strong><span class="text-3" data-i18n="landing.sources.5.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 2">
+          <span class="source-abbr">SDAIA</span>
+          <div><strong data-i18n="landing.sources.6.name"></strong><span class="text-3" data-i18n="landing.sources.6.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 3">
+          <span class="source-abbr">SFDA</span>
+          <div><strong data-i18n="landing.sources.7.name"></strong><span class="text-3" data-i18n="landing.sources.7.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 0">
+          <span class="source-abbr">SASO</span>
+          <div><strong data-i18n="landing.sources.8.name"></strong><span class="text-3" data-i18n="landing.sources.8.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 1">
+          <span class="source-abbr">SAIP</span>
+          <div><strong data-i18n="landing.sources.9.name"></strong><span class="text-3" data-i18n="landing.sources.9.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 2">
+          <span class="source-abbr">CST</span>
+          <div><strong data-i18n="landing.sources.10.name"></strong><span class="text-3" data-i18n="landing.sources.10.use"></span></div>
+        </div>
+        <div class="source" data-reveal style="--i: 3">
+          <span class="source-abbr">SPL</span>
+          <div><strong data-i18n="landing.sources.11.name"></strong><span class="text-3" data-i18n="landing.sources.11.use"></span></div>
+        </div>
+      </div>
+      <p class="disclaimer" data-i18n="landing.srcDisclaimer"></p>
+    </section>
+
+    <!-- ================= ABOUT ================= -->
+    <section class="container split" id="about">
+      <div class="split-text" data-reveal>
+        <p class="eyebrow" data-i18n="landing.aboutKicker"></p>
+        <h2 class="headline headline-lg" data-i18n="landing.aboutTitle"></h2>
+        <p class="lead" data-i18n="landing.aboutP1"></p>
+        <p class="lead" data-i18n="landing.aboutP2"></p>
+        <div class="values">
+          <div class="tile"><strong data-i18n="landing.values.0.t"></strong><span class="text-2" data-i18n="landing.values.0.b"></span></div>
+          <div class="tile"><strong data-i18n="landing.values.1.t"></strong><span class="text-2" data-i18n="landing.values.1.b"></span></div>
+          <div class="tile"><strong data-i18n="landing.values.2.t"></strong><span class="text-2" data-i18n="landing.values.2.b"></span></div>
+        </div>
+        <p class="text-3" data-i18n="landing.ksu"></p>
+      </div>
+      <!-- dir="ltr" so the map and its pins never flip in Arabic -->
+      <div class="map-wrap" dir="ltr" data-reveal aria-hidden="true">
+        <div class="map-inner">
+          <svg viewBox="0 0 600 501" width="100%" class="map-svg" aria-hidden="true">
+          <defs>
+          <linearGradient id="mapg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EAF2F8"/><stop offset="0.6" stop-color="#C7D9E6"/><stop offset="1" stop-color="#8FAEC4"/></linearGradient>
+          <filter id="mapsh" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#1B4467" flood-opacity="0.22"/></filter>
+          </defs>
+          <path filter="url(#mapsh)" fill="url(#mapg)" stroke="#ffffff" stroke-width="3" stroke-linejoin="round" d="M236.9 480.8 L233.4 468.4 L225.4 459.6 L223.4 448.0 L209.6 437.6 L195.4 413.1 L187.9 389.4 L169.5 369.3 L157.6 364.5 L140.0 336.8 L136.9 316.5 L138.0 299.2 L122.8 266.9 L110.3 255.5 L95.9 249.5 L87.2 232.8 L88.6 226.2 L81.2 211.1 L73.4 204.6 L63.0 182.9 L46.8 159.4 L33.3 139.4 L20.0 139.6 L24.1 123.6 L25.3 113.4 L28.6 101.7 L58.2 106.4 L69.8 97.4 L76.1 86.9 L96.4 82.9 L100.8 73.1 L109.6 68.2 L83.1 39.0 L136.4 24.4 L141.5 20.0 L173.6 27.9 L213.2 48.3 L288.3 106.9 L337.8 109.2 L361.5 112.0 L368.1 125.9 L387.0 125.2 L397.4 150.3 L410.5 157.0 L415.0 167.2 L433.2 179.4 L434.8 191.5 L432.2 201.2 L435.5 211.0 L443.2 219.1 L446.7 228.7 L450.7 235.8 L458.8 241.6 L466.1 239.5 L471.2 250.7 L472.2 257.4 L482.4 286.9 L562.4 301.6 L567.8 295.5 L580.0 316.1 L562.3 374.4 L482.4 403.5 L405.6 414.7 L380.8 427.8 L361.7 458.4 L349.3 463.3 L342.6 453.6 L332.4 455.0 L306.7 452.1 L301.8 449.2 L271.1 449.9 L263.8 452.5 L252.9 444.9 L245.9 459.3 L248.6 471.5 L236.9 480.8 Z"/>
+          <g class="map-routes" stroke="#1B4467" stroke-width="1.5" stroke-dasharray="4 6" fill="none" opacity="0.35">
+          <path d="M342 237 Q240 260 141 331"/>
+          <path d="M342 237 Q390 200 432 187"/>
+          <path d="M342 237 Q250 230 153 244"/>
+          <path d="M342 237 Q300 340 230 426"/>
+          <path d="M342 237 Q200 150 72 130"/>
+          </g>
+          </svg>
+          <span class="map-pin" style="left: 57%; top: 47.3%; --i: 0"></span>
+          <span class="map-label" style="left: 60%; top: 41%" data-i18n="landing.cities.0.name"></span>
+          <span class="map-pin" style="left: 23.6%; top: 66.1%; --i: 1"></span>
+          <span class="map-label" style="left: 26%; top: 64%" data-i18n="landing.cities.1.name"></span>
+          <span class="map-pin" style="left: 72%; top: 37.3%; --i: 2"></span>
+          <span class="map-label" style="left: 75%; top: 31%" data-i18n="landing.cities.2.name"></span>
+          <span class="map-pin" style="left: 25.4%; top: 48.7%; --i: 3"></span>
+          <span class="map-label" style="left: 28%; top: 44%" data-i18n="landing.cities.3.name"></span>
+          <span class="map-pin" style="left: 11.9%; top: 26%; --i: 4"></span>
+          <span class="map-label" style="left: 15%; top: 19%" data-i18n="landing.cities.4.name"></span>
+          <span class="map-pin" style="left: 38.3%; top: 85.1%; --i: 5"></span>
+          <span class="map-label" style="left: 41%; top: 80%" data-i18n="landing.cities.5.name"></span>
+        </div>
+        <span class="chip chip-navy map-badge" data-i18n="landing.mapBadge"></span>
+      </div>
+    </section>
+
+    <!-- ================= CALL TO ACTION ================= -->
+    <section class="container" data-reveal>
+      <div class="cta">
+        <h2 class="headline headline-lg" data-i18n="landing.ctaTitle"></h2>
+        <p data-i18n="landing.ctaSub"></p>
+        <div class="cta-actions">
+          <a class="btn btn-lg cta-primary" href="pages/auth/sign-up/sign-up.html"><span data-i18n="landing.ctaPrimary"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          <a class="btn btn-lg cta-secondary" href="pages/auth/login/login.html" data-i18n="auth.login"></a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <script type="module" src="shared/layout.js"></script>
+  <script type="module" src="index.js"></script>
+</body>
+</html>

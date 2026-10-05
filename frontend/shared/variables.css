@@ -1,0 +1,86 @@
+/* ==========================================================
+   Darb design tokens
+   Every color, font, radius and shadow in the app lives here.
+   Pages must use var(--name) and never write raw values.
+   ========================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Manrope:wght@400;500;600;700;800&family=Almarai:wght@400;700;800&display=swap');
+
+:root {
+  /* surfaces */
+  --bg:            #FFFFFF;   /* main area */
+  --bg-subtle:     #F7F9FB;   /* sidebar, secondary areas */
+  --bg-muted:      #F2F5F8;   /* segmented controls, user chat bubbles */
+  --bg-tile:       #F6F8FA;   /* key-value tiles, KPI tiles */
+  --bg-hover:      #EEF2F6;   /* hover on ghost buttons and nav items */
+  --border:        #E6ECF1;   /* hairline */
+  --border-strong: #E1E8EE;   /* inputs, buttons */
+  --divider:       #EEF2F6;
+
+  /* text */
+  --text:      #0F2438;
+  --text-2:    #5B6B7B;
+  --text-3:    #8A97A4;
+  --text-nav:  #3F5163;
+
+  /* brand */
+  --navy:        #1B4467;     /* primary buttons, avatar, active */
+  --navy-hover:  #12324D;
+  --navy-tint:   #EEF3F8;
+  --navy-deep:   #0E2A42;     /* darkest navy: bottom of the landing hero, footer */
+  --teal:        #1F8E97;     /* single accent */
+  --teal-text:   #17777E;
+  --teal-tint:   #E3F4F5;
+  --teal-bright: #6FD3DA;     /* teal for text on dark navy */
+  --link-tint:   #E9F4F8;     /* action-link buttons */
+  --link-text:   #16627F;
+
+  /* semantic: good = high score, risk = low / closed, warn = medium */
+  --good: #22895B;  --good-text: #1F7A52;  --good-tint: #EAF6F0;
+  --risk: #D64545;  --risk-text: #B23A3A;  --risk-tint: #FBEBEB;
+  --warn: #E0B23E;  --warn-text: #9A6A12;  --warn-tint: #FBF4E3;
+  --gauge: linear-gradient(90deg, #D64545, #EBC94F 50%, #2F9E6E);
+
+  /* gradients */
+  --gradient-brand: linear-gradient(135deg, #2C8FB8, #1B4467);   /* primary buttons, avatar, highlights */
+  --gradient-aurora:                                            /* soft glow behind hero / auth / home */
+    radial-gradient(60% 50% at 15% 0%, rgba(31, 142, 151, 0.16), transparent 70%),
+    radial-gradient(50% 45% at 90% 10%, rgba(44, 143, 184, 0.16), transparent 70%),
+    radial-gradient(60% 60% at 50% 100%, rgba(27, 68, 103, 0.08), transparent 70%);
+
+  /* fonts */
+  --font-ui:      'Manrope', system-ui, sans-serif;   /* all normal text */
+  --font-display: 'DM Serif Display', serif;          /* "Darb" wordmark, greetings, big score numbers only */
+  --display-weight: 400;                              /* weight of the display font */
+
+  /* shape */
+  --r-sm:   10px;   /* buttons, inputs, nav items */
+  --r-md:   14px;   /* cards */
+  --r-lg:   20px;   /* panels, composer */
+  --r-pill: 999px;
+
+  /* depth */
+  --shadow-sm:    0 1px 3px rgba(15, 36, 56, 0.10);
+  --shadow-float: 0 1px 2px rgba(15, 36, 56, 0.04), 0 18px 48px -24px rgba(15, 36, 56, 0.22);
+  --shadow-panel: 0 30px 80px -30px rgba(15, 36, 56, 0.30);
+  --shadow-card:  0 1px 2px rgba(15, 36, 56, 0.04), 0 10px 24px -18px rgba(15, 36, 56, 0.20);
+  --shadow-brand: 0 8px 20px -10px rgba(27, 68, 103, 0.55);   /* under primary buttons */
+
+  /* motion */
+  --dur-fast: 0.15s;
+  --dur:      0.25s;
+  --ease:     cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* layout sizes */
+  --sidebar-w: 264px;
+  --header-h:  56px;
+  --content-w: 1120px;   /* max width of page content */
+}
+
+/* Arabic: same token names, Arabic font (Almarai).
+   language.js sets <html dir="rtl">, and every page switches automatically. */
+html[dir="rtl"] {
+  --font-ui:      'Almarai', system-ui, sans-serif;
+  --font-display: 'Almarai', system-ui, sans-serif;
+  --display-weight: 800;
+}
