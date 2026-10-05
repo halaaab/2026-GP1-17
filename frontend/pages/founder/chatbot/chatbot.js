@@ -10,17 +10,18 @@
 
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
-import { account } from '../../../shared/guard.js';
+import { getAccount } from '../../../shared/auth.js';
 import {
-  say, label, scoreBand, whenText, chatLink, roadmapFor,
-  getAssessments, getAssessment, saveAssessment, newAssessment, sampleResult,
-  showSidebarHistory, AGENT_STEPS, SIMILAR_STARTUPS,
+  say, label, scoreBand, whenText, chatLink, loadResult,
+  getAssessments, getAssessment, saveAssessment, saveMessage, newAssessment, sampleResult,
+  showSidebarHistory, AGENT_STEPS,
 } from '../../../shared/assessments.js';
+import { showToast } from '../../../shared/ui.js';
 import { openPanel, closePanel, roadmapList } from './panel.js';
 
 /* What Darb needs before it can run the analysis */
 const QUESTIONS = [
-  { field: 'sector', ask: 'chat.askSector', options: ['food', 'ecommerce', 'tech', 'fashion', 'education'] },
+  { field: 'sector', ask: 'chat.askSector', options: ['ai', 'food', 'fashion', 'furniture'] },
   { field: 'city',   ask: 'chat.askCity',   options: ['riyadh', 'jeddah', 'dammam'] },
   { field: 'model',  ask: 'chat.askModel',  options: ['commission', 'subscription', 'sales'] },
   { field: 'hiring', ask: 'chat.askHiring', options: ['yes', 'no', 'unsure'] },
@@ -48,7 +49,21 @@ let waitingFor = null;        // the question Darb is waiting an answer for
 let askingAbout = null;       // the startup the next question is about
 let busy = false;             // true while Darb is "working"
 
+let account = { role: 'none' };   // who is signed in; filled when the page opens (see the end of this file)
+
 const wait = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+/* Saves the conversation's state. If saving fails, the founder is told once
+   and can keep talking; the conversation just will not be in History. */
+let saveFailed = false;
+
+async function save() {
+  const worked = await saveAssessment(current);
+  if (!worked && !saveFailed) {
+    saveFailed = true;
+    showToast(t('chat.notSaved'), 'risk');
+  }
+}
 
 /* ---------- Adding messages to the conversation ---------- */
 
@@ -61,7 +76,7 @@ function addUser(text, about = null) {
   const row = document.createElement('div');
   row.className = 'msg msg-user';
   row.innerHTML = `${about ? `<span class="chip chip-teal msg-about"></span>` : ''}<p class="bubble"></p>`;
-  if (about) row.querySelector('.msg-about').textContent = say(about.name);
+  if (about) row.querySelector('.msg-about').textContent = about.name;
   row.querySelector('.bubble').textContent = text;   // as text, never as HTML
   thread.append(row);
   scrollToEnd();
@@ -145,7 +160,7 @@ function addResult() {
   const card = document.createElement('button');
   card.type = 'button';
   card.className = 'result-card';
-  card.dataset.openTab = 'overview';
+  card.dataset.openTab = 'score';
   card.innerHTML = `
     <span class="result-score is-${band}">${current.score}</span>
     <span class="result-text"><strong>${t('chat.cardTitle')}</strong><small>${t('chat.cardSub')}</small></span>
@@ -157,7 +172,7 @@ function addResult() {
 
 /* The roadmap inside the chat, with a button that opens it in the panel */
 function addRoadmap() {
-  const steps = roadmapFor(current).length;
+  const steps = current.result.roadmap.length;
   const body = addAgent(t('chat.roadmapIntro').replace('{n}', steps));
 
   const card = document.createElement('div');
@@ -188,12 +203,17 @@ function addFollowUps() {
   scrollToEnd();
 }
 
+/* One of the similar startups of this assessment, by its id */
+function findStartup(id) {
+  return current.result.similar.find((item) => item.id === id) || null;
+}
+
 /* The text of one follow-up answer from Darb */
 function replyText(message) {
-  const startup = SIMILAR_STARTUPS.find((item) => item.id === message.about);
+  const startup = findStartup(message.about);
   if (startup) {
-    const facts = [say(startup.name), label(startup.city), t('similar.founded').replace('{year}', startup.year), t(`status.${startup.status}`)];
-    return `${t('chat.startupReply')} ${facts.join(' · ')}. ${say(startup.about)}`;
+    const facts = [startup.name, startup.region, startup.stage].filter(Boolean);
+    return `${t('chat.startupReply')} ${facts.join(' · ')}. ${startup.about}`;
   }
   return t('chat.sampleReply');
 }
@@ -256,7 +276,7 @@ function showChat() {
 function showHeaderButton() {
   const actions = document.querySelector('#header-actions');
   actions.innerHTML = current && current.score
-    ? `<button type="button" class="btn btn-secondary btn-sm" data-open-tab="overview"><span class="chip chip-${scoreBand(current.score)}">${current.score}</span> ${t('chat.assessment')}</button>`
+    ? `<button type="button" class="btn btn-secondary btn-sm" data-open-tab="score"><span class="chip chip-${scoreBand(current.score)}">${current.score}</span> ${t('chat.assessment')}</button>`
     : '';
 }
 
@@ -267,6 +287,7 @@ async function askNext() {
 
   if (waitingFor) {
     addQuestion(waitingFor);
+    await saveMessage(current, 'agent', { text: t(waitingFor.ask) });
   } else {
     await runAnalysis();
   }
@@ -289,12 +310,14 @@ async function startConversation(idea) {
 
   showChat();
   addUser(idea);
-  await saveAssessment(current);
+  await save();
+  await saveMessage(current, 'user', { text: idea });
   history.replaceState(null, '', chatLink(current.id));
   showSidebarHistory();
 
   busy = true;
   await agentSays(introText());
+  await saveMessage(current, 'agent', { text: introText() });
   busy = false;
   await askNext();
 }
@@ -318,7 +341,8 @@ async function answerQuestion(answer) {
 
   addUser(label(answer));
   current[question.field] = answer;
-  await saveAssessment(current);
+  await save();
+  await saveMessage(current, 'user', { text: label(answer) });
   await askNext();
 }
 
@@ -330,10 +354,12 @@ async function runAnalysis() {
   await addTrace(true);
 
   Object.assign(current, sampleResult());
-  await saveAssessment(current);
+  await loadResult(current);   // the similar startups, market numbers and roadmap from the database
+  await save();
   busy = false;
 
   addResult();
+  await saveMessage(current, 'agent', { text: t('chat.result').replace('{score}', current.score) });
   addFollowUps();
   showHeaderButton();
   setPlaceholder();
@@ -353,7 +379,9 @@ async function followUp(text) {
   await agentSays(replyText(reply));
   busy = false;
 
-  await saveAssessment(current);
+  await save();
+  await saveMessage(current, 'user', { text, followUp: true, about: reply.about });
+  await saveMessage(current, 'agent', { text: replyText(reply), followUp: true, about: reply.about });
   addFollowUps();
 }
 
@@ -370,7 +398,9 @@ async function buildRoadmap() {
   busy = false;
 
   current.roadmapShown = true;
-  await saveAssessment(current);
+  await save();
+  await saveMessage(current, 'user', { text: t('chat.followRoadmap') });
+  await saveMessage(current, 'agent', { text: t('chat.roadmapIntro').replace('{n}', current.result.roadmap.length) });
   addRoadmap();
   addFollowUps();
 }
@@ -396,6 +426,8 @@ async function showSaved() {
     return;
   }
 
+  if (!current.result) await loadResult(current);
+
   addAgent(t('chat.confirm'));
   await addTrace(false);
   addResult();
@@ -407,7 +439,7 @@ async function showSaved() {
 
   for (const message of current.extra) {
     if (message.from === 'user') {
-      addUser(message.text, SIMILAR_STARTUPS.find((item) => item.id === message.about));
+      addUser(message.text, findStartup(message.about));
     } else {
       addAgent(replyText(message));
     }
@@ -423,7 +455,7 @@ async function showSaved() {
 function setAskingAbout(startup) {
   askingAbout = startup;
   contextBox.hidden = !startup;
-  document.querySelector('#composer-context-name').textContent = startup ? say(startup.name) : '';
+  document.querySelector('#composer-context-name').textContent = startup ? startup.name : '';
 }
 
 // the box grows with the text, up to a few lines
@@ -493,15 +525,41 @@ document.querySelector('#composer-context-remove').addEventListener('click', () 
 document.addEventListener('darb:ask-startup', (event) => {
   setAskingAbout(event.detail);
 
-  // on small screens the panel covers the chat, so close it to show the box
-  if (window.matchMedia('(max-width: 1280px)').matches) closePanel();
+  // go back to the conversation, where the question is written
+  closePanel();
   input.focus();
+  window.scrollTo(0, document.body.scrollHeight);
 });
 
 /* ---------- When the page opens ---------- */
 
 document.querySelector('#composer-send').innerHTML = icon('arrowUp');
 document.querySelector('#composer-context-remove').innerHTML = icon('close');
+
+// The conversation is text in the current language, so draw it again when the language
+// changes. This also covers a slow start, when the words arrive after this file has run.
+let pageIsReady = false;         // false while the page is still opening
+let languageCameLate = false;    // the words arrived while the page was opening
+
+function drawAgain() {
+  if (current) {
+    showSaved();
+  } else {
+    showHome();
+  }
+}
+
+document.addEventListener('darb:language', () => {
+  if (!pageIsReady) {
+    languageCameLate = true;
+  } else if (!busy) {
+    drawAgain();
+  }
+});
+
+// Ask who is signed in here, instead of reading it from guard.js: Safari can run this
+// file before guard.js has finished, and the greeting would have no name to show.
+account = await getAccount();
 
 const address = new URLSearchParams(window.location.search);
 
@@ -524,12 +582,5 @@ if (address.get('id')) {
 
 input.focus();
 
-// the conversation is text in the current language, so draw it again when the language changes
-document.addEventListener('darb:language', () => {
-  if (busy) return;
-  if (current) {
-    showSaved();
-  } else {
-    showHome();
-  }
-});
+pageIsReady = true;
+if (languageCameLate) drawAgain();
