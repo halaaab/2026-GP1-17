@@ -1,0 +1,1203 @@
+/* Chat page only: the home state, the conversation and the assessment panel.
+   Buttons, pills, chips, cards, tiles and bars come from shared/shared.css. */
+
+/* ==========================================================
+   1. The page: home state and conversation state
+   ========================================================== */
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  max-width: 760px;
+  min-height: calc(100dvh - var(--header-h) - 130px);
+  margin-inline: auto;
+}
+
+/* ----- Home ----- */
+
+.chat-home {
+  padding-top: 9vh;
+  margin-bottom: 26px;
+  text-align: center;
+}
+.chat-greeting {
+  margin: 0 0 8px;
+  font-size: clamp(28px, 4.4vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.chat-question {
+  margin: 0;
+  font-size: 16px;
+  color: var(--text-2);
+}
+
+.chat-start {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  margin-top: 16px;
+}
+.chat-examples {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
+/* a long example wraps inside its pill instead of leaving the screen */
+.chat-examples .pill {
+  height: auto;
+  min-height: 34px;
+  padding-block: 6px;
+  text-align: start;
+}
+
+.recent-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 13.5px;
+}
+.recent-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.recent-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  font-size: 12.5px;
+}
+.recent-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 22px;
+}
+.recent-title {
+  font-size: 14.5px;
+  color: var(--text);
+}
+
+/* ----- Conversation: the home pieces go away, the box sticks to the bottom ----- */
+
+.thread {
+  display: none;
+}
+.chat.is-started .chat-home,
+.chat.is-started .chat-start {
+  display: none;
+}
+.chat.is-started .thread {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 22px;
+  padding-bottom: 28px;
+}
+.chat.is-started .composer {
+  position: sticky;
+  inset-block-end: 16px;
+  z-index: 50;
+  /* the second shadow is a white strip under the box, so messages do not show below it */
+  box-shadow: var(--shadow-float), 0 28px 0 0 var(--bg);
+}
+
+/* this page has no title in the header, so give the header a background
+   and messages do not show through behind its buttons */
+body[data-page="chatbot"] .app-header {
+  background: var(--bg);
+}
+
+/* ==========================================================
+   2. The box the founder writes in
+   ========================================================== */
+
+.composer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: var(--r-lg);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.composer:focus-within {
+  border-color: var(--teal);
+}
+.composer-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+.composer-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 72px;
+  padding: 6px 8px;
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.chat.is-started .composer-input {
+  min-height: 38px;
+}
+.composer-input::placeholder {
+  color: var(--text-3);
+}
+.composer-send {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: var(--r-sm);
+  background: var(--navy);
+  color: var(--bg);
+  cursor: pointer;
+  transition: background var(--dur-fast), transform var(--dur-fast) var(--ease);
+}
+.composer-send:hover {
+  background: var(--navy-hover);
+  transform: translateY(-1px);
+}
+
+/* "Asking about (startup)" above the text */
+.composer-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  align-self: flex-start;
+  padding-block: 2px;
+  padding-inline: 10px 2px;
+  border-radius: var(--r-sm);
+  background: var(--teal-tint);
+  font-size: 12.5px;
+}
+.composer-context .btn-icon {
+  width: 26px;
+  height: 26px;
+}
+
+/* ==========================================================
+   3. Messages
+   ========================================================== */
+
+.msg {
+  animation: fade-up var(--dur) var(--ease) both;
+}
+
+/* the founder: a grey bubble on the far side */
+.msg-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  align-self: flex-end;
+  gap: 6px;
+  max-width: 82%;
+}
+.bubble {
+  margin: 0;
+  padding: 11px 16px;
+  border-radius: 18px;
+  background: var(--bg-muted);
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Darb: a small avatar and plain text */
+.msg-agent {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.msg-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+  padding-top: 3px;
+}
+.msg-body p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.replies,
+.follow-ups {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.follow-ups {
+  padding-inline-start: 40px;
+}
+/* an answered question: the choices stay, faded, with the chosen one dark */
+.replies .pill:disabled {
+  cursor: default;
+  opacity: 0.5;
+  transform: none;
+}
+.replies .pill.is-active:disabled {
+  opacity: 1;
+}
+
+/* three dots while Darb thinks */
+.typing {
+  display: inline-flex;
+  gap: 4px;
+  padding-block: 8px;
+}
+.typing i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-3);
+  animation: typing 1s infinite ease-in-out;
+}
+.typing i:nth-child(2) { animation-delay: 0.15s; }
+.typing i:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing {
+  0%, 60%, 100% { opacity: 0.3; transform: none; }
+  30%           { opacity: 1;   transform: translateY(-3px); }
+}
+
+/* ----- The agent's steps ----- */
+
+.trace summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+  list-style: none;
+  cursor: pointer;
+}
+.trace summary::-webkit-details-marker {
+  display: none;
+}
+.trace summary svg {
+  transition: transform var(--dur-fast);
+}
+html[dir="rtl"] .trace summary svg {
+  transform: scaleX(-1);
+}
+.trace[open] summary svg,
+html[dir="rtl"] .trace[open] summary svg {
+  transform: rotate(90deg);
+}
+.trace-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.trace-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: 13.5px;
+  transition: color var(--dur);
+}
+.trace-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1.5px dashed var(--border-strong);
+  border-radius: 50%;
+}
+.trace-dot svg {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+}
+.trace-steps li.is-running {
+  color: var(--text);
+  font-weight: 700;
+}
+.trace-steps li.is-running .trace-dot {
+  border: 2px solid var(--teal-tint);
+  border-top-color: var(--teal);
+  animation: spin 0.7s linear infinite;
+}
+.trace-steps li.is-done {
+  color: var(--text-nav);
+}
+.trace-steps li.is-done .trace-dot {
+  border: 1.5px solid var(--good);
+  color: var(--good);
+}
+.trace-steps li.is-done .trace-dot svg {
+  opacity: 1;
+}
+
+/* ----- The card that opens the assessment ----- */
+
+.result-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: min(460px, 100%);
+  padding: 14px;
+  border: 1px solid var(--navy);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: box-shadow var(--dur), transform var(--dur) var(--ease);
+}
+.result-card:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+.result-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-sm);
+  font-size: 20px;
+  font-weight: 800;
+}
+.result-score.is-good { background: var(--good-tint); color: var(--good-text); }
+.result-score.is-warn { background: var(--warn-tint); color: var(--warn-text); }
+.result-score.is-risk { background: var(--risk-tint); color: var(--risk-text); }
+.result-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14.5px;
+}
+.result-text small {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* ----- The roadmap inside the chat ----- */
+
+.roadmap-card {
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+}
+.roadmap-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--divider);
+  background: var(--bg-subtle);
+}
+.roadmap-card-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--r-sm);
+  background: var(--gradient-brand);
+  color: var(--bg);
+}
+.roadmap-card .rm-list {
+  padding: 16px;
+}
+
+/* ==========================================================
+   4. The roadmap list (in the chat and in the panel)
+   ========================================================== */
+
+.rm-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rm-step {
+  position: relative;
+  display: flex;
+  gap: 14px;
+  padding-bottom: 20px;
+}
+.rm-step:last-child {
+  padding-bottom: 0;
+}
+/* the line that joins one number to the next */
+.rm-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  inset-block: 32px 0;
+  inset-inline-start: 15px;
+  width: 2px;
+  background: var(--divider);
+}
+.rm-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 800;
+}
+.rm-step:first-child .rm-number {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: var(--bg);
+}
+.rm-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+.rm-text p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.rm-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 32px;
+  font-size: 14.5px;
+}
+.rm-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rm-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: var(--link-tint);
+  color: var(--link-text);
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: background var(--dur-fast);
+}
+.rm-action:hover {
+  background: var(--teal-tint);
+}
+.rm-action svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ==========================================================
+   5. The assessment panel
+   ========================================================== */
+
+.assess {
+  position: fixed;
+  inset-block: 12px;
+  inset-inline-end: 12px;
+  z-index: 250;
+  display: flex;
+  flex-direction: column;
+  width: min(620px, calc(100vw - 24px));
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-panel);
+  visibility: hidden;
+  opacity: 0;
+  transform: translateX(24px);
+  transition:
+    transform var(--dur) var(--ease),
+    opacity var(--dur),
+    visibility var(--dur);
+}
+html[dir="rtl"] .assess {
+  transform: translateX(-24px);
+}
+.assess.is-open,
+html[dir="rtl"] .assess.is-open {
+  visibility: visible;
+  opacity: 1;
+  transform: none;
+}
+
+/* Wide screens: the chat moves aside so the panel does not cover it */
+@media (min-width: 1281px) {
+  body.assess-open .app-main {
+    padding-inline-end: 632px;
+  }
+}
+
+.assess-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 18px 20px 12px;
+}
+.assess-heading {
+  flex: 1;
+  min-width: 0;
+}
+.assess-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+}
+.assess-sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* the tabs scroll sideways when they do not fit */
+.assess-tabs {
+  padding-inline: 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.assess-tabs .segmented {
+  display: flex;
+  width: max-content;
+  min-width: 100%;
+}
+.assess-tabs .segmented-item {
+  flex: 1;
+}
+
+.assess-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+.assess-body p {
+  margin: 0;
+}
+.assess-section .section-title {
+  margin: 0;
+}
+.assess-section p {
+  margin-top: 2px;
+  font-size: 13px;
+}
+.assess-note {
+  margin-top: auto;
+  padding-top: 8px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+/* ----- The score gauge ----- */
+
+.score-head {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  align-items: center;
+  gap: 20px;
+}
+.score-head p {
+  font-size: 13px;
+  line-height: 1.55;
+}
+.score-title {
+  margin: 8px 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.gauge {
+  position: relative;
+}
+.gauge svg {
+  display: block;
+  width: 100%;
+}
+.gauge path {
+  fill: none;
+  stroke-width: 14;
+  stroke-linecap: round;
+}
+.gauge-track {
+  stroke: var(--bg-muted);
+}
+.gauge-stop-risk { stop-color: var(--risk); }
+.gauge-stop-warn { stop-color: var(--warn); }
+.gauge-stop-good { stop-color: var(--good); }
+.gauge-knob {
+  fill: var(--bg);
+  stroke: currentColor;
+  stroke-width: 5;
+}
+.gauge-number {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -4px;
+  font-size: 46px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.gauge.is-good { color: var(--good); }
+.gauge.is-warn { color: var(--warn-text); }
+.gauge.is-risk { color: var(--risk); }
+
+/* ----- Small tiles: facts and market numbers ----- */
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.fact-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.facts strong,
+.activity strong {
+  font-size: 13.5px;
+  overflow-wrap: anywhere;
+}
+
+/* ----- Overview: strength, risk, to consider ----- */
+
+.insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.insight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  font-size: 13.5px;
+}
+.insight-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.insight-kind::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.insight.is-good .insight-kind { color: var(--good-text); }
+.insight.is-risk .insight-kind { color: var(--risk-text); }
+.insight.is-info .insight-kind { color: var(--link-text); }
+
+.inside {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.inside-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border: none;
+  border-top: 1px solid var(--divider);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+.inside-link:first-child {
+  border-top: none;
+}
+.inside-link:hover {
+  background: var(--bg-subtle);
+}
+.inside-link svg {
+  color: var(--text-3);
+}
+html[dir="rtl"] .inside-link svg {
+  transform: scaleX(-1);
+}
+
+/* ----- Score: how the score is built ----- */
+
+.wf {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+.wf-row {
+  display: grid;
+  grid-template-columns: 150px 1fr 34px;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.wf-total {
+  padding-top: 12px;
+  border-top: 1px solid var(--divider);
+}
+.wf-track {
+  position: relative;
+  height: 14px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+}
+.wf-fill {
+  position: absolute;
+  inset-block: 0;
+  border-radius: var(--r-pill);
+}
+.wf-fill.is-average { background: var(--border-strong); }
+.wf-fill.is-good    { background: var(--good); }
+.wf-fill.is-warn    { background: var(--warn); }
+.wf-fill.is-risk    { background: var(--risk); }
+.wf-value {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.wf-value.is-good { color: var(--good-text); }
+.wf-value.is-warn { color: var(--warn-text); }
+.wf-value.is-risk { color: var(--risk-text); }
+.is-light {
+  color: var(--text-3);
+  font-weight: 600;
+}
+
+.factors {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.factors li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 13.5px;
+}
+.factors .chip {
+  min-width: 38px;
+  justify-content: center;
+}
+.factors p {
+  margin-top: 2px;
+  font-size: 13px;
+}
+
+/* ----- Similar startups ----- */
+
+.similar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.startup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  font-size: 13px;
+}
+.startup-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.startup-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-weight: 800;
+}
+.startup-name {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  font-size: 12.5px;
+}
+.startup-name strong {
+  font-size: 14.5px;
+}
+.startup-match {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+.startup-match .bar {
+  flex: 1;
+}
+.startup-match strong {
+  color: var(--teal-text);
+}
+.startup-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ----- Market: bars by year ----- */
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 150px;
+  margin-top: 16px;
+}
+.chart-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: 1;
+  height: 100%;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.chart-bar {
+  width: 100%;
+  max-width: 44px;
+  border-radius: 8px 8px 3px 3px;
+  background: var(--teal);
+  opacity: 0.85;
+}
+.chart-column:last-child .chart-bar {
+  opacity: 1;
+}
+.chart-value {
+  font-weight: 800;
+  color: var(--text);
+}
+.market-source {
+  font-size: 12.5px;
+}
+.assess-body > .btn {
+  align-self: flex-start;
+}
+
+/* ----- Roadmap: the diagram ----- */
+
+.rm-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rm-diagram {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 14px;
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+}
+.rm-start {
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+.rm-end {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: var(--r-sm);
+  background: var(--gradient-brand);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 800;
+}
+.rm-wave {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* the dashed line down the middle */
+.rm-wave::before {
+  content: '';
+  position: absolute;
+  inset-block: -14px;
+  inset-inline-start: calc(50% - 1px);
+  border-inline-start: 2px dashed var(--border-strong);
+}
+/* each card takes one half; odd steps on one side, even steps on the other */
+.rm-wave li {
+  position: relative;
+  width: 50%;
+  padding-inline-end: 26px;
+}
+.rm-wave li:nth-child(even) {
+  margin-inline-start: 50%;
+  padding-inline: 26px 0;
+}
+/* the number sits on the line */
+.rm-wave .rm-number {
+  position: absolute;
+  inset-block-start: 14px;
+  inset-inline-end: -16px;
+  z-index: 1;
+  border-color: var(--navy);
+  background: var(--navy);
+  color: var(--bg);
+}
+.rm-wave li:nth-child(even) .rm-number {
+  inset-inline: -16px auto;
+}
+.rm-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.rm-card strong {
+  font-size: 14px;
+}
+
+/* ----- Report ----- */
+
+.report-title h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+.report-title p {
+  margin-top: 2px;
+  font-size: 13px;
+}
+.report-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+}
+.report-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.report-head .section-title {
+  margin: 0;
+}
+.report-link {
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.report-list,
+.report-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  font-size: 13.5px;
+}
+.report-list {
+  list-style: none;
+}
+.report-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.report-match {
+  margin-inline-start: auto;
+  font-weight: 800;
+  color: var(--teal-text);
+}
+.report-steps {
+  padding-inline-start: 20px;
+}
+.report-steps li::marker {
+  font-weight: 800;
+  color: var(--navy);
+}
+
+/* ==========================================================
+   6. Smaller screens
+   ========================================================== */
+
+@media (max-width: 640px) {
+  .chat-home {
+    padding-top: 4vh;
+  }
+  .recent-grid {
+    grid-template-columns: 1fr;
+  }
+  .msg-user {
+    max-width: 92%;
+  }
+  .follow-ups {
+    padding-inline-start: 0;
+  }
+
+  /* the panel fills the phone screen */
+  .assess {
+    inset: 0;
+    width: 100%;
+    border: none;
+    border-radius: 0;
+  }
+  .assess-head {
+    flex-wrap: wrap;
+  }
+  .score-head {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+  }
+  .gauge {
+    width: 200px;
+  }
+  .insights {
+    grid-template-columns: 1fr;
+  }
+  .wf-row {
+    grid-template-columns: 104px 1fr 30px;
+    gap: 8px;
+  }
+
+  /* the diagram becomes one column, with the line on the starting side */
+  .rm-wave::before {
+    inset-inline-start: 15px;
+  }
+  .rm-wave li,
+  .rm-wave li:nth-child(even) {
+    width: 100%;
+    margin-inline-start: 0;
+    padding-inline: 44px 0;
+  }
+  .rm-wave .rm-number,
+  .rm-wave li:nth-child(even) .rm-number {
+    inset-inline: 0 auto;
+  }
+}
+
+/* ==========================================================
+   7. Export PDF: on paper only the report is printed
+   ========================================================== */
+
+@media print {
+  .sidebar,
+  .sidebar-backdrop,
+  .app-header,
+  .app-footer,
+  .chat,
+  .assess-head,
+  .assess-tabs,
+  .report-link {
+    display: none !important;
+  }
+  body.assess-open .app-main,
+  .app-content {
+    padding: 0;
+    max-width: none;
+  }
+  .assess {
+    position: static;
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    transform: none;
+  }
+  .assess-body {
+    overflow: visible;
+  }
+  .report-section {
+    break-inside: avoid;
+  }
+  /* keep the colors of chips, tiles and the gauge on paper */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

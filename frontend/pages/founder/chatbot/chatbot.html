@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+  CHAT WITH DARB (the founder's home page after signing in)
+  One page with two states:
+    1. "home"  a greeting, the box to describe an idea, examples and recent ideas
+    2. "chat"  the conversation: Darb asks its questions, runs the analysis and
+               shows the result. The assessment opens in a panel beside the chat.
+  Open a saved conversation with  chatbot.html?id=a-101  (add &tab=roadmap to open the panel).
+
+  chatbot.js  the conversation
+  panel.js    the assessment panel (Overview, Score, Similar, Market, Roadmap, Report)
+  The data comes from shared/assessments.js: sample data today, the agents later.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="chatbot.css">
+</head>
+<body data-layout="founder" data-page="chatbot">
+
+  <main>
+    <section class="chat" id="chat">
+
+      <!-- Home: the greeting above the box -->
+      <div class="chat-home" id="chat-home">
+        <h1 class="chat-greeting" id="greeting"></h1>
+        <p class="chat-question" data-i18n="chat.homeSub"></p>
+      </div>
+
+      <!-- The conversation. chatbot.js adds the messages here. -->
+      <div class="thread" id="thread" aria-live="polite"></div>
+
+      <!-- The box the founder writes in -->
+      <form class="composer glass" id="composer">
+        <!-- shown when the next question is about one startup ("Ask about it") -->
+        <div class="composer-context" id="composer-context" hidden>
+          <span class="text-3" data-i18n="chat.askingAbout"></span>
+          <strong id="composer-context-name"></strong>
+          <button type="button" class="btn-icon" id="composer-context-remove" data-i18n-aria-label="chat.removeContext"></button>
+        </div>
+        <div class="composer-row">
+          <textarea class="composer-input" id="composer-input" rows="1" data-i18n-placeholder="chat.placeholder" data-i18n-aria-label="chat.placeholder"></textarea>
+          <button type="submit" class="composer-send" id="composer-send" data-i18n-aria-label="chat.send"></button>
+        </div>
+      </form>
+
+      <!-- Home: examples and recent ideas under the box -->
+      <div class="chat-start" id="chat-start">
+        <div class="chat-examples" id="examples"></div>
+
+        <div class="recent" id="recent" hidden>
+          <div class="recent-head">
+            <strong data-i18n="chat.recent"></strong>
+            <a class="link" href="../history/history.html" data-i18n="chat.viewAll"></a>
+          </div>
+          <div class="recent-grid" id="recent-grid"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- The assessment panel. panel.js fills it. -->
+    <aside class="assess" id="assess"></aside>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="chatbot.js"></script>
+</body>
+</html>

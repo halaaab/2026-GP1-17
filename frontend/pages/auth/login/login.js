@@ -26,6 +26,11 @@ function showGreeting() {
 // The words are ready once the language is loaded, and change when it changes
 document.addEventListener('darb:language', showGreeting);
 
+// if the words were already loaded before this file started listening, show it now
+if (t('login.sub') !== 'login.sub') {
+  showGreeting();
+}
+
 /* ---------- Already logged in? ----------
    This also catches people coming back from Google or from the link in their confirmation email. */
 
