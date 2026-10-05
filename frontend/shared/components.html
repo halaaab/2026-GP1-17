@@ -1,0 +1,463 @@
+<!doctype html>
+<!--
+  COMPONENT REFERENCE
+  Open this page to see every shared component and copy its HTML.
+  To add a component here: add a <section class="ref-section"> with an <h2>
+  and put the live example inside <div class="ref-example">. The code box
+  and the Copy button are created automatically from that example.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb — Shared components</title>
+  <link rel="stylesheet" href="shared.css">
+  <style>
+    /* Layout for this reference page only */
+    .ref           { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 40px; align-items: start; padding-block: 32px 80px; }
+    .ref-menu      { position: sticky; inset-block-start: 88px; display: flex; flex-direction: column; gap: 2px; }
+    .ref-menu a    { padding: 6px 10px; border-radius: 8px; color: var(--text-nav); font-size: 13px; font-weight: 600; }
+    .ref-menu a:hover { background: var(--bg-hover); color: var(--text); }
+    .ref-body      { display: flex; flex-direction: column; gap: 44px; min-width: 0; }
+    .ref-hero      { padding: 28px; border-radius: var(--r-lg); border: 1px solid var(--border); }
+    .ref-hero p    { margin: 8px 0 0; }
+    .ref-section   { display: flex; flex-direction: column; gap: 12px; scroll-margin-top: 88px; }
+    .ref-section > p { margin: 0; }
+    .ref-example   { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .ref-example.is-stacked { flex-direction: column; align-items: stretch; }
+    .ref-code      { position: relative; }
+    .ref-code pre  { margin: 0; padding: 12px 14px; max-height: 220px; overflow: auto; border-radius: var(--r-sm); background: var(--bg-tile); color: var(--text-2); font-size: 12px; line-height: 1.6; direction: ltr; text-align: left; }
+    .ref-code .btn { position: absolute; inset-block-start: 8px; right: 8px; }
+    .ref-swatches  { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
+    .ref-swatch    { display: flex; flex-direction: column; gap: 6px; font-size: 11.5px; font-weight: 700; color: var(--text-2); }
+    .ref-swatch i  { height: 44px; border-radius: var(--r-sm); border: 1px solid var(--border); }
+    .ref-header    { position: sticky; inset-block-start: 0; z-index: 100; border-bottom: 1px solid var(--divider); border-inline: none; border-top: none; box-shadow: none; }
+    .ref-header-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; height: 64px; }
+    @media (max-width: 900px) {
+      .ref      { grid-template-columns: minmax(0, 1fr); }
+      .ref-menu { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="glass ref-header">
+  <div class="container ref-header-inner">
+    <a class="brand" href="../index.html">
+      <img class="brand-logo" src="../assets/images/%20Darb-logo-horizontal.png" alt="Darb">
+    </a>
+    <button type="button" class="btn btn-secondary btn-sm language-toggle" data-language-toggle>
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15 15 0 0 1 0 20a15 15 0 0 1 0-20"/></svg>
+      <span></span>
+    </button>
+  </div>
+</header>
+
+<div class="container ref">
+
+  <nav class="ref-menu" id="ref-menu" aria-label="Components"></nav>
+
+  <div class="ref-body">
+
+    <div class="ref-hero bg-aurora fade-up">
+      <p class="eyebrow">Darb design system</p>
+      <h1 class="display">Shared <span class="text-gradient">components</span></h1>
+      <p class="text-2">Every class here comes from shared.css. Find what you need, press Copy, paste it into your page. Use the language button to check it in Arabic.</p>
+    </div>
+
+    <section class="ref-section" id="colors">
+      <h2 class="section-title">Colors</h2>
+      <p class="text-2">Write <code>var(--name)</code> in your CSS. Never type a hex color in a page file.</p>
+      <div class="ref-swatches" id="ref-colors"></div>
+    </section>
+
+    <section class="ref-section" id="text">
+      <h2 class="section-title">Text</h2>
+      <div class="ref-example is-stacked">
+        <p class="eyebrow">Eyebrow label</p>
+        <h1 class="display" data-i18n="demo.greeting"></h1>
+        <h2 class="page-title">Page title</h2>
+        <h3 class="section-title">Section title</h3>
+        <p data-i18n="demo.body"></p>
+        <p class="text-2">Secondary text</p>
+        <a class="link" href="#">A link</a>
+      </div>
+    </section>
+
+    <section class="ref-section" id="buttons">
+      <h2 class="section-title">Buttons</h2>
+      <div class="ref-example">
+        <button type="button" class="btn btn-primary">Primary</button>
+        <button type="button" class="btn btn-secondary">Secondary</button>
+        <button type="button" class="btn btn-ghost">Ghost</button>
+        <button type="button" class="btn btn-danger">Delete</button>
+        <button type="button" class="btn btn-primary btn-sm">Small</button>
+        <button type="button" class="btn btn-primary btn-lg">Large</button>
+        <button type="button" class="btn btn-primary is-loading">Saving</button>
+        <button type="button" class="btn btn-primary" disabled>Disabled</button>
+      </div>
+    </section>
+
+    <section class="ref-section" id="fields">
+      <h2 class="section-title">Form fields</h2>
+      <div class="ref-example is-stacked">
+        <div class="field">
+          <label class="label" for="demo-email">Email</label>
+          <input class="input" id="demo-email" type="email" placeholder="you@example.com">
+          <p class="field-hint">We only use it to sign you in.</p>
+        </div>
+        <div class="field">
+          <label class="label" for="demo-password">Password</label>
+          <div class="input-group">
+            <input class="input is-error" id="demo-password" type="password" value="123">
+            <button type="button" class="btn-icon" data-password-toggle aria-label="Show password">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="field-error">Password must be at least 8 characters.</p>
+        </div>
+        <div class="field">
+          <label class="label" for="demo-sector">Sector</label>
+          <select class="input" id="demo-sector">
+            <option>AI &amp; Software</option>
+            <option>Food &amp; Beverages</option>
+            <option>Fashion</option>
+            <option>Furniture</option>
+          </select>
+        </div>
+        <label class="check"><input type="checkbox" checked> Remember me</label>
+      </div>
+    </section>
+
+    <section class="ref-section" id="chips">
+      <h2 class="section-title">Chips</h2>
+      <div class="ref-example">
+        <span class="chip">Default</span>
+        <span class="chip chip-good chip-dot">Operating</span>
+        <span class="chip chip-risk chip-dot">Closed</span>
+        <span class="chip chip-warn">Conditional</span>
+        <span class="chip chip-navy">Mandatory</span>
+        <span class="chip chip-teal">82% match</span>
+      </div>
+    </section>
+
+    <section class="ref-section" id="pills">
+      <h2 class="section-title">Pills</h2>
+      <div class="ref-example">
+        <button type="button" class="pill">Assess a new idea</button>
+        <button type="button" class="pill">Find similar startups</button>
+        <button type="button" class="pill is-active">Chosen</button>
+      </div>
+    </section>
+
+    <section class="ref-section" id="segmented">
+      <h2 class="section-title">Segmented control</h2>
+      <div class="ref-example">
+        <div class="segmented">
+          <button type="button" class="segmented-item is-active">All</button>
+          <button type="button" class="segmented-item">Assessed</button>
+          <button type="button" class="segmented-item">Drafts</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="cards">
+      <h2 class="section-title">Cards and tiles</h2>
+      <div class="ref-example is-stacked">
+        <div class="grid">
+          <div class="card">
+            <h3 class="section-title">Card</h3>
+            <p class="text-2">White with a soft shadow.</p>
+          </div>
+          <a class="card card-hover" href="#cards">
+            <h3 class="section-title">Clickable card</h3>
+            <p class="text-2">Lifts on hover.</p>
+          </a>
+          <div class="card card-brand">
+            <h3 class="section-title">Brand card</h3>
+            <p>One highlight per page.</p>
+          </div>
+          <div class="tile">
+            <span class="text-3">Active businesses</span>
+            <span class="tile-value">12,480</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="alerts">
+      <h2 class="section-title">Alerts</h2>
+      <div class="ref-example is-stacked">
+        <div class="alert alert-good">Your account was created.</div>
+        <div class="alert alert-risk">Wrong email or password.</div>
+        <div class="alert alert-warn">Your session is about to end.</div>
+        <div class="alert alert-info">Check your inbox for the reset link.</div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="toast">
+      <h2 class="section-title">Toast</h2>
+      <p class="text-2">Shown from JavaScript: <code>showToast('Saved', 'good')</code>. Import it from ui.js.</p>
+      <div class="ref-example">
+        <button type="button" class="btn btn-secondary" id="demo-toast">Show a toast</button>
+      </div>
+    </section>
+
+    <section class="ref-section" id="modal">
+      <h2 class="section-title">Modal</h2>
+      <p class="text-2">Needs ui.js on the page. No other JavaScript.</p>
+      <div class="ref-example">
+        <button type="button" class="btn btn-secondary" data-modal-open="demo-modal">Open modal</button>
+        <dialog class="modal" id="demo-modal">
+          <h3 class="modal-title">Delete this assessment?</h3>
+          <p class="text-2">This cannot be undone.</p>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" data-modal-close>Cancel</button>
+            <button type="button" class="btn btn-danger" data-modal-close>Delete</button>
+          </div>
+        </dialog>
+      </div>
+    </section>
+
+    <section class="ref-section" id="loading">
+      <h2 class="section-title">Loading and empty states</h2>
+      <div class="ref-example is-stacked">
+        <span class="spinner"></span>
+        <div class="skeleton" style="height: 18px; width: 60%"></div>
+        <div class="skeleton" style="height: 18px; width: 40%"></div>
+        <div class="empty">
+          <span class="empty-icon">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          </span>
+          <h3 class="section-title">Nothing here yet</h3>
+          <p class="text-2">Start an assessment to see it in this list.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="small">
+      <h2 class="section-title">Avatar, divider, progress bar</h2>
+      <div class="ref-example is-stacked">
+        <div><span class="avatar">HA</span> <span class="avatar avatar-sm">HA</span></div>
+        <div class="divider-text">or</div>
+        <div class="bar bar-good"><div class="bar-fill" style="width: 72%"></div></div>
+        <div class="bar bar-warn"><div class="bar-fill" style="width: 48%"></div></div>
+        <div class="bar bar-risk"><div class="bar-fill" style="width: 24%"></div></div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="toolbar">
+      <h2 class="section-title">Toolbar and table</h2>
+      <p class="text-2">For list pages: explorers, history, admin. On a phone the search takes the first line and the table scrolls sideways.</p>
+      <div class="ref-example is-stacked">
+        <div>
+          <div class="toolbar">
+            <label class="search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+              <input type="search" placeholder="Search by name or email">
+            </label>
+            <button type="button" class="pill is-active">All</button>
+            <button type="button" class="pill">Active</button>
+            <button type="button" class="pill">Deactivated</button>
+          </div>
+          <div class="table-card">
+            <table class="table">
+              <thead>
+                <tr><th>Founder</th><th>Field</th><th>Joined</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><span class="cell-title">Nora Alharbi</span><span class="cell-detail">nora@example.com</span></td>
+                  <td><span class="chip">Food &amp; Beverages</span></td>
+                  <td>12 Sep 2026</td>
+                  <td><span class="chip chip-good chip-dot">Active</span></td>
+                </tr>
+                <tr>
+                  <td><span class="cell-title">Saud Almutairi</span><span class="cell-detail">saud@example.com</span></td>
+                  <td><span class="chip">Fashion</span></td>
+                  <td>3 Oct 2026</td>
+                  <td><span class="chip chip-good chip-dot">Active</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="stats">
+      <h2 class="section-title">Stat cards</h2>
+      <p class="text-2">Four in a row on desktop, two on a tablet, one on a phone.</p>
+      <div class="ref-example is-stacked">
+        <div class="grid stat-grid">
+          <div class="card stat">
+            <span class="stat-label">Founder accounts</span>
+            <span class="stat-value">128</span>
+            <a class="link" href="#stats">View founders</a>
+          </div>
+          <div class="card stat">
+            <span class="stat-label">Assessments</span>
+            <span class="stat-value">342</span>
+            <span class="text-3">Completed by founders</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="form-row">
+      <h2 class="section-title">Form layout</h2>
+      <p class="text-2"><code>form</code> spaces the fields. <code>form-row</code> puts two side by side and stacks them on a phone.</p>
+      <div class="ref-example is-stacked">
+        <form class="form">
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="demo-first">First name</label>
+              <input class="input" id="demo-first" type="text">
+            </div>
+            <div class="field">
+              <label class="label" for="demo-last">Last name</label>
+              <input class="input" id="demo-last" type="text">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="demo-site">Website</label>
+            <input class="input" id="demo-site" type="url" placeholder="https://">
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="ref-section" id="panel">
+      <h2 class="section-title">Side panel</h2>
+      <p class="text-2">Slides in from the edge for details or an edit form. Full screen on a phone. Needs ui.js.</p>
+      <div class="ref-example">
+        <button type="button" class="btn btn-secondary" data-panel-open="demo-panel">Open panel</button>
+        <aside class="panel" id="demo-panel">
+          <div class="panel-head">
+            <div>
+              <h3 class="modal-title">Edit organization</h3>
+              <p class="text-3">Last updated 3 Oct 2026</p>
+            </div>
+            <button type="button" class="btn-icon" data-panel-close aria-label="Close">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <div class="panel-body">
+            <form class="form">
+              <div class="field">
+                <label class="label" for="demo-org">Organization name</label>
+                <input class="input" id="demo-org" type="text">
+              </div>
+              <div class="form-row">
+                <div class="field">
+                  <label class="label" for="demo-city">City</label>
+                  <select class="input" id="demo-city"><option>Riyadh</option><option>Jeddah</option></select>
+                </div>
+                <div class="field">
+                  <label class="label" for="demo-stage">Stage</label>
+                  <select class="input" id="demo-stage"><option>Pre-seed</option><option>Seed</option></select>
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="panel-foot">
+            <button type="button" class="btn btn-secondary" data-panel-close>Cancel</button>
+            <button type="button" class="btn btn-primary" data-panel-close>Save changes</button>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="ref-section" id="glass">
+      <h2 class="section-title">Glass</h2>
+      <p class="text-2">Only for things that float above the page: the chat composer, panels, popovers.</p>
+      <div class="ref-example is-stacked bg-aurora" style="padding: 24px; border-radius: var(--r-lg)">
+        <div class="glass" style="padding: 16px; border-radius: var(--r-lg)">Floating layer</div>
+      </div>
+    </section>
+
+    <section class="ref-section" id="layout">
+      <h2 class="section-title">Page layout</h2>
+      <p class="text-2">The sidebar, header and footer are built by layout.js. A page picks one with <code>data-layout</code> on <code>&lt;body&gt;</code> and writes only its own content inside <code>&lt;main&gt;</code>. Copy <code>pages/_template/</code> to start a new page.</p>
+      <div class="table-card">
+        <table class="table">
+          <thead><tr><th>data-layout</th><th>What the page gets</th><th>Used by</th></tr></thead>
+          <tbody>
+            <tr><td><code>founder</code></td><td>Sidebar, header, language switch</td><td>Chatbot, explorers, profile</td></tr>
+            <tr><td><code>admin</code></td><td>Admin sidebar, breadcrumb header</td><td>Admin console pages</td></tr>
+            <tr><td><code>public</code></td><td>Top bar with links, footer</td><td>Landing page</td></tr>
+            <tr><td><code>auth</code></td><td>Logo and a centered card</td><td>Sign up, log in, reset password</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="text-2">Every founder and admin page also loads <code>shared/guard.js</code>. It sends away anyone who is not signed in with the right kind of account, shows the person's name in the sidebar, and makes the logout button work. A founder page that visitors may also open (the explorers) adds <code>data-access="public"</code> to <code>&lt;body&gt;</code>.</p>
+      <div class="ref-example">
+        <a class="btn btn-secondary" href="../pages/_template/template.html">Open the page template</a>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script type="module">
+  import { initLanguage } from './language.js';
+  import { showToast } from './ui.js';
+
+  initLanguage();
+
+  document.querySelector('#demo-toast').addEventListener('click', () => {
+    showToast('Saved', 'good');
+  });
+
+  // ---- Side menu: one link per section ----
+  const menu = document.querySelector('#ref-menu');
+  document.querySelectorAll('.ref-section').forEach((section) => {
+    const link = document.createElement('a');
+    link.href = `#${section.id}`;
+    link.textContent = section.querySelector('h2').textContent;
+    menu.append(link);
+  });
+
+  // ---- Color swatches ----
+  const COLORS = ['--navy', '--teal', '--good', '--warn', '--risk', '--text', '--text-2', '--text-3',
+                  '--bg-subtle', '--bg-muted', '--navy-tint', '--teal-tint', '--good-tint', '--warn-tint', '--risk-tint', '--border'];
+  const colorBox = document.querySelector('#ref-colors');
+  COLORS.forEach((name) => {
+    const swatch = document.createElement('div');
+    swatch.className = 'ref-swatch';
+    swatch.innerHTML = `<i style="background: var(${name})"></i>${name}`;
+    colorBox.append(swatch);
+  });
+
+  // ---- Code box + Copy button under every example ----
+  function tidy(html) {
+    const lines = html.replace(/^\s*\n/, '').trimEnd().split('\n');
+    const indent = Math.min(...lines.filter((line) => line.trim()).map((line) => line.match(/^ */)[0].length));
+    return lines.map((line) => line.slice(indent)).join('\n');
+  }
+
+  document.querySelectorAll('.ref-example').forEach((example) => {
+    const code = tidy(example.innerHTML);
+
+    const box = document.createElement('div');
+    box.className = 'ref-code';
+
+    const pre = document.createElement('pre');
+    pre.textContent = code;
+
+    const copyButton = document.createElement('button');
+    copyButton.type = 'button';
+    copyButton.className = 'btn btn-secondary btn-sm';
+    copyButton.textContent = 'Copy';
+    copyButton.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(code);
+      showToast('Copied', 'good');
+    });
+
+    box.append(pre, copyButton);
+    example.after(box);
+  });
+</script>
+
+</body>
+</html>

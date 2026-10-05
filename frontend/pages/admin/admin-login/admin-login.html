@@ -1,2 +1,90 @@
+<!doctype html>
+<!--
+  ADMIN LOGIN
+  Admins have no sign-up page: the Darb team creates their accounts.
+  Signing in takes two steps, on two screens of this page:
+    1. "login"  email and password
+    2. "code"   a 6-digit code that Darb emails to the admin
+  The side panel and the language switch come from shared/layout.js
+  (data-layout="auth", and data-page="admin" adds the ADMIN badge).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb — Admin login</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="admin-login.css">
+  <script>
+    // Already signed in? Keep the page hidden until admin-login.js has checked the session.
+    var signedIn = Object.keys(localStorage).some(function (key) { return key.indexOf('sb-') === 0 && key.indexOf('-auth-token') > -1; });
+    if (signedIn) document.documentElement.classList.add('is-checking');
+  </script>
+</head>
+<body data-layout="auth" data-page="admin">
 
+  <main>
 
+    <!-- ============ 1. Email and password ============ -->
+    <section class="screen is-active" data-screen="login">
+      <h1 class="auth-title" data-i18n="adminLogin.title"></h1>
+      <p class="auth-sub" data-i18n="adminLogin.sub"></p>
+
+      <div class="alert alert-risk" id="form-error" hidden></div>
+
+      <form class="form" id="login-form" novalidate>
+        <div class="field">
+          <label class="label" for="email" data-i18n="auth.email"></label>
+          <input class="input" id="email" name="email" type="email" autocomplete="email" dir="ltr">
+          <p class="field-error" data-error-for="email" hidden></p>
+        </div>
+
+        <div class="field">
+          <div class="label-row">
+            <label class="label" for="password" data-i18n="auth.password"></label>
+            <a class="link" href="../../auth/forgot-password/forgot-password.html" data-i18n="auth.forgot"></a>
+          </div>
+          <div class="input-group">
+            <input class="input" id="password" name="password" type="password" autocomplete="current-password" dir="ltr">
+            <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="auth.showPassword">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <p class="field-error" data-error-for="password" hidden></p>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg btn-block" id="submit-button" data-i18n="adminLogin.submit"></button>
+      </form>
+
+      <p class="auth-switch" data-i18n="adminLogin.note"></p>
+    </section>
+
+    <!-- ============ 2. The 6-digit code Darb emailed to the admin ============ -->
+    <section class="screen" data-screen="code">
+      <h1 class="auth-title" data-i18n="adminLogin.codeTitle"></h1>
+      <!-- admin-login.js writes this line, with the admin's email in it -->
+      <p class="auth-sub" id="code-sub"></p>
+
+      <div class="alert alert-risk" id="code-error" hidden></div>
+      <div class="alert alert-good" id="code-info" hidden></div>
+
+      <form class="form" id="code-form" novalidate>
+        <div class="field">
+          <label class="label is-required" for="login-code" data-i18n="adminLogin.codeLabel"></label>
+          <input class="input code-input" id="login-code" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr" placeholder="000000">
+          <p class="field-error" data-error-for="login-code" hidden></p>
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg btn-block" data-i18n="adminLogin.codeSubmit"></button>
+        <button type="button" class="btn btn-ghost btn-block" id="resend-button" data-i18n="adminLogin.resend"></button>
+      </form>
+
+      <p class="auth-switch"><button type="button" class="link link-button" data-other-account data-i18n="adminLogin.otherAccount"></button></p>
+    </section>
+
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="admin-login.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+/* Admin login page only.
+   Shared pieces (inputs, buttons, screens, the split layout) are in shared/shared.css. */
+
+/* on wide screens the note is already on the side panel, so hide the copy under the form */
+@media (min-width: 961px) {
+  [data-screen="login"] .auth-switch {
+    display: none;
+  }
+}
+
+/* ---------- The emailed code ---------- */
+
+/* the box for the 6 digits: large, spaced out and centered */
+.code-input {
+  height: 56px;
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: 0.4em;
+  text-align: center;
+}
+
+/* a link that is really a button ("Sign in with a different account") */
+.link-button {
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+}
