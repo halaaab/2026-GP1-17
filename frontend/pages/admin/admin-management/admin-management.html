@@ -45,7 +45,8 @@
         <!-- admin-management.js adds one row for each admin -->
         <tbody id="rows"></tbody>
       </table>
-      <p class="empty admins-empty" id="empty" hidden></p>
+      <!-- shows a spinner while loading, then "no match" or the load error -->
+      <p class="empty admins-empty" id="empty"><span class="spinner"></span></p>
     </div>
 
     <div class="alert alert-info admins-note">

@@ -12,6 +12,7 @@ const empty = document.querySelector('#empty');
 
 let admins = [];
 let myId = null;          // the signed-in admin, marked "You"
+let loading = true;      // the spinner stays until the rows arrive
 let loadFailed = false;
 
 // First letter of the first two words: "Saud Almutairi" → "SA"
@@ -35,6 +36,8 @@ function dateTimeText(date) {
 }
 
 function showRows() {
+  if (loading) return;
+
   const words = search.value.trim().toLowerCase();
   const visible = admins.filter((admin) => `${admin.full_name} ${admin.email}`.toLowerCase().includes(words));
 
@@ -88,4 +91,5 @@ if (error) {
 } else {
   admins = data;
 }
+loading = false;
 showRows();

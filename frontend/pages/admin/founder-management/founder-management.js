@@ -1,5 +1,6 @@
 /* Founder management: the list of founder accounts, a search box, a status
-   filter, and a side panel to deactivate / activate or delete one founder. */
+   filter, and a side panel to see, edit, deactivate / activate or delete one founder.
+   Each row also has an edit and a delete button. */
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
@@ -14,10 +15,30 @@ const panel = document.querySelector('#founder-panel');
 const statusButton = document.querySelector('#status-button');
 const deleteModal = document.querySelector('#delete-modal');
 const deleteConfirm = document.querySelector('#delete-confirm');
+const form = document.querySelector('#panel-form');
+const saveButton = document.querySelector('#edit-save');
+
+// the bin icon (layout.js has no bin icon yet)
+const TRASH_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
+
+// what a username may look like (the same rule the database checks)
+const USERNAME_RULE = /^[A-Za-z0-9_]{3,20}$/;
+
+// the user types from sign-up, and the words shown for them
+const TYPE_LABELS = {
+  student: 'signup.student',
+  entrepreneur: 'signup.entrepreneur',
+  business_owner: 'signup.owner',
+  investor: 'signup.investor',
+  other: 'signup.other',
+};
 
 let founders = [];
 let filter = 'all';       // 'all', 'active' or 'deactivated'
 let selectedId = null;    // the founder open in the side panel
+let editing = false;      // the side panel shows the edit form
+let deleteId = null;      // the founder the delete pop-up is asking about
+let loading = true;       // the spinner stays until the rows arrive
 let loadFailed = false;
 
 /* ---------- Small helpers ---------- */
@@ -33,21 +54,20 @@ function dateText(date) {
   });
 }
 
-/* The founder's field, from the sign-up answers:
-   project sector (student, entrepreneur), business sector (business owner),
-   or field of study. Saved as a code like "ai_software", or as the founder's
-   own words when they picked "Other". */
-function fieldText(founder) {
-  const sector = founder.project_sector || founder.current_business_sector;
-  if (sector) {
-    const key = `signup.sector.${sector}`;
-    return t(key) === key ? sector : t(key);
-  }
-  if (founder.field_of_study) {
-    const key = `signup.study.${founder.field_of_study}`;
-    return t(key) === key ? founder.field_of_study : t(key);
-  }
-  return '—';
+function typeText(founder) {
+  return TYPE_LABELS[founder.user_type] ? t(TYPE_LABELS[founder.user_type]) : '—';
+}
+
+// the user type as a pastel chip, one color per type (founder-management.css)
+function typeChip(founder) {
+  const known = TYPE_LABELS[founder.user_type];
+  return `<span class="chip ${known ? `type-${founder.user_type}` : ''}">${typeText(founder)}</span>`;
+}
+
+function statusChip(founder) {
+  return founder.status === 'active'
+    ? `<span class="chip chip-good chip-dot">${t('founders.activeOne')}</span>`
+    : `<span class="chip chip-risk chip-dot">${t('founders.deactivatedOne')}</span>`;
 }
 
 function findFounder(id) {
@@ -57,6 +77,8 @@ function findFounder(id) {
 /* ---------- The table ---------- */
 
 function showRows() {
+  if (loading) return;
+
   const words = search.value.trim().toLowerCase();
 
   const visible = founders.filter((founder) => {
@@ -74,21 +96,26 @@ function showRows() {
             <span class="cell-title"></span>
             <span class="cell-detail"></span>
           </div>
-          ${founder.status === 'deactivated' ? `<span class="chip chip-risk chip-dot">${t('founders.deactivatedOne')}</span>` : ''}
         </div>
       </td>
-      <td><span class="chip founder-field-chip"></span></td>
+      <td class="hide-small">${typeChip(founder)}</td>
       <td class="hide-small text-2">${dateText(founder.created_at)}</td>
-      <td class="hide-small text-2">—</td>
+      <td class="hide-small text-2 founder-count">${founder.assessments_count ?? 0}</td>
+      <td>${statusChip(founder)}</td>
+      <td>
+        <div class="founder-actions">
+          <button type="button" class="btn-icon" data-action="edit" aria-label="${t('founders.edit')}">${icon('pencil')}</button>
+          <button type="button" class="btn-icon is-danger" data-action="delete" aria-label="${t('founders.delete')}">${TRASH_ICON}</button>
+        </div>
+      </td>
     </tr>`).join('');
 
-  // names, emails and "Other" answers are written by founders, so they are added as text
+  // names and emails are written by founders, so they are added as text
   rows.querySelectorAll('tr').forEach((row, index) => {
     const founder = visible[index];
     row.querySelector('.founder-avatar').textContent = initials(founder.full_name);
     row.querySelector('.cell-title').textContent = founder.full_name;
     row.querySelector('.cell-detail').textContent = founder.email;
-    row.querySelector('.founder-field-chip').textContent = fieldText(founder);
   });
 
   empty.textContent = t(loadFailed ? 'founders.loadError' : founders.length ? 'founders.noMatch' : 'founders.none');
@@ -97,6 +124,7 @@ function showRows() {
 
 /* ---------- The side panel ---------- */
 
+// Fills the panel with the selected founder and shows the view or the edit mode
 function showPanel() {
   const founder = findFounder(selectedId);
   if (!founder) {
@@ -109,8 +137,9 @@ function showPanel() {
   document.querySelector('#panel-avatar').textContent = initials(founder.full_name);
   document.querySelector('#panel-name').textContent = founder.full_name;
   document.querySelector('#panel-email').textContent = founder.email;
-  document.querySelector('#panel-field').textContent = fieldText(founder);
+  document.querySelector('#panel-type').innerHTML = typeChip(founder);
   document.querySelector('#panel-joined').textContent = dateText(founder.created_at);
+  document.querySelector('#panel-assessments').textContent = founder.assessments_count ?? 0;
   document.querySelector('#panel-language').textContent = t(founder.locale === 'en' ? 'founders.english' : 'founders.arabic');
 
   const status = document.querySelector('#panel-status');
@@ -125,37 +154,150 @@ function showPanel() {
 
   statusButton.textContent = t(isActive ? 'founders.deactivate' : 'founders.activate');
 
+  // view mode or edit mode
+  document.querySelector('#panel-view').hidden = editing;
+  document.querySelector('#foot-view').hidden = editing;
+  document.querySelector('#panel-edit').hidden = editing;
+  form.hidden = !editing;
+  document.querySelector('#foot-edit').hidden = !editing;
+
   panel.classList.add('is-open');
 }
 
-function openFounder(id) {
+/* ---------- Edit form ---------- */
+
+function showFieldError(id, key) {
+  const input = document.querySelector(`#${id}`);
+  const message = document.querySelector(`#${id}-error`);
+  input.classList.toggle('is-error', Boolean(key));
+  message.textContent = key ? t(key) : '';
+  message.hidden = !key;
+}
+
+function clearErrors() {
+  showFieldError('edit-name', '');
+  showFieldError('edit-username', '');
+}
+
+// Puts the founder's current details into the form
+function fillForm(founder) {
+  document.querySelector('#edit-name').value = founder.full_name;
+  document.querySelector('#edit-username').value = founder.username;
+  document.querySelector('#edit-email').value = founder.email;
+  document.querySelector('#edit-type').value = founder.user_type;
+  document.querySelector('#edit-language').value = founder.locale;
+  document.querySelector('#edit-status').value = founder.status;
+  clearErrors();
+}
+
+function openFounder(id, edit = false) {
   selectedId = id;
+  editing = edit;
+  if (edit) fillForm(findFounder(id));
   showRows();
   showPanel();
 }
 
+function startEditing() {
+  openFounder(selectedId, true);
+  document.querySelector('#edit-name').focus();
+}
+
+document.querySelector('#panel-edit').addEventListener('click', startEditing);
+
+document.querySelector('#edit-cancel').addEventListener('click', () => {
+  editing = false;
+  showPanel();
+});
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const founder = findFounder(selectedId);
+
+  const changes = {
+    full_name: document.querySelector('#edit-name').value.trim(),
+    username: document.querySelector('#edit-username').value.trim(),
+    user_type: document.querySelector('#edit-type').value,
+    locale: document.querySelector('#edit-language').value,
+    status: document.querySelector('#edit-status').value,
+  };
+
+  // check the answers here first, so the admin sees the problem next to the field
+  showFieldError('edit-name', changes.full_name ? '' : 'founders.nameRequired');
+  showFieldError('edit-username', USERNAME_RULE.test(changes.username) ? '' : 'error.username');
+  if (!changes.full_name || !USERNAME_RULE.test(changes.username)) return;
+
+  saveButton.classList.add('is-loading');
+  const { error } = await supabase.rpc('admin_update_founder', {
+    target_user_id: founder.user_id,
+    new_full_name: changes.full_name,
+    new_username: changes.username,
+    new_user_type: changes.user_type,
+    new_locale: changes.locale,
+    new_status: changes.status,
+  });
+  saveButton.classList.remove('is-loading');
+
+  if (error) {
+    // 23505: the username is already used by another founder or an admin
+    if (error.code === '23505') {
+      showFieldError('edit-username', 'error.usernameTaken');
+    } else {
+      console.error('admin_update_founder:', error.message);
+      showToast(t('founders.actionError'), 'risk');
+    }
+    return;
+  }
+
+  Object.assign(founder, changes);
+  editing = false;
+  showToast(t('founders.saved'), 'good');
+  showRows();
+  showPanel();
+});
+
+/* ---------- Clicks in the table ---------- */
+
 rows.addEventListener('click', (event) => {
   const row = event.target.closest('[data-id]');
-  if (row) openFounder(row.dataset.id);
+  if (!row) return;
+
+  const action = event.target.closest('[data-action]')?.dataset.action;
+  if (action === 'edit') {
+    openFounder(row.dataset.id, true);
+  } else if (action === 'delete') {
+    askToDelete(row.dataset.id);
+  } else {
+    openFounder(row.dataset.id);
+  }
 });
 
 rows.addEventListener('keydown', (event) => {
   const row = event.target.closest('[data-id]');
-  if (row && (event.key === 'Enter' || event.key === ' ')) {
+  // Enter on the edit / delete buttons is handled by their own click
+  if (row && event.target === row && (event.key === 'Enter' || event.key === ' ')) {
     event.preventDefault();
     openFounder(row.dataset.id);
   }
 });
 
-// ui.js closes the panel; here we only clear the highlighted row
+// ui.js closes the panel (close button or Escape); here we only clear the highlighted row
+function clearSelection() {
+  selectedId = null;
+  editing = false;
+  showRows();
+}
+
 panel.addEventListener('click', (event) => {
-  if (event.target.closest('[data-panel-close]')) {
-    selectedId = null;
-    showRows();
-  }
+  if (event.target.closest('[data-panel-close]')) clearSelection();
 });
 
-/* ---------- Actions ---------- */
+// ui.js runs first, so the panel is already closed when this runs
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && selectedId && !panel.classList.contains('is-open')) clearSelection();
+});
+
+/* ---------- Activate / deactivate ---------- */
 
 statusButton.addEventListener('click', async () => {
   const founder = findFounder(selectedId);
@@ -176,14 +318,18 @@ statusButton.addEventListener('click', async () => {
   showPanel();
 });
 
-// the modal opens through ui.js (data-modal-open); fill in whose account it is
-document.querySelector('[data-modal-open="delete-modal"]').addEventListener('click', () => {
-  const founder = findFounder(selectedId);
-  document.querySelector('#delete-text').textContent = t('founders.deleteText').replace('{name}', founder.full_name);
-});
+/* ---------- Delete ---------- */
+
+function askToDelete(id) {
+  deleteId = id;
+  document.querySelector('#delete-text').textContent = t('founders.deleteText').replace('{name}', findFounder(id).full_name);
+  deleteModal.showModal();
+}
+
+document.querySelector('#panel-delete').addEventListener('click', () => askToDelete(selectedId));
 
 deleteConfirm.addEventListener('click', async () => {
-  const founder = findFounder(selectedId);
+  const founder = findFounder(deleteId);
 
   deleteConfirm.classList.add('is-loading');
   const { error } = await supabase.rpc('admin_delete_founder', { target_user_id: founder.user_id });
@@ -196,8 +342,11 @@ deleteConfirm.addEventListener('click', async () => {
   }
 
   founders = founders.filter((item) => item.user_id !== founder.user_id);
-  selectedId = null;
-  panel.classList.remove('is-open');
+  if (selectedId === founder.user_id) {
+    selectedId = null;
+    editing = false;
+    panel.classList.remove('is-open');
+  }
   showToast(t('founders.deleted'), 'good');
   showRows();
 });
@@ -215,17 +364,23 @@ document.querySelector('#filter').addEventListener('click', (event) => {
 
 search.addEventListener('input', showRows);
 
-// dates, fields and statuses are text in the current language, so draw them again when it changes
+// dates, types and statuses are text in the current language, so draw them again when it changes
+// (the form keeps what the admin typed: only the view is drawn again)
 document.addEventListener('darb:language', () => {
   showRows();
   if (selectedId) showPanel();
+  if (deleteModal.open) {
+    document.querySelector('#delete-text').textContent = t('founders.deleteText').replace('{name}', findFounder(deleteId).full_name);
+  }
 });
 
 /* ---------- Start ---------- */
 
 document.querySelector('#search-icon').innerHTML = icon('search');
 document.querySelector('#panel-close').innerHTML = icon('close');
-document.querySelector('#panel-field-icon').innerHTML = icon('briefcase');
+document.querySelector('#panel-edit').innerHTML = icon('pencil');
+document.querySelector('#panel-type-icon').innerHTML = icon('user');
+document.querySelector('#delete-icon').innerHTML = TRASH_ICON;
 
 const { data, error } = await supabase.rpc('admin_list_founders');
 if (error) {
@@ -234,4 +389,5 @@ if (error) {
 } else {
   founders = data;
 }
+loading = false;
 showRows();
