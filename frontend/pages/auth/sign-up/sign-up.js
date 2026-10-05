@@ -2,7 +2,7 @@
    The same page finishes the profile of people who signed in with Google. */
 
 import { t, getLanguage } from '../../../shared/language.js';
-import { signUp, completeProfile, logInWithGoogle, getAccount, getCurrentUser, goToHomePage, PASSWORD_RULES, isGoodPassword, passwordProblem } from '../../../shared/auth.js';
+import { signUp, completeProfile, isUsernameFree, logInWithGoogle, getAccount, getCurrentUser, goToHomePage, PASSWORD_RULES, isGoodPassword, passwordProblem } from '../../../shared/auth.js';
 
 const form = document.querySelector('#sign-up-form');
 const steps = [...document.querySelectorAll('.step')];
@@ -277,6 +277,13 @@ function readDetails() {
 
 async function goForward() {
   if (!checkStep(currentStep)) return;
+
+  // the username must not belong to someone else
+  if (currentStep === STEP_NAME && !(await isUsernameFree(form.elements.username.value))) {
+    showError('username', 'error.usernameTaken');
+    form.elements.username.focus();
+    return;
+  }
 
   // People who came through Google finish after the details question
   if (currentStep === STEP_DETAILS && cameFromGoogle) {
