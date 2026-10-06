@@ -1,0 +1,44 @@
+/* Admin management page only. The table, toolbar, chips and alert come from
+   shared/shared.css. */
+
+/* the search box on one side, the number of admins on the other */
+.admins-toolbar {
+  justify-content: space-between;
+}
+
+.admin-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admins-empty {
+  margin: 16px;
+}
+
+.admins-note {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+.admins-note svg {
+  flex-shrink: 0;
+  color: var(--teal-text);
+}
+
+/* Phones: keep the admin, the role and the status */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  .admins-table {
+    min-width: 0;
+  }
+}

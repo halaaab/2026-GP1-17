@@ -1,0 +1,20 @@
+warning: in the working copy of 'backend/supabase/migrations/0001_users_and_admins.sql', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/supabase/migrations/0001_users_and_admins.sql b/backend/supabase/migrations/0001_users_and_admins.sql[m
+[1mindex ea51286..0bc22ce 100644[m
+[1m--- a/backend/supabase/migrations/0001_users_and_admins.sql[m
+[1m+++ b/backend/supabase/migrations/0001_users_and_admins.sql[m
+[36m@@ -1,6 +1,4 @@[m
+[31m-[m
+[31m-[m
+[31m-nnn-- ---------------------------------------------------------[m
+[32m+[m[32m-- ---------------------------------------------------------[m
+ -- 1. Tables (columns exactly as in the data dictionary)[m
+ -- ---------------------------------------------------------[m
+ [m
+[36m@@ -280,4 +278,4 @@[m [mend;[m
+ $$;[m
+ [m
+ revoke execute on function public.delete_my_account() from public, anon;[m
+[31m-grant execute on function public.delete_my_account() to authenticated;[m
+[32m+[m[32mgrant execute on function public.delete_my_account() to authenticated;[m
+\ No newline at end of file[m
