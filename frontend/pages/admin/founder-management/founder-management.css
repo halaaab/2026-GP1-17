@@ -1,0 +1,150 @@
+/* Founder management page only. The table, toolbar, chips, panel and modal
+   come from shared/shared.css. */
+
+/* ---------- Table ---------- */
+
+.founder-row {
+  cursor: pointer;
+}
+.founder-row:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+.founder-table tbody tr.is-selected td {
+  background: var(--bg-subtle);
+}
+
+.founder-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* the Assessments number sits in the middle of its column */
+.founder-table .founder-count {
+  text-align: center;
+}
+
+/* the edit and delete icons at the end of each row */
+.founder-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.btn-icon.is-danger:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+.founder-empty {
+  margin: 16px;
+}
+
+/* ---------- Side panel ---------- */
+
+.panel-person {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.panel-person .modal-title {
+  margin: 0;
+}
+.panel-email {
+  margin: 2px 0 0;
+  overflow-wrap: anywhere;
+}
+
+/* edit and close buttons, top corner of the panel */
+.founder-panel-tools {
+  display: flex;
+  gap: 2px;
+}
+
+.founder-avatar-lg {
+  width: 48px;
+  height: 48px;
+  font-size: 15px;
+}
+
+.founder-type-tile {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.founder-type-icon {
+  display: inline-flex;
+  color: var(--teal-text);
+}
+
+.founder-tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.founder-tile-value {
+  display: block;
+  font-size: 15px;
+  font-weight: 700;
+}
+.founder-tile-value.is-good { color: var(--good-text); }
+.founder-tile-value.is-risk { color: var(--risk-text); }
+
+.founder-reports-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 24px 0 10px;
+}
+.founder-reports-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.founder-reports {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.founder-reports-empty {
+  margin: 0;
+}
+
+/* the two buttons share the footer equally, as in the design */
+.founder-panel-foot .btn {
+  flex: 1;
+}
+
+/* Delete: soft red, the strong red is kept for the confirm button in the modal */
+.btn-danger-soft {
+  background: var(--risk-tint);
+  border-color: var(--risk-tint);
+  color: var(--risk-text);
+}
+.btn-danger-soft:hover {
+  border-color: var(--risk);
+}
+
+/* Delete pop-up: the red icon above the title, as in the design */
+.founder-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* Phones: keep the founder, the status and the buttons */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  .founder-table {
+    min-width: 0;
+  }
+}

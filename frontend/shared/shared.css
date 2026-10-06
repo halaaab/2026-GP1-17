@@ -566,6 +566,25 @@ textarea.input {
 .chip-navy { background: var(--navy-tint); color: var(--navy); }
 .chip-teal { background: var(--teal-tint); color: var(--teal-text); }
 
+/* Pastel chips: to tell apart kinds of things with no good / bad meaning
+   (user types, authorities). Avoid 6 (mint) next to a green status chip.
+   <span class="chip chip-pastel-3">Business Owner</span> */
+.chip-pastel-1 { background: var(--pastel-1-tint); color: var(--pastel-1-text); }
+.chip-pastel-2 { background: var(--pastel-2-tint); color: var(--pastel-2-text); }
+.chip-pastel-3 { background: var(--pastel-3-tint); color: var(--pastel-3-text); }
+.chip-pastel-4 { background: var(--pastel-4-tint); color: var(--pastel-4-text); }
+.chip-pastel-5 { background: var(--pastel-5-tint); color: var(--pastel-5-text); }
+.chip-pastel-6 { background: var(--pastel-6-tint); color: var(--pastel-6-text); }
+.chip-pastel-7 { background: var(--pastel-7-tint); color: var(--pastel-7-text); }
+.chip-pastel-8 { background: var(--pastel-8-tint); color: var(--pastel-8-text); }
+.chip-pastel-9  { background: var(--pastel-9-tint);  color: var(--pastel-9-text); }
+.chip-pastel-10 { background: var(--pastel-10-tint); color: var(--pastel-10-text); }
+.chip-pastel-11 { background: var(--pastel-11-tint); color: var(--pastel-11-text); }
+.chip-pastel-12 { background: var(--pastel-12-tint); color: var(--pastel-12-text); }
+.chip-pastel-13 { background: var(--pastel-13-tint); color: var(--pastel-13-text); }
+.chip-pastel-14 { background: var(--pastel-14-tint); color: var(--pastel-14-text); }
+.chip-pastel-15 { background: var(--pastel-15-tint); color: var(--pastel-15-text); }
+
 /* Small colored dot before the chip text: <span class="chip chip-good chip-dot">Operating</span> */
 .chip-dot::before {
   content: '';
@@ -607,6 +626,13 @@ textarea.input {
   background: var(--navy);
   border-color: var(--navy);
   color: #fff;
+}
+
+/* A dropdown filter that looks like a pill (explorers, admin lists)
+   <select class="pill"><option value="">Sector</option> ... </select> */
+select.pill {
+  max-width: 220px;   /* long option names are cut in the closed dropdown, shown in full when open */
+  padding-inline-end: 10px;
 }
 
 /* Language toggle, tabs, filters
