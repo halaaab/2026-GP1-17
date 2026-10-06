@@ -116,6 +116,8 @@ const ICON_PATHS = {
   chevron:   '<path d="m9 6 6 6-6 6"/>',
   map:       '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
   flag:      '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+  trendUp:   '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  trendDown: '<path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
 };
 
 /* A small line icon. Pages can use it too:

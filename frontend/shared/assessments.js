@@ -170,12 +170,10 @@ async function loadMarket(assessment) {
     activity: { en: row.economic_activity_name_en, ar: row.economic_activity_name_ar || row.economic_activity_name_en },
     year: row.year,
     sourceUrl: row.source_url || '',
-    numbers: [
-      { label: 'market.establishments', value: row.enterprises_total },
-      { label: 'market.newEnterprises', value: row.new_enterprises_total },
-      { label: 'market.employees',      value: row.employees_total },
-      { label: 'market.growth',         value: row.enterprises_growth_pct, isPercent: true },
-    ].filter((number) => number.value !== null),
+    enterprises: row.enterprises_total,
+    newEnterprises: row.new_enterprises_total,
+    employees: row.employees_total,
+    growth: row.enterprises_growth_pct,   // percent, compared with the year before
     sizes: [
       { label: 'size.micro',  value: row.share_micro_pct },
       { label: 'size.small',  value: row.share_small_pct },
@@ -219,6 +217,8 @@ async function loadRoadmap(assessment) {
       type: row.mandatory === 'Required' ? 'mandatory' : 'conditional',
       link: row.service_url || row.official_source_url || '',
       source: row.official_source_url || '',
+      stage: row.business_stage || '',
+      fees: row.fees_thresholds || '',
     }));
 }
 
