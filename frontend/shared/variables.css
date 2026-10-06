@@ -41,13 +41,23 @@
   --warn: #E0B23E;  --warn-text: #9A6A12;  --warn-tint: #FBF4E3;
   --gauge: linear-gradient(90deg, #D64545, #EBC94F 50%, #2F9E6E);
 
-  /* user types (pastel chips on the admin Founders page). No green or red:
-     those mean active / deactivated next to them. */
-  --type-student-tint:  #EFEAFB;  --type-student-text:  #6A4FB3;   /* lavender */
-  --type-founder-tint:  #FDEDE2;  --type-founder-text:  #9E5320;   /* peach: entrepreneur */
-  --type-owner-tint:    #E4F0FB;  --type-owner-text:    #285F94;   /* sky blue: business owner */
-  --type-investor-tint: #FBE8F1;  --type-investor-text: #A0406F;   /* pink */
-  --type-other-tint:    #FAF2D8;  --type-other-text:    #7E6214;   /* butter yellow */
+  /* pastels: soft colors to tell apart things that have no good / bad meaning,
+     like user types or authorities (chip-pastel-1 … chip-pastel-15 in shared.css) */
+  --pastel-1-tint: #EFEAFB;  --pastel-1-text: #6A4FB3;   /* lavender */
+  --pastel-2-tint: #FDEDE2;  --pastel-2-text: #9E5320;   /* peach */
+  --pastel-3-tint: #E4F0FB;  --pastel-3-text: #285F94;   /* sky blue */
+  --pastel-4-tint: #FBE8F1;  --pastel-4-text: #A0406F;   /* pink */
+  --pastel-5-tint: #FAF2D8;  --pastel-5-text: #7E6214;   /* butter yellow */
+  --pastel-6-tint: #E3F5EC;  --pastel-6-text: #2C7353;   /* mint */
+  --pastel-7-tint: #E0F3F6;  --pastel-7-text: #1F6B78;   /* aqua */
+  --pastel-8-tint: #F3EDE4;  --pastel-8-text: #6E5A3E;   /* sand */
+  --pastel-9-tint:  #FDE9E5;  --pastel-9-text:  #A3432F;  /* coral */
+  --pastel-10-tint: #EEF6DA;  --pastel-10-text: #536A14;  /* lime */
+  --pastel-11-tint: #DDF3EE;  --pastel-11-text: #1D6A5D;  /* teal */
+  --pastel-12-tint: #E7E9FB;  --pastel-12-text: #4048A6;  /* indigo */
+  --pastel-13-tint: #F5E6F7;  --pastel-13-text: #87398F;  /* orchid */
+  --pastel-14-tint: #E8EDF2;  --pastel-14-text: #465A6E;  /* slate */
+  --pastel-15-tint: #F1F0D9;  --pastel-15-text: #66601A;  /* olive */
 
   /* gradients */
   --gradient-brand: linear-gradient(135deg, #2C8FB8, #1B4467);   /* primary buttons, avatar, highlights */
