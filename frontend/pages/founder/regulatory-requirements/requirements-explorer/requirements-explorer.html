@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  REGULATORY EXPLORER (founder side, also open to visitors)
+  Every regulatory requirement as a card: search, filter by authority, sector
+  and business stage. A card opens the requirement's details page.
+  The rows come from the regulatory_requirements table (shared/regulatory.js).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="requirements-explorer.css">
+</head>
+<body data-layout="founder" data-page="requirements" data-title="nav.requirements" data-access="public">
+
+  <main>
+    <section class="card bg-aurora reg-hero">
+      <div class="reg-hero-head">
+        <div>
+          <h2 class="page-title" data-i18n="reg.title"></h2>
+          <p class="text-2" data-i18n="reg.sub"></p>
+        </div>
+        <dl class="reg-stats">
+          <div><dt class="text-3" data-i18n="reg.statRequirements"></dt><dd id="stat-requirements">—</dd></div>
+          <div><dt class="text-3" data-i18n="reg.statAuthorities"></dt><dd id="stat-authorities">—</dd></div>
+          <div><dt class="text-3" data-i18n="reg.statSectors"></dt><dd id="stat-sectors">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="toolbar reg-filters">
+        <label class="search">
+          <span id="search-icon"></span>
+          <input type="search" id="search" data-i18n-placeholder="reg.search" data-i18n-aria-label="reg.search">
+        </label>
+        <select class="pill" id="authority-filter" data-i18n-aria-label="reg.authority"></select>
+        <select class="pill" id="sector-filter" data-i18n-aria-label="reg.sector"></select>
+      </div>
+    </section>
+
+    <!-- One pill per business stage, with how many requirements it has. requirements-explorer.js fills it. -->
+    <div class="reg-stages" id="stages" role="group" data-i18n-aria-label="reg.stage"></div>
+
+    <p class="reg-count" id="count"></p>
+
+    <!-- requirements-explorer.js adds one card for each requirement -->
+    <div class="grid" id="cards"></div>
+    <!-- shows a spinner while loading, then "no match" or the load error -->
+    <p class="empty" id="empty"><span class="spinner"></span></p>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="requirements-explorer.js"></script>
+</body>
+</html>

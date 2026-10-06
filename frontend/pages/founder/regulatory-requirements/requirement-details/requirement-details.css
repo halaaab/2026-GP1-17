@@ -1,0 +1,186 @@
+/* Requirement details page only. Tiles, cards, chips, buttons and the alert
+   come from shared/shared.css. */
+
+/* the content stays narrow enough to read comfortably */
+.req {
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+.req-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.req-back:hover {
+  color: var(--navy);
+}
+.req-back svg {
+  width: 15px;
+  height: 15px;
+}
+html[dir="rtl"] .req-back svg {
+  transform: scaleX(-1);
+}
+
+/* ---------- Title row: icon, name, share ---------- */
+
+.req-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.req-head-text {
+  flex: 1;
+  min-width: 0;
+}
+.req-head .page-title {
+  margin: 0;
+}
+
+.req-icon,
+.req-source-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--r-sm);
+  background: var(--bg-tile);
+  color: var(--text-2);
+}
+
+.req-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 6px 0 0;
+}
+
+/* ---------- Authority, stage, source ---------- */
+
+.req-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--divider);
+}
+
+.req-tile-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.req-tile-value svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--teal-text);
+}
+
+/* ---------- Sections ---------- */
+
+.req-section {
+  padding-block: 24px;
+  border-bottom: 1px solid var(--divider);
+}
+.req-section:last-child {
+  border-bottom: none;
+}
+.req-section .section-title {
+  margin: 0 0 12px;
+}
+.req-section > p {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.req-checks {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.req-checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-block: 12px;
+  border-bottom: 1px solid var(--divider);
+  line-height: 1.6;
+}
+.req-checks li:first-child {
+  padding-top: 0;
+}
+.req-checks svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--teal-text);
+}
+
+/* ---------- Official source card ---------- */
+
+.req-source {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.req-source-icon {
+  width: 40px;
+  height: 40px;
+}
+.req-source-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+.req-source-text .text-3 {
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+.req-source-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.req-source-actions svg {
+  width: 14px;
+  height: 14px;
+}
+
+.req-note {
+  margin-top: 12px;
+}
+
+/* Phones: everything in one column */
+@media (max-width: 640px) {
+  /* the Share button moves under the title */
+  .req-head {
+    flex-wrap: wrap;
+  }
+  .req-head-text {
+    flex-basis: 200px;
+  }
+  .req-tiles {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .req-source {
+    flex-wrap: wrap;
+  }
+  .req-source-actions {
+    width: 100%;
+  }
+  .req-source-actions .btn {
+    flex: 1;
+  }
+}

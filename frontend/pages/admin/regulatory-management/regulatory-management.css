@@ -1,0 +1,72 @@
+/* Regulatory management page only. The table, toolbar, pills, panel, form
+   fields and modal come from shared/shared.css. */
+
+/* ---------- Table ---------- */
+
+.reg-row {
+  cursor: pointer;
+}
+.reg-row:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+/* long requirement names wrap instead of making the table very wide */
+.reg-table .cell-title {
+  max-width: 320px;
+}
+
+/* the edit and delete icons at the end of each row */
+.reg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.btn-icon.is-danger:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+.reg-empty {
+  margin: 16px;
+}
+
+/* ---------- Form ---------- */
+
+/* the sector check boxes: no browser frame around the group */
+.reg-sectors {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.reg-sectors legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.reg-sector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+/* Cancel and Save share the footer equally */
+.reg-panel-foot .btn {
+  flex: 1;
+}
+
+/* Delete pop-up: the red icon above the title, as in the design */
+.reg-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* Phones: keep the requirement and the buttons */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  .reg-table {
+    min-width: 0;
+  }
+}
