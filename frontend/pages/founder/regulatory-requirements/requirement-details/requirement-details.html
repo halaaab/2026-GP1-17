@@ -1,0 +1,103 @@
+<!doctype html>
+<!--
+  REQUIREMENT DETAILS (founder side, also open to visitors)
+  One regulatory requirement: who issues it, when it applies, what to do,
+  the fees and the official source. Opened from the Regulatory Explorer:
+    requirement-details.html?id=GEN-001
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="requirement-details.css">
+</head>
+<body data-layout="founder" data-page="requirements" data-title="nav.requirements" data-access="public">
+
+  <main class="req">
+    <a class="req-back text-2" id="back" href="../requirements-explorer/requirements-explorer.html">
+      <span id="back-icon"></span>
+      <span data-i18n="nav.requirements"></span>
+    </a>
+
+    <!-- shown while loading, and when the requirement cannot be found -->
+    <p class="empty" id="status"><span class="spinner"></span></p>
+
+    <article id="details" hidden>
+      <div class="req-head">
+        <span class="req-icon" id="title-icon"></span>
+        <div class="req-head-text">
+          <h2 class="page-title" id="name"></h2>
+          <p class="text-2 req-summary">
+            <span id="category"></span>
+            <span class="chip" id="mandatory"></span>
+          </p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="share">
+          <span id="share-icon"></span>
+          <span data-i18n="reg.share"></span>
+        </button>
+      </div>
+
+      <div class="req-tiles">
+        <div class="tile">
+          <span class="text-3" data-i18n="reg.authority"></span>
+          <strong class="req-tile-value"><span id="authority-icon"></span><span id="authority"></span></strong>
+        </div>
+        <div class="tile">
+          <span class="text-3" data-i18n="reg.stage"></span>
+          <strong class="req-tile-value" id="stage"></strong>
+        </div>
+        <div class="tile">
+          <span class="text-3" data-i18n="reg.officialSource"></span>
+          <a class="req-tile-value link" id="source-link" target="_blank" rel="noopener noreferrer"></a>
+        </div>
+      </div>
+
+      <section class="req-section">
+        <h3 class="section-title" data-i18n="reg.appliesWhen"></h3>
+        <ul class="req-checks">
+          <li><span id="check-icon"></span><span id="applies-when"></span></li>
+          <li><span id="sector-icon"></span><span id="sectors"></span></li>
+        </ul>
+      </section>
+
+      <section class="req-section" id="guidance-section">
+        <h3 class="section-title" data-i18n="reg.guidance"></h3>
+        <p class="text-2" id="guidance"></p>
+      </section>
+
+      <section class="req-section" id="fees-section">
+        <h3 class="section-title" data-i18n="reg.fees"></h3>
+        <p class="text-2" id="fees"></p>
+      </section>
+
+      <section class="req-section">
+        <h3 class="section-title" data-i18n="reg.officialSource"></h3>
+        <div class="card req-source">
+          <span class="req-source-icon" id="source-icon"></span>
+          <div class="req-source-text">
+            <strong id="source-title"></strong>
+            <span class="text-3" id="source-url" dir="ltr"></span>
+          </div>
+          <div class="req-source-actions">
+            <a class="btn btn-secondary btn-sm" id="source-open" target="_blank" rel="noopener noreferrer">
+              <span data-i18n="reg.openSource"></span><span id="open-icon"></span>
+            </a>
+            <a class="btn btn-primary btn-sm" id="service-open" target="_blank" rel="noopener noreferrer">
+              <span data-i18n="reg.applyHere"></span><span id="apply-icon"></span>
+            </a>
+          </div>
+        </div>
+        <div class="alert alert-warn req-note" id="verified"></div>
+      </section>
+    </article>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="../../../../shared/ui.js"></script>
+  <script type="module" src="requirement-details.js"></script>
+</body>
+</html>

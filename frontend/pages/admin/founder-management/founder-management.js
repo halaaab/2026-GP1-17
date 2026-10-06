@@ -18,9 +18,6 @@ const deleteConfirm = document.querySelector('#delete-confirm');
 const form = document.querySelector('#panel-form');
 const saveButton = document.querySelector('#edit-save');
 
-// the bin icon (layout.js has no bin icon yet)
-const TRASH_ICON = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg>';
-
 // what a username may look like (the same rule the database checks)
 const USERNAME_RULE = /^[A-Za-z0-9_]{3,20}$/;
 
@@ -32,6 +29,9 @@ const TYPE_LABELS = {
   investor: 'signup.investor',
   other: 'signup.other',
 };
+
+// one pastel chip color per user type (chip-pastel-N in shared.css); no mint (6), it sits next to the green "Active"
+const TYPE_COLORS = { student: 1, entrepreneur: 2, business_owner: 3, investor: 4, other: 5 };
 
 let founders = [];
 let filter = 'all';       // 'all', 'active' or 'deactivated'
@@ -58,10 +58,10 @@ function typeText(founder) {
   return TYPE_LABELS[founder.user_type] ? t(TYPE_LABELS[founder.user_type]) : '—';
 }
 
-// the user type as a pastel chip, one color per type (founder-management.css)
+// the user type as a pastel chip, one color per type
 function typeChip(founder) {
-  const known = TYPE_LABELS[founder.user_type];
-  return `<span class="chip ${known ? `type-${founder.user_type}` : ''}">${typeText(founder)}</span>`;
+  const color = TYPE_COLORS[founder.user_type];
+  return `<span class="chip ${color ? `chip-pastel-${color}` : ''}">${typeText(founder)}</span>`;
 }
 
 function statusChip(founder) {
@@ -105,7 +105,7 @@ function showRows() {
       <td>
         <div class="founder-actions">
           <button type="button" class="btn-icon" data-action="edit" aria-label="${t('founders.edit')}">${icon('pencil')}</button>
-          <button type="button" class="btn-icon is-danger" data-action="delete" aria-label="${t('founders.delete')}">${TRASH_ICON}</button>
+          <button type="button" class="btn-icon is-danger" data-action="delete" aria-label="${t('founders.delete')}">${icon('trash')}</button>
         </div>
       </td>
     </tr>`).join('');
@@ -380,7 +380,7 @@ document.querySelector('#search-icon').innerHTML = icon('search');
 document.querySelector('#panel-close').innerHTML = icon('close');
 document.querySelector('#panel-edit').innerHTML = icon('pencil');
 document.querySelector('#panel-type-icon').innerHTML = icon('user');
-document.querySelector('#delete-icon').innerHTML = TRASH_ICON;
+document.querySelector('#delete-icon').innerHTML = icon('trash');
 
 const { data, error } = await supabase.rpc('admin_list_founders');
 if (error) {

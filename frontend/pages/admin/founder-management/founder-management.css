@@ -36,13 +36,6 @@
   color: var(--risk-text);
 }
 
-/* one pastel color per user type (table chip and side panel) */
-.chip.type-student        { background: var(--type-student-tint);  color: var(--type-student-text); }
-.chip.type-entrepreneur   { background: var(--type-founder-tint);  color: var(--type-founder-text); }
-.chip.type-business_owner { background: var(--type-owner-tint);    color: var(--type-owner-text); }
-.chip.type-investor       { background: var(--type-investor-tint); color: var(--type-investor-text); }
-.chip.type-other          { background: var(--type-other-tint);    color: var(--type-other-text); }
-
 .founder-empty {
   margin: 16px;
 }
