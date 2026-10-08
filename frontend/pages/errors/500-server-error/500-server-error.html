@@ -1,0 +1,31 @@
+<!doctype html>
+<!--
+  500 — SERVER ERROR
+  Shown when a page could not load its data from the database:
+  showErrorPage(500)  (shared/errors.js). "Try again" reopens that page.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="500-server-error.css">
+</head>
+<body data-layout="error" class="bg-aurora">
+
+  <main>
+    <span class="empty-icon server-error-icon" id="icon"></span>
+    <p class="display text-gradient">500</p>
+    <h1 class="page-title" data-i18n="errorPage.serverTitle"></h1>
+    <p class="text-2" data-i18n="errorPage.serverText"></p>
+    <div class="error-actions">
+      <a class="btn btn-secondary" id="home" href="../../../index.html" data-i18n="errorPage.home"></a>
+      <button type="button" class="btn btn-primary" id="retry" data-i18n="errorPage.retry"></button>
+    </div>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="500-server-error.js"></script>
+</body>
+</html>

@@ -11,8 +11,8 @@
 --
 -- This file only creates the empty tables. To fill them:
 --   1. run  backend/supabase/seed/reference_data.sql  in the SQL Editor
---   2. import  backend/supabase/seed/startups.csv  into the startups table
---      (Table Editor → startups → Insert → Import data from CSV)
+--   2. run  backend/supabase/seed/startups.sql  in the SQL Editor
+--      (the 1,128 startups of startups.csv, with the sectors tidied for the filters)
 -- ---------------------------------------------------------
 
 

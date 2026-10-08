@@ -17,6 +17,7 @@
     11. App layout: sidebar, header, footer (built by layout.js)
     12. Public layout: top bar and footer for the landing page
     13. Auth layout: logo + centered card
+   13b. Error layout: logo + centered message (403, 404, 500)
     14. Responsive rules (tablet, phone, small phone)
 
    Rules:
@@ -2019,6 +2020,63 @@ html[dir="rtl"] .auth-title {
 /* Google button */
 .btn-google {
   gap: 10px;
+}
+
+/* ==========================================================
+   13b. Error layout (403, 404, 500 pages)
+   layout.js builds it for <body data-layout="error">:
+   the logo and the language button on top, the page's <main> centered.
+   ========================================================== */
+
+.error-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.error-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+.error-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 24px 16px 72px;
+  text-align: center;
+}
+.error-main p {
+  margin: 0;
+}
+
+/* the buttons under the message, side by side (stacked on a phone) */
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .error-top {
+    padding: 12px 16px;
+  }
+  .error-actions {
+    width: 100%;
+  }
+  .error-actions .btn {
+    flex: 1 1 100%;
+  }
 }
 
 /* ==========================================================
