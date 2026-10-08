@@ -1,0 +1,100 @@
+<!doctype html>
+<!--
+  INCUBATOR / ACCELERATOR DETAILS
+  One support program: who can apply, what it is, what it gives, funding,
+  and its official website. Opened from the explorer with ?id=<support_org_id>.
+  Visitors may open it too. The layout follows the Regulatory requirement page.
+  The row comes from the support_organisations table (migration 0006), through ../programs.js.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="incubator-accelerator-details.css">
+</head>
+<body data-layout="founder" data-page="incubators" data-title="nav.incubators" data-access="public">
+
+  <main class="detail-page">
+    <a class="detail-back" id="back-link" href="../incubators-accelerators-explorer/incubators-accelerators-explorer.html">
+      <span id="back-icon"></span>
+      <span data-i18n="programs.back"></span>
+    </a>
+
+    <!-- shown while the program loads -->
+    <div class="detail-loading" id="loading">
+      <div class="skeleton detail-skeleton-title"></div>
+      <div class="skeleton detail-skeleton-line"></div>
+      <div class="skeleton detail-skeleton-block"></div>
+    </div>
+
+    <!-- shown when the id is wrong or the program was removed -->
+    <div class="empty" id="not-found" hidden>
+      <span class="empty-icon" id="not-found-icon"></span>
+      <h3 class="section-title" data-i18n="programs.notFound"></h3>
+      <p class="text-2" data-i18n="programs.notFoundText"></p>
+      <a class="btn btn-secondary btn-sm" href="../incubators-accelerators-explorer/incubators-accelerators-explorer.html" data-i18n="programs.back"></a>
+    </div>
+
+    <article class="detail" id="detail" hidden>
+      <header class="detail-head">
+        <span class="detail-logo" id="detail-logo"></span>
+        <div class="detail-title">
+          <h2 id="detail-name"></h2>
+          <p class="detail-sub">
+            <span id="detail-place"></span>
+            <span class="detail-type" id="detail-type"></span>
+          </p>
+        </div>
+        <button type="button" class="btn btn-secondary detail-share" id="share"></button>
+      </header>
+
+      <!-- key facts -->
+      <div class="detail-facts" id="facts"></div>
+
+      <section class="detail-section" id="eligibility-section">
+        <h3 class="section-title" data-i18n="programs.eligibility"></h3>
+        <ul class="detail-rows" id="eligibility"></ul>
+      </section>
+
+      <section class="detail-section">
+        <h3 class="section-title" data-i18n="programs.about"></h3>
+        <p class="detail-text" id="about"></p>
+      </section>
+
+      <section class="detail-section" id="services-section">
+        <h3 class="section-title" data-i18n="programs.services"></h3>
+        <ul class="detail-rows" id="services"></ul>
+      </section>
+
+      <section class="detail-section" id="funding-section">
+        <h3 class="section-title" data-i18n="programs.funding"></h3>
+        <p class="detail-text" id="funding"></p>
+      </section>
+
+      <section class="detail-section" id="website-section">
+        <h3 class="section-title" data-i18n="programs.website"></h3>
+        <div class="detail-source">
+          <span class="detail-source-logo" id="source-logo"></span>
+          <div class="detail-source-text">
+            <strong id="source-name"></strong>
+            <span id="source-url" dir="ltr"></span>
+          </div>
+          <a class="btn btn-primary btn-sm" id="website" target="_blank" rel="noopener"></a>
+        </div>
+        <div class="detail-note" data-i18n="programs.verifyNote"></div>
+      </section>
+
+      <section class="detail-section detail-similar" id="similar-section">
+        <h3 class="section-title" data-i18n="programs.similar"></h3>
+        <div class="detail-similar-grid" id="similar"></div>
+      </section>
+    </article>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="incubator-accelerator-details.js"></script>
+</body>
+</html>
