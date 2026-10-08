@@ -19,6 +19,9 @@ const TABS = ['score', 'similar', 'market', 'roadmap', 'report'];
 // the Darb logo, for the top of the report
 const LOGO = new URL('../../../assets/images/%20Darb-logo-horizontal.png', import.meta.url).href;
 
+// the folder with the logos of the authorities and of Monsha'at
+const LOGOS = new URL('../../../assets/images/logos/', import.meta.url).href;
+
 const panel = document.querySelector('#assess');
 
 let assessment = null;       // the assessment being shown
@@ -41,7 +44,7 @@ export function openPanel(assessmentToShow, tab = 'score') {
   drawPanel();
   panel.classList.add('is-open');
   document.body.classList.add('assess-open');   // chatbot.css hides the chat while this is on
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: 'instant' });
   playScore(currentTab === 'report');
 }
 
@@ -53,7 +56,7 @@ export function closePanel() {
 function showTab(tab, withoutAnimation = false) {
   currentTab = tab;
   drawPanel();
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: 'instant' });
   // the report is a document, so its score is shown at once, without counting up
   playScore(withoutAnimation || tab === 'report');
 }
@@ -83,72 +86,130 @@ function drawPanel() {
 
 /* ---------- Pieces used by more than one tab ---------- */
 
-/* The score on its path: a big number, and a line from 0 to 100 with a marker on it.
-   The line has three parts, one for each score band (0–39, 40–69, 70–100).
-   It always runs from 0 on the left to 100 on the right (dir="ltr"), in Arabic too,
-   the way number lines and charts are normally drawn.
-   The number and the marker start at 0; playScore() moves them to the score. */
-function scoreOnPath() {
+/* The score, big, in a blue box: a half-circle dial on one side and the verdict in
+   words on the other. The dial is an arc from 0 (left) to 100 (right). It always runs
+   left to right (dir="ltr"), in Arabic too.
+   The arc, its knob and the number start at 0; playScore() moves them to the score. */
+const DIAL_LENGTH = 282.7;   // the length of the arc drawn below (half a circle of radius 90)
+
+function scoreHero() {
   const band = scoreBand(assessment.score);
 
   return `
-    <div class="fis is-${band}">
-      <p class="fis-label">${t('score.title')}</p>
-      <p class="fis-number"><strong data-score="${assessment.score}">0</strong><span>${t('score.outOf')}</span></p>
-      <p class="fis-sentence">${t(`score.sentence.${band}`)}</p>
-
-      <div class="fis-path" dir="ltr">
-        <span class="fis-part is-risk"></span><span class="fis-part is-warn"></span><span class="fis-part is-good"></span>
-        <span class="fis-marker" data-marker></span>
+    <div class="score-hero is-${band}">
+      <div class="dial" dir="ltr">
+        <svg viewBox="0 0 220 122" aria-hidden="true">
+          <defs>
+            <linearGradient id="dial-colors" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" class="dial-stop-start"/><stop offset="1" class="dial-stop-end"/>
+            </linearGradient>
+          </defs>
+          <path class="dial-track" d="M20 110 A90 90 0 0 1 200 110"/>
+          <path class="dial-arc" data-dial-arc d="M20 110 A90 90 0 0 1 200 110" stroke="url(#dial-colors)" stroke-dasharray="${DIAL_LENGTH}" stroke-dashoffset="${DIAL_LENGTH}"/>
+          <circle class="dial-knob" data-dial-knob cx="20" cy="110" r="9"/>
+        </svg>
+        <p class="dial-number"><strong data-score="${assessment.score}">0</strong><span>/ 100</span></p>
       </div>
-      <div class="fis-scale" dir="ltr" aria-hidden="true">
-        <span>0</span><span>100</span>
+      <div class="score-verdict">
+        <p class="fis-label">${t('score.title')}</p>
+        <h3>${t(`score.band.${band}`)}</h3>
+        <p class="fis-sentence">${t(`score.sentence.${band}`)}</p>
       </div>
     </div>`;
 }
 
-/* Counts the number up and slides the marker along the path.
-   withoutAnimation = put both at the score straight away (used before printing). */
-function playScore(withoutAnimation = false) {
+/* Puts the dial at one value between 0 and the score */
+function setDial(value) {
   const number = panel.querySelector('[data-score]');
-  const marker = panel.querySelector('[data-marker]');
-  if (!number) return;
+  const angle = Math.PI * (value / 100);
 
+  number.textContent = Math.round(value);
+  panel.querySelector('[data-dial-arc]').style.strokeDashoffset = DIAL_LENGTH * (1 - value / 100);
+
+  const knob = panel.querySelector('[data-dial-knob]');
+  knob.setAttribute('cx', 110 - 90 * Math.cos(angle));
+  knob.setAttribute('cy', 110 - 90 * Math.sin(angle));
+}
+
+/* Sweeps the dial from 0 up to the score, and lets the boxes of the page rise in.
+   withoutAnimation = show everything in its final place at once (used before printing). */
+function playScore(withoutAnimation = false) {
+  // people who asked their device for less motion get no animation either
+  const still = withoutAnimation || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  panel.classList.toggle('is-still', still);
+
+  riseIn(still);
+
+  const number = panel.querySelector('[data-score]');
+  if (!number) return;
   const score = Number(number.dataset.score);
 
-  if (withoutAnimation) {
-    number.textContent = score;
-    marker.style.transition = 'none';
-    marker.style.insetInlineStart = `${score}%`;
+  if (still) {
+    setDial(score);
     return;
   }
 
   const started = performance.now();
-  const duration = 900;   // milliseconds
-
-  // the browser draws the marker at 0 first, then moves it (chatbot.css animates the move)
-  requestAnimationFrame(() => { marker.style.insetInlineStart = `${score}%`; });
+  const duration = 1400;   // milliseconds
 
   function tick(now) {
     const progress = Math.min((now - started) / duration, 1);
-    number.textContent = Math.round(score * progress);
+    const eased = 1 - (1 - progress) ** 3;   // fast at first, then slowing down
+    setDial(score * eased);
     if (progress < 1) requestAnimationFrame(tick);
   }
   requestAnimationFrame(tick);
 }
 
-/* Survival potential, risk level and sector viability, side by side */
+/* Every box of the page starts a little lower and faded, and rises into place when it
+   comes onto the screen, one after the other. chatbot.css has the movement (.rise). */
+function riseIn(still) {
+  const pieces = panel.querySelectorAll('.score-hero, .readings > *, .assess-body .box, .step-row, .phase-title');
+
+  if (still) {
+    pieces.forEach((piece) => piece.classList.add('is-in'));
+    return;
+  }
+
+  const watcher = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-in');
+        watcher.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.15 });
+
+  pieces.forEach((piece, index) => {
+    piece.classList.add('rise');
+    piece.style.setProperty('--i', index % 4);   // neighbors rise one after the other
+    watcher.observe(piece);
+  });
+}
+
+/* Survival potential, risk level and sector viability: three tinted tiles
+   that sit over the bottom edge of the picture */
 function readings() {
   const band = scoreBand(assessment.score);
   const riskLevel = { good: 'low', warn: 'medium', risk: 'high' }[band];
   const sectorIsGood = assessment.factors[3] >= -1;
 
+  const tiles = [
+    { icon: 'sprout', name: 'score.survival', value: t(`survival.${band}`), color: band },
+    { icon: 'shield', name: 'score.risk',     value: t(`level.${riskLevel}`), color: band },
+    { icon: 'store',  name: 'score.sector',   value: t(sectorIsGood ? 'sector.favourable' : 'sector.challenging'), color: sectorIsGood ? 'good' : 'warn' },
+  ];
+
   return `
-    <dl class="readings">
-      <div><dt>${t('score.survival')}</dt><dd class="is-${band}">${t(`survival.${band}`)}</dd></div>
-      <div><dt>${t('score.risk')}</dt><dd class="is-${band}">${t(`level.${riskLevel}`)}</dd></div>
-      <div><dt>${t('score.sector')}</dt><dd class="is-${sectorIsGood ? 'good' : 'warn'}">${t(sectorIsGood ? 'sector.favourable' : 'sector.challenging')}</dd></div>
-    </dl>`;
+    <div class="readings">
+      ${tiles.map((tile) => `
+        <div class="reading is-${tile.color}">
+          <span class="reading-icon">${icon(tile.icon)}</span>
+          <span class="reading-name">${t(tile.name)}</span>
+          <strong>${tile.value}</strong>
+          <small>${t(`${tile.name}.why`)}</small>
+        </div>`).join('')}
+    </div>`;
 }
 
 function sectionTitle(title, sub = '') {
@@ -161,33 +222,34 @@ function sectionTitle(title, sub = '') {
 
 /* ---------- Tab: Score ---------- */
 
-/* One list of factors: the ones that push the score up, or the ones that pull it down */
+/* One box of factors: the ones that push the score up, or the ones that pull it down.
+   Each has a small bar, so the biggest influence is easy to spot. */
 function factorList(title, wanted) {
+  const biggest = Math.max(...assessment.factors.map((change) => Math.abs(change)), 1);
+
   const rows = assessment.factors
     .map((change, index) => ({ change, name: SCORE_FACTORS[index] }))
     .filter((factor) => (wanted === 'up' ? factor.change >= 0 : factor.change < 0))
     .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
 
   return `
-    <div class="moves">
-      <h3 class="moves-title">${title}</h3>
+    <div class="box moves is-${wanted}">
+      <h3 class="box-title">${icon(wanted === 'up' ? 'trendUp' : 'trendDown')} ${title}</h3>
       ${rows.length === 0 ? `<p class="text-3">${t('score.none')}</p>` : ''}
-      <ul>
-        ${rows.map((factor) => `
-          <li>
-            <span class="moves-value is-${wanted}" dir="ltr">${factor.change >= 0 ? '+' : '−'}${Math.abs(factor.change)}</span>
-            <span title="${t(`${factor.name}.why`)}">${t(factor.name)}</span>
-          </li>`).join('')}
-      </ul>
+      ${rows.map((factor) => `
+        <div class="move" title="${t(`${factor.name}.why`)}">
+          <span class="move-name">${t(factor.name)}</span>
+          <span class="move-bar"><span style="--w: ${(Math.abs(factor.change) / biggest) * 100}%"></span></span>
+          <strong dir="ltr">${factor.change >= 0 ? '+' : '−'}${Math.abs(factor.change)}</strong>
+        </div>`).join('')}
     </div>`;
 }
 
 function scoreTab() {
   return `
-    ${scoreOnPath()}
+    ${scoreHero()}
     ${readings()}
-
-    <div class="moves-grid">
+    <div class="score-moves">
       ${factorList(t('score.up'), 'up')}
       ${factorList(t('score.down'), 'down')}
     </div>`;
@@ -205,67 +267,129 @@ function shorten(text, length = 220) {
 
 /* ---------- Tab: Similar startups ---------- */
 
+/* The first letter of a name in a tinted circle (the dataset has no startup logos) */
+function initial(name) {
+  const tints = ['navy', 'teal', 'good', 'warn'];
+  const tint = tints[name.length % tints.length];
+  return `<span class="initial is-${tint}">${safe(name.trim().charAt(0).toUpperCase())}</span>`;
+}
+
+function startupCard(startup) {
+  return `
+    <article class="box startup">
+      <div class="startup-top">
+        ${initial(startup.name)}
+        <div class="startup-name">
+          <strong>${safe(startup.name)}</strong>
+          <span class="text-3">${safe([startup.sector, startup.region].filter(Boolean).join(' · '))}</span>
+        </div>
+        ${startup.stage ? `<span class="chip">${safe(startup.stage)}</span>` : ''}
+      </div>
+      <p class="startup-about" dir="auto">${safe(shorten(startup.about, 200))}</p>
+      <div class="startup-actions">
+        <button type="button" class="btn btn-secondary btn-sm" data-ask="${startup.id}">${t('similar.ask')}</button>
+        ${startup.website ? `<a class="btn btn-ghost btn-sm" href="${safe(startup.website)}" target="_blank" rel="noopener">${t('similar.website')} ${icon('external')}</a>` : ''}
+      </div>
+    </article>`;
+}
+
 function similarTab() {
   const startups = assessment.result.similar;
+  if (startups.length === 0) return `${sectionTitle(t('similar.title'))}${nothingYet()}`;
 
   return `
-    ${sectionTitle(t('similar.title'), t('similar.sub'))}
-    ${startups.length === 0 ? nothingYet() : ''}
-    <div class="similar">
-      ${startups.map((startup) => `
-        <article class="startup">
-          <div class="startup-top">
-            <strong>${safe(startup.name)}</strong>
-            <span class="text-3">${safe([startup.sector, startup.region, startup.stage].filter(Boolean).join(' · '))}</span>
-          </div>
-          <p class="text-2" dir="auto">${safe(shorten(startup.about))}</p>
-          <div class="startup-actions">
-            <button type="button" class="btn btn-secondary btn-sm" data-ask="${startup.id}">${t('similar.ask')}</button>
-            ${startup.website ? `<a class="btn btn-ghost btn-sm" href="${safe(startup.website)}" target="_blank" rel="noopener">${t('similar.website')} ${icon('external')}</a>` : ''}
-          </div>
-        </article>`).join('')}
-    </div>`;
+    ${sectionTitle(t('similar.count').replace('{n}', startups.length), t('similar.note'))}
+    <div class="startups">${startups.map(startupCard).join('')}</div>`;
 }
 
 /* ---------- Tab: Market ---------- */
 
-function showNumber(number) {
-  if (number.isPercent) return `${number.value > 0 ? '+' : ''}${number.value}%`;
-  return Number(number.value).toLocaleString('en');
+const inNumbers = (value) => Number(value).toLocaleString('en');
+
+/* The four market numbers. Each box has the number, its name and one plain sentence. */
+function marketNumbers(market) {
+  const perBusiness = market.enterprises && market.employees ? Math.round(market.employees / market.enterprises) : null;
+  const newShare = market.enterprises && market.newEnterprises ? Math.round((market.newEnterprises / market.enterprises) * 100) : null;
+  const isGrowing = market.growth >= 0;
+
+  const boxes = [
+    market.enterprises === null ? null : {
+      icon: 'store', value: inNumbers(market.enterprises), name: t('market.establishments'),
+      text: t('market.establishments.text'),
+    },
+    market.newEnterprises === null ? null : {
+      icon: 'sprout', value: inNumbers(market.newEnterprises), name: t('market.newEnterprises'),
+      text: t('market.new.text').replace('{year}', market.year).replace('{n}', newShare),
+    },
+    market.employees === null ? null : {
+      icon: 'users', value: inNumbers(market.employees), name: t('market.employees'),
+      text: t('market.employees.text').replace('{n}', perBusiness),
+    },
+    market.growth === null ? null : {
+      icon: isGrowing ? 'trendUp' : 'trendDown', value: `${isGrowing ? '+' : ''}${market.growth}%`, name: t('market.growth'),
+      text: t(isGrowing ? 'market.growth.up' : 'market.growth.down'), color: isGrowing ? 'good' : 'risk',
+    },
+  ].filter(Boolean);
+
+  return `
+    <div class="stats">
+      ${boxes.map((box) => `
+        <div class="box stat-box">
+          <span class="stat-icon ${box.color ? `is-${box.color}` : ''}">${icon(box.icon)}</span>
+          <strong class="${box.color ? `is-${box.color}` : ''}" dir="ltr">${box.value}</strong>
+          <span class="stat-name">${box.name}</span>
+          <small>${box.text}</small>
+        </div>`).join('')}
+    </div>`;
 }
 
-function marketNumbers(market) {
+/* The numbers read as plain sentences: what they mean for someone about to start */
+function marketMeaning(market) {
+  const lines = [];
+  const micro = market.sizes.find((size) => size.label === 'size.micro');
+  const newShare = market.enterprises && market.newEnterprises ? Math.round((market.newEnterprises / market.enterprises) * 100) : null;
+
+  if (market.growth !== null) {
+    let key = 'meaning.stable';
+    if (market.growth >= 3) key = 'meaning.growing';
+    if (market.growth <= -3) key = 'meaning.shrinking';
+    lines.push(t(key));
+  }
+  if (micro && micro.value >= 60) lines.push(t('meaning.small').replace('{n}', Math.round(micro.value)));
+  if (newShare !== null && newShare >= 10) lines.push(t('meaning.entry').replace('{n}', newShare));
+
+  if (lines.length === 0) return '';
+
   return `
-    <div class="kpis">
-      ${market.numbers.map((number) => `
-        <div class="tile">
-          <span class="fact-label">${t(number.label)}</span>
-          <span class="tile-value" dir="ltr">${showNumber(number)}</span>
-        </div>`).join('')}
+    <div class="box meaning">
+      <h3 class="box-title">${icon('spark')} ${t('market.meaning')}</h3>
+      <ul>${lines.map((line) => `<li>${line}</li>`).join('')}</ul>
+    </div>`;
+}
+
+/* Micro, small, medium and large enterprises as ONE bar cut into four parts */
+function marketSizes(market) {
+  if (market.sizes.length === 0) return '';
+
+  return `
+    <div class="box sizes">
+      <h3 class="box-title">${t('market.sizeTitle')}</h3>
+      <div class="size-bar" dir="ltr">
+        ${market.sizes.map((size, index) => `<span class="size-part is-${index + 1}" style="--w: ${Math.max(size.value, 0.6)}"></span>`).join('')}
+      </div>
+      <div class="size-legend">
+        ${market.sizes.map((size, index) => `
+          <span><i class="size-dot is-${index + 1}"></i>${t(size.label)} <strong dir="ltr">${Number(size.value.toFixed(1))}%</strong></span>`).join('')}
+      </div>
     </div>`;
 }
 
 function marketSource(market) {
   const text = t('market.source').replace('{year}', market.year);
+  const logo = `<img class="source-logo" src="${LOGOS}monshaat.png" alt="" onerror="this.remove()">`;
   return market.sourceUrl
-    ? `<a class="link market-source" href="${safe(market.sourceUrl)}" target="_blank" rel="noopener">${text}</a>`
-    : `<p class="text-3 market-source">${text}</p>`;
-}
-
-/* Micro, small, medium and large enterprises as four bars */
-function marketSizes(market) {
-  if (market.sizes.length === 0) return '';
-
-  return `
-    <div class="sizes">
-      <h3 class="section-title">${t('market.sizeTitle')}</h3>
-      ${market.sizes.map((size) => `
-        <div class="size-row">
-          <span>${t(size.label)}</span>
-          <div class="bar"><div class="bar-fill" style="width: ${size.value}%"></div></div>
-          <strong dir="ltr">${size.value}%</strong>
-        </div>`).join('')}
-    </div>`;
+    ? `<a class="market-source" href="${safe(market.sourceUrl)}" target="_blank" rel="noopener">${logo}<span>${text}</span>${icon('external')}</a>`
+    : `<p class="market-source">${logo}<span>${text}</span></p>`;
 }
 
 function marketTab() {
@@ -273,48 +397,101 @@ function marketTab() {
   if (!market) return `${sectionTitle(t('market.title'))}${nothingYet()}`;
 
   return `
-    ${sectionTitle(t('market.title'), `${t('market.activity')}: ${safe(say(market.activity))} · ${market.year}`)}
+    ${sectionTitle(safe(say(market.activity)), `${t('market.activity')} · ${market.year}`)}
     ${marketNumbers(market)}
+    ${marketMeaning(market)}
     ${marketSizes(market)}
     ${marketSource(market)}`;
 }
 
 /* ---------- Tab: Roadmap ---------- */
 
+/* The logo file of each authority, found by a word in its name.
+   The files are in assets/images/logos/. Without a file, the authority's initials are shown. */
+const AUTHORITY_LOGOS = [
+  ['Saudi Business Center', 'sbc'], ['Chambers', 'chambers'], ['Commerce', 'mc'],
+  ['SPL', 'spl'], ['Balady', 'balady'], ['ZATCA', 'zatca'], ['Qiwa', 'qiwa'],
+  ['GOSI', 'gosi'], ['Human Resources', 'hrsd'], ['SFDA', 'sfda'], ['SASO', 'saso'],
+  ['CST', 'cst'], ['SDAIA', 'sdaia'], ['Industry', 'mim'], ['SAIP', 'saip'],
+];
+
+function authorityLogo(authority) {
+  const match = AUTHORITY_LOGOS.find(([word]) => authority.includes(word));
+  const letters = authority.replace(/[^A-Za-z ]/g, '').split(' ').filter((word) => /^[A-Z]/.test(word)).map((word) => word[0]).slice(0, 2).join('');
+
+  return `
+    <span class="authority-logo">
+      ${match ? `<img src="${LOGOS}${match[1]}.png" alt="" onerror="this.remove()">` : ''}
+      <b>${letters}</b>
+    </span>`;
+}
+
 function typeChip(step) {
   return `<span class="chip ${step.type === 'mandatory' ? 'chip-navy' : 'chip-warn'}">${t(`roadmap.${step.type}`)}</span>`;
 }
 
-/* The address without "https://" and the page: https://business.sa/x → business.sa */
-function siteName(address) {
-  try {
-    return new URL(address).hostname.replace('www.', '');
-  } catch {
-    return '';
-  }
+/* The roadmap has three parts. A step goes into the part its business stage belongs to. */
+const PHASES = [
+  { name: 'phase.establish', stages: ['Establishment'] },
+  { name: 'phase.prepare',   stages: ['Pre-operation', 'Planning', 'Design', 'Pre-market', 'Product launch'] },
+  { name: 'phase.operate',   stages: ['Hiring', 'Operation', 'Import', 'Export', 'Pre-import'] },
+];
+
+function phaseOf(step) {
+  return PHASES.find((phase) => phase.stages.some((stage) => step.stage.startsWith(stage))) || PHASES[2];
 }
 
-/* The roadmap as a numbered list. chatbot.js shows the same list inside the chat. */
+/* The short roadmap shown inside the chat: number, name and tag only */
 export function roadmapList(forAssessment) {
   const steps = forAssessment.result.roadmap;
   if (steps.length === 0) return nothingYet();
 
   return `
-    <ol class="rm-list">
+    <ol class="rm-brief">
       ${steps.map((step, index) => `
-        <li class="rm-step">
+        <li>
           <span class="rm-number">${index + 1}</span>
-          <div class="rm-text">
-            <div class="rm-title"><strong>${safe(say(step.title))}</strong>${typeChip(step)}</div>
-            <p class="rm-authority">${safe(step.authority)}</p>
-            <p class="text-2" dir="auto">${safe(step.guidance)}</p>
-            <div class="rm-links">
-              ${step.link ? `<a class="rm-action" href="${safe(step.link)}" target="_blank" rel="noopener">${t('roadmap.apply')} ${icon('external')}</a>` : ''}
-              ${step.source ? `<a class="chip" dir="ltr" href="${safe(step.source)}" target="_blank" rel="noopener">${siteName(step.source)}</a>` : ''}
-            </div>
-          </div>
+          <strong>${safe(say(step.title))}</strong>
+          ${typeChip(step)}
         </li>`).join('')}
     </ol>`;
+}
+
+/* The full roadmap: the three parts, and a box for every step */
+function roadmapFull() {
+  const steps = assessment.result.roadmap;
+  if (steps.length === 0) return nothingYet();
+
+  const numbered = steps.map((step, index) => ({ ...step, number: index + 1 }));
+
+  return PHASES.map((phase) => {
+    const own = numbered.filter((step) => phaseOf(step) === phase);
+    if (own.length === 0) return '';
+
+    return `
+      <section class="phase">
+        <h3 class="phase-title"><span>${t(phase.name)}</span><small>${t('phase.count').replace('{n}', own.length)}</small></h3>
+        <div class="phase-steps">
+          ${own.map((step) => `
+            <div class="step-row is-${step.type}">
+              <span class="step-dot">${step.number}</span>
+              <article class="box step">
+                ${authorityLogo(step.authority)}
+                <div class="step-text">
+                  <div class="step-title"><strong>${safe(say(step.title))}</strong>${typeChip(step)}</div>
+                  <span class="step-authority">${safe(step.authority)}</span>
+                  <p dir="auto">${safe(step.guidance)}</p>
+                  ${step.fees ? `<p class="step-fees" dir="auto"><b>${t('roadmap.fees')}</b> ${safe(shorten(step.fees, 150))}</p>` : ''}
+                  <div class="step-links">
+                    ${step.link ? `<a class="rm-action" href="${safe(step.link)}" target="_blank" rel="noopener">${t('roadmap.apply')} ${icon('external')}</a>` : ''}
+                    ${step.source ? `<a class="link" href="${safe(step.source)}" target="_blank" rel="noopener">${t('roadmap.source')}</a>` : ''}
+                  </div>
+                </div>
+              </article>
+            </div>`).join('')}
+        </div>
+      </section>`;
+  }).join('');
 }
 
 /* The same steps as a diagram: cards on both sides of one line, from top to bottom */
@@ -341,17 +518,19 @@ function roadmapDiagram() {
 }
 
 function roadmapTab() {
-  const steps = assessment.result.roadmap.length;
+  const steps = assessment.result.roadmap;
+  const mandatory = steps.filter((step) => step.type === 'mandatory').length;
+  const summary = t('roadmap.summary').replace('{n}', steps.length).replace('{m}', mandatory).replace('{c}', steps.length - mandatory);
 
   return `
     <div class="rm-head">
-      ${sectionTitle(t('roadmap.title'), t('roadmap.sub').replace('{n}', steps))}
+      ${sectionTitle(t('roadmap.title'), summary)}
       <div class="segmented">
         <button type="button" class="segmented-item ${roadmapView === 'list' ? 'is-active' : ''}" data-roadmap-view="list">${t('roadmap.list')}</button>
         <button type="button" class="segmented-item ${roadmapView === 'diagram' ? 'is-active' : ''}" data-roadmap-view="diagram">${t('roadmap.diagram')}</button>
       </div>
     </div>
-    ${roadmapView === 'list' ? roadmapList(assessment) : roadmapDiagram()}`;
+    ${roadmapView === 'list' ? roadmapFull() : roadmapDiagram()}`;
 }
 
 /* ---------- Tab: Report ----------
@@ -370,33 +549,16 @@ function reportSection(number, tab, title, content) {
 }
 
 function reportTab() {
-  const { similar, market, roadmap } = assessment.result;
+  const { similar, market } = assessment.result;
   const facts = ['sector', 'city', 'model'].map((field) => safe(label(assessment[field]))).join(' · ');
   const today = new Date().toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-
-  const score = `
-    ${scoreOnPath()}
-    ${readings()}
-    <div class="moves-grid">
-      ${factorList(t('score.up'), 'up')}
-      ${factorList(t('score.down'), 'down')}
-    </div>`;
 
   const marketPart = !market ? nothingYet() : `
     <p class="report-line">${t('market.activity')}: <strong>${safe(say(market.activity))}</strong> · ${market.year}</p>
     ${marketNumbers(market)}
+    ${marketMeaning(market)}
     ${marketSizes(market)}
     ${marketSource(market)}`;
-
-  const startups = similar.length === 0 ? nothingYet() : `
-    <div class="report-startups">
-      ${similar.map((startup) => `
-        <div class="report-startup">
-          <strong>${safe(startup.name)}</strong>
-          <span class="text-3">${safe([startup.sector, startup.region, startup.stage].filter(Boolean).join(' · '))}</span>
-          <p class="text-2" dir="auto">${safe(shorten(startup.about, 180))}</p>
-        </div>`).join('')}
-    </div>`;
 
   return `
     <div class="report">
@@ -413,10 +575,10 @@ function reportTab() {
         <p class="text-2">${facts}</p>
       </div>
 
-      ${reportSection(1, 'score', t('score.title'), score)}
+      ${reportSection(1, 'score', t('score.title'), scoreTab())}
       ${reportSection(2, 'market', t('market.title'), marketPart)}
-      ${reportSection(3, 'similar', t('similar.title'), startups)}
-      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapList(assessment))}
+      ${reportSection(3, 'similar', t('similar.title'), similar.length === 0 ? nothingYet() : `<div class="startups">${similar.map(startupCard).join('')}</div>`)}
+      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapFull())}
     </div>`;
 }
 

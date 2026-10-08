@@ -68,6 +68,8 @@ async function save() {
 /* ---------- Adding messages to the conversation ---------- */
 
 function scrollToEnd() {
+  // while the assessment is open the chat is hidden, so there is nothing to scroll to
+  if (document.body.classList.contains('assess-open')) return;
   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 

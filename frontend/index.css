@@ -1335,6 +1335,204 @@ html[dir="rtl"] .x-timer {
   background: rgba(255, 255, 255, 0.12);
 }
 
+/* Arabic reading rhythm, scoped to the landing page. */
+html[dir="rtl"] .landing {
+  line-height: 1.8;
+}
+html[dir="rtl"] .landing :is(.headline, .x-title) {
+  text-wrap: balance;
+}
+html[dir="rtl"] .landing .hero-title {
+  font-size: clamp(30px, 4.2vw, 58px);
+  line-height: 1.5;
+}
+html[dir="rtl"] .landing .hero-title .line {
+  padding-block: 0.06em 0.14em;
+}
+html[dir="rtl"] .landing .lead {
+  line-height: 1.95;
+  text-wrap: pretty;
+}
+html[dir="rtl"] .landing .hero-lead {
+  max-width: 510px;
+}
+html[dir="rtl"] .landing :is(.eyebrow, .chip, .tag, .pill) {
+  letter-spacing: 0;
+}
+html[dir="rtl"] .landing :is(.bubble, .road-card, .source div, .values) {
+  line-height: 1.8;
+}
+html[dir="rtl"] .landing .composer-text {
+  line-height: 1.85;
+  min-height: 3.7em;
+}
+html[dir="rtl"] .landing .marquee-item {
+  direction: rtl;
+}
+html[dir="rtl"] .landing .marquee-item b {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+/* Landing presentation: clear actions, quieter previews and section rhythm. */
+.hero {
+  min-height: 800px;
+  padding-block: 148px 80px;
+}
+.hero-text {
+  gap: 24px;
+  max-width: 650px;
+}
+.hero-chip {
+  padding: 8px 14px;
+  border: 1px solid var(--teal-tint);
+}
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.hero-actions .btn {
+  min-height: 52px;
+  height: auto;
+  padding: 14px 24px;
+}
+.hero-secondary {
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  color: var(--navy);
+}
+.hero-secondary:hover {
+  background: var(--navy-tint);
+  border-color: var(--navy);
+}
+.landing .composer {
+  width: min(500px, 100%);
+  gap: 10px;
+  padding: 18px 22px;
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--shadow-card);
+  background: color-mix(in srgb, var(--bg) 94%, transparent);
+}
+.composer-label {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-2);
+}
+.landing .composer-text,
+html[dir="rtl"] .landing .composer-text {
+  min-height: 3.4em;
+  font-size: 15px;
+  line-height: 1.7;
+}
+.landing .hero-ticks {
+  gap: 12px 20px;
+  font-size: 12px;
+  color: var(--text-nav);
+}
+.landing .section-head {
+  gap: 18px;
+}
+.section-head > .eyebrow {
+  color: var(--teal-text);
+}
+.section-head > .lead {
+  max-width: 650px;
+}
+.landing .chat-card,
+.landing .gauge-card {
+  background: linear-gradient(150deg, var(--bg), var(--bg-subtle));
+  border-color: var(--border);
+  border-radius: 24px;
+  padding: 28px;
+}
+.landing .score-grid > .card {
+  border-radius: 24px;
+  padding: 28px;
+}
+.landing .insight {
+  background: var(--bg-subtle);
+  border-color: transparent;
+  box-shadow: none;
+}
+.landing .source {
+  min-height: 88px;
+  padding: 16px;
+  background: var(--bg-subtle);
+  border-color: transparent;
+  transition: background var(--dur), border-color var(--dur);
+}
+.landing .source:hover {
+  background: var(--bg);
+  border-color: var(--border-strong);
+}
+.landing .cta {
+  background: radial-gradient(ellipse at top right, var(--navy), transparent 70%), var(--navy-deep);
+  padding-block: 80px;
+  gap: 24px;
+}
+.landing .cta .headline {
+  max-width: 740px;
+  text-wrap: balance;
+}
+
+/* ---------- Landing strength ----------
+   Bigger headings and darker text so the page reads with confidence,
+   and real names in the preview cards. */
+
+.landing .headline-lg { font-size: clamp(32px, 4.8vw, 56px); }
+.landing .headline-md { font-size: clamp(27px, 3.4vw, 42px); }
+.landing .lead {
+  font-size: 17.5px;
+  color: var(--text-nav);
+}
+/* wide enough for each headline line to stay on one line */
+.landing .hero-text {
+  max-width: 780px;
+}
+.landing .hero-title {
+  font-size: clamp(40px, 5.2vw, 74px);
+}
+.landing .hero-lead {
+  max-width: 560px;
+  font-size: 19px;
+}
+
+/* a real name and one line about it, where the grey bars used to be */
+.mock-name {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.mock-name strong {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+.mock-name span {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.mock-title {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--text);
+}
+.mock-caption {
+  align-self: center;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+
+@media (max-width: 1000px) {
+  .landing .hero-lead {
+    font-size: 17px;
+  }
+}
+
 /* ---------- 15. Tablet and phone ---------- */
 
 @media (max-width: 1000px) {
@@ -1454,6 +1652,25 @@ html[dir="rtl"] .x-timer {
 }
 
 @media (max-width: 640px) {
+  .hero-text {
+    gap: 20px;
+  }
+  .hero-actions {
+    width: 100%;
+    gap: 10px;
+  }
+  .hero-actions .btn {
+    flex: 1 1 auto;
+    padding-inline: 16px;
+  }
+  .landing .composer {
+    padding: 16px 18px;
+  }
+  .landing .score-grid > .card,
+  .landing .chat-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
   .landing {
     gap: 64px;
     padding-bottom: 56px;
