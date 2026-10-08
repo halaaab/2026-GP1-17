@@ -1,0 +1,207 @@
+/* Admin profile only. Cards, fields, rules, chips and the segmented control
+   come from shared/shared.css. */
+
+main > section + section,
+.profile-columns,
+.profile-columns + section {
+  margin-top: 14px;
+}
+
+/* ---------- Who is signed in ---------- */
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 22px;
+  background: var(--gradient-aurora), var(--bg);
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  box-shadow: var(--shadow-brand);
+}
+.profile-hero-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.profile-hero-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.profile-hero-name h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+.profile-hero-line {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.profile-hero-facts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profile-hero-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 112px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+.profile-hero-fact strong {
+  font-size: 14px;
+}
+
+/* ---------- Columns ---------- */
+
+.profile-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+  align-items: start;
+}
+.profile-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-card {
+  padding: 22px;
+}
+.profile-card > .text-3,
+.profile-card-head .text-3,
+.profile-row .text-3 {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.profile-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* "@" and "+966" in front of the box */
+.profile-prefix {
+  display: flex;
+  align-items: stretch;
+}
+.profile-prefix-sign {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 12px;
+  border: 1px solid var(--border-strong);
+  border-inline-end: none;
+  border-start-start-radius: var(--r-sm);
+  border-end-start-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.profile-prefix .input {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.input[readonly] {
+  background: var(--bg-subtle);
+  color: var(--text-2);
+}
+
+.profile-form-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.profile-form-foot .text-3 {
+  margin-inline-end: auto;
+  font-size: 12.5px;
+}
+
+/* ---------- What the admin added ---------- */
+
+.profile-work {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+}
+.profile-work-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--bg-tile);
+  color: var(--text);
+  transition: background var(--dur-fast);
+}
+.profile-work-item:hover {
+  background: var(--bg-hover);
+}
+.profile-work-icon {
+  display: inline-flex;
+  color: var(--teal-text);
+}
+.profile-work-label {
+  flex: 1;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.profile-work-item strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+.profile-work-total {
+  margin: 6px 0 0;
+  font-size: 12.5px;
+}
+
+/* ---------- Security ---------- */
+
+.profile-password .rules {
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .profile-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .profile-hero-facts {
+    width: 100%;
+  }
+  .profile-hero-fact {
+    flex: 1;
+    min-width: 0;
+  }
+  .profile-form-foot .btn {
+    flex: 1;
+  }
+}

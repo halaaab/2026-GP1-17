@@ -1,0 +1,296 @@
+/* Incubator / accelerator details only. The layout follows the Regulatory
+   requirement page: one narrow column, sections one under the other.
+   Buttons, cards and chips come from shared/shared.css. */
+
+.detail-page {
+  max-width: 1000px;
+}
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 22px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.detail-back:hover {
+  color: var(--text);
+}
+.detail-back svg {
+  width: 16px;
+  height: 16px;
+}
+html[dir="rtl"] .detail-back svg {
+  transform: scaleX(-1);
+}
+
+/* ---------- Loading ---------- */
+
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.detail-skeleton-title { height: 36px; width: 55%; }
+.detail-skeleton-line  { height: 16px; width: 30%; }
+.detail-skeleton-block { height: 80px; }
+
+/* ---------- Head ---------- */
+
+.detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.detail-title {
+  flex: 1;
+  min-width: 0;
+}
+.detail-title h2 {
+  margin: 0;
+  font-size: clamp(24px, 3.4vw, 32px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.detail-sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.detail-type {
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: var(--bg-muted);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.detail-share {
+  flex-shrink: 0;
+}
+
+/* The program's logo, or its initials (from ../programs.js) */
+.program-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-tile);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 800;
+}
+.program-logo.has-image {
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.program-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.program-logo.tone-0 { background: var(--teal-tint); color: var(--teal-text); }
+.program-logo.tone-1 { background: var(--navy-tint); color: var(--navy); }
+.program-logo.tone-2 { background: var(--link-tint); color: var(--link-text); }
+
+.detail-logo .program-logo {
+  width: 54px;
+  height: 54px;
+  border-radius: 14px;
+  font-size: 17px;
+}
+.detail-logo .program-logo img {
+  padding: 7px;
+}
+
+/* ---------- Key facts ---------- */
+
+.detail-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 26px 0 28px;
+}
+.detail-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--bg-tile);
+}
+.detail-fact-label {
+  font-size: 14px;
+  color: var(--text-3);
+}
+.detail-fact-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+.detail-fact-value svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--teal-text);
+}
+.detail-fact-link {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--link-text);
+}
+.detail-fact-link:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Sections ---------- */
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-block: 24px;
+  border-top: 1px solid var(--divider);
+}
+.detail-section .section-title {
+  font-size: 16px;
+}
+
+/* a list with a tick in a circle before each row, a line between rows */
+.detail-rows {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.detail-rows li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--divider);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.detail-rows li:first-child {
+  padding-top: 2px;
+}
+.detail-rows svg {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--teal-text);
+}
+
+.detail-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+
+/* ---------- Official website ---------- */
+
+.detail-source {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+}
+.detail-source-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 260px;
+  min-width: 0;
+}
+.detail-source-text strong {
+  font-size: 15px;
+}
+.detail-source-text span {
+  font-size: 13px;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+  text-align: start;
+}
+
+.detail-note {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--warn-tint);
+  color: var(--warn-text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+/* ---------- Similar programs ---------- */
+
+.detail-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+.detail-similar-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  color: inherit;
+}
+.detail-similar-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 4px;
+}
+.detail-similar-card .text-3 {
+  font-size: 12.5px;
+}
+
+@media (max-width: 760px) {
+  .detail-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-head {
+    flex-wrap: wrap;
+  }
+  .detail-share {
+    order: -1;
+    margin-inline-start: auto;
+  }
+  .detail-source .btn {
+    width: 100%;
+  }
+}
