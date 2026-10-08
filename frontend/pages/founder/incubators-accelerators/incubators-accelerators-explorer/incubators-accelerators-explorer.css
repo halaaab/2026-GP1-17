@@ -1,0 +1,384 @@
+/* Incubators & Accelerators Explorer only. The layout follows the
+   Regulatory & Licensing Explorer. Buttons and the empty state come from shared/shared.css. */
+
+/* ---------- Framed head: title, totals, search and dropdowns ---------- */
+
+.programs-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 26px 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+}
+.programs-hero-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.programs-hero-top p {
+  margin: 6px 0 0;
+}
+
+.programs-totals {
+  display: flex;
+  gap: 32px;
+}
+.programs-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.programs-total strong {
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.programs-total span {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.programs-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.programs-search {
+  flex: 1 1 320px;
+  max-width: none;
+  height: 46px;
+  border-radius: 12px;
+}
+
+/* a pill with a chevron at its end (drawn on the wrapper) */
+.programs-select-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 200px;
+  min-width: 160px;
+}
+.programs-select-wrap::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 20px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  /* physical sides on purpose: the arrow points down in both languages */
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.programs-select {
+  width: 100%;
+  height: 44px;
+  padding-inline: 18px 42px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.programs-select:hover {
+  border-color: var(--teal);
+}
+.programs-select:focus-visible {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+
+/* ---------- Type pills ---------- */
+
+.programs-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 24px 0 18px;
+}
+.programs-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--text-nav);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--dur-fast), color var(--dur-fast), background var(--dur-fast);
+}
+.programs-pill:hover {
+  border-color: var(--teal);
+  color: var(--teal-text);
+}
+.programs-count {
+  color: var(--text-3);
+  font-weight: 600;
+}
+.programs-pill.is-active {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+/* the number in the chosen pill: the same white, a little softer */
+.programs-pill.is-active .programs-count {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.programs-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.programs-found {
+  font-size: 15px;
+  font-weight: 800;
+}
+
+/* ---------- Cards ---------- */
+
+.programs-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.programs-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  transition:
+    border-color var(--dur),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.programs-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-float);
+  transform: translateY(-3px);
+}
+
+/* The grey band at the top. With a logo, the logo itself, blurred, fills it. */
+.programs-card-banner {
+  position: relative;
+  flex-shrink: 0;
+  height: 72px;
+  background: var(--bg-tile);
+}
+.programs-card-glow {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+.programs-card-backdrop {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.5;
+  filter: blur(26px) saturate(1.6);
+  transform: scale(1.8);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+}
+.programs-card:hover .programs-card-backdrop {
+  opacity: 0.65;
+  transform: scale(2);
+}
+
+.programs-card-type {
+  position: absolute;
+  z-index: 1;
+  top: 12px;
+  inset-inline-end: 12px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.programs-card-banner .program-logo {
+  position: absolute;
+  z-index: 1;
+  bottom: -20px;
+  inset-inline-start: 20px;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  box-shadow: var(--shadow-sm);
+  font-size: 14px;
+}
+.programs-card-banner .program-logo.has-image {
+  background: var(--bg);
+}
+
+.programs-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  padding: 36px 20px 0;
+}
+.programs-card-name {
+  margin: 0 0 2px;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.programs-card-meta {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--text-3);
+}
+.programs-card-meta svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+.programs-card-about {
+  margin: 6px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+  /* three lines, then "…" */
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.programs-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 18px 20px 0;
+  padding: 14px 0 18px;
+  border-top: 1px solid var(--divider);
+}
+.programs-card-sectors {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-3);
+}
+.programs-card-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--link-text);
+}
+.programs-card-more svg {
+  width: 15px;
+  height: 15px;
+  transition: transform var(--dur-fast);
+}
+.programs-card:hover .programs-card-more svg {
+  transform: translateX(2px);
+}
+html[dir="rtl"] .programs-card-more svg {
+  transform: scaleX(-1);
+}
+html[dir="rtl"] .programs-card:hover .programs-card-more svg {
+  transform: scaleX(-1) translateX(2px);
+}
+
+/* ---------- The program's logo, or its initials (from ../programs.js) ---------- */
+
+.program-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+.program-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.program-logo.tone-0 { background: var(--teal-tint); color: var(--teal-text); }
+.program-logo.tone-1 { background: var(--navy-tint); color: var(--navy); }
+.program-logo.tone-2 { background: var(--link-tint); color: var(--link-text); }
+
+/* ---------- Empty state and pages ---------- */
+
+.programs-empty .section-title,
+.programs-empty p {
+  margin: 0;
+}
+
+.programs-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  font-size: 13px;
+}
+.programs-pager-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .programs-hero {
+    padding: 20px;
+  }
+  .programs-totals {
+    width: 100%;
+    justify-content: space-around;
+  }
+  .programs-select-wrap {
+    flex: 1 1 140px;
+    min-width: 0;
+  }
+}
