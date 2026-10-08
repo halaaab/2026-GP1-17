@@ -12,6 +12,7 @@
                    "admin"    sidebar + header, for admin console pages
                    "public"   top bar + footer, for the landing page
                    "auth"     logo + centered card, for sign up / log in pages
+                   "error"    logo + language button, for the 403 / 404 / 500 pages
    data-page     the id of this page in the menus below (highlights it in the sidebar).
                  On an "auth" page, data-page="admin" shows the ADMIN badge.
    data-title    translation key for the title shown in the header
@@ -121,6 +122,8 @@ const ICON_PATHS = {
   landmark:  '<path d="M3 21h18"/><path d="M5 21v-9M10 21v-9M14 21v-9M19 21v-9"/><path d="M2 10 12 4l10 6z"/>',
   share:     '<path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
   checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
+  alert:     '<path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>',
+  lock:      '<rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
 };
 
 /* A small line icon. Pages can use it too:
@@ -200,6 +203,11 @@ function founderSidebar(activePage) {
     </div>
 
     <div class="sidebar-bottom">
+      <!-- Settings opens the founder's profile page, like Settings in the admin sidebar -->
+      <a class="nav-item ${activePage === 'profile' ? 'is-active' : ''}" href="${ROOT}${PAGES.profile}">
+        ${icon('settings')}
+        <span data-i18n="nav.settings"></span>
+      </a>
       <div class="user-card">
         <!-- the name opens the profile page -->
         <a class="user-card-link" href="${ROOT}${PAGES.profile}">
@@ -624,6 +632,21 @@ async function playDemo() {
   }
 }
 
+/* ---------- Error layout (403, 404 and 500 pages) ----------
+   The logo and the language button on top, the page's <main> centered under them.
+   No sidebar: the person may not be signed in, or the page they wanted may not exist. */
+
+function buildErrorLayout() {
+  const main = document.querySelector('main');
+  document.body.classList.add('error-layout');
+  main.classList.add('error-main');
+
+  const top = document.createElement('header');
+  top.className = 'error-top';
+  top.innerHTML = `${brand(PAGES.home)}${languageSwitch()}`;
+  main.before(top);
+}
+
 /* ---------- Start ---------- */
 
 async function startLayout() {
@@ -635,6 +658,8 @@ async function startLayout() {
     buildPublicLayout();
   } else if (layout === 'auth') {
     buildAuthLayout();
+  } else if (layout === 'error') {
+    buildErrorLayout();
   }
 
   await initLanguage();
