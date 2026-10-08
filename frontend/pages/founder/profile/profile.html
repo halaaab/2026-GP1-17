@@ -1,0 +1,172 @@
+<!doctype html>
+<!--
+  PROFILE (founder side)
+  The signed-in founder's account: name, email, mobile number, country and
+  region, the language Darb uses, logging out, and deleting the account.
+  Reads and saves the founder's own row in the users table (migrations 0001
+  and 0002: a founder may edit only their own row). A new email is saved by
+  Supabase Auth, which first emails a confirmation link. Deleting calls
+  delete_my_account() (migration 0001).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body data-layout="founder" data-page="profile" data-title="profile.title" data-denied="403">
+
+  <main class="pf">
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="profile.title"></h2>
+        <p class="text-2" data-i18n="profile.sub"></p>
+      </div>
+    </div>
+
+    <!-- shown while loading -->
+    <p class="empty" id="status"><span class="spinner"></span></p>
+
+    <div class="pf-cards" id="content" hidden>
+
+      <!-- Personal details -->
+      <section class="card pf-card">
+        <h3 class="section-title" data-i18n="profile.personal"></h3>
+        <p class="text-3 pf-card-sub" data-i18n="profile.personalSub"></p>
+
+        <form class="pf-personal" id="profile-form" novalidate>
+          <span class="avatar pf-avatar" id="avatar"></span>
+
+          <div class="form">
+            <div class="form-row">
+              <div class="field">
+                <label class="label is-required" for="full-name" data-i18n="founders.fullName"></label>
+                <input class="input" id="full-name" type="text" autocomplete="name" dir="auto">
+                <p class="field-error" id="full-name-error" hidden></p>
+              </div>
+              <div class="field">
+                <label class="label is-required" for="email" data-i18n="founders.email"></label>
+                <input class="input" id="email" type="email" autocomplete="email" dir="ltr">
+                <p class="field-hint" id="email-hint" data-i18n="profile.emailHint"></p>
+                <p class="field-error" id="email-error" hidden></p>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="field">
+                <label class="label" for="phone" data-i18n="profile.phone"></label>
+                <!-- a phone number reads left to right in both languages -->
+                <div class="pf-phone" dir="ltr">
+                  <span class="pf-phone-code">+966</span>
+                  <input class="input" id="phone" type="tel" inputmode="numeric" autocomplete="tel-national" dir="ltr" placeholder="5XXXXXXXX">
+                </div>
+                <p class="field-error" id="phone-error" hidden></p>
+              </div>
+              <div class="field">
+                <label class="label is-required" for="country" data-i18n="signup.country"></label>
+                <!-- the list of countries is filled in by profile.js, in the page's language -->
+                <select class="input" id="country" data-searchable></select>
+                <p class="field-error" id="country-error" hidden></p>
+              </div>
+            </div>
+
+            <div class="form-row" id="region-row">
+              <div class="field">
+                <label class="label is-required" for="region" data-i18n="signup.region"></label>
+                <select class="input" id="region">
+                  <option value="" data-i18n="signup.select"></option>
+                  <option value="riyadh" data-i18n="signup.region.riyadh"></option>
+                  <option value="makkah" data-i18n="signup.region.makkah"></option>
+                  <option value="madinah" data-i18n="signup.region.madinah"></option>
+                  <option value="eastern" data-i18n="signup.region.eastern"></option>
+                  <option value="qassim" data-i18n="signup.region.qassim"></option>
+                  <option value="asir" data-i18n="signup.region.asir"></option>
+                  <option value="tabuk" data-i18n="signup.region.tabuk"></option>
+                  <option value="hail" data-i18n="signup.region.hail"></option>
+                  <option value="northern_borders" data-i18n="signup.region.northern_borders"></option>
+                  <option value="jazan" data-i18n="signup.region.jazan"></option>
+                  <option value="najran" data-i18n="signup.region.najran"></option>
+                  <option value="baha" data-i18n="signup.region.baha"></option>
+                  <option value="jawf" data-i18n="signup.region.jawf"></option>
+                </select>
+                <p class="field-error" id="region-error" hidden></p>
+              </div>
+            </div>
+
+            <div class="pf-actions">
+              <button type="submit" class="btn btn-primary" id="save" data-i18n="founders.save"></button>
+            </div>
+          </div>
+        </form>
+      </section>
+
+      <!-- Preferences -->
+      <section class="card pf-card">
+        <h3 class="section-title" data-i18n="profile.preferences"></h3>
+        <p class="text-3 pf-card-sub" data-i18n="profile.preferencesSub"></p>
+
+        <p class="label" id="language-label" data-i18n="founders.language"></p>
+        <!-- language.js switches the page when one is clicked; profile.js saves the choice -->
+        <div class="segmented pf-language" role="group" aria-labelledby="language-label">
+          <button type="button" class="segmented-item" data-language="en">English</button>
+          <button type="button" class="segmented-item" data-language="ar">العربية</button>
+        </div>
+
+        <div class="pf-tiles">
+          <div class="tile">
+            <span class="text-3" data-i18n="profile.memberSince"></span>
+            <strong id="member-since"></strong>
+          </div>
+          <div class="tile">
+            <span class="text-3" data-i18n="founders.assessments"></span>
+            <strong id="assessments"></strong>
+          </div>
+          <div class="tile">
+            <span class="text-3" data-i18n="founders.userType"></span>
+            <strong id="user-type"></strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Session -->
+      <section class="card pf-card pf-row">
+        <div>
+          <h3 class="section-title" data-i18n="profile.session"></h3>
+          <p class="text-3 pf-card-sub" data-i18n="profile.sessionSub"></p>
+        </div>
+        <!-- data-logout: auth.js signs the founder out -->
+        <button type="button" class="btn btn-secondary btn-sm" data-logout>
+          <span id="logout-icon"></span>
+          <span data-i18n="auth.logout"></span>
+        </button>
+      </section>
+
+      <!-- Delete account -->
+      <section class="card pf-card pf-row">
+        <div>
+          <h3 class="section-title" data-i18n="founders.delete"></h3>
+          <p class="text-3 pf-card-sub" data-i18n="profile.deleteSub"></p>
+        </div>
+        <button type="button" class="btn btn-sm pf-danger-soft" data-modal-open="delete-modal" data-i18n="founders.delete"></button>
+      </section>
+    </div>
+
+    <dialog class="modal" id="delete-modal">
+      <span class="empty-icon pf-delete-icon" id="delete-icon"></span>
+      <h3 class="modal-title" data-i18n="profile.deleteTitle"></h3>
+      <p class="text-2" data-i18n="profile.deleteText"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal-close data-i18n="founders.cancel"></button>
+        <button type="button" class="btn btn-danger" id="delete-confirm" data-i18n="founders.delete"></button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="profile.js"></script>
+</body>
+</html>
