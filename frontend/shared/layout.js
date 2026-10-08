@@ -116,6 +116,11 @@ const ICON_PATHS = {
   chevron:   '<path d="m9 6 6 6-6 6"/>',
   map:       '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
   flag:      '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+  trash:     '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/>',
+  file:      '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+  landmark:  '<path d="M3 21h18"/><path d="M5 21v-9M10 21v-9M14 21v-9M19 21v-9"/><path d="M2 10 12 4l10 6z"/>',
+  share:     '<path d="M12 15V3"/><path d="m8 7 4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/>',
+  checkCircle: '<circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/>',
 };
 
 /* A small line icon. Pages can use it too:

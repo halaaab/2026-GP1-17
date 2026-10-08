@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  ADMIN MANAGEMENT (admin console)
+  Everyone with access to the admin console, read only.
+  Admins are added by the Darb team in Supabase (make_admin), not from here.
+  The rows come from the admin_list_admins() database function (migration 0004).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="admin-management.css">
+</head>
+<body data-layout="admin" data-page="admins" data-title="admin.admins">
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="admins.title"></h2>
+        <p class="text-2" data-i18n="admins.sub"></p>
+      </div>
+    </div>
+
+    <div class="toolbar admins-toolbar">
+      <label class="search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="admins.search" data-i18n-aria-label="admins.search">
+      </label>
+      <span class="text-3" id="total"></span>
+    </div>
+
+    <div class="table-card">
+      <table class="table admins-table">
+        <thead>
+          <tr>
+            <th data-i18n="admins.admin"></th>
+            <th data-i18n="admins.role"></th>
+            <th class="hide-small" data-i18n="admins.added"></th>
+            <th class="hide-small" data-i18n="admins.lastSignIn"></th>
+            <th data-i18n="admins.status"></th>
+          </tr>
+        </thead>
+        <!-- admin-management.js adds one row for each admin -->
+        <tbody id="rows"></tbody>
+      </table>
+      <!-- shows a spinner while loading, then "no match" or the load error -->
+      <p class="empty admins-empty" id="empty"><span class="spinner"></span></p>
+    </div>
+
+    <div class="alert alert-info admins-note">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <span data-i18n="admins.note"></span>
+    </div>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="admin-management.js"></script>
+</body>
+</html>
