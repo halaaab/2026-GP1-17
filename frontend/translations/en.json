@@ -1224,5 +1224,6 @@
   "errorPage.home": "Go to home",
   "errorPage.myHome": "Go to my pages",
   "errorPage.switchAccount": "Log in with another account",
-  "errorPage.retry": "Try again"
+  "errorPage.retry": "Try again",
+  "landing.supportedBy": "Supported by"
 }

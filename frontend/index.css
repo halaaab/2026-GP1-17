@@ -366,6 +366,37 @@ html[dir="rtl"] .hero-title {
   to { transform: translateX(-50%); }
 }
 
+/* "Supported by" and the supporters' logos, centered under the sources strip */
+.supporters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 22px;
+  margin-top: -56px;   /* sits close to the strip above it */
+}
+.supporters-logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 28px 64px;
+}
+.supporters-logos img {
+  height: 58px;
+  width: auto;
+}
+@media (max-width: 640px) {
+  .supporters {
+    margin-top: -32px;
+  }
+  .supporters-logos {
+    gap: 20px 36px;
+  }
+  .supporters-logos img {
+    height: 42px;
+  }
+}
+
 /* ---------- 5. Feature blocks ---------- */
 
 /* text on one side, picture on the other */
