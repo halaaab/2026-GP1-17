@@ -1,5 +1,4 @@
-/* ==========================================================
-   Layout: builds the sidebar, header and footer around a page.
+/* ===================================================   Layout: builds the sidebar, header and footer around a page.
    How to use it in a page:
 
      <body data-layout="founder" data-page="startups" data-title="nav.startups">
@@ -117,6 +116,8 @@ const ICON_PATHS = {
   chevron:   '<path d="m9 6 6 6-6 6"/>',
   map:       '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/>',
   flag:      '<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+  trendUp:   '<path d="m3 17 6-6 4 4 8-8"/><path d="M15 7h6v6"/>',
+  trendDown: '<path d="m3 7 6 6 4-4 8 8"/><path d="M15 17h6v-6"/>',
   trash:     '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/>',
   file:      '<path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
   landmark:  '<path d="M3 21h18"/><path d="M5 21v-9M10 21v-9M14 21v-9M19 21v-9"/><path d="M2 10 12 4l10 6z"/>',
