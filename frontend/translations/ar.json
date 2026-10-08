@@ -967,5 +967,6 @@
   "errorPage.home": "الذهاب إلى الرئيسية",
   "errorPage.myHome": "الذهاب إلى صفحاتي",
   "errorPage.switchAccount": "تسجيل الدخول بحساب آخر",
-  "errorPage.retry": "حاول مرة أخرى"
+  "errorPage.retry": "حاول مرة أخرى",
+  "landing.supportedBy": "بدعم من"
 }
