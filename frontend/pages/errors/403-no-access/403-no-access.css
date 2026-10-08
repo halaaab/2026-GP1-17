@@ -1,0 +1,8 @@
+/* 403 page only. The frame, buttons and texts come from shared/shared.css
+   (error layout, section 13b). */
+
+/* the lock in the warning color instead of teal */
+.no-access-icon {
+  background: var(--warn-tint);
+  color: var(--warn-text);
+}

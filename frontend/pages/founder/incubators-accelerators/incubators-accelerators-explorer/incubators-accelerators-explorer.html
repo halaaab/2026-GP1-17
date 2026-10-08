@@ -1,0 +1,85 @@
+<!doctype html>
+<!--
+  INCUBATORS & ACCELERATORS EXPLORER
+  Every support program in Darb: search, filter by type, sector and city,
+  and see them as cards. Each one opens its details page.
+  Visitors may open it too (data-access="public").
+  The layout follows the Regulatory & Licensing Explorer.
+  The rows come from the support_organisations table (migration 0006), through ../programs.js.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="incubators-accelerators-explorer.css">
+</head>
+<body data-layout="founder" data-page="incubators" data-title="nav.incubators" data-access="public">
+
+  <main>
+    <!-- Title, totals, search and dropdowns, in one framed box -->
+    <section class="programs-hero">
+      <div class="programs-hero-top">
+        <div>
+          <h2 class="page-title" data-i18n="programs.title"></h2>
+          <p class="text-2" data-i18n="programs.sub"></p>
+        </div>
+        <!-- the totals, filled by incubators-accelerators-explorer.js -->
+        <div class="programs-totals" id="totals" aria-live="polite"></div>
+      </div>
+
+      <div class="programs-filters">
+        <label class="search programs-search">
+          <span id="search-icon"></span>
+          <input type="search" id="search" data-i18n-placeholder="programs.search" data-i18n-aria-label="programs.search">
+        </label>
+        <span class="programs-select-wrap">
+          <select class="programs-select" id="sector-filter" data-i18n-aria-label="programs.sector">
+            <option value="" data-i18n="programs.allSectors"></option>
+          </select>
+        </span>
+        <span class="programs-select-wrap">
+          <select class="programs-select" id="city-filter" data-i18n-aria-label="programs.city">
+            <option value="" data-i18n="programs.allCities"></option>
+          </select>
+        </span>
+      </div>
+    </section>
+
+    <!-- Type pills, each with how many programs it has -->
+    <div class="programs-pills" id="type-filter" role="group" data-i18n-aria-label="programs.type">
+      <button type="button" class="programs-pill is-active" data-type="all"><span data-i18n="programs.all"></span> <span class="programs-count" data-count="all"></span></button>
+      <button type="button" class="programs-pill" data-type="incubator"><span data-i18n="programs.incubators"></span> <span class="programs-count" data-count="incubator"></span></button>
+      <button type="button" class="programs-pill" data-type="accelerator"><span data-i18n="programs.accelerators"></span> <span class="programs-count" data-count="accelerator"></span></button>
+    </div>
+
+    <div class="programs-bar">
+      <strong class="programs-found" id="found"></strong>
+    </div>
+
+    <!-- The cards -->
+    <div class="programs-cards" id="cards-view"></div>
+
+
+    <div class="empty programs-empty" id="empty" hidden>
+      <span class="empty-icon" id="empty-icon"></span>
+      <h3 class="section-title" id="empty-title"></h3>
+      <p class="text-2" id="empty-text"></p>
+      <button type="button" class="btn btn-secondary btn-sm" id="clear-filters" data-i18n="programs.clear"></button>
+    </div>
+
+    <div class="programs-pager" id="pager">
+      <span class="text-2" id="showing"></span>
+      <div class="programs-pager-buttons">
+        <button type="button" class="btn btn-secondary btn-sm" id="previous" data-i18n="programs.previous"></button>
+        <button type="button" class="btn btn-secondary btn-sm" id="next" data-i18n="programs.next"></button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="incubators-accelerators-explorer.js"></script>
+</body>
+</html>
