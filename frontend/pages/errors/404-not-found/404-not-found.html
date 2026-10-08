@@ -1,0 +1,31 @@
+<!doctype html>
+<!--
+  404 — PAGE NOT FOUND
+  Shown when a page or an item does not exist, for example a startup
+  details link whose startup was deleted:  showErrorPage(404)  (shared/errors.js)
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="404-not-found.css">
+</head>
+<body data-layout="error" class="bg-aurora">
+
+  <main>
+    <span class="empty-icon" id="icon"></span>
+    <p class="display text-gradient">404</p>
+    <h1 class="page-title" data-i18n="errorPage.notFoundTitle"></h1>
+    <p class="text-2" data-i18n="errorPage.notFoundText"></p>
+    <div class="error-actions">
+      <button type="button" class="btn btn-secondary" id="back" data-i18n="errorPage.back"></button>
+      <a class="btn btn-primary" id="home" href="../../../index.html" data-i18n="errorPage.home"></a>
+    </div>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="404-not-found.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+/* Startup Explorer page only. Cards, pills, search, chips, buttons and the
+   empty state come from shared/shared.css. The layout follows the
+   Regulatory Explorer so the explorers look like one family. */
+
+/* ---------- Top card: title, numbers, search and filters ---------- */
+
+.st-hero {
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.st-hero-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.st-hero-head p {
+  margin: 4px 0 0;
+}
+
+.st-stats {
+  display: flex;
+  gap: 28px;
+  margin: 0;
+}
+.st-stats div {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+}
+.st-stats dt {
+  font-size: 12px;
+}
+.st-stats dd {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+/* the search box takes the free space, the dropdowns sit after it */
+.st-filters {
+  margin: 0;
+}
+.st-filters .search {
+  max-width: none;
+}
+
+/* ---------- Stage pills: they wrap on wide screens, one sideways-scrolling line on phones ---------- */
+
+.st-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.st-stages .pill {
+  flex-shrink: 0;
+}
+.st-pill-count {
+  opacity: 0.7;
+  font-weight: 600;
+}
+
+.st-count {
+  margin: 0 0 12px;
+  font-weight: 800;
+}
+
+/* ---------- Startup card ---------- */
+
+.st-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0 18px 16px;
+  overflow: hidden;
+}
+
+/* grey band at the top with the funding stage at the end */
+.st-card-top {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 58px;
+  margin-inline: -18px;
+  padding: 12px 14px 28px;
+  background: var(--bg-tile);
+}
+.st-card-stage {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: var(--bg);
+}
+
+/* the initials sit half on the band, like the document icon on requirement cards */
+.st-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--teal-tint);
+  color: var(--teal-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+.st-card .st-logo {
+  margin-top: -21px;
+}
+
+.st-card-title {
+  margin: 12px 0 4px;
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.st-card-sector {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 12.5px;
+}
+.st-card-sector svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+.st-card-sector span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* the description is cut after three lines so every card has the same rhythm */
+.st-card-summary {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  overflow: hidden;
+  margin: 12px 0 14px;
+  font-size: 13px;
+}
+
+.st-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--divider);
+  font-size: 12.5px;
+}
+.st-card-region {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.st-card-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.st-card-more svg {
+  width: 14px;
+  height: 14px;
+}
+html[dir="rtl"] .st-card-more svg {
+  transform: scaleX(-1);
+}
+
+/* "Show more" under the cards */
+.st-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Phones: the numbers go under the title */
+@media (max-width: 640px) {
+  .st-hero {
+    padding: 18px;
+  }
+  .st-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  /* the two dropdowns share one line under the search box */
+  .st-filters select.pill {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
+  }
+  .st-stages {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+}
