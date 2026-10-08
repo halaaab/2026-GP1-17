@@ -1,0 +1,61 @@
+<!doctype html>
+<!--
+  STARTUP EXPLORER (founder side, also open to visitors)
+  Every startup as a card: search, filter by sector and region, and one pill
+  per funding stage. A card opens the startup's details page.
+  The rows come from the startups table (shared/startups.js).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="startup-explorer.css">
+</head>
+<body data-layout="founder" data-page="startups" data-title="nav.startups" data-access="public">
+
+  <main>
+    <section class="card bg-aurora st-hero">
+      <div class="st-hero-head">
+        <div>
+          <h2 class="page-title" data-i18n="startups.title"></h2>
+          <p class="text-2" data-i18n="startups.sub"></p>
+        </div>
+        <dl class="st-stats">
+          <div><dt class="text-3" data-i18n="startups.statStartups"></dt><dd id="stat-startups">—</dd></div>
+          <div><dt class="text-3" data-i18n="startups.statSectors"></dt><dd id="stat-sectors">—</dd></div>
+          <div><dt class="text-3" data-i18n="startups.statSaudi"></dt><dd id="stat-saudi">—</dd></div>
+        </dl>
+      </div>
+
+      <div class="toolbar st-filters">
+        <label class="search">
+          <span id="search-icon"></span>
+          <input type="search" id="search" data-i18n-placeholder="startups.search" data-i18n-aria-label="startups.search">
+        </label>
+        <select class="pill" id="sector-filter" data-i18n-aria-label="startups.sector"></select>
+        <select class="pill" id="region-filter" data-i18n-aria-label="startups.region"></select>
+      </div>
+    </section>
+
+    <!-- One pill per funding stage, with how many startups it has. startup-explorer.js fills it. -->
+    <div class="st-stages" id="stages" role="group" data-i18n-aria-label="startups.stage"></div>
+
+    <p class="st-count" id="count"></p>
+
+    <!-- startup-explorer.js adds one card for each startup -->
+    <div class="grid" id="cards"></div>
+    <!-- shows a spinner while loading, then "no match" or the load error -->
+    <p class="empty" id="empty"><span class="spinner"></span></p>
+
+    <div class="st-more">
+      <button type="button" class="btn btn-secondary" id="more" data-i18n="startups.showMore" hidden></button>
+    </div>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="startup-explorer.js"></script>
+</body>
+</html>

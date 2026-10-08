@@ -1,0 +1,111 @@
+<!doctype html>
+<!--
+  STARTUP DETAILS (founder side, also open to visitors)
+  One startup: what it does, its sectors, funding stage, regions, target
+  market, products and links. Opened from the Startup Explorer:
+    startup-details.html?id=ST_001
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="startup-details.css">
+</head>
+<body data-layout="founder" data-page="startups" data-title="nav.startups" data-access="public">
+
+  <main class="std">
+    <a class="std-back text-2" href="../startup-explorer/startup-explorer.html">
+      <span id="back-icon"></span>
+      <span data-i18n="nav.startups"></span>
+    </a>
+
+    <!-- shown while loading (a missing startup opens the 404 page, a load failure the 500 page) -->
+    <p class="empty" id="status"><span class="spinner"></span></p>
+
+    <article id="details" hidden>
+      <div class="std-head">
+        <span class="std-logo" id="logo"></span>
+        <div class="std-head-text">
+          <h2 class="page-title" id="name"></h2>
+          <p class="text-2 std-summary">
+            <span id="sectors"></span>
+            <span class="chip chip-teal" id="stage-chip"></span>
+          </p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" id="share">
+          <span id="share-icon"></span>
+          <span data-i18n="reg.share"></span>
+        </button>
+      </div>
+
+      <div class="std-tiles">
+        <div class="tile">
+          <span class="text-3" data-i18n="startups.stage"></span>
+          <strong class="std-tile-value" id="stage"></strong>
+        </div>
+        <div class="tile">
+          <span class="text-3" data-i18n="startups.region"></span>
+          <strong class="std-tile-value"><span id="region-icon"></span><span id="region"></span></strong>
+        </div>
+        <div class="tile">
+          <span class="text-3" data-i18n="startups.website"></span>
+          <a class="std-tile-value link" id="website-link" target="_blank" rel="noopener noreferrer"></a>
+          <strong class="std-tile-value" id="website-none" data-i18n="startups.none"></strong>
+        </div>
+      </div>
+
+      <section class="std-section">
+        <h3 class="section-title" data-i18n="startups.about"></h3>
+        <p class="text-2" id="description"></p>
+      </section>
+
+      <section class="std-section" id="products-section">
+        <h3 class="section-title" data-i18n="startups.products"></h3>
+        <!-- startup-details.js adds one line for each product or service -->
+        <ul class="std-checks" id="products"></ul>
+      </section>
+
+      <section class="std-section" id="market-section">
+        <h3 class="section-title" data-i18n="startups.market"></h3>
+        <ul class="std-checks">
+          <li><span class="std-check-icon"></span><span id="market"></span></li>
+          <li><span class="std-check-icon"></span><span id="country"></span></li>
+        </ul>
+      </section>
+
+      <section class="std-section" id="tags-section">
+        <h3 class="section-title" data-i18n="startups.tags"></h3>
+        <!-- startup-details.js adds one chip for each tag -->
+        <div class="std-chips" id="tags"></div>
+      </section>
+
+      <section class="std-section">
+        <h3 class="section-title" data-i18n="startups.links"></h3>
+        <div class="card std-source">
+          <span class="std-logo std-source-logo" id="source-logo"></span>
+          <div class="std-source-text">
+            <strong id="source-title"></strong>
+            <span class="text-3" id="source-url" dir="ltr"></span>
+          </div>
+          <div class="std-source-actions">
+            <a class="btn btn-secondary btn-sm" id="profile-open" target="_blank" rel="noopener noreferrer">
+              <span data-i18n="startups.ecosystemProfile"></span><span id="profile-icon"></span>
+            </a>
+            <a class="btn btn-primary btn-sm" id="website-open" target="_blank" rel="noopener noreferrer">
+              <span data-i18n="startups.visitWebsite"></span><span id="website-icon"></span>
+            </a>
+          </div>
+        </div>
+        <div class="alert alert-warn std-note" data-i18n="startups.sourceNote"></div>
+      </section>
+    </article>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="../../../../shared/ui.js"></script>
+  <script type="module" src="startup-details.js"></script>
+</body>
+</html>
