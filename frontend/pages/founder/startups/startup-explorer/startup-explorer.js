@@ -1,151 +1,237 @@
-/* Startup Explorer: every startup as a card, with a search box, sector and
-   region filters, and one pill per funding stage. */
+/* Startup Explorer: every startup, with a search box, sector / region / stage
+   filters, colored cards, and pages of 12 (the same design as the Incubators
+   & Accelerators Explorer).
+   The filters are kept in the address (?q=...&sector=...), so a filtered list can be
+   shared, and going back from a details page keeps them. */
 
 import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, allValues, initials, detailsLink, fillFilter, SECTORS, STAGES, REGIONS,
+  loadStartups, listOf, listText, label, initials, colorOf, detailsLink, STAGES, REGIONS,
 } from '../../../../shared/startups.js';
 
+const PAGE_SIZE = 12;   // four rows of three cards
+const SAUDI_REGIONS = REGIONS.slice(0, 6);
+
 const cards = document.querySelector('#cards');
-const empty = document.querySelector('#empty');
 const search = document.querySelector('#search');
 const sectorFilter = document.querySelector('#sector-filter');
 const regionFilter = document.querySelector('#region-filter');
-const stagesBox = document.querySelector('#stages');
-const moreButton = document.querySelector('#more');
-
-// There are more than a thousand startups: the cards are shown a page at a time
-const PAGE_SIZE = 48;
-const SAUDI_REGIONS = REGIONS.slice(0, 6);
+const stageFilter = document.querySelector('#stage-filter');
+const empty = document.querySelector('#empty');
+const pager = document.querySelector('#pager');
 
 let startups = [];
-let stage = '';           // the chosen funding stage, '' = all stages
-let shown = PAGE_SIZE;    // how many cards are on screen
-let loading = true;       // the spinner stays until the cards arrive
+let page = 0;
+let loading = true;   // the spinner stays until the cards arrive
 
-/* ---------- Filters ---------- */
+/* ---------- Small helpers ---------- */
 
-// Does a startup fit the search and the two dropdowns? (the stage pills are checked separately)
-function fitsFilters(row) {
+// Startup text comes from the dataset, so it is escaped before it goes into HTML
+function safe(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
+}
+
+/* ---------- Filtering ---------- */
+
+function matches(row, ignoreStage = false) {
   const words = search.value.trim().toLowerCase();
-  const text = [row.startup_name, row.startup_description, row.tags, row.products_services, listText(row, 'sector')]
+  const searchable = [row.startup_name, row.startup_description, row.tags, row.products_services, listText(row, 'sector')]
     .join(' ').toLowerCase();
 
-  return text.includes(words)
+  return (!words || searchable.includes(words))
     && (!sectorFilter.value || listOf(row, 'sector').includes(sectorFilter.value))
-    && (!regionFilter.value || listOf(row, 'region').includes(regionFilter.value));
+    && (!regionFilter.value || listOf(row, 'region').includes(regionFilter.value))
+    && (ignoreStage || !stageFilter.value || listOf(row, 'stage').includes(stageFilter.value));
 }
 
-// Fills the two dropdowns, keeping what was chosen (the words change with the language)
-function fillDropdowns() {
-  fillFilter(sectorFilter, 'startups.sector', 'startups.allSectors',
-    allValues(startups, 'sector', SECTORS).map((value) => [value, label('sector', value)])
-      .sort((a, b) => a[1].localeCompare(b[1])));
-  fillFilter(regionFilter, 'startups.region', 'startups.allRegions',
-    allValues(startups, 'region', REGIONS).map((value) => [value, label('region', value)]));
-}
+/* ---------- Drawing ---------- */
 
-/* ---------- Stage pills ---------- */
-
-function showStages(matching) {
-  const count = (value) => matching.filter((row) => listOf(row, 'stage').includes(value)).length;
-
-  stagesBox.innerHTML = [
-    `<button type="button" class="pill ${stage ? '' : 'is-active'}" data-stage="">${t('startups.allStages')} <span class="st-pill-count">${matching.length}</span></button>`,
-    ...allValues(startups, 'stage', STAGES).map((value) => `
-      <button type="button" class="pill ${stage === value ? 'is-active' : ''}" data-stage="${value}">
-        ${label('stage', value)} <span class="st-pill-count">${count(value)}</span>
-      </button>`),
-  ].join('');
-}
-
-stagesBox.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-stage]');
-  if (!button) return;
-  stage = button.dataset.stage;
-  shown = PAGE_SIZE;
-  showAll();
-});
-
-/* ---------- Cards ---------- */
-
-function showAll() {
-  if (loading) return;
-
-  const matching = startups.filter(fitsFilters);
-  const visible = stage ? matching.filter((row) => listOf(row, 'stage').includes(stage)) : matching;
-  const page = visible.slice(0, shown);
-
-  showStages(matching);
-
-  cards.innerHTML = page.map((row) => `
-    <a class="card card-hover st-card" href="${detailsLink(row.startup_id)}">
-      <div class="st-card-top">
-        <span class="chip st-card-stage" ${row.stage ? '' : 'hidden'}></span>
-      </div>
-      <span class="st-logo"></span>
-      <h3 class="st-card-title"></h3>
-      <p class="st-card-sector text-3">${icon('briefcase')}<span></span></p>
-      <p class="st-card-summary text-2"></p>
-      <div class="st-card-foot">
-        <span class="text-3 st-card-region"></span>
-        <span class="link st-card-more">${t('startups.viewDetails')} ${icon('chevron')}</span>
-      </div>
-    </a>`).join('');
-
-  // the texts come from the database, so they are added as text
-  cards.querySelectorAll('.st-card').forEach((card, index) => {
-    const row = page[index];
-    card.querySelector('.st-card-stage').textContent = listText(row, 'stage');
-    card.querySelector('.st-logo').textContent = initials(row.startup_name);
-    card.querySelector('.st-card-title').textContent = row.startup_name;
-    card.querySelector('.st-card-sector span').textContent = listText(row, 'sector', ', ') || t('startups.noSector');
-    card.querySelector('.st-card-summary').textContent = row.startup_description || t('startups.noDescription');
-    card.querySelector('.st-card-region').textContent = listText(row, 'region', ', ');
-  });
-
-  document.querySelector('#count').textContent = t('startups.count').replace('{n}', visible.length);
-  empty.textContent = t('startups.noMatch');
-  empty.hidden = visible.length > 0;
-  moreButton.hidden = visible.length <= shown;
-}
-
-function showStats() {
+function showTotals() {
   const sectors = new Set(startups.flatMap((row) => listOf(row, 'sector')));
   const saudi = startups.filter((row) => listOf(row, 'region').some((region) => SAUDI_REGIONS.includes(region)));
-  document.querySelector('#stat-startups').textContent = startups.length;
-  document.querySelector('#stat-sectors').textContent = sectors.size;
-  document.querySelector('#stat-saudi').textContent = saudi.length;
+  const total = (value, words, iconName) => `
+    <div class="st-total">
+      <span class="st-total-icon">${icon(iconName)}</span>
+      <span class="st-total-text"><strong>${value}</strong><span>${words}</span></span>
+    </div>`;
+  document.querySelector('#totals').innerHTML = total(startups.length, t('startups.statStartups'), 'store')
+    + total(sectors.size, t('startups.statSectors'), 'grid')
+    + total(saudi.length, t('startups.statSaudi'), 'map');
 }
 
-// a new search or filter starts again from the first page of cards
-function filterChanged() {
-  shown = PAGE_SIZE;
-  showAll();
+/* The sector and region dropdowns list what the startups really have, most common first,
+   with how many each has. The values are the database's English words, so a choice
+   stays chosen when the language changes; only the words are redrawn. */
+function fillDropdowns() {
+  const tally = (column) => {
+    const counts = new Map();
+    startups.flatMap((row) => listOf(row, column)).forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
+    return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  };
+
+  const fill = (select, nameKey, kind, column) => {
+    const chosen = select.value;
+    select.innerHTML = `<option value="">${t(nameKey)}</option>`
+      + tally(column).map(([value, count]) => `<option value="${safe(value)}">${safe(label(kind, value))} (${count})</option>`).join('');
+    select.value = chosen;
+  };
+
+  fill(sectorFilter, 'startups.sector', 'sector', 'sector');
+  fill(regionFilter, 'startups.region', 'region', 'region');
+
+  // the stages go from the earliest to the latest
+  const chosen = stageFilter.value;
+  stageFilter.innerHTML = `<option value="">${t('startups.allStages')}</option>`
+    + STAGES.filter((stage) => startups.some((row) => listOf(row, 'stage').includes(stage)))
+      .map((stage) => `<option value="${safe(stage)}">${safe(label('stage', stage))}</option>`).join('');
+  stageFilter.value = chosen;
 }
 
-search.addEventListener('input', filterChanged);
-sectorFilter.addEventListener('change', filterChanged);
-regionFilter.addEventListener('change', filterChanged);
+// The stage dropdown says how many startups each stage has; the numbers follow the other filters
+function showStageCounts() {
+  const fitting = startups.filter((row) => matches(row, true));
+  stageFilter.querySelectorAll('option').forEach((option) => {
+    const count = option.value ? fitting.filter((row) => listOf(row, 'stage').includes(option.value)).length : fitting.length;
+    const words = option.value ? label('stage', option.value) : t('startups.allStages');
+    option.textContent = `${words} (${count})`;
+  });
+}
 
-moreButton.addEventListener('click', () => {
-  shown += PAGE_SIZE;
-  showAll();
+/* The sectors as small chips: the first two, then "+N" */
+function sectorChips(row) {
+  const sectors = listOf(row, 'sector');
+  return sectors.slice(0, 2).map((sector) => `<span class="st-chip">${safe(label('sector', sector))}</span>`).join('')
+    + (sectors.length > 2 ? `<span class="st-chip">+${sectors.length - 2}</span>` : '');
+}
+
+/* One card: a colored band with the funding stage and a big tilted square with
+   the initials, the name, what it does, the sector chips, and a footer with the
+   region and an arrow. The color is the startup's own (colorOf), so the details
+   page opens in the same color. */
+function cardHtml(row, index) {
+  const stage = listText(row, 'stage');
+  return `
+    <a class="st-card color-${colorOf(row)} fade-up" style="--i: ${index}" href="${detailsLink(row.startup_id)}">
+      <div class="st-card-band">
+        ${stage ? `<span class="st-card-stage">${safe(stage)}</span>` : ''}
+        <span class="st-card-logo" aria-hidden="true">${safe(initials(row.startup_name))}</span>
+      </div>
+      <div class="st-card-body">
+        <h3 class="st-card-name">${safe(row.startup_name)}</h3>
+        <p class="st-card-about">${safe(row.startup_description || t('startups.noDescription'))}</p>
+        <div class="st-card-chips">${sectorChips(row)}</div>
+      </div>
+      <div class="st-card-foot">
+        <span class="st-card-region">${icon('map')}<span>${safe(listText(row, 'region', ', ') || '—')}</span></span>
+        <span class="st-card-arrow" aria-label="${t('startups.viewDetails')}">${icon('chevron')}</span>
+      </div>
+    </a>`;
+}
+
+function show() {
+  if (loading) return;
+
+  const visible = startups.filter((row) => matches(row));
+  const pages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  page = Math.min(page, pages - 1);
+  const onThisPage = visible.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  cards.hidden = visible.length === 0;
+  cards.innerHTML = onThisPage.map(cardHtml).join('');
+
+  document.querySelector('#found').innerHTML = t('startups.found').replace('{n}', `<strong>${visible.length}</strong>`);
+  showStageCounts();
+
+  // Nothing matches: say so, with a button that clears the filters
+  empty.hidden = visible.length > 0;
+  document.querySelector('#clear-filters').hidden = !(search.value || sectorFilter.value || regionFilter.value || stageFilter.value);
+
+  // "Showing 13–24 of 1128 startups"
+  pager.hidden = visible.length === 0;
+  document.querySelector('#showing').textContent = t('startups.showing')
+    .replace('{from}', page * PAGE_SIZE + 1)
+    .replace('{to}', page * PAGE_SIZE + onThisPage.length)
+    .replace('{n}', visible.length);
+  document.querySelector('#previous').disabled = page === 0;
+  document.querySelector('#next').disabled = page >= pages - 1;
+
+  rememberFilters();
+}
+
+/* ---------- The address keeps the filters ---------- */
+
+function rememberFilters() {
+  const params = new URLSearchParams();
+  if (search.value) params.set('q', search.value);
+  if (sectorFilter.value) params.set('sector', sectorFilter.value);
+  if (regionFilter.value) params.set('region', regionFilter.value);
+  if (stageFilter.value) params.set('stage', stageFilter.value);
+  if (page > 0) params.set('page', page + 1);
+  const query = params.toString();
+  history.replaceState(null, '', query ? `?${query}` : window.location.pathname);
+}
+
+function readFilters() {
+  const params = new URLSearchParams(window.location.search);
+  search.value = params.get('q') || '';
+  sectorFilter.value = params.get('sector') || '';
+  regionFilter.value = params.get('region') || '';
+  stageFilter.value = params.get('stage') || '';
+  page = Math.max(0, (Number(params.get('page')) || 1) - 1);
+}
+
+/* ---------- Events ---------- */
+
+function startOver() {
+  page = 0;
+  show();
+}
+
+search.addEventListener('input', startOver);
+sectorFilter.addEventListener('change', startOver);
+regionFilter.addEventListener('change', startOver);
+stageFilter.addEventListener('change', startOver);
+
+// The list already follows what is typed; the Search button takes the person down to it
+document.querySelector('#filters').addEventListener('submit', (event) => {
+  event.preventDefault();
+  startOver();
+  document.querySelector('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
-// labels and dropdowns are in the current language, so draw them again when it changes
+document.querySelector('#clear-filters').addEventListener('click', () => {
+  search.value = '';
+  sectorFilter.value = '';
+  regionFilter.value = '';
+  stageFilter.value = '';
+  startOver();
+});
+
+document.querySelector('#previous').addEventListener('click', () => {
+  page -= 1;
+  show();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+document.querySelector('#next').addEventListener('click', () => {
+  page += 1;
+  show();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// labels are in the current language, so draw them again when it changes (the choices stay)
 document.addEventListener('darb:language', () => {
   if (loading) return;
   fillDropdowns();
-  showAll();
+  showTotals();
+  show();
 });
 
 /* ---------- Start ---------- */
 
 document.querySelector('#search-icon').innerHTML = icon('search');
-fillDropdowns();
+document.querySelector('#empty-icon').innerHTML = icon('search');
 
 // the startups could not be loaded → the 500 page, with "Try again"
 const rows = await loadStartups();
@@ -154,7 +240,13 @@ if (!rows) {
 } else {
   startups = rows;
   loading = false;
+
+  // the loading spinner gives way to the "no match" words (shown only when nothing matches)
+  document.querySelector('#loading').remove();
+  ['#empty-icon', '#empty-title', '#empty-text'].forEach((selector) => { document.querySelector(selector).hidden = false; });
+
   fillDropdowns();
-  showStats();
-  showAll();
+  readFilters();
+  showTotals();
+  show();
 }
