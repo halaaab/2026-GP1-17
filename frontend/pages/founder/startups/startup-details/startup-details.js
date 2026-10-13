@@ -1,18 +1,36 @@
-/* Startup details: one startup, read from ?id= in the address. */
+/* Startup details: one startup, read from ?id= in the address.
+   A colored head (the startup's color, as on its card in the explorer), then
+   two columns: sectors and market, about, products and services, tags and
+   similar startups on one side; the key facts and the links in a card on the other. */
 
 import { t, getLanguage } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartup, listOf, listText, tagsOf, initials, countryName, siteName,
+  loadStartup, loadSimilar, listOf, listText, label, tagsOf, initials, countryName, colorOf, detailsLink,
 } from '../../../../shared/startups.js';
-
-const status = document.querySelector('#status');
-const details = document.querySelector('#details');
 
 const id = new URLSearchParams(window.location.search).get('id');
 let startup = null;
+let similar = [];
+
+// Startup text comes from the dataset, so it is escaped before it goes into HTML
+function safe(text) {
+  return String(text ?? '').replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
+}
+
+/* One key fact in the side card: a small colored icon, a label, the value */
+function fact(iconName, tone, labelKey, value) {
+  return `
+    <div class="std-fact">
+      <span class="std-fact-icon chip-pastel-${tone}">${icon(iconName)}</span>
+      <span class="std-fact-text">
+        <span class="std-fact-label">${t(labelKey)}</span>
+        <strong class="std-fact-value">${safe(value)}</strong>
+      </span>
+    </div>`;
+}
 
 // Shows or hides a link, and points it at the address
 function setLink(link, address) {
@@ -20,61 +38,80 @@ function setLink(link, address) {
   link.hidden = !address;
 }
 
-// Fills the page in the current language
-function showStartup() {
+/* ---------- Drawing (in the current language) ---------- */
+
+function show() {
   const row = startup;
   const comma = getLanguage() === 'ar' ? '، ' : ', ';
-  const none = t('startups.none');
-
-  document.querySelector('#logo').textContent = initials(row.startup_name);
-  document.querySelector('#source-logo').textContent = initials(row.startup_name);
-  document.querySelector('#name').textContent = row.startup_name;
-  document.querySelector('#sectors').textContent = listText(row, 'sector', comma) || t('startups.noSector');
-
-  // the funding stage: a chip next to the sectors, and a tile
+  const sectors = listOf(row, 'sector');
   const stage = listText(row, 'stage');
-  document.querySelector('#stage-chip').textContent = stage;
-  document.querySelector('#stage-chip').hidden = !stage;
-  document.querySelector('#stage').textContent = stage || none;
-  document.querySelector('#region').textContent = listText(row, 'region', comma) || none;
-
-  const websiteLink = document.querySelector('#website-link');
-  websiteLink.textContent = siteName(row.website);
-  setLink(websiteLink, row.website);
-  document.querySelector('#website-none').hidden = Boolean(row.website);
-
-  document.querySelector('#description').textContent = row.startup_description || t('startups.noDescription');
-
-  // sections with nothing in the dataset are hidden
-  const products = listOf(row, 'products_services');
-  document.querySelector('#products').innerHTML = products.map(() => `<li>${icon('checkCircle')}<span></span></li>`).join('');
-  document.querySelectorAll('#products span').forEach((span, index) => { span.textContent = products[index]; });
-  document.querySelector('#products-section').hidden = products.length === 0;
-
-  // market: who it sells to and its country, each line only when the dataset has it
+  const region = listText(row, 'region', comma);
   const market = listText(row, 'target_market', comma);
-  const country = countryName(row.country);
-  document.querySelector('#market').textContent = t('startups.marketLine').replace('{market}', market);
-  document.querySelector('#market').parentElement.hidden = !market;
-  document.querySelector('#country').textContent = t('startups.countryLine').replace('{country}', country);
-  document.querySelector('#country').parentElement.hidden = !country;
-  document.querySelector('#market-section').hidden = !market && !country;
-
-  const tags = tagsOf(row);
-  document.querySelector('#tags').innerHTML = tags.map(() => '<span class="chip"></span>').join('');
-  document.querySelectorAll('#tags .chip').forEach((chip, index) => { chip.textContent = tags[index]; });
-  document.querySelector('#tags-section').hidden = tags.length === 0;
-
-  // links: the startup's website and its EcosystemSA profile
-  document.querySelector('#source-title').textContent = row.startup_name;
-  document.querySelector('#source-url').textContent = row.website || row.ecosystemsa_profile_url || '';
-  setLink(document.querySelector('#website-open'), row.website);
-  setLink(document.querySelector('#profile-open'), row.ecosystemsa_profile_url);
 
   document.title = `${row.startup_name} · Darb`;
+
+  // Head, in the startup's color
+  document.querySelector('#hero').className = `std-hero color-${colorOf(row)}`;
+  document.querySelector('#logo').textContent = initials(row.startup_name);
+  document.querySelector('#name').textContent = row.startup_name;
+  document.querySelector('#place').textContent = [region, countryName(row.country)].filter(Boolean).join(' · ') || '—';
+
+  // Tags: the funding stage (with its icon), then up to three sectors
+  document.querySelector('#tags').innerHTML = [
+    stage ? `<span class="std-tag is-strong">${icon('flag')}${safe(stage)}</span>` : '',
+    ...sectors.slice(0, 3).map((sector) => `<span class="std-tag">${safe(label('sector', sector))}</span>`),
+  ].join('');
+
+  // Sectors and market: each line only when the dataset has it
+  const lines = [
+    sectors.length ? t('startups.sectorsLine').replace('{list}', listText(row, 'sector', comma)) : '',
+    market ? t('startups.marketLine').replace('{market}', market) : '',
+  ].filter(Boolean);
+  document.querySelector('#market-section').hidden = lines.length === 0;
+  document.querySelector('#market').innerHTML = lines.map((line) => `<li>${icon('checkCircle')}<span>${safe(line)}</span></li>`).join('');
+
+  document.querySelector('#about').textContent = row.startup_description || t('startups.noDescription');
+
+  // Products and services: numbered rows
+  const products = listOf(row, 'products_services');
+  document.querySelector('#products-section').hidden = products.length === 0;
+  document.querySelector('#products-count').textContent = t('startups.productsCount').replace('{n}', products.length);
+  document.querySelector('#products').innerHTML = products
+    .map((product, index) => `<li><span class="std-step-number">${index + 1}</span><span>${safe(product)}</span></li>`)
+    .join('');
+
+  const tags = tagsOf(row);
+  document.querySelector('#tags-section').hidden = tags.length === 0;
+  document.querySelector('#tag-chips').innerHTML = tags.map((tag) => `<span class="chip">${safe(tag)}</span>`).join('');
+
+  // Side card: the key facts the dataset has for this startup (empty ones are left out), then the links
+  const facts = [
+    // icon colors: shades of blue (sky, aqua, indigo, steel)
+    ['flag', 3, 'startups.stage', stage],
+    ['map', 7, 'startups.region', region],
+    ['globe', 12, 'startups.country', countryName(row.country)],
+    ['users', 14, 'startups.targetMarket', market],
+  ].filter(([, , , value]) => value);
+  document.querySelector('#facts').innerHTML = facts.map((item) => fact(...item)).join('');
+  document.querySelector('#facts').hidden = facts.length === 0;
+  setLink(document.querySelector('#website'), row.website);
+  setLink(document.querySelector('#profile'), row.ecosystemsa_profile_url);
+
+  // Similar startups, each in its own color
+  document.querySelector('#similar-section').hidden = similar.length === 0;
+  document.querySelector('#similar').innerHTML = similar.map((other, index) => `
+    <a class="std-similar-card color-${colorOf(other)} fade-up" style="--i: ${index}" href="${detailsLink(other.startup_id)}">
+      <span class="std-similar-logo" aria-hidden="true">${safe(initials(other.startup_name))}</span>
+      <span class="std-similar-text">
+        <strong>${safe(other.startup_name)}</strong>
+        <span>${safe([listText(other, 'stage'), listText(other, 'region', comma)].filter(Boolean).join(' · ') || '—')}</span>
+      </span>
+    </a>`).join('');
 }
 
-// Share: the phone's share sheet when there is one, otherwise copy the link
+/* ---------- Share ----------
+   Phones open their own share sheet; elsewhere the link is copied. */
+
 document.querySelector('#share').addEventListener('click', async () => {
   const link = window.location.href;
   if (navigator.share) {
@@ -94,27 +131,33 @@ document.querySelector('#share').addEventListener('click', async () => {
 });
 
 document.addEventListener('darb:language', () => {
-  if (startup) showStartup();
+  if (startup) show();
 });
 
 /* ---------- Start ---------- */
 
 document.querySelector('#back-icon').innerHTML = icon('arrowBack');
 document.querySelector('#share-icon').innerHTML = icon('share');
-document.querySelector('#region-icon').innerHTML = icon('map');
-document.querySelectorAll('.std-check-icon').forEach((span) => { span.innerHTML = icon('checkCircle'); });
-document.querySelector('#profile-icon').innerHTML = icon('external');
+document.querySelector('#hero-art').innerHTML = icon('store');
 document.querySelector('#website-icon').innerHTML = icon('external');
+document.querySelector('#profile-icon').innerHTML = icon('external');
+document.querySelector('#note-icon').innerHTML = icon('info');
+
+// Going back keeps the explorer's filters when the person came from there
+if (document.referrer.includes('startup-explorer')) {
+  document.querySelector('#back-link').href = document.referrer;
+}
 
 // no id, or a startup that does not exist → 404; the database did not answer → 500
 const result = id ? await loadStartup(id) : { startup: null, failed: false };
-startup = result.startup;
 if (result.failed) {
   showErrorPage(500);
-} else if (!startup) {
+} else if (!result.startup) {
   showErrorPage(404);
 } else {
-  showStartup();
-  status.hidden = true;
-  details.hidden = false;
+  startup = result.startup;
+  similar = await loadSimilar(startup);
+  document.querySelector('#loading').hidden = true;
+  document.querySelector('#details').hidden = false;
+  show();
 }
