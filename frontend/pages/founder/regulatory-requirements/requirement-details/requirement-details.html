@@ -1,9 +1,12 @@
 <!doctype html>
 <!--
   REQUIREMENT DETAILS (founder side, also open to visitors)
-  One regulatory requirement: who issues it, when it applies, what to do,
-  the fees and the official source. Opened from the Regulatory Explorer:
+  One regulatory requirement: when it applies, what to do, the fees, similar
+  requirements, and its key facts and official links. Opened from the Regulatory Explorer:
     requirement-details.html?id=GEN-001
+  The same design as the Startup details page: a colored head (the same color
+  as the requirement's card), then two columns.
+  A missing requirement opens the 404 page, a load failure the 500 page.
 -->
 <html lang="en" dir="ltr">
 <head>
@@ -15,83 +18,75 @@
 </head>
 <body data-layout="founder" data-page="requirements" data-title="nav.requirements" data-access="public">
 
-  <main class="req">
-    <a class="req-back text-2" id="back" href="../requirements-explorer/requirements-explorer.html">
+  <main>
+    <a class="req-back" id="back-link" href="../requirements-explorer/requirements-explorer.html">
       <span id="back-icon"></span>
       <span data-i18n="nav.requirements"></span>
     </a>
 
-    <!-- shown while loading, and when the requirement cannot be found -->
-    <p class="empty" id="status"><span class="spinner"></span></p>
+    <!-- shown while the requirement loads -->
+    <div class="req-loading" id="loading">
+      <div class="skeleton req-skeleton-hero"></div>
+      <div class="skeleton req-skeleton-line"></div>
+      <div class="skeleton req-skeleton-block"></div>
+    </div>
 
     <article id="details" hidden>
-      <div class="req-head">
-        <span class="req-icon" id="title-icon"></span>
-        <div class="req-head-text">
-          <h2 class="page-title" id="name"></h2>
-          <p class="text-2 req-summary">
-            <span id="category"></span>
-            <span class="chip" id="mandatory"></span>
-          </p>
+      <!-- Head: logo, name, authority, tags. The color class is set by the script. -->
+      <header class="req-hero" id="hero">
+        <span class="req-hero-art" id="hero-art" aria-hidden="true"></span>
+        <span class="req-logo" id="logo" aria-hidden="true"></span>
+        <div class="req-title">
+          <h2 id="name"></h2>
+          <p class="req-sub" id="authority"></p>
+          <div class="req-tags" id="tags"></div>
         </div>
-        <button type="button" class="btn btn-secondary btn-sm" id="share">
+        <button type="button" class="btn btn-secondary btn-sm req-share" id="share">
           <span id="share-icon"></span>
           <span data-i18n="reg.share"></span>
         </button>
+      </header>
+
+      <div class="req-layout">
+        <div class="req-main">
+          <!-- When it applies and to which sectors: a green box, a tick before each line -->
+          <section class="req-section">
+            <h3 class="section-title" data-i18n="reg.appliesWhen"></h3>
+            <ul class="req-checks" id="applies"></ul>
+          </section>
+
+          <!-- What to do: numbered steps, each in its own box -->
+          <section class="req-section" id="steps-section">
+            <div class="req-section-head">
+              <h3 class="section-title" data-i18n="reg.guidance"></h3>
+              <span class="req-count" id="steps-count"></span>
+            </div>
+            <ol class="req-steps" id="steps"></ol>
+          </section>
+
+          <section class="req-section" id="fees-section">
+            <h3 class="section-title" data-i18n="reg.fees"></h3>
+            <p class="req-text" id="fees"></p>
+          </section>
+
+          <section class="req-section" id="similar-section">
+            <h3 class="section-title" data-i18n="reg.similar"></h3>
+            <div class="req-similar-grid" id="similar"></div>
+          </section>
+        </div>
+
+        <!-- Key facts and the official links -->
+        <aside class="req-side">
+          <div class="req-facts" id="facts"></div>
+          <a class="btn req-apply" id="service-link" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="reg.applyHere"></span><span id="apply-icon"></span>
+          </a>
+          <a class="btn btn-secondary req-source" id="source-link" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="reg.openSource"></span><span id="source-icon"></span>
+          </a>
+          <div class="req-note"><span id="note-icon"></span><span id="note"></span></div>
+        </aside>
       </div>
-
-      <div class="req-tiles">
-        <div class="tile">
-          <span class="text-3" data-i18n="reg.authority"></span>
-          <strong class="req-tile-value"><span id="authority-icon"></span><span id="authority"></span></strong>
-        </div>
-        <div class="tile">
-          <span class="text-3" data-i18n="reg.stage"></span>
-          <strong class="req-tile-value" id="stage"></strong>
-        </div>
-        <div class="tile">
-          <span class="text-3" data-i18n="reg.officialSource"></span>
-          <a class="req-tile-value link" id="source-link" target="_blank" rel="noopener noreferrer"></a>
-        </div>
-      </div>
-
-      <section class="req-section">
-        <h3 class="section-title" data-i18n="reg.appliesWhen"></h3>
-        <ul class="req-checks">
-          <li><span id="check-icon"></span><span id="applies-when"></span></li>
-          <li><span id="sector-icon"></span><span id="sectors"></span></li>
-        </ul>
-      </section>
-
-      <section class="req-section" id="guidance-section">
-        <h3 class="section-title" data-i18n="reg.guidance"></h3>
-        <p class="text-2" id="guidance"></p>
-      </section>
-
-      <section class="req-section" id="fees-section">
-        <h3 class="section-title" data-i18n="reg.fees"></h3>
-        <p class="text-2" id="fees"></p>
-      </section>
-
-      <section class="req-section">
-        <h3 class="section-title" data-i18n="reg.officialSource"></h3>
-        <div class="card req-source">
-          <span class="req-source-icon" id="source-icon"></span>
-          <div class="req-source-text">
-            <strong id="source-title"></strong>
-            <span class="text-3" id="source-url" dir="ltr"></span>
-          </div>
-          <div class="req-source-actions">
-            <a class="btn btn-secondary btn-sm" id="source-open" target="_blank" rel="noopener noreferrer">
-              <span data-i18n="reg.openSource"></span><span id="open-icon"></span>
-            </a>
-            <a class="btn btn-primary btn-sm" id="service-open" target="_blank" rel="noopener noreferrer">
-              <span data-i18n="reg.applyHere"></span><span id="apply-icon"></span>
-            </a>
-          </div>
-        </div>
-        <div class="alert alert-warn req-note" id="verified"></div>
-      </section>
     </article>
   </main>
 

@@ -30,7 +30,7 @@ const deleteConfirm = document.querySelector('#delete-confirm');
 
 // The text columns the form edits: each one has an input with id "f-<column>"
 const TEXT_COLUMNS = [
-  'name_en', 'name_ar', 'authority', 'authority_ar', 'category', 'category_ar', 'business_stage',
+  'name_en', 'name_ar', 'authority', 'authority_ar', 'authority_logo', 'category', 'category_ar', 'business_stage',
   'mandatory', 'regulatory_status', 'applies_when', 'applies_when_ar',
   'what_darb_should_surface', 'what_darb_should_surface_ar', 'fees_thresholds', 'fees_thresholds_ar',
   'official_source_url', 'service_url', 'last_verified', 'founder_trigger_fields', 'notes',
@@ -167,7 +167,28 @@ function fillFormChoices() {
   // suggestions while typing an authority or a type (the English names already used)
   document.querySelector('#authority-list').innerHTML = pairs('authority', 'authority').map(([value]) => `<option value="${value}">`).join('');
   document.querySelector('#type-list').innerHTML = pairs('category', 'category').map(([value]) => `<option value="${value}">`).join('');
+
+  // the logos already in use, each named after its authority (frontend/assets/images/authorities/)
+  const logo = input('authority_logo').value;
+  input('authority_logo').innerHTML = `<option value="">${t('regAdmin.noLogo')}</option>`
+    + logoChoices().map(([path, name]) => `<option value="${path}">${name}</option>`).join('');
+  input('authority_logo').value = logo;
 }
+
+// [logo address, authority name in the page's language], A to Z
+function logoChoices() {
+  const found = new Map();
+  requirements.forEach((row) => {
+    if (row.authority_logo && !found.has(row.authority_logo)) found.set(row.authority_logo, field(row, 'authority'));
+  });
+  return [...found].sort((a, b) => a[1].localeCompare(b[1]));
+}
+
+// Typing an authority that already has a logo picks that logo (the admin can still change it)
+input('authority').addEventListener('change', () => {
+  const same = requirements.find((row) => row.authority === input('authority').value.trim() && row.authority_logo);
+  if (same && !input('authority_logo').value) input('authority_logo').value = same.authority_logo;
+});
 
 // Opens the panel to edit a requirement, or to add a new one when id is null
 function openForm(id) {
