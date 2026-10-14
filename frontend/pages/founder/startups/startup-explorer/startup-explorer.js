@@ -8,7 +8,7 @@ import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, initials, colorOf, detailsLink, STAGES, REGIONS,
+  loadStartups, listOf, listText, label, initials, colorOf, detailsLink, descriptionOf, STAGES, REGIONS,
 } from '../../../../shared/startups.js';
 
 const PAGE_SIZE = 12;   // four rows of three cards
@@ -37,7 +37,7 @@ function safe(text) {
 
 function matches(row, ignoreStage = false) {
   const words = search.value.trim().toLowerCase();
-  const searchable = [row.startup_name, row.startup_description, row.tags, row.products_services, listText(row, 'sector')]
+  const searchable = [row.startup_name, row.startup_description, row.startup_description_ar, row.tags, row.products_services, listText(row, 'sector')]
     .join(' ').toLowerCase();
 
   return (!words || searchable.includes(words))
@@ -120,7 +120,7 @@ function cardHtml(row, index) {
       </div>
       <div class="st-card-body">
         <h3 class="st-card-name">${safe(row.startup_name)}</h3>
-        <p class="st-card-about">${safe(row.startup_description || t('startups.noDescription'))}</p>
+        <p class="st-card-about">${safe(descriptionOf(row) || t('startups.noDescription'))}</p>
         <div class="st-card-chips">${sectorChips(row)}</div>
       </div>
       <div class="st-card-foot">
