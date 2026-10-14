@@ -6,7 +6,7 @@
      <script type="module" src="../../../shared/guard.js"></script>
 
    It reads data-layout on <body> and does the rest:
-     data-layout="admin"    only admins get in, and only after the code from their phone
+     data-layout="admin"    only admins get in, and only after the code from the authenticator app on their phone
      data-layout="founder"  only founders get in
    Anyone else is sent to the right login page (or to their own first page).
 
@@ -93,7 +93,7 @@ if (account.role === 'founder' && account.profile.status === 'deactivated') {
   }
 }
 
-// An admin page also needs the second step: the code Darb emailed to the admin.
+// An admin page also needs the second step: the code from the admin's authenticator app.
 // Without it, the admin goes back to the admin login, which asks for the code.
 if (allowed && neededRole === 'admin' && (await getSecondStep()) !== 'done') {
   allowed = false;
