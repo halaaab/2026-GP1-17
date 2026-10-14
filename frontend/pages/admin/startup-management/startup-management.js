@@ -8,7 +8,7 @@ import { supabase } from '../../../shared/supabase.js';
 import { getCurrentUser } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, allValues, initials, detailsLink, fillFilter, dateText,
+  loadStartups, listOf, listText, label, allValues, detailsLink, fillFilter, dateText, logoOf, logoHtml,
   SECTORS, STAGES, REGIONS, MARKETS,
 } from '../../../shared/startups.js';
 import '../../../shared/guard.js';
@@ -30,7 +30,7 @@ const deleteConfirm = document.querySelector('#delete-confirm');
 
 // The text columns the form edits: each one has an input with id "f-<column>"
 const TEXT_COLUMNS = [
-  'startup_name', 'startup_description', 'startup_description_ar', 'country', 'products_services', 'tags',
+  'startup_name', 'startup_name_ar', 'logo', 'startup_description', 'startup_description_ar', 'country', 'products_services', 'tags',
   'website', 'ecosystemsa_profile_url', 'description_source',
 ];
 
@@ -38,7 +38,7 @@ const TEXT_COLUMNS = [
 const CHOICE_COLUMNS = { sector: SECTORS, stage: STAGES, region: REGIONS, target_market: MARKETS };
 const KINDS = { sector: 'sector', stage: 'stage', region: 'region', target_market: 'market' };
 
-const URL_COLUMNS = ['website', 'ecosystemsa_profile_url', 'description_source'];
+const URL_COLUMNS = ['logo', 'website', 'ecosystemsa_profile_url', 'description_source'];
 
 // More than a thousand startups: the table shows them a page at a time
 const PAGE_SIZE = 50;
@@ -66,7 +66,7 @@ function fillFilters() {
 
 function fits(row) {
   const words = search.value.trim().toLowerCase();
-  const text = [row.startup_id, row.startup_name, row.country, row.tags, row.website].join(' ').toLowerCase();
+  const text = [row.startup_id, row.startup_name, row.startup_name_ar, row.country, row.tags, row.website].join(' ').toLowerCase();
 
   return text.includes(words)
     && Object.entries(filters).every(([column, select]) => !select.value || listOf(row, column).includes(select.value));
@@ -107,7 +107,8 @@ function showRows() {
   rows.querySelectorAll('tr').forEach((tr, index) => {
     const row = page[index];
     const stage = listText(row, 'stage');
-    tr.querySelector('.sm-logo').textContent = initials(row.startup_name);
+    tr.querySelector('.sm-logo').classList.toggle('has-logo', Boolean(logoOf(row)));
+    tr.querySelector('.sm-logo').innerHTML = logoHtml(row);
     tr.querySelector('.cell-title').textContent = row.startup_name;
     tr.querySelector('.cell-detail').textContent = [row.startup_id, listText(row, 'region', ', ')].filter(Boolean).join(' · ');
     tr.querySelector('.sm-sector').textContent = listText(row, 'sector', ', ') || '—';

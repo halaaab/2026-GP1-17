@@ -913,7 +913,7 @@
   "startupAdmin.addSub": "تظهر في مستكشف الشركات الناشئة بعد الحفظ.",
   "startupAdmin.lastUpdated": "آخر تحديث {date}",
   "startupAdmin.viewAsFounder": "عرض كرائد أعمال",
-  "startupAdmin.name": "اسم الشركة الناشئة",
+  "startupAdmin.name": "اسم الشركة الناشئة (بالإنجليزية)",
   "startupAdmin.nameRequired": "أدخل اسم الشركة الناشئة.",
   "startupAdmin.description": "الوصف (بالإنجليزية)",
   "startupAdmin.sectorRequired": "اختر قطاعًا واحدًا على الأقل.",
@@ -988,5 +988,8 @@
   "regAdmin.logoHint": "يُختار تلقائيًا إذا كان للجهة شعار. تُضاف الشعارات الجديدة إلى frontend/assets/images/authorities/.",
   "regAdmin.noLogo": "بدون شعار (تظهر الأحرف الأولى)",
   "startupAdmin.descriptionAr": "الوصف (بالعربية)",
-  "startupAdmin.descriptionArHint": "يظهر عندما يكون الموقع بالعربية، وإذا تُرك فارغًا يظهر الوصف الإنجليزي."
+  "startupAdmin.descriptionArHint": "يظهر عندما يكون الموقع بالعربية، وإذا تُرك فارغًا يظهر الوصف الإنجليزي.",
+  "startupAdmin.nameAr": "اسم الشركة الناشئة (بالعربية)",
+  "startupAdmin.logo": "رابط الشعار",
+  "startupAdmin.logoHint": "رابط صورة الشعار (PNG أو JPG أو SVG). إذا تُرك فارغًا تظهر الأحرف الأولى من الاسم."
 }

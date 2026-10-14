@@ -1170,7 +1170,7 @@
   "startupAdmin.addSub": "It appears in the Startup Explorer once saved.",
   "startupAdmin.lastUpdated": "Last updated {date}",
   "startupAdmin.viewAsFounder": "View as founder",
-  "startupAdmin.name": "Startup name",
+  "startupAdmin.name": "Startup name (English)",
   "startupAdmin.nameRequired": "Enter the startup's name.",
   "startupAdmin.description": "Description (English)",
   "startupAdmin.sectorRequired": "Choose at least one sector.",
@@ -1245,5 +1245,8 @@
   "regAdmin.logoHint": "Picked for you when the authority already has a logo. New logos go in frontend/assets/images/authorities/.",
   "regAdmin.noLogo": "No logo (show the initials)",
   "startupAdmin.descriptionAr": "Description (Arabic)",
-  "startupAdmin.descriptionArHint": "Shown when the site is in Arabic. When empty, the English description is shown."
+  "startupAdmin.descriptionArHint": "Shown when the site is in Arabic. When empty, the English description is shown.",
+  "startupAdmin.nameAr": "Startup name (Arabic)",
+  "startupAdmin.logo": "Logo link",
+  "startupAdmin.logoHint": "A link to the logo image (PNG, JPG or SVG). When empty, the initials are shown."
 }
