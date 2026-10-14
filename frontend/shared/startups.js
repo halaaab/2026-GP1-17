@@ -115,6 +115,13 @@ export function listOf(row, column) {
   return (row[column] || '').split(';').map((item) => item.trim()).filter(Boolean);
 }
 
+/* The description in the page's language: the Arabic one (migration 0011) when the
+   page is in Arabic and there is one, the English one otherwise ('' when there is none) */
+export function descriptionOf(row) {
+  if (getLanguage() === 'ar' && row.startup_description_ar) return row.startup_description_ar;
+  return row.startup_description || '';
+}
+
 /* "SaaS,ERP" → ['SaaS', 'ERP'] (tags are separated by commas in the dataset) */
 export function tagsOf(row) {
   return (row.tags || '').split(',').map((item) => item.trim()).filter(Boolean);
