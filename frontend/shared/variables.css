@@ -32,6 +32,16 @@
   --teal-text:   #17777E;
   --teal-tint:   #E3F4F5;
   --teal-bright: #6FD3DA;     /* teal for text on dark navy */
+  --green-deep:  #0A4A2A;     /* darkest Saudi green: the shade over the Regulatory Explorer banner */
+
+  /* Saudi greens: six light shades around the flag green (#006C35), for the Regulatory
+     Explorer and requirement details (tint = background, text = words and icons) */
+  --saudi-1-tint: #EBF7F0;  --saudi-1-text: #0B7A40;   /* flag green */
+  --saudi-2-tint: #EBF7F2;  --saudi-2-text: #0F7854;   /* emerald */
+  --saudi-3-tint: #EEF5F0;  --saudi-3-text: #2E6E48;   /* forest */
+  --saudi-4-tint: #E8F6F2;  --saudi-4-text: #117260;   /* jade */
+  --saudi-5-tint: #ECF3F0;  --saudi-5-text: #24694F;   /* pine */
+  --saudi-6-tint: #F0F4EF;  --saudi-6-text: #4C7255;   /* sage */
   --link-tint:   #E9F4F8;     /* action-link buttons */
   --link-text:   #16627F;
 

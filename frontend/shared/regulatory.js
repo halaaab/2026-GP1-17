@@ -1,6 +1,6 @@
 /* ==========================================================
    Regulatory requirements: the ONE place that knows the
-   regulatory_requirements table (migrations 0006 and 0010).
+   regulatory_requirements table (migrations 0006, 0010 and 0012).
 
    Used by the founder Regulatory Explorer, the requirement details page
    and the admin Regulatory page:
@@ -43,11 +43,53 @@ export async function loadRequirements() {
   return data;
 }
 
-/* One requirement, or null */
+/* One requirement: { requirement, failed }.
+   requirement is null when there is no such id; failed is true when the database did not answer. */
 export async function loadRequirement(id) {
   const { data, error } = await supabase.from('regulatory_requirements').select('*').eq('requirement_id', id).maybeSingle();
   if (error) console.error('regulatory_requirements:', error.message);
-  return data || null;
+  return { requirement: data || null, failed: Boolean(error) };
+}
+
+/* Up to 3 other requirements to suggest next to one: the same authority first,
+   then the same type, then the same sector. */
+export async function loadSimilar(row) {
+  const all = await loadRequirements();
+  if (!all) return [];
+  const sectors = sectorsOf(row);
+  const score = (other) => (other.authority === row.authority ? 4 : 0)
+    + (other.category === row.category ? 2 : 0)
+    + (sectorsOf(other).some((sector) => sectors.includes(sector)) ? 1 : 0);
+  return all
+    .filter((other) => other.requirement_id !== row.requirement_id && score(other) > 0)
+    .sort((a, b) => score(b) - score(a) || a.requirement_id.localeCompare(b.requirement_id))
+    .slice(0, 3);
+}
+
+/* ---------- Look: color, logo, initials ---------- */
+
+/* The requirement's color, from 0 to 5 (six shades of green, color-N in the explorer and
+   details pages). Worked out from its id (GEN-014, FOOD-003 …), so a requirement always
+   keeps the same color and its card and details page match. */
+export function colorOf(row) {
+  const id = row.requirement_id || '';
+  let sum = 0;
+  for (const letter of id.replace(/[^A-Za-z]/g, '')) sum += letter.charCodeAt(0);   // the letters: GEN, FOOD …
+  return (sum + (Number(id.replace(/\D/g, '')) || 0)) % 6;                          // plus the number: 1, 2, 3 …
+}
+
+/* The full address of the authority's logo (authority_logo, migration 0012), or '' when there is none */
+export function logoUrl(row) {
+  return row.authority_logo ? `${ROOT}${row.authority_logo}` : '';
+}
+
+/* The authority's short name from its brackets, or the first letters of its words:
+   "Communications, Space and Technology Commission (CST)" → "CST", "Saudi Post" → "SP" */
+export function initials(authority) {
+  const short = (authority || '').match(/\(([^)]+)\)\s*$/);
+  if (short) return short[1].slice(0, 4).toUpperCase();
+  const words = (authority || '').split(/[\s/]+/).filter((word) => /^[A-Za-z]/.test(word) && !['and', 'of', 'for', 'the'].includes(word));
+  return (words.slice(0, 2).map((word) => word[0]).join('') || '?').toUpperCase();
 }
 
 /* A text column in the page's language: field(row, 'name') reads name_ar or name_en,
