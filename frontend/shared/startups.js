@@ -122,6 +122,78 @@ export function descriptionOf(row) {
   return row.startup_description || '';
 }
 
+/* The name in the page's language: the Arabic one (migration 0012) when the page
+   is in Arabic and there is one, the English one otherwise */
+export function nameOf(row) {
+  if (getLanguage() === 'ar' && row.startup_name_ar) return row.startup_name_ar;
+  return row.startup_name || '';
+}
+
+/* The logo's web address, or '' when there is none. Only http(s) links are
+   accepted, so a wrong value in the database can never run as code. */
+export function logoOf(row) {
+  try {
+    const address = new URL(row.logo || '');
+    return address.protocol === 'https:' || address.protocol === 'http:' ? address.href : '';
+  } catch {
+    return '';
+  }
+}
+
+/* What goes inside a startup's logo square: its logo image, or its initials when it has none.
+   The square gets the class "has-logo" when there is an image (each page styles it).
+     square.classList.toggle('has-logo', Boolean(logoOf(row)));
+     square.innerHTML = logoHtml(row); */
+export function logoHtml(row) {
+  const escape = (text) => String(text).replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
+  const logo = logoOf(row);
+  const letters = escape(initials(row.startup_name));
+  // crossorigin lets the page look at the image's colors (the logo host allows it), see below
+  return logo ? `<img src="${escape(logo)}" alt="" loading="lazy" crossorigin="anonymous" data-initials="${letters}">` : letters;
+}
+
+/* Some logos are drawn in white for dark backgrounds and would vanish on a white square.
+   When a logo loads, a tiny copy is drawn on a canvas; if almost all of its visible pixels
+   are light, its square gets the class "is-light" and each page shows it on a dark color. */
+function isLightImage(image) {
+  const size = 24;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.drawImage(image, 0, 0, size, size);
+  const pixels = context.getImageData(0, 0, size, size).data;
+
+  let visible = 0;
+  let light = 0;
+  for (let index = 0; index < pixels.length; index += 4) {
+    if (pixels[index + 3] < 60) continue;   // (almost) transparent
+    visible += 1;
+    if (pixels[index] > 225 && pixels[index + 1] > 225 && pixels[index + 2] > 225) light += 1;
+  }
+  return visible > 0 && light / visible > 0.9;
+}
+
+// "load" does not bubble either, so it is also caught on the way down
+document.addEventListener('load', (event) => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement) || !image.dataset.initials) return;
+  try {
+    image.parentElement?.classList.toggle('is-light', isLightImage(image));
+  } catch {
+    // the image host did not allow reading its colors: keep the white square
+  }
+}, true);
+
+// A logo that cannot load (moved or deleted on the other website) is replaced by the initials.
+// "error" does not bubble, so it is caught on the way down (third argument: true).
+document.addEventListener('error', (event) => {
+  const image = event.target;
+  if (!(image instanceof HTMLImageElement) || !image.dataset.initials) return;
+  image.parentElement?.classList.remove('has-logo');
+  image.replaceWith(document.createTextNode(image.dataset.initials));
+}, true);
+
 /* "SaaS,ERP" → ['SaaS', 'ERP'] (tags are separated by commas in the dataset) */
 export function tagsOf(row) {
   return (row.tags || '').split(',').map((item) => item.trim()).filter(Boolean);
