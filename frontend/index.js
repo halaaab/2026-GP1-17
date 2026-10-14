@@ -51,16 +51,40 @@ function updateOnScroll() {
     const reachedAt = index / (roadSteps.length - 1) * 0.92;
     step.classList.toggle('is-on', roadProgress >= reachedAt && roadProgress > 0);
   });
+  markCurrentStep();
+}
+
+// The last step the line has reached is the "current" one (navy); the ones before it are done (teal)
+function markCurrentStep() {
+  const reached = [...roadSteps].filter((step) => step.classList.contains('is-on'));
+  roadSteps.forEach((step) => {
+    step.classList.toggle('is-current', step === reached[reached.length - 1]);
+  });
 }
 
 if (reduceMotion) {
   road.style.setProperty('--progress', 1);
   roadSteps.forEach((step) => step.classList.add('is-on'));
+  markCurrentStep();
 } else {
   window.addEventListener('scroll', updateOnScroll, { passive: true });
   window.addEventListener('resize', updateOnScroll);
   updateOnScroll();
 }
+
+/* ---------- The phone in the About section ----------
+   The assessment inside the phone is built 360px wide. Here we measure the photo
+   and tell the CSS how much to shrink it (--fit) so it fills the photo's screen exactly.
+   The screen is 35.9% of the photo's width. */
+
+const hand = document.querySelector('.hand');
+
+function fitPhone() {
+  const screenWidth = hand.offsetWidth * 0.359;
+  hand.style.setProperty('--fit', screenWidth / 360);
+}
+fitPhone();
+new ResizeObserver(fitPhone).observe(hand);
 
 /* ---------- 2. Reveal on scroll ---------- */
 

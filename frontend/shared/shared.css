@@ -1453,8 +1453,10 @@ body.sidebar-collapsed .header-toggle {
   padding: 10px;
   padding-inline-start: 18px;
   border-radius: 22px;
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 1px 0 #fff inset, var(--shadow-panel);
+  border-color: var(--border);
+  /* almost solid, so the page sliding under the bar does not show through the links */
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-float);
 }
 .public-header .brand-logo { height: 42px; }
 
