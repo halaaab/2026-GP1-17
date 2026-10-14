@@ -79,9 +79,47 @@ export async function loadStartup(id) {
   return { startup: data || null, failed: Boolean(error) };
 }
 
+/* Up to three startups like this one, for its details page.
+   Only startups in its first sector are read. Each gets 2 points for every sector
+   it shares, 1 for the same funding stage and 1 for a shared region; the best three
+   are kept. Returns [] when there are none or they could not be loaded. */
+export async function loadSimilar(row) {
+  const sectors = listOf(row, 'sector');
+  if (sectors.length === 0) return [];
+
+  const { data, error } = await supabase.from('startups').select('*')
+    .ilike('sector', `%${sectors[0]}%`).neq('startup_id', row.startup_id).limit(60);
+  if (error) {
+    console.error('startups:', error.message);
+    return [];
+  }
+
+  const stages = listOf(row, 'stage');
+  const regions = listOf(row, 'region');
+  const shared = (other, column, mine) => listOf(other, column).filter((value) => mine.includes(value)).length;
+
+  return data
+    .map((other) => ({
+      other,
+      score: shared(other, 'sector', sectors) * 2
+        + (shared(other, 'stage', stages) ? 1 : 0)
+        + (shared(other, 'region', regions) ? 1 : 0),
+    }))
+    .sort((a, b) => b.score - a.score || a.other.startup_name.localeCompare(b.other.startup_name))
+    .slice(0, 3)
+    .map((item) => item.other);
+}
+
 /* "Seed; Series A" → ['Seed', 'Series A'] (sector, stage, region, target_market, products_services) */
 export function listOf(row, column) {
   return (row[column] || '').split(';').map((item) => item.trim()).filter(Boolean);
+}
+
+/* The description in the page's language: the Arabic one (migration 0011) when the
+   page is in Arabic and there is one, the English one otherwise ('' when there is none) */
+export function descriptionOf(row) {
+  if (getLanguage() === 'ar' && row.startup_description_ar) return row.startup_description_ar;
+  return row.startup_description || '';
 }
 
 /* "SaaS,ERP" → ['SaaS', 'ERP'] (tags are separated by commas in the dataset) */
@@ -124,6 +162,13 @@ export function initials(name) {
   if (words.length === 0) return '?';
   const letters = words.length > 1 ? words[0][0] + words[1][0] : words[0].slice(0, 2);
   return letters.toUpperCase();
+}
+
+/* The startup's color, from 0 to 5: the number in its id (ST_073 → 73) decides it,
+   so a startup always keeps the same color and the six colors are shared out evenly.
+   The explorer's card and the details page's head use it, so they match. */
+export function colorOf(row) {
+  return (Number((row.startup_id || '').replace(/\D/g, '')) || 0) % 6;
 }
 
 /* The country in the page's language. The dataset writes it in English ("Saudi Arabia");
