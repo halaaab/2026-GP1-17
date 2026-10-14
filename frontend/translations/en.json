@@ -881,7 +881,7 @@
   "startupAdmin.viewAsFounder": "View as founder",
   "startupAdmin.name": "Startup name",
   "startupAdmin.nameRequired": "Enter the startup's name.",
-  "startupAdmin.description": "Description",
+  "startupAdmin.description": "Description (English)",
   "startupAdmin.sectorRequired": "Choose at least one sector.",
   "startupAdmin.country": "Country (English)",
   "startupAdmin.countryHint": "Where the company is registered, for example Saudi Arabia.",
@@ -937,5 +937,7 @@
   "startups.sectorsLine": "Sectors: {list}",
   "startups.productsCount": "{n} products",
   "startups.similar": "Similar startups",
-  "startups.country": "Country"
+  "startups.country": "Country",
+  "startupAdmin.descriptionAr": "Description (Arabic)",
+  "startupAdmin.descriptionArHint": "Shown when the site is in Arabic. When empty, the English description is shown."
 }
