@@ -93,6 +93,29 @@ html[dir="rtl"] .std-back svg {
   box-shadow: 0 14px 28px -14px var(--strong);
 }
 
+/* with a logo: the image fills the white tile */
+.std-logo.has-logo,
+.std-similar-logo.has-logo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+/* a white logo (made for dark backgrounds) sits on the startup's own dark color */
+.std-logo.has-logo.is-light,
+.std-similar-logo.has-logo.is-light {
+  background: var(--strong);
+}
+.std-logo img,
+.std-similar-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
+.std-similar-logo img {
+  padding: 5px;
+}
+
 .std-title {
   position: relative;
   flex: 1;
