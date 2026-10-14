@@ -8,7 +8,8 @@ import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartup, loadSimilar, listOf, listText, label, tagsOf, initials, countryName, colorOf, detailsLink, descriptionOf,
+  loadStartup, loadSimilar, listOf, listText, label, tagsOf, countryName, colorOf, detailsLink, descriptionOf,
+  nameOf, logoOf, logoHtml,
 } from '../../../../shared/startups.js';
 
 const id = new URLSearchParams(window.location.search).get('id');
@@ -48,12 +49,14 @@ function show() {
   const region = listText(row, 'region', comma);
   const market = listText(row, 'target_market', comma);
 
-  document.title = `${row.startup_name} · Darb`;
+  document.title = `${nameOf(row)} · Darb`;
 
   // Head, in the startup's color
   document.querySelector('#hero').className = `std-hero color-${colorOf(row)}`;
-  document.querySelector('#logo').textContent = initials(row.startup_name);
-  document.querySelector('#name').textContent = row.startup_name;
+  const logo = document.querySelector('#logo');
+  logo.classList.toggle('has-logo', Boolean(logoOf(row)));
+  logo.innerHTML = logoHtml(row);
+  document.querySelector('#name').textContent = nameOf(row);
   document.querySelector('#place').textContent = [region, countryName(row.country)].filter(Boolean).join(' · ') || '—';
 
   // Tags: the funding stage (with its icon), then up to three sectors
@@ -101,9 +104,9 @@ function show() {
   document.querySelector('#similar-section').hidden = similar.length === 0;
   document.querySelector('#similar').innerHTML = similar.map((other, index) => `
     <a class="std-similar-card color-${colorOf(other)} fade-up" style="--i: ${index}" href="${detailsLink(other.startup_id)}">
-      <span class="std-similar-logo" aria-hidden="true">${safe(initials(other.startup_name))}</span>
+      <span class="std-similar-logo ${logoOf(other) ? 'has-logo' : ''}" aria-hidden="true">${logoHtml(other)}</span>
       <span class="std-similar-text">
-        <strong>${safe(other.startup_name)}</strong>
+        <strong>${safe(nameOf(other))}</strong>
         <span>${safe([listText(other, 'stage'), listText(other, 'region', comma)].filter(Boolean).join(' · ') || '—')}</span>
       </span>
     </a>`).join('');
@@ -116,7 +119,7 @@ document.querySelector('#share').addEventListener('click', async () => {
   const link = window.location.href;
   if (navigator.share) {
     try {
-      await navigator.share({ title: startup.startup_name, url: link });
+      await navigator.share({ title: nameOf(startup), url: link });
     } catch {
       // the person closed the share sheet
     }
