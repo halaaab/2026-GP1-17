@@ -1005,6 +1005,14 @@
   "regAdmin.logoHint": "يُختار تلقائيًا إذا كان للجهة شعار. تُضاف الشعارات الجديدة إلى frontend/assets/images/authorities/.",
   "regAdmin.noLogo": "بدون شعار (تظهر الأحرف الأولى)",
   "startupAdmin.descriptionAr": "الوصف (بالعربية)",
-  "startupAdmin.descriptionArHint": "يظهر عندما يكون الموقع بالعربية، وإذا تُرك فارغًا يظهر الوصف الإنجليزي."
-
+  "startupAdmin.descriptionArHint": "يظهر عندما يكون الموقع بالعربية، وإذا تُرك فارغًا يظهر الوصف الإنجليزي.",
+  "landing.supportedBy": "بدعم من",
+  "landing.sources.12.name": "قوى",
+  "landing.sources.12.use": "التوظيف ورخص العمل",
+  "landing.sources.13.name": "وزارة الصناعة والثروة المعدنية",
+  "landing.sources.13.use": "التراخيص الصناعية",
+  "landing.sources.14.name": "المركز السعودي للأعمال",
+  "landing.sources.14.use": "تأسيس الأعمال",
+  "landing.sources.15.name": "اتحاد الغرف السعودية",
+  "landing.sources.15.use": "الاشتراك في الغرفة التجارية"
 }

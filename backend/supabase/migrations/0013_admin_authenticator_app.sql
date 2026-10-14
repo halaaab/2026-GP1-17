@@ -1,5 +1,5 @@
 -- =========================================================
--- 0011 — Admin second step: back to the authenticator app
+-- 0013 — Admin second step: back to the authenticator app
 -- Run once in Supabase: SQL Editor → paste → Run.
 -- (Safe to run again.)
 --
