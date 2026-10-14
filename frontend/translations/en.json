@@ -1262,6 +1262,14 @@
   "regAdmin.logoHint": "Picked for you when the authority already has a logo. New logos go in frontend/assets/images/authorities/.",
   "regAdmin.noLogo": "No logo (show the initials)",
   "startupAdmin.descriptionAr": "Description (Arabic)",
-  "startupAdmin.descriptionArHint": "Shown when the site is in Arabic. When empty, the English description is shown."
-
+  "startupAdmin.descriptionArHint": "Shown when the site is in Arabic. When empty, the English description is shown.",
+  "landing.supportedBy": "Supported by",
+  "landing.sources.12.name": "Qiwa",
+  "landing.sources.12.use": "Hiring and work permits",
+  "landing.sources.13.name": "Ministry of Industry",
+  "landing.sources.13.use": "Industrial licenses",
+  "landing.sources.14.name": "Saudi Business Center",
+  "landing.sources.14.use": "Business setup",
+  "landing.sources.15.name": "Federation of Saudi Chambers",
+  "landing.sources.15.use": "Chamber membership"
 }
