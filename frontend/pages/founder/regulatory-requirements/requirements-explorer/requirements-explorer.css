@@ -1,184 +1,473 @@
-/* Regulatory Explorer page only. Cards, pills, search, chips and the empty
-   state come from shared/shared.css. */
+/* Regulatory Explorer only: a banner with a desert picture, a search bar on its lower
+   edge (search, authority, sector, stage), and colored cards with each authority's logo.
+   The same design as the Startup Explorer, in six shades of green instead of blue.
+   Buttons and the empty state come from shared/shared.css. */
 
-/* ---------- Top card: title, numbers, search and filters ---------- */
+/* ---------- Banner ---------- */
 
 .reg-hero {
-  padding: 24px;
-  margin-bottom: 20px;
+  position: relative;
+  overflow: hidden;
+  min-height: 236px;
+  padding: 30px 32px 70px;
+  border-radius: 22px;
+  background: var(--green-deep);   /* shows only until the picture loads */
+  color: #fff;
 }
 
-.reg-hero-head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
+/* the picture fills the banner, the palace at the end (mirrored in Arabic so it stays opposite the text) */
+.reg-hero-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  pointer-events: none;
 }
-.reg-hero-head p {
-  margin: 4px 0 0;
+html[dir="rtl"] .reg-hero-art {
+  transform: scaleX(-1);
 }
 
-.reg-stats {
-  display: flex;
-  gap: 28px;
-  margin: 0;
+/* a dark green shade on the text side, fading out before the palace, so the white text stays readable */
+.reg-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right,
+    color-mix(in srgb, var(--green-deep) 86%, transparent) 0%,
+    color-mix(in srgb, var(--green-deep) 60%, transparent) 40%,
+    color-mix(in srgb, var(--green-deep) 8%, transparent) 75%);
+  pointer-events: none;
 }
-.reg-stats div {
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
+html[dir="rtl"] .reg-hero::after {
+  background: linear-gradient(to left,
+    color-mix(in srgb, var(--green-deep) 86%, transparent) 0%,
+    color-mix(in srgb, var(--green-deep) 60%, transparent) 40%,
+    color-mix(in srgb, var(--green-deep) 8%, transparent) 75%);
 }
-.reg-stats dt {
+
+.reg-hero-text {
+  position: relative;
+  z-index: 1;
+  max-width: 540px;
+}
+.reg-hero-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.12);
   font-size: 12px;
+  font-weight: 700;
 }
-.reg-stats dd {
-  margin: 0;
-  font-size: 22px;
+.reg-hero-title {
+  margin: 14px 0 6px;
+  font-size: clamp(26px, 3.4vw, 34px);
   font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
 }
-
-/* the search box takes the free space, the dropdowns sit after it */
-.reg-filters {
+.reg-hero-text p {
   margin: 0;
-}
-.reg-filters .search {
-  max-width: none;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.78);
 }
 
-/* ---------- Stage pills: they wrap on wide screens, one sideways-scrolling line on phones ---------- */
-
-.reg-stages {
+/* the three glass boxes with the totals */
+.reg-totals {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.reg-total {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 8px;
+  padding-inline: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(4px);
+}
+.reg-total-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.reg-total-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.reg-total-text {
+  display: flex;
+  flex-direction: column;
+}
+.reg-total-text strong {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.reg-total-text span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Search bar, on the banner's lower edge ---------- */
+
+.reg-filters {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 14px;
+  margin: -40px 20px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
 }
-.reg-stages .pill {
-  flex-shrink: 0;
+.reg-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--bg-muted);
+  color: var(--text-3);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast), background var(--dur-fast);
 }
-.reg-pill-count {
-  opacity: 0.7;
+.reg-search:focus-within {
+  border-color: var(--teal);
+  background: var(--bg);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.reg-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* a select with a chevron at its end (drawn on the wrapper) */
+.reg-select-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 165px;
+  min-width: 120px;
+}
+.reg-select-wrap::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  /* physical sides on purpose: the arrow points down in both languages */
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.reg-select {
+  width: 100%;
+  height: 44px;
+  padding-inline: 14px 36px;
+  border: 1px solid var(--border-strong);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
   font-weight: 600;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.reg-select:hover {
+  border-color: var(--teal);
+}
+.reg-select:focus-visible {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.reg-search-button {
+  height: 44px;
+  padding-inline: 24px;
+  border-radius: 11px;
 }
 
-.reg-count {
-  margin: 0 0 12px;
+.reg-bar {
+  margin: 28px 0 14px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.reg-found {
+  font-size: 14px;
+  color: var(--text-2);
+}
+.reg-found strong {
+  margin-inline-end: 2px;
+  font-size: 19px;
   font-weight: 800;
+  color: var(--text);
 }
 
-/* ---------- Requirement card ---------- */
+/* ---------- Cards ---------- */
+
+.reg-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* Each requirement has one of six Saudi greens (colorOf in shared/regulatory.js):
+   --tint for the band, --ink for text on it, --strong for the big square.
+   The details page uses the same six. */
+.color-0 { --tint: var(--saudi-1-tint); --ink: var(--saudi-1-text); --strong: var(--saudi-1-text); }   /* flag green */
+.color-1 { --tint: var(--saudi-2-tint); --ink: var(--saudi-2-text); --strong: var(--saudi-2-text); }   /* emerald */
+.color-2 { --tint: var(--saudi-3-tint); --ink: var(--saudi-3-text); --strong: var(--saudi-3-text); }   /* forest */
+.color-3 { --tint: var(--saudi-4-tint); --ink: var(--saudi-4-text); --strong: var(--saudi-4-text); }   /* jade */
+.color-4 { --tint: var(--saudi-5-tint); --ink: var(--saudi-5-text); --strong: var(--saudi-5-text); }   /* pine */
+.color-5 { --tint: var(--saudi-6-tint); --ink: var(--saudi-6-text); --strong: var(--saudi-6-text); }   /* sage */
 
 .reg-card {
   display: flex;
   flex-direction: column;
-  padding: 0 18px 16px;
   overflow: hidden;
-}
-
-/* grey band at the top with the business stage at the end */
-.reg-card-top {
-  display: flex;
-  justify-content: flex-end;
-  margin-inline: -18px;
-  padding: 12px 14px 28px;
-  background: var(--bg-tile);
-}
-.reg-card-stage {
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border: 1px solid var(--border);
+  border-radius: 16px;
   background: var(--bg);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  transition:
+    border-color var(--dur),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.reg-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-float);
+  transform: translateY(-3px);
 }
 
-/* the document icon sits half on the band */
-.reg-card-icon {
+/* the colored band, with a soft pattern of triangles */
+.reg-card-band {
+  position: relative;
+  flex-shrink: 0;
+  height: 100px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='24'%3E%3Cpath d='M0 24 14 0l14 24Z' fill='%23fff' fill-opacity='.38'/%3E%3Cpath d='M0 0h14L0 24ZM28 0H14l14 24Z' fill='%23fff' fill-opacity='.12'/%3E%3C/svg%3E"),
+    var(--tint);
+}
+/* the business stage, at the start of the band */
+.reg-card-stage {
+  position: absolute;
+  top: 14px;
+  inset-inline-start: 14px;
+  max-width: calc(100% - 110px);
+  overflow: hidden;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* the big square at the end of the band: the authority's logo on white,
+   or, with no logo, a tilted colored square with its initials (both the size of the Startup Explorer's) */
+.reg-card-logo {
+  position: absolute;
+  top: 16px;
+  inset-inline-end: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 38px;
-  height: 38px;
-  margin-top: -19px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-sm);
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  transition: transform var(--dur) var(--ease);
+}
+.reg-card-logo.has-logo {
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, var(--ink) 14%, transparent);
   background: var(--bg);
-  color: var(--teal-text);
+  box-shadow: 0 14px 24px -14px var(--strong);
 }
-
-.reg-card-title {
-  margin: 12px 0 4px;
-  font-size: 15px;
+.reg-card-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.reg-card-logo.is-initials {
+  background: var(--strong);
+  color: #fff;
+  font-size: 17px;
   font-weight: 800;
+  box-shadow: 0 14px 24px -12px var(--strong);
+  transform: rotate(-8deg);
+}
+.reg-card:hover .reg-card-logo {
+  transform: rotate(0) scale(1.05);
 }
 
-.reg-card-authority {
+.reg-card-body {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
+  flex: 1;
+  padding: 18px 18px 0;
+}
+.reg-card-name {
   margin: 0;
-  font-size: 12.5px;
+  font-size: 16.5px;
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
 }
-.reg-card-authority svg {
-  flex-shrink: 0;
-  width: 14px;
-  height: 14px;
-}
-
-/* the summary is cut after three lines so every card has the same rhythm */
-.reg-card-summary {
+.reg-card-about {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-3);
+  /* two lines, then "…" */
   display: -webkit-box;
+  -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
   overflow: hidden;
-  margin: 12px 0 14px;
-  font-size: 13px;
+}
+.reg-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.reg-chip {
+  max-width: 100%;
+  padding: 3px 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .reg-card-foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-top: auto;
-  padding-top: 12px;
-  border-top: 1px solid var(--divider);
-  font-size: 12.5px;
+  gap: 10px;
+  padding: 16px 18px;
 }
-.reg-card-more {
+.reg-card-authority {
   display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 5px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.reg-card-authority span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.reg-card-authority svg {
   flex-shrink: 0;
-  font-weight: 700;
+  width: 15px;
+  height: 15px;
+  color: var(--ink);
 }
-.reg-card-more svg {
-  width: 14px;
-  height: 14px;
+.reg-card-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--navy-deep);
+  color: #fff;
+  transition: transform var(--dur-fast), background var(--dur-fast);
 }
-html[dir="rtl"] .reg-card-more svg {
+.reg-card-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.reg-card:hover .reg-card-arrow {
+  background: var(--strong);
+  transform: translateX(2px);
+}
+html[dir="rtl"] .reg-card-arrow svg {
   transform: scaleX(-1);
 }
+html[dir="rtl"] .reg-card:hover .reg-card-arrow {
+  transform: translateX(-2px);
+}
 
-/* Phones: the numbers go under the title */
+/* ---------- Empty state and pages ---------- */
+
+.reg-empty .section-title,
+.reg-empty p {
+  margin: 0;
+}
+
+.reg-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  font-size: 13px;
+}
+.reg-pager-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Phones */
 @media (max-width: 640px) {
   .reg-hero {
-    padding: 18px;
+    padding: 22px 20px 64px;
   }
-  .reg-stats {
-    width: 100%;
-    justify-content: space-between;
+  /* the text covers the whole banner, so the shade does too */
+  .reg-hero::after,
+  html[dir="rtl"] .reg-hero::after {
+    background: linear-gradient(to bottom,
+      color-mix(in srgb, var(--green-deep) 80%, transparent),
+      color-mix(in srgb, var(--green-deep) 55%, transparent));
   }
-  /* the two dropdowns share one line under the search box */
-  .reg-filters select.pill {
-    flex: 1 1 0;
+  .reg-filters {
+    margin-inline: 10px;
+  }
+  .reg-select-wrap {
+    flex: 1 1 120px;
     min-width: 0;
-    max-width: none;
   }
-  .reg-stages {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    scrollbar-width: none;
+  .reg-search-button {
+    flex: 1 1 100%;
   }
 }
