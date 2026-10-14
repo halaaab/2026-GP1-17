@@ -8,7 +8,7 @@ import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartup, loadSimilar, listOf, listText, label, tagsOf, initials, countryName, colorOf, detailsLink,
+  loadStartup, loadSimilar, listOf, listText, label, tagsOf, initials, countryName, colorOf, detailsLink, descriptionOf,
 } from '../../../../shared/startups.js';
 
 const id = new URLSearchParams(window.location.search).get('id');
@@ -70,7 +70,7 @@ function show() {
   document.querySelector('#market-section').hidden = lines.length === 0;
   document.querySelector('#market').innerHTML = lines.map((line) => `<li>${icon('checkCircle')}<span>${safe(line)}</span></li>`).join('');
 
-  document.querySelector('#about').textContent = row.startup_description || t('startups.noDescription');
+  document.querySelector('#about').textContent = descriptionOf(row) || t('startups.noDescription');
 
   // Products and services: numbered rows
   const products = listOf(row, 'products_services');

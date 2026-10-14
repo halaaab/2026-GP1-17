@@ -30,7 +30,7 @@ const deleteConfirm = document.querySelector('#delete-confirm');
 
 // The text columns the form edits: each one has an input with id "f-<column>"
 const TEXT_COLUMNS = [
-  'startup_name', 'startup_description', 'country', 'products_services', 'tags',
+  'startup_name', 'startup_description', 'startup_description_ar', 'country', 'products_services', 'tags',
   'website', 'ecosystemsa_profile_url', 'description_source',
 ];
 

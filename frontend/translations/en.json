@@ -1172,7 +1172,7 @@
   "startupAdmin.viewAsFounder": "View as founder",
   "startupAdmin.name": "Startup name",
   "startupAdmin.nameRequired": "Enter the startup's name.",
-  "startupAdmin.description": "Description",
+  "startupAdmin.description": "Description (English)",
   "startupAdmin.sectorRequired": "Choose at least one sector.",
   "startupAdmin.country": "Country (English)",
   "startupAdmin.countryHint": "Where the company is registered, for example Saudi Arabia.",
@@ -1243,5 +1243,7 @@
   "reg.lastChecked": "Last checked",
   "regAdmin.logo": "Authority logo",
   "regAdmin.logoHint": "Picked for you when the authority already has a logo. New logos go in frontend/assets/images/authorities/.",
-  "regAdmin.noLogo": "No logo (show the initials)"
+  "regAdmin.noLogo": "No logo (show the initials)",
+  "startupAdmin.descriptionAr": "Description (Arabic)",
+  "startupAdmin.descriptionArHint": "Shown when the site is in Arabic. When empty, the English description is shown."
 }
