@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------
--- 0008 — Arabic text for incubators and accelerators
--- Run this once in the Supabase SQL Editor, after 0007.
+-- 0012 — Arabic text for incubators and accelerators
+-- Run this once in the Supabase SQL Editor, after 0011.
 --
 -- The dataset has the programs in English only. These columns hold the
 -- Arabic version of each text field. The founder pages show them when the
