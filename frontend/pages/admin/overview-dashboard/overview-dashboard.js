@@ -8,16 +8,15 @@
      2. Founder journey: signed up → described an idea → got a score → opened a roadmap
      3. Score health: how the scores are spread across the three bands
      4. Activity rhythm: founder actions per day, last 12 weeks
-     5. Demand vs coverage: ideas per sector against the data Darb has for that sector
-     6. Who is on Darb: founders by type, region or language
-     7. Data health: what needs the admin's attention, with links to fix it
-     8. Latest activity */
+     5. Who is on Darb: founders by type, region or language
+     6. Data health: what needs the admin's attention, with links to fix it
+     7. Latest activity */
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getAccount } from '../../../shared/auth.js';
-import { scoreBand, whenText, label } from '../../../shared/assessments.js';
+import { scoreBand, whenText } from '../../../shared/assessments.js';
 import { completeness } from '../../founder/incubators-accelerators/programs.js';
 import '../../../shared/guard.js';
 
@@ -33,16 +32,6 @@ const PAGES = {
   regulatory:   'pages/admin/regulatory-management/regulatory-management.html',
   programs:     'pages/admin/incubator-accelerator-management/incubator-accelerator-management.html',
 };
-
-/* Darb's four sectors: the answer saved on an idea → how to recognise the sector in each dataset.
-   (The startup words follow shared/assessments.js, so "similar startups" and this table agree.) */
-const SECTORS = [
-  { id: 'ai',        name: 'AI & Software',    startups: (s) => /tech/i.test(s.sector),                 programs: /tech|\bai\b|artificial|software|digital|ict|data/i },
-  { id: 'food',      name: 'Food & Beverages', startups: (s) => /food/i.test(s.sector),                 programs: /food|beverage|f&b|restaurant|hospitality/i },
-  { id: 'fashion',   name: 'Fashion',          startups: (s) => /fashion/i.test(s.sector),              programs: /fashion|apparel|textile|creative/i },
-  { id: 'furniture', name: 'Furniture',        startups: (s) => /furniture/i.test(s.startup_description), programs: /furniture|interior|home/i },
-];
-const OPEN_TO_ALL = /all sectors|all industries|industry-agnostic|multiple sectors|agnostic/i;
 
 // founder types → their words in translations (from the sign-up page)
 const TYPE_WORDS = {
@@ -532,48 +521,7 @@ function showRhythm() {
     ].join('');
 }
 
-/* ---------- 5. Demand vs coverage ---------- */
-
-function showCoverage() {
-  const openPrograms = data.programs.filter((program) => OPEN_TO_ALL.test(program.sector || '')).length;
-  const totalIdeas = data.ideas.filter((idea) => SECTORS.some((sector) => sector.id === idea.sector)).length;
-
-  const rows = SECTORS.map((sector) => {
-    const demand = data.ideas.filter((idea) => idea.sector === sector.id).length;
-    const startups = data.startups.filter((startup) => sector.startups({ sector: startup.sector || '', startup_description: startup.startup_description || '' })).length;
-    const programs = data.programs.filter((program) => sector.programs.test(program.sector || '') && !OPEN_TO_ALL.test(program.sector || '')).length;
-    const rules = data.requirements.filter((rule) => rule.sector !== 'All' && (rule.sector || '').includes(sector.name)).length;
-    const share = percent(demand, totalIdeas);
-
-    // the weakest kind of data for a sector founders actually ask about
-    let status = { key: 'overview.cOk', chip: 'chip-good' };
-    if (demand === 0) status = { key: 'overview.cNoDemand', chip: '' };
-    else if (startups < 10) status = { key: 'overview.cFewStartups', chip: 'chip-warn' };
-    else if (programs < 2) status = { key: 'overview.cFewPrograms', chip: 'chip-warn' };
-    else if (rules < 3) status = { key: 'overview.cFewRules', chip: 'chip-warn' };
-
-    return { sector, demand, share, startups, programs, rules, status };
-  });
-
-  const topShare = Math.max(1, ...rows.map((row) => row.share));
-
-  document.querySelector('#coverage').innerHTML = rows.map((row) => `
-    <tr>
-      <td><span class="cell-title">${label(row.sector.id)}</span></td>
-      <td>
-        <div class="ov-demand" data-tip="${safe(fill('overview.demandTip', { n: number(row.demand), share: row.share }))}">
-          <div class="bar"><div class="bar-fill ov-bar-navy" style="width: ${(row.share / topShare) * 100}%"></div></div>
-          <span>${number(row.demand)}</span>
-        </div>
-      </td>
-      <td class="ov-num">${number(row.startups)}</td>
-      <td class="ov-num" title="${safe(fill('overview.openToAll', { n: openPrograms }))}">${number(row.programs)} <span class="text-3" dir="ltr">+${openPrograms}</span></td>
-      <td class="ov-num">${number(row.rules)}</td>
-      <td><span class="chip ${row.status.chip}">${t(row.status.key)}</span></td>
-    </tr>`).join('');
-}
-
-/* ---------- 6. Who is on Darb ---------- */
+/* ---------- 5. Who is on Darb ---------- */
 
 function groupName(group, value) {
   if (!value) return t('overview.notSet');
@@ -609,7 +557,7 @@ function showPeople() {
       </li>`).join('');
 }
 
-/* ---------- 7. Data health ---------- */
+/* ---------- 6. Data health ---------- */
 
 function showHealth() {
   const now = Date.now();
@@ -686,7 +634,7 @@ function showHealth() {
     </li>`).join('');
 }
 
-/* ---------- 8. Latest activity ---------- */
+/* ---------- 7. Latest activity ---------- */
 
 function showFeed() {
   const nameOf = (userId) => data.userById.get(userId)?.full_name || t('overview.aFounder');
@@ -737,7 +685,6 @@ function showAll() {
   showFunnel();
   showScores();
   showRhythm();
-  showCoverage();
   showPeople();
   showHealth();
   showFeed();

@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------
--- 0007 — Logos for incubators and accelerators
--- Run this once in the Supabase SQL Editor, after 0006.
+-- 0011 — Logos for incubators and accelerators
+-- Run this once in the Supabase SQL Editor, after 0010.
 --
 -- Admins upload a program's logo on the Incubators & Accelerators
 -- management page; founders see it on the explorer and details pages.
