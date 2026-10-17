@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  403 — NO ACCESS
+  Shown when a signed-in account opens a page meant for the other kind of
+  account (a founder on an admin page, an admin on a founder page).
+  A page asks for it with data-denied="403" on <body> (guard.js, shared/errors.js).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="403-no-access.css">
+</head>
+<body data-layout="error" class="bg-aurora">
+
+  <main>
+    <span class="empty-icon no-access-icon" id="icon"></span>
+    <p class="display text-gradient">403</p>
+    <h1 class="page-title" data-i18n="errorPage.noAccessTitle"></h1>
+    <p class="text-2" data-i18n="errorPage.noAccessText"></p>
+    <div class="error-actions">
+      <button type="button" class="btn btn-secondary" id="switch" data-i18n="errorPage.switchAccount"></button>
+      <a class="btn btn-primary" id="home" href="../../../index.html" data-i18n="errorPage.myHome"></a>
+    </div>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="403-no-access.js"></script>
+</body>
+</html>

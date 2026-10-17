@@ -1,0 +1,460 @@
+/* Startup details only: a colored head (the startup's color, as on its card in
+   the explorer), then two columns, the sections and a side card with the key
+   facts and the links. The same design as the incubator / accelerator details page.
+   Buttons, chips and skeletons come from shared/shared.css. */
+
+.std-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.std-back:hover {
+  color: var(--text);
+}
+.std-back svg {
+  width: 16px;
+  height: 16px;
+}
+html[dir="rtl"] .std-back svg {
+  transform: scaleX(-1);
+}
+
+/* ---------- Loading ---------- */
+
+.std-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.std-skeleton-hero  { height: 140px; border-radius: 22px; }
+.std-skeleton-line  { height: 18px; width: 30%; }
+.std-skeleton-block { height: 90px; }
+
+/* ---------- The six startup colors (colorOf in shared/startups.js, same as the explorer) ---------- */
+
+/* six shades of blue: sky, navy, ocean, indigo, aqua, steel */
+.color-0 { --tint: var(--pastel-3-tint);  --ink: var(--pastel-3-text);  --strong: var(--pastel-3-text); }
+.color-1 { --tint: var(--navy-tint);      --ink: var(--navy);           --strong: var(--navy); }
+.color-2 { --tint: var(--link-tint);      --ink: var(--link-text);      --strong: var(--link-text); }
+.color-3 { --tint: var(--pastel-12-tint); --ink: var(--pastel-12-text); --strong: var(--pastel-12-text); }
+.color-4 { --tint: var(--pastel-7-tint);  --ink: var(--pastel-7-text);  --strong: var(--pastel-7-text); }
+.color-5 { --tint: var(--pastel-14-tint); --ink: var(--pastel-14-text); --strong: var(--pastel-14-text); }
+
+/* ---------- Head ---------- */
+
+.std-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 22px;
+  /* a soft grid of dots over the startup's color */
+  background:
+    radial-gradient(color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    var(--tint);
+}
+
+/* a big, faint store icon at the end of the head */
+.std-hero-art {
+  position: absolute;
+  inset-inline-end: 34px;
+  bottom: -34px;
+  color: var(--strong);
+  opacity: 0.16;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.std-hero-art svg {
+  width: 170px;
+  height: 170px;
+  stroke-width: 1.6;
+}
+
+/* the startup's initials in a white tile, lifted (the dataset has no logos) */
+.std-logo {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 22px;
+  font-weight: 800;
+  box-shadow: 0 14px 28px -14px var(--strong);
+}
+
+/* with a logo: the image fills the white tile */
+.std-logo.has-logo,
+.std-similar-logo.has-logo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+/* a white logo (made for dark backgrounds) sits on the startup's own dark color */
+.std-logo.has-logo.is-light,
+.std-similar-logo.has-logo.is-light {
+  background: var(--strong);
+}
+.std-logo img,
+.std-similar-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
+.std-similar-logo img {
+  padding: 5px;
+}
+
+.std-title {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.std-title h2 {
+  margin: 4px 0 0;
+  font-size: clamp(24px, 3.4vw, 32px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.std-sub {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.std-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.std-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.std-tag.is-strong {
+  color: var(--ink);
+}
+.std-tag svg {
+  width: 14px;
+  height: 14px;
+}
+
+.std-share {
+  position: relative;
+  flex-shrink: 0;
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------- Two columns ---------- */
+
+.std-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 28px;
+  margin-top: 26px;
+}
+
+.std-main {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+}
+.std-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.std-section .section-title {
+  margin: 0;
+  font-size: 17px;
+}
+.std-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.std-count {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Sectors and market: a green box, a tick before each line */
+.std-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--good) 18%, transparent);
+  border-radius: 14px;
+  background: var(--good-tint);
+  list-style: none;
+}
+.std-checks li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.std-checks svg {
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+  margin-top: 2px;
+  color: var(--good-text);
+}
+
+.std-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+
+/* Products and services: numbered rows, each in its own box */
+.std-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.std-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.std-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.std-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ---------- Side card ---------- */
+
+.std-side {
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+}
+.std-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.std-fact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-tile);
+}
+.std-fact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9px;
+}
+.std-fact-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.std-fact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.std-fact-label {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.std-fact-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.std-visit,
+.std-profile {
+  height: 46px;
+  border-radius: 12px;
+}
+.std-visit {
+  margin-top: 4px;
+  background: var(--navy-deep);
+  color: #fff;
+}
+.std-visit:hover {
+  background: var(--navy);
+}
+.std-visit svg,
+.std-profile svg {
+  width: 15px;
+  height: 15px;
+}
+
+.std-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--warn-tint);
+  color: var(--warn-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+.std-note svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* ---------- Similar startups ---------- */
+
+.std-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.std-similar-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: inherit;
+  transition: border-color var(--dur-fast), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.std-similar-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+.std-similar-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--strong);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+}
+.std-similar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.std-similar-text strong {
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.std-similar-text span {
+  overflow: hidden;
+  font-size: 12.5px;
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Narrow screens: one column, the side card under the head ---------- */
+
+@media (max-width: 900px) {
+  .std-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .std-side {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .std-hero {
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+  .std-logo {
+    width: 60px;
+    height: 60px;
+  }
+  .std-share {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px;
+  }
+}

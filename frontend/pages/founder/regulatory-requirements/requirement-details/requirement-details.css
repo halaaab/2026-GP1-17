@@ -1,186 +1,456 @@
-/* Requirement details page only. Tiles, cards, chips, buttons and the alert
-   come from shared/shared.css. */
-
-/* the content stays narrow enough to read comfortably */
-.req {
-  max-width: 920px;
-  margin-inline: auto;
-}
+/* Requirement details only: a colored head (the requirement's color, as on its card in
+   the explorer), then two columns, the sections and a side card with the key facts and
+   the official links. The same design as the Startup details page, in green.
+   Buttons, chips and skeletons come from shared/shared.css. */
 
 .req-back {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 18px;
-  font-size: 13px;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
   font-weight: 600;
+  color: var(--text-2);
 }
 .req-back:hover {
-  color: var(--navy);
+  color: var(--text);
 }
 .req-back svg {
-  width: 15px;
-  height: 15px;
+  width: 16px;
+  height: 16px;
 }
 html[dir="rtl"] .req-back svg {
   transform: scaleX(-1);
 }
 
-/* ---------- Title row: icon, name, share ---------- */
+/* ---------- Loading ---------- */
 
-.req-head {
+.req-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.req-skeleton-hero  { height: 140px; border-radius: 22px; }
+.req-skeleton-line  { height: 18px; width: 30%; }
+.req-skeleton-block { height: 90px; }
+
+/* ---------- The six requirement colors (colorOf in shared/regulatory.js, same as the explorer) ---------- */
+
+/* six Saudi greens, around the flag green */
+.color-0 { --tint: var(--saudi-1-tint); --ink: var(--saudi-1-text); --strong: var(--saudi-1-text); }   /* flag green */
+.color-1 { --tint: var(--saudi-2-tint); --ink: var(--saudi-2-text); --strong: var(--saudi-2-text); }   /* emerald */
+.color-2 { --tint: var(--saudi-3-tint); --ink: var(--saudi-3-text); --strong: var(--saudi-3-text); }   /* forest */
+.color-3 { --tint: var(--saudi-4-tint); --ink: var(--saudi-4-text); --strong: var(--saudi-4-text); }   /* jade */
+.color-4 { --tint: var(--saudi-5-tint); --ink: var(--saudi-5-text); --strong: var(--saudi-5-text); }   /* pine */
+.color-5 { --tint: var(--saudi-6-tint); --ink: var(--saudi-6-text); --strong: var(--saudi-6-text); }   /* sage */
+
+/* ---------- Head ---------- */
+
+.req-hero {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 20px;
-}
-.req-head-text {
-  flex: 1;
-  min-width: 0;
-}
-.req-head .page-title {
-  margin: 0;
+  gap: 20px;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 22px;
+  /* a soft grid of dots over the requirement's color */
+  background:
+    radial-gradient(color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    var(--tint);
 }
 
-.req-icon,
-.req-source-icon {
+/* a big, faint document icon at the end of the head */
+.req-hero-art {
+  position: absolute;
+  inset-inline-end: 34px;
+  bottom: -34px;
+  color: var(--strong);
+  opacity: 0.16;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.req-hero-art svg {
+  width: 170px;
+  height: 170px;
+  stroke-width: 1.6;
+}
+
+/* the authority's logo (or its initials) in a white tile, lifted */
+.req-logo {
+  position: relative;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--r-sm);
-  background: var(--bg-tile);
-  color: var(--text-2);
+  width: 72px;
+  height: 72px;
+  padding: 8px;
+  border-radius: 18px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 14px 28px -14px var(--strong);
+}
+.req-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.req-summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 6px 0 0;
+.req-title {
+  position: relative;
+  flex: 1;
+  min-width: 0;
 }
-
-/* ---------- Authority, stage, source ---------- */
-
-.req-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--divider);
-}
-
-.req-tile-value {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  font-weight: 700;
+.req-title h2 {
+  margin: 4px 0 0;
+  font-size: clamp(24px, 3.4vw, 32px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   overflow-wrap: anywhere;
 }
-.req-tile-value svg {
+.req-sub {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.req-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.req-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.req-tag.is-strong {
+  color: var(--ink);
+}
+.req-tag svg {
+  width: 14px;
+  height: 14px;
+}
+
+.req-share {
+  position: relative;
   flex-shrink: 0;
-  width: 15px;
-  height: 15px;
-  color: var(--teal-text);
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
 }
 
-/* ---------- Sections ---------- */
+/* ---------- Two columns ---------- */
 
+.req-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 28px;
+  margin-top: 26px;
+}
+
+.req-main {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+}
 .req-section {
-  padding-block: 24px;
-  border-bottom: 1px solid var(--divider);
-}
-.req-section:last-child {
-  border-bottom: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 .req-section .section-title {
-  margin: 0 0 12px;
-}
-.req-section > p {
   margin: 0;
-  line-height: 1.7;
+  font-size: 17px;
+}
+.req-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.req-count {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 700;
 }
 
+/* When it applies: a green box, a tick before each line */
 .req-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   margin: 0;
-  padding: 0;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--good) 18%, transparent);
+  border-radius: 14px;
+  background: var(--good-tint);
   list-style: none;
 }
 .req-checks li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  padding-block: 12px;
-  border-bottom: 1px solid var(--divider);
+  font-size: 15px;
   line-height: 1.6;
-}
-.req-checks li:first-child {
-  padding-top: 0;
 }
 .req-checks svg {
   flex-shrink: 0;
-  margin-top: 3px;
-  color: var(--teal-text);
+  width: 19px;
+  height: 19px;
+  margin-top: 2px;
+  color: var(--good-text);
 }
 
-/* ---------- Official source card ---------- */
+.req-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
 
-.req-source {
+/* What to do: numbered rows, each in its own box */
+.req-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.req-steps li {
   display: flex;
   align-items: center;
   gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.55;
 }
-.req-source-icon {
-  width: 40px;
-  height: 40px;
+.req-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 800;
 }
-.req-source-text {
+
+/* ---------- Side card ---------- */
+
+.req-side {
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
   display: flex;
-  flex: 1;
   flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+}
+.req-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.req-fact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-tile);
+}
+.req-fact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9px;
+}
+/* the icon colors, one Saudi green each */
+.tone-1 { background: var(--saudi-1-tint); color: var(--saudi-1-text); }
+.tone-2 { background: var(--saudi-2-tint); color: var(--saudi-2-text); }
+.tone-3 { background: var(--saudi-3-tint); color: var(--saudi-3-text); }
+.tone-4 { background: var(--saudi-4-tint); color: var(--saudi-4-text); }
+.tone-5 { background: var(--saudi-5-tint); color: var(--saudi-5-text); }
+.tone-6 { background: var(--saudi-6-tint); color: var(--saudi-6-text); }
+.req-fact-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.req-fact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
-.req-source-text .text-3 {
-  font-size: 12.5px;
+.req-fact-label {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.req-fact-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
-.req-source-actions {
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
+
+.req-apply,
+.req-source {
+  height: 46px;
+  border-radius: 12px;
 }
-.req-source-actions svg {
-  width: 14px;
-  height: 14px;
+.req-apply {
+  margin-top: 4px;
+  background: var(--navy-deep);
+  color: #fff;
+}
+.req-apply:hover {
+  background: var(--navy);
+}
+.req-apply svg,
+.req-source svg {
+  width: 15px;
+  height: 15px;
 }
 
 .req-note {
-  margin-top: 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--warn-tint);
+  color: var(--warn-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+.req-note svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
 }
 
-/* Phones: everything in one column */
-@media (max-width: 640px) {
-  /* the Share button moves under the title */
-  .req-head {
-    flex-wrap: wrap;
-  }
-  .req-head-text {
-    flex-basis: 200px;
-  }
-  .req-tiles {
+/* ---------- Similar requirements ---------- */
+
+.req-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.req-similar-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: inherit;
+  transition: border-color var(--dur-fast), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.req-similar-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+/* the authority's logo on its color, or its initials */
+.req-similar-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  padding: 5px;
+  border-radius: 12px;
+  background: var(--strong);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
+}
+.req-similar-logo.has-logo {
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.req-similar-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.req-similar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.req-similar-text strong {
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.req-similar-text span {
+  overflow: hidden;
+  font-size: 12.5px;
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Narrow screens: one column, the side card under the head ---------- */
+
+@media (max-width: 900px) {
+  .req-layout {
     grid-template-columns: minmax(0, 1fr);
   }
-  .req-source {
+  .req-side {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  /* room at the top for the Share button, so it does not cover the title */
+  .req-hero {
     flex-wrap: wrap;
+    padding: 60px 20px 20px;
   }
-  .req-source-actions {
-    width: 100%;
+  .req-logo {
+    width: 60px;
+    height: 60px;
   }
-  .req-source-actions .btn {
-    flex: 1;
+  .req-share {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px;
   }
 }
