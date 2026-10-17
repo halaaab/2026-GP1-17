@@ -1,16 +1,12 @@
-/* Incubator / accelerator details only. The layout follows the Regulatory
-   requirement page: one narrow column, sections one under the other.
-   Buttons, cards and chips come from shared/shared.css. */
-
-.detail-page {
-  max-width: 1000px;
-}
+/* Incubator / accelerator details only: a colored head (the program's color,
+   as on its card in the explorer), then two columns, the sections and a side
+   card with the key facts and the website. Buttons and chips come from shared/shared.css. */
 
 .detail-back {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 22px;
+  margin-bottom: 20px;
   font-size: 14px;
   font-weight: 600;
   color: var(--text-2);
@@ -31,54 +27,100 @@ html[dir="rtl"] .detail-back svg {
 .detail-loading {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
 }
-.detail-skeleton-title { height: 36px; width: 55%; }
-.detail-skeleton-line  { height: 16px; width: 30%; }
-.detail-skeleton-block { height: 80px; }
+.detail-skeleton-hero  { height: 140px; border-radius: 22px; }
+.detail-skeleton-line  { height: 18px; width: 30%; }
+.detail-skeleton-block { height: 90px; }
+
+/* ---------- The six program blues (colorOf in ../programs.js, same as the explorer) ---------- */
+
+.color-0 { --tint: #E6F1FB; --ink: #2A6496; --strong: #4A90D9; }   /* sky */
+.color-1 { --tint: #E3ECFA; --ink: #1F4F8F; --strong: #2F6FD0; }   /* azure */
+.color-2 { --tint: #E5E8FA; --ink: #2F3F9E; --strong: #3B55C9; }   /* royal blue */
+.color-3 { --tint: #E8E7F8; --ink: #3D3A8F; --strong: #4E49B8; }   /* indigo */
+.color-4 { --tint: #E2E8F2; --ink: #1F3560; --strong: #263E73; }   /* navy */
+.color-5 { --tint: #ECEAFB; --ink: #4B45A8; --strong: #6A63D6; }   /* periwinkle */
 
 /* ---------- Head ---------- */
 
-.detail {
-  display: flex;
-  flex-direction: column;
-}
-
-.detail-head {
+.detail-hero {
+  position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 16px;
+  gap: 20px;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 22px;
+  /* a soft grid of dots over the program's color */
+  background:
+    radial-gradient(color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    var(--tint);
 }
+
+/* the type's icon, big and faint, at the end of the head */
+.detail-hero-art {
+  position: absolute;
+  inset-inline-end: 34px;
+  bottom: -34px;
+  color: var(--strong);
+  opacity: 0.16;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.detail-hero-art svg {
+  width: 170px;
+  height: 170px;
+  stroke-width: 1.6;
+}
+
 .detail-title {
+  position: relative;
   flex: 1;
   min-width: 0;
 }
 .detail-title h2 {
-  margin: 0;
+  margin: 4px 0 0;
   font-size: clamp(24px, 3.4vw, 32px);
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.01em;
 }
 .detail-sub {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   font-size: 15px;
   color: var(--text-2);
 }
-.detail-type {
-  padding: 3px 9px;
-  border-radius: 7px;
-  background: var(--bg-muted);
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.detail-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg);
   color: var(--text-2);
   font-size: 12.5px;
   font-weight: 700;
 }
+.detail-tag.is-strong {
+  color: var(--ink);
+}
+.detail-tag svg {
+  width: 14px;
+  height: 14px;
+}
+
 .detail-share {
+  position: relative;
   flex-shrink: 0;
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
 }
 
 /* The program's logo, or its initials (from ../programs.js) */
@@ -97,7 +139,6 @@ html[dir="rtl"] .detail-back svg {
   font-weight: 800;
 }
 .program-logo.has-image {
-  border: 1px solid var(--border);
   background: var(--bg);
 }
 .program-logo img {
@@ -110,98 +151,89 @@ html[dir="rtl"] .detail-back svg {
 .program-logo.tone-1 { background: var(--navy-tint); color: var(--navy); }
 .program-logo.tone-2 { background: var(--link-tint); color: var(--link-text); }
 
+/* the big logo in the head: a white tile, lifted */
+.detail-logo {
+  position: relative;
+}
 .detail-logo .program-logo {
-  width: 54px;
-  height: 54px;
-  border-radius: 14px;
-  font-size: 17px;
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  box-shadow: 0 14px 28px -14px var(--strong);
+  font-size: 22px;
+}
+.detail-logo .program-logo.has-image {
+  background: var(--bg);
 }
 .detail-logo .program-logo img {
-  padding: 7px;
+  padding: 9px;
 }
 
-/* ---------- Key facts ---------- */
+/* ---------- Two columns ---------- */
 
-.detail-facts {
+.detail-layout {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 26px 0 28px;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 28px;
+  margin-top: 26px;
 }
-.detail-fact {
+
+.detail-main {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 30px;
   min-width: 0;
-  padding: 14px 16px;
-  border-radius: 12px;
-  background: var(--bg-tile);
 }
-.detail-fact-label {
-  font-size: 14px;
-  color: var(--text-3);
-}
-.detail-fact-value {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  font-size: 15px;
-  font-weight: 700;
-}
-.detail-fact-value svg {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  color: var(--teal-text);
-}
-.detail-fact-link {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--link-text);
-}
-.detail-fact-link:hover {
-  text-decoration: underline;
-}
-
-/* ---------- Sections ---------- */
-
 .detail-section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding-block: 24px;
-  border-top: 1px solid var(--divider);
+  gap: 12px;
 }
 .detail-section .section-title {
-  font-size: 16px;
+  margin: 0;
+  font-size: 17px;
+}
+.detail-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.detail-count {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--pastel-1-tint);
+  color: var(--pastel-1-text);
+  font-size: 12px;
+  font-weight: 700;
 }
 
-/* a list with a tick in a circle before each row, a line between rows */
-.detail-rows {
+/* Who can apply: a green box, a tick before each condition */
+.detail-applies {
   display: flex;
   flex-direction: column;
+  gap: 10px;
   margin: 0;
-  padding: 0;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--good) 18%, transparent);
+  border-radius: 14px;
+  background: var(--good-tint);
   list-style: none;
 }
-.detail-rows li {
+.detail-applies li {
   display: flex;
   align-items: flex-start;
-  gap: 12px;
-  padding-block: 14px;
-  border-bottom: 1px solid var(--divider);
+  gap: 10px;
   font-size: 15px;
   line-height: 1.6;
 }
-.detail-rows li:first-child {
-  padding-top: 2px;
-}
-.detail-rows svg {
+.detail-applies svg {
   flex-shrink: 0;
-  margin-top: 3px;
-  color: var(--teal-text);
+  width: 19px;
+  height: 19px;
+  margin-top: 2px;
+  color: var(--good-text);
 }
 
 .detail-text {
@@ -211,86 +243,221 @@ html[dir="rtl"] .detail-back svg {
   color: var(--text-2);
 }
 
-/* ---------- Official website ---------- */
-
-.detail-source {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--bg);
-  box-shadow: var(--shadow-card);
-}
-.detail-source-text {
+/* What you get: numbered rows, each in its own box */
+.detail-steps {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1 1 260px;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.detail-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.detail-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pastel-1-tint);
+  color: var(--pastel-1-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* ---------- Side card ---------- */
+
+.detail-side {
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+}
+.detail-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.detail-fact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-tile);
+}
+.detail-fact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9px;
+}
+.detail-fact-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.detail-fact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
   min-width: 0;
 }
-.detail-source-text strong {
-  font-size: 15px;
-}
-.detail-source-text span {
-  font-size: 13px;
+.detail-fact-label {
+  font-size: 12px;
   color: var(--text-3);
+}
+.detail-fact-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
   overflow-wrap: anywhere;
-  text-align: start;
+}
+
+.detail-apply {
+  height: 46px;
+  margin-top: 4px;
+  border-radius: 12px;
+  background: var(--navy-deep);
+  color: #fff;
+}
+.detail-apply:hover {
+  background: var(--navy);
+}
+.detail-apply svg {
+  width: 15px;
+  height: 15px;
 }
 
 .detail-note {
-  padding: 14px 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
   border-radius: 12px;
   background: var(--warn-tint);
   color: var(--warn-text);
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 600;
-  line-height: 1.6;
+  line-height: 1.55;
+}
+.detail-note svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
 }
 
 /* ---------- Similar programs ---------- */
 
 .detail-similar-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
 }
 .detail-similar-card {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 6px;
-  color: inherit;
-}
-.detail-similar-top {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 4px;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: inherit;
+  transition: border-color var(--dur-fast), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
 }
-.detail-similar-card .text-3 {
+.detail-similar-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+.detail-similar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--strong);
+  color: #fff;
+}
+.detail-similar-icon svg {
+  width: 20px;
+  height: 20px;
+}
+/* with a logo: a white square, so the logo shows as it is */
+.detail-similar-icon.has-logo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.detail-similar-icon img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.detail-similar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.detail-similar-text strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+.detail-similar-text span {
   font-size: 12.5px;
+  color: var(--text-3);
 }
 
-@media (max-width: 760px) {
-  .detail-facts {
+/* ---------- Narrow screens: one column, the side card under the head ---------- */
+
+@media (max-width: 900px) {
+  .detail-layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .detail-side {
+    position: static;
+    order: -1;
   }
 }
 
 @media (max-width: 640px) {
-  .detail-head {
+  .detail-hero {
     flex-wrap: wrap;
+    padding: 20px;
+  }
+  .detail-logo .program-logo {
+    width: 60px;
+    height: 60px;
   }
   .detail-share {
-    order: -1;
-    margin-inline-start: auto;
-  }
-  .detail-source .btn {
-    width: 100%;
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px;
   }
 }
