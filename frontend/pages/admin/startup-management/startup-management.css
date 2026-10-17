@@ -1,0 +1,134 @@
+/* Startup management page only. The table, toolbar, pills, panel, form
+   fields and modal come from shared/shared.css. The rest follows the
+   admin Regulatory page. */
+
+/* ---------- Table ---------- */
+
+.sm-row {
+  cursor: pointer;
+}
+.sm-row:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+/* initials square + name and region */
+.sm-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sm-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--r-sm);
+  background: var(--teal-tint);
+  color: var(--teal-text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+/* with a logo: the image in a white square */
+.sm-logo.has-logo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+/* a white logo (made for dark backgrounds) sits on navy */
+.sm-logo.has-logo.is-light {
+  background: var(--navy);
+}
+.sm-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+
+/* long names and sector lists wrap instead of making the table very wide */
+.sm-table .cell-title {
+  max-width: 260px;
+}
+.sm-sector {
+  max-width: 220px;
+}
+
+/* the edit and delete icons at the end of each row */
+.sm-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.btn-icon.is-danger:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+.sm-empty {
+  margin: 16px;
+}
+
+/* how many are shown, and "Show more" */
+.sm-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* ---------- Panel ---------- */
+
+.sm-panel-sub {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 4px 0 0;
+}
+.sm-panel-sub .link:not([hidden])::before {
+  content: "·";
+  margin-inline-end: 6px;
+  color: var(--text-3);
+}
+
+/* the check box groups: no browser frame around them */
+.sm-choices {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.sm-choices legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.sm-choice-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+/* Cancel and Save share the footer equally */
+.sm-panel-foot .btn {
+  flex: 1;
+}
+
+/* Delete pop-up: the red icon above the title, as in the design */
+.sm-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* Phones: keep the startup and the buttons */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  .sm-table {
+    min-width: 0;
+  }
+}

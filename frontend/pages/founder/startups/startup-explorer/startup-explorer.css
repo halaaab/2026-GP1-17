@@ -1,0 +1,470 @@
+/* Startup Explorer only: a banner with a photo of Riyadh's skyline, a search bar
+   on its lower edge (search, sector, region, stage), and colored cards.
+   The same design as the Incubators & Accelerators Explorer.
+   Buttons and the empty state come from shared/shared.css. */
+
+/* ---------- Banner ---------- */
+
+.st-hero {
+  position: relative;
+  overflow: hidden;
+  min-height: 236px;
+  padding: 30px 32px 70px;
+  border-radius: 22px;
+  background: var(--navy-deep);   /* shows only until the photo loads */
+  color: #fff;
+}
+
+/* the photo fills the banner, the skyline at the end (mirrored in Arabic so it stays opposite the text) */
+.st-hero-photo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  pointer-events: none;
+}
+html[dir="rtl"] .st-hero-photo {
+  transform: scaleX(-1);
+}
+
+/* a dark shade on the text side, fading out before the skyline, so the white text stays readable */
+.st-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to right, rgba(14, 42, 66, 0.86) 0%, rgba(14, 42, 66, 0.6) 40%, rgba(14, 42, 66, 0.08) 75%);
+  pointer-events: none;
+}
+html[dir="rtl"] .st-hero::after {
+  background: linear-gradient(to left, rgba(14, 42, 66, 0.86) 0%, rgba(14, 42, 66, 0.6) 40%, rgba(14, 42, 66, 0.08) 75%);
+}
+
+.st-hero-text {
+  position: relative;
+  z-index: 1;
+  max-width: 540px;
+}
+.st-hero-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+}
+.st-hero-title {
+  margin: 14px 0 6px;
+  font-size: clamp(26px, 3.4vw, 34px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.st-hero-text p {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+/* the three glass boxes with the totals */
+.st-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.st-total {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 8px;
+  padding-inline: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(4px);
+}
+.st-total-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.st-total-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.st-total-text {
+  display: flex;
+  flex-direction: column;
+}
+.st-total-text strong {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.st-total-text span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Search bar, on the banner's lower edge ---------- */
+
+.st-filters {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -40px 20px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+}
+.st-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--bg-muted);
+  color: var(--text-3);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast), background var(--dur-fast);
+}
+.st-search:focus-within {
+  border-color: var(--teal);
+  background: var(--bg);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.st-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* a select with a chevron at its end (drawn on the wrapper) */
+.st-select-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 165px;
+  min-width: 120px;
+}
+.st-select-wrap::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  /* physical sides on purpose: the arrow points down in both languages */
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.st-select {
+  width: 100%;
+  height: 44px;
+  padding-inline: 14px 36px;
+  border: 1px solid var(--border-strong);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.st-select:hover {
+  border-color: var(--teal);
+}
+.st-select:focus-visible {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.st-search-button {
+  height: 44px;
+  padding-inline: 24px;
+  border-radius: 11px;
+}
+
+.st-bar {
+  margin: 28px 0 14px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.st-found {
+  font-size: 14px;
+  color: var(--text-2);
+}
+.st-found strong {
+  margin-inline-end: 2px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ---------- Cards ---------- */
+
+.st-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* Each startup has one of six shades of blue (colorOf in shared/startups.js):
+   --tint for the band, --ink for text on it, --strong for the big square.
+   The details page uses the same six. */
+.color-0 { --tint: var(--pastel-3-tint);  --ink: var(--pastel-3-text);  --strong: var(--pastel-3-text); }   /* sky blue */
+.color-1 { --tint: var(--navy-tint);      --ink: var(--navy);           --strong: var(--navy); }            /* navy */
+.color-2 { --tint: var(--link-tint);      --ink: var(--link-text);      --strong: var(--link-text); }       /* ocean blue */
+.color-3 { --tint: var(--pastel-12-tint); --ink: var(--pastel-12-text); --strong: var(--pastel-12-text); }  /* indigo blue */
+.color-4 { --tint: var(--pastel-7-tint);  --ink: var(--pastel-7-text);  --strong: var(--pastel-7-text); }   /* aqua blue */
+.color-5 { --tint: var(--pastel-14-tint); --ink: var(--pastel-14-text); --strong: var(--pastel-14-text); }  /* steel blue */
+
+.st-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  transition:
+    border-color var(--dur),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.st-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-float);
+  transform: translateY(-3px);
+}
+
+/* the colored band, with a soft pattern of triangles */
+.st-card-band {
+  position: relative;
+  flex-shrink: 0;
+  height: 100px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='24'%3E%3Cpath d='M0 24 14 0l14 24Z' fill='%23fff' fill-opacity='.38'/%3E%3Cpath d='M0 0h14L0 24ZM28 0H14l14 24Z' fill='%23fff' fill-opacity='.12'/%3E%3C/svg%3E"),
+    var(--tint);
+}
+/* the funding stage, at the start of the band */
+.st-card-stage {
+  position: absolute;
+  top: 14px;
+  inset-inline-start: 14px;
+  max-width: calc(100% - 110px);
+  overflow: hidden;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* the big tilted square with the startup's initials (the dataset has no logos) */
+.st-card-logo {
+  position: absolute;
+  top: 16px;
+  inset-inline-end: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: var(--strong);
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 14px 24px -12px var(--strong);
+  transform: rotate(-8deg);
+  transition: transform var(--dur) var(--ease);
+}
+.st-card:hover .st-card-logo {
+  transform: rotate(0) scale(1.05);
+}
+/* with a logo: a straight white square, so any logo shows as it is */
+.st-card-logo.has-logo {
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 14px 24px -12px var(--strong), 0 0 0 1px var(--border);
+  transform: none;
+}
+.st-card:hover .st-card-logo.has-logo {
+  transform: scale(1.05);
+}
+/* a white logo (made for dark backgrounds) sits on the card's own dark color */
+.st-card-logo.has-logo.is-light {
+  background: var(--strong);
+}
+.st-card-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
+
+.st-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  padding: 18px 18px 0;
+}
+.st-card-name {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 800;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.st-card-about {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-3);
+  /* two lines, then "…" */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.st-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.st-chip {
+  max-width: 100%;
+  padding: 3px 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.st-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 18px;
+}
+.st-card-region {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.st-card-region span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.st-card-region svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--ink);
+}
+.st-card-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--navy-deep);
+  color: #fff;
+  transition: transform var(--dur-fast), background var(--dur-fast);
+}
+.st-card-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.st-card:hover .st-card-arrow {
+  background: var(--strong);
+  transform: translateX(2px);
+}
+html[dir="rtl"] .st-card-arrow svg {
+  transform: scaleX(-1);
+}
+html[dir="rtl"] .st-card:hover .st-card-arrow {
+  transform: translateX(-2px);
+}
+
+/* ---------- Empty state and pages ---------- */
+
+.st-empty .section-title,
+.st-empty p {
+  margin: 0;
+}
+
+.st-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  font-size: 13px;
+}
+.st-pager-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .st-hero {
+    padding: 22px 20px 64px;
+  }
+  /* the text covers the whole banner, so the shade does too */
+  .st-hero::after,
+  html[dir="rtl"] .st-hero::after {
+    background: linear-gradient(to bottom, rgba(14, 42, 66, 0.8), rgba(14, 42, 66, 0.55));
+  }
+  .st-filters {
+    margin-inline: 10px;
+  }
+  .st-select-wrap {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .st-search-button {
+    flex: 1 1 100%;
+  }
+}
