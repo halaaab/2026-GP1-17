@@ -2,7 +2,7 @@
    search box and type / sector filters. Each row has an edit button
    (opens the side panel) and a delete button (asks first). "Add program" opens
    the same panel empty. Only admins can save (database rules, migration 0006).
-   A program can have a logo (migration 0007): it is shrunk in the browser,
+   Every program needs a logo (migration 0011): it is shrunk in the browser,
    uploaded to the "program-logos" Storage bucket, and its address saved in logo_url. */
 
 import { t, getLanguage } from '../../../shared/language.js';
@@ -13,7 +13,7 @@ import { getCurrentUser } from '../../../shared/auth.js';
 import '../../../shared/guard.js';
 import {
   getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, detailsLink,
-  logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
+  text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
 } from '../../founder/incubators-accelerators/programs.js';
 
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
@@ -45,7 +45,7 @@ const FIELDS = ['name', 'type', 'location', 'sector', 'description', 'target_sta
 const OPTIONAL = ['program_duration', 'funding_investment'];
 const REQUIRED = FIELDS.filter((field) => !OPTIONAL.includes(field));
 
-// The Arabic twins of the text fields (migration 0008). All optional:
+// The Arabic twins of the text fields (migration 0012). All optional:
 // the founder pages show the English text where the Arabic one is empty.
 const ARABIC = ARABIC_FIELDS.map((field) => `${field}_ar`);
 let hasArabic = false;   // true once the table has the Arabic columns
@@ -56,6 +56,7 @@ let deleteId = null;     // the program the delete question is about
 
 // The logo in the open panel: the saved one, a new picture waiting to upload, or removed
 const logo = { current: '', file: null, preview: '', removed: false };
+
 let loadFailed = false;
 
 /* ---------- Small helpers ---------- */
@@ -79,12 +80,12 @@ function findProgram(id) {
 // "Open to all sectors", or the program's sectors as one line
 function appliesTo(program) {
   if (isOpenToAll(program)) return t('programs.openToAll');
-  return sectorList(program).join(', ') || '—';
+  return sectorList(program).join(t('programs.listComma')) || '—';
 }
 
 /* ---------- Filters ---------- */
 
-// The sector dropdown lists the sectors the programs really have, A to Z
+// The sector dropdown lists the sectors the programs really have, A to Z, in the page's language
 function fillDropdowns() {
   const keep = sectorFilter.value;
   const sorted = (values) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
@@ -99,7 +100,9 @@ function fillDropdowns() {
 function matches(program) {
   const words = search.value.trim().toLowerCase();
   const kind = programType(program);
-  const fitsSearch = [program.name, program.sector, program.location, program.target_stage].map(clean).join(' ').toLowerCase().includes(words);
+  const fitsSearch = ['name', 'sector', 'location', 'target_stage']
+    .flatMap((field) => [clean(program[field]), arabicOf(program, field)])
+    .join(' ').toLowerCase().includes(words);
   const fitsType = !typeFilter.value || kind === typeFilter.value || kind === 'both';
   const fitsSector = !sectorFilter.value || sectorList(program).includes(sectorFilter.value) || isOpenToAll(program);
   return fitsSearch && fitsType && fitsSector;
@@ -112,7 +115,7 @@ function showRows() {
 
   rows.innerHTML = visible.map((program) => {
     const kind = programType(program);
-    const name = clean(program.name);
+    const name = text(program, 'name');
     const place = cityOf(program);
     return `
       <tr class="${program.support_org_id === selectedId ? 'is-selected' : ''}">
@@ -126,7 +129,7 @@ function showRows() {
           </div>
         </td>
         <td><span class="chip manage-chip ${TYPE_CHIP[kind]}">${t(`programs.type.${kind}`)}</span></td>
-        <td class="hide-small manage-text">${safe(clean(program.target_stage) || '—')}</td>
+        <td class="hide-small manage-text">${safe(text(program, 'target_stage') || '—')}</td>
         <td class="hide-small manage-text">${safe(appliesTo(program))}</td>
         <td class="hide-small manage-text">${dateText(program.updated_at || program.created_at)}</td>
         <td>
@@ -158,7 +161,7 @@ function fillForm(program) {
     form.elements[field].value = program ? clean(program[field]) : '';
   });
   ARABIC.forEach((field) => {
-    form.elements[field].value = program ? clean(program[field]) : '';
+    form.elements[field].value = program ? arabicOf(program, field.replace(/_ar$/, '')) : '';
   });
   if (!program) typeSelect.value = 'Incubator';
 
@@ -199,7 +202,7 @@ rows.addEventListener('click', (event) => {
   const remove = event.target.closest('[data-delete]');
   if (remove) {
     deleteId = remove.dataset.delete;
-    document.querySelector('#delete-text').textContent = t('programsAdmin.deleteText').replace('{name}', clean(findProgram(deleteId).name));
+    document.querySelector('#delete-text').textContent = t('programsAdmin.deleteText').replace('{name}', text(findProgram(deleteId), 'name'));
     deleteModal.showModal();
   }
 });
@@ -219,7 +222,7 @@ function showSaveLabel() {
   saveButton.textContent = t(selectedId ? 'programsAdmin.saveChanges' : 'programsAdmin.add');
 }
 
-/* ---------- Logo ---------- */
+/* ---------- Logo (required) ---------- */
 
 const logoInput = document.querySelector('#f-logo');
 const logoError = document.querySelector('#logo-error');
@@ -476,7 +479,7 @@ saveButton.addEventListener('click', async () => {
   if (result.error) {
     console.error('save program:', result.error.message);
     if (uploaded) removeLogoFile(uploaded.path);
-    // the logo_url column comes with migration 0007
+    // the logo_url column comes with migration 0011
     const needsUpdate = (result.error.message || '').includes('logo_url');
     showToast(t(needsUpdate ? 'programsAdmin.f.logoNotSaved' : 'programsAdmin.saveError'), 'risk');
     return;
@@ -532,6 +535,8 @@ function showAddButton() {
 
 // dates and labels are text in the current language, so draw them again when it changes
 document.addEventListener('darb:language', () => {
+  sectorFilter.value = '';
+  fillDropdowns();
   showAddButton();
   showSaveLabel();
   showLogo();
@@ -548,7 +553,7 @@ const data = await getPrograms();
 loadFailed = data === null;
 programs = data || [];
 
-// After migration 0008 every row has the Arabic columns: show the Arabic part of the form
+// After migration 0012 every row has the Arabic columns: show the Arabic part of the form
 hasArabic = programs.some((program) => 'name_ar' in program);
 document.querySelector('#arabic-section').hidden = !hasArabic;
 

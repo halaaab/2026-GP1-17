@@ -1,6 +1,6 @@
 -- ---------------------------------------------------------
 -- Arabic text for the 19 incubators and accelerators in the dataset.
--- Run this once in the Supabase SQL Editor, AFTER migration 0008.
+-- Run this once in the Supabase SQL Editor, AFTER migration 0012.
 -- Safe to run again: it only fills the *_ar columns of these programs.
 -- The English columns are not touched.
 -- A field the English dataset leaves empty is left empty here too.

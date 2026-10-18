@@ -1,21 +1,21 @@
 /* Incubators & Accelerators Explorer: every support program, with a search box,
-   type / sector / city filters, cards, and pages of 12.
-   The layout follows the Regulatory & Licensing Explorer.
+   type / sector / city filters, colored cards, and pages of 12.
    The filters are kept in the address (?q=...&type=...), so a filtered list can be shared. */
 
 import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import '../../../../shared/guard.js';
 import {
-  getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, text, detailsLink, logoOf, logoHtml,
+  getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
 } from '../programs.js';
 
-const PAGE_SIZE = 12;   // three rows of four cards
+const PAGE_SIZE = 12;   // four rows of three cards
 
 const cards = document.querySelector('#cards-view');
 const search = document.querySelector('#search');
 const sectorFilter = document.querySelector('#sector-filter');
 const cityFilter = document.querySelector('#city-filter');
+const typeFilter = document.querySelector('#type-filter');
 const empty = document.querySelector('#empty');
 const pager = document.querySelector('#pager');
 
@@ -40,8 +40,8 @@ function typeLabel(program) {
 function matches(program, ignoreType = false) {
   const words = search.value.trim().toLowerCase();
   const fields = ['name', 'sector', 'location', 'description', 'target_stage'];
-  const searchable = fields.flatMap((field) => [program[field], program[`${field}_ar`]])
-    .map(clean).join(' ').toLowerCase();
+  const searchable = fields.flatMap((field) => [clean(program[field]), arabicOf(program, field)])
+    .join(' ').toLowerCase();
 
   const fitsSearch = !words || searchable.includes(words);
   const fitsType = ignoreType || type === 'all' || programType(program) === type || programType(program) === 'both';
@@ -56,55 +56,56 @@ function matches(program, ignoreType = false) {
 
 function showTotals() {
   const count = (kind) => programs.filter((program) => programType(program) === kind || programType(program) === 'both').length;
-  const total = (value, label) => `<div class="programs-total"><strong>${value}</strong><span>${label}</span></div>`;
-  document.querySelector('#totals').innerHTML = total(programs.length, t('programs.totalPrograms'))
-    + total(count('incubator'), t('programs.incubators'))
-    + total(count('accelerator'), t('programs.accelerators'));
+  const total = (value, label, iconName) => `
+    <div class="programs-total">
+      <span class="programs-total-icon">${icon(iconName)}</span>
+      <span class="programs-total-text"><strong>${value}</strong><span>${label}</span></span>
+    </div>`;
+  document.querySelector('#totals').innerHTML = total(programs.length, t('programs.totalPrograms'), 'grid')
+    + total(count('incubator'), t('programs.incubators'), TYPE_ICON.incubator)
+    + total(count('accelerator'), t('programs.accelerators'), TYPE_ICON.accelerator);
 }
 
-// The numbers inside the type buttons follow the other filters
+// The type dropdown says how many programs each type has; the numbers follow the other filters
 function showTypeCounts() {
   const fitting = programs.filter((program) => matches(program, true));
   const count = (kind) => fitting.filter((program) => kind === 'all' || programType(program) === kind || programType(program) === 'both').length;
-  document.querySelectorAll('[data-count]').forEach((element) => {
-    element.textContent = count(element.dataset.count);
+  typeFilter.querySelectorAll('option').forEach((option) => {
+    option.textContent = `${t(option.dataset.label)} (${count(option.value)})`;
   });
 }
 
-// A small coins icon for the funding line (layout.js has none)
-const COINS = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6"/><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6"/></svg>';
-
-// The sectors in the card's footer: "Open to all sectors", or the first two
-function sectorText(program) {
-  if (isOpenToAll(program)) return t('programs.openToAll');
+/* The sectors as small chips: "Open to all sectors", or the first two and "+N" */
+function sectorChips(program) {
+  if (isOpenToAll(program)) return `<span class="programs-chip">${t('programs.openToAll')}</span>`;
   const sectors = sectorList(program);
-  return sectors.slice(0, 2).join(t('programs.listComma')) + (sectors.length > 2 ? ` +${sectors.length - 2}` : '') || '—';
+  return sectors.slice(0, 2).map((sector) => `<span class="programs-chip">${safe(sector)}</span>`).join('')
+    + (sectors.length > 2 ? `<span class="programs-chip">+${sectors.length - 2}</span>` : '');
 }
 
-/* One card, laid out like the Regulatory Explorer's: a band with the type,
-   the logo on its edge, the name, where it is (and its funding), what it does,
-   and a footer with its sectors and "View details". The band is the program's own:
-   its logo, blurred, fills it. */
+/* One card: a colored band with the type and a big tilted square holding the
+   program's logo (or, without one, its type's icon), the name, what it does, the sector chips, and a footer with the
+   city and an arrow. The color is the program's own (colorOf), so the details
+   page opens in the same color. */
 function cardHtml(program, index) {
   const kind = programType(program);
-  const funding = text(program, 'funding_investment');
   const logo = logoOf(program);
   return `
-    <a class="programs-card fade-up" style="--i: ${index}" href="${detailsLink(program.support_org_id)}">
-      <div class="programs-card-banner ${logo ? 'has-image' : ''}">
-        ${logo ? `<span class="programs-card-glow" aria-hidden="true"><img class="programs-card-backdrop" src="${safe(logo)}" alt="" loading="lazy"></span>` : ''}
+    <a class="programs-card color-${colorOf(program)} fade-up" style="--i: ${index}" href="${detailsLink(program.support_org_id)}">
+      <div class="programs-card-band">
         <span class="programs-card-type">${typeLabel(program)}</span>
-        ${logoHtml(program)}
+        <span class="programs-card-icon ${logo ? 'has-logo' : ''}" aria-hidden="true">
+          ${logo ? `<img src="${safe(logo)}" alt="" loading="lazy">` : icon(TYPE_ICON[kind])}
+        </span>
       </div>
       <div class="programs-card-body">
         <h3 class="programs-card-name">${safe(text(program, 'name'))}</h3>
-        <p class="programs-card-meta">${icon('map')}<span>${safe(text(program, 'location') || '—')}</span></p>
-        ${funding ? `<p class="programs-card-meta">${COINS}<span>${safe(funding)}</span></p>` : ''}
-        <p class="programs-card-about">${safe(text(program, 'description'))}</p>
+        <p class="programs-card-about">${safe(text(program, 'description') || t('programs.noDescription'))}</p>
+        <div class="programs-card-chips">${sectorChips(program)}</div>
       </div>
       <div class="programs-card-foot">
-        <span class="programs-card-sectors">${safe(sectorText(program))}</span>
-        <span class="programs-card-more">${t('programs.viewDetails')}${icon('chevron')}</span>
+        <span class="programs-card-city">${icon('map')}<span>${safe(cityOf(program) || '—')}</span></span>
+        <span class="programs-card-arrow" aria-label="${t('programs.viewDetails')}">${icon('chevron')}</span>
       </div>
     </a>`;
 }
@@ -118,7 +119,7 @@ function show() {
   cards.hidden = visible.length === 0;
   cards.innerHTML = onThisPage.map(cardHtml).join('');
 
-  document.querySelector('#found').textContent = t('programs.found').replace('{n}', visible.length);
+  document.querySelector('#found').innerHTML = t('programs.found').replace('{n}', `<strong>${visible.length}</strong>`);
   showTypeCounts();
 
   // Nothing to show: the database failed, it is empty, or the filters found nothing
@@ -180,8 +181,7 @@ function readFilters() {
   sectorFilter.value = params.get('sector') || '';
   cityFilter.value = params.get('city') || '';
   page = Math.max(0, (Number(params.get('page')) || 1) - 1);
-
-  document.querySelectorAll('[data-type]').forEach((item) => item.classList.toggle('is-active', item.dataset.type === type));
+  typeFilter.value = type;
 }
 
 /* ---------- Events ---------- */
@@ -192,14 +192,18 @@ function startOver() {
 }
 
 search.addEventListener('input', startOver);
+
+// The list already follows what is typed; the Search button takes the person down to it
+document.querySelector('#filters').addEventListener('submit', (event) => {
+  event.preventDefault();
+  startOver();
+  document.querySelector('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 sectorFilter.addEventListener('change', startOver);
 cityFilter.addEventListener('change', startOver);
 
-document.querySelector('#type-filter').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-type]');
-  if (!button) return;
-  type = button.dataset.type;
-  document.querySelectorAll('[data-type]').forEach((item) => item.classList.toggle('is-active', item === button));
+typeFilter.addEventListener('change', () => {
+  type = typeFilter.value;
   startOver();
 });
 
@@ -208,7 +212,7 @@ document.querySelector('#clear-filters').addEventListener('click', () => {
   sectorFilter.value = '';
   cityFilter.value = '';
   type = 'all';
-  document.querySelectorAll('[data-type]').forEach((item) => item.classList.toggle('is-active', item.dataset.type === 'all'));
+  typeFilter.value = 'all';
   startOver();
 });
 
