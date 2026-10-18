@@ -1,4 +1,4 @@
-/* Regulatory Explorer: every requirement, with a search box, authority / sector /
+/* Regulatory Explorer: every requirement, with a search box, authority / ISIC4 sector /
    business-stage filters, colored cards with the authority's logo, and pages of 12
    (the same design as the Startup Explorer).
    The filters are kept in the address (?q=...&sector=...), so a filtered list can be
@@ -8,8 +8,8 @@ import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadRequirements, field, label, sectorsOf, stagesOf, allStages, stagesText,
-  colorOf, logoUrl, initials, detailsLink, SECTORS,
+  loadRequirements, field, label, isicOf, stagesOf, allStages, stagesText,
+  colorOf, logoUrl, initials, detailsLink, ISIC_SECTIONS, fitsIsic, isicText,
 } from '../../../../shared/regulatory.js';
 
 const PAGE_SIZE = 12;   // four rows of three cards
@@ -33,12 +33,6 @@ function safe(text) {
   return String(text ?? '').replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
 }
 
-// A requirement for "All" sectors applies to every sector
-function fitsSector(row, sector) {
-  const sectors = sectorsOf(row);
-  return sectors.includes(sector) || sectors.includes('All');
-}
-
 /* ---------- Filtering ---------- */
 
 function matches(row, ignore = '') {
@@ -48,14 +42,15 @@ function matches(row, ignore = '') {
 
   return (!words || searchable.includes(words))
     && (ignore === 'authority' || !authorityFilter.value || row.authority === authorityFilter.value)
-    && (ignore === 'sector' || !sectorFilter.value || fitsSector(row, sectorFilter.value))
+    && (ignore === 'sector' || !sectorFilter.value || fitsIsic(row, sectorFilter.value))
     && (ignore === 'stage' || !stageFilter.value || stagesOf(row).includes(stageFilter.value));
 }
 
 /* ---------- Drawing ---------- */
 
 function showTotals() {
-  const sectors = new Set(requirements.flatMap(sectorsOf).filter((sector) => sector !== 'All'));
+  // the ISIC4 sections that have at least one requirement (the same list as the sector filter)
+  const sectors = ISIC_SECTIONS.filter((section) => requirements.some((row) => fitsIsic(row, section.code)));
   const total = (value, words, iconName) => `
     <div class="reg-total">
       <span class="reg-total-icon">${icon(iconName)}</span>
@@ -63,7 +58,7 @@ function showTotals() {
     </div>`;
   document.querySelector('#totals').innerHTML = total(requirements.length, t('reg.statRequirements'), 'file')
     + total(new Set(requirements.map((row) => row.authority)).size, t('reg.statAuthorities'), 'landmark')
-    + total(sectors.size, t('reg.statSectors'), 'grid');
+    + total(sectors.length, t('reg.statSectors'), 'grid');
 }
 
 /* Fills a dropdown: its name (shown while nothing is chosen), "All …", then each option
@@ -81,7 +76,8 @@ function fillSelect(select, nameKey, allKey, options) {
 function fillDropdowns() {
   const authorities = [...new Set(requirements.map((row) => row.authority).filter(Boolean))].map((value) => [value]);
   fillSelect(authorityFilter, 'reg.authority', 'reg.allAuthorities', authorities);
-  fillSelect(sectorFilter, 'reg.sector', 'reg.sector.all', SECTORS.filter((sector) => sector !== 'All').map((value) => [value]));
+  // the sector filter lists the 20 ISIC4 sections (GASTAT's SSIC), in their official order
+  fillSelect(sectorFilter, 'reg.isic', 'reg.isicAll', ISIC_SECTIONS.map((section) => [section.code]));
   fillSelect(stageFilter, 'reg.stage', 'reg.allStages', allStages(requirements).map((value) => [value]));
 }
 
@@ -100,7 +96,7 @@ function showCounts() {
 
   const authorityWords = new Map(requirements.map((row) => [row.authority, field(row, 'authority')]));
   write(authorityFilter, 'reg.allAuthorities', 'authority', (row, value) => row.authority === value, (value) => authorityWords.get(value) || value);
-  write(sectorFilter, 'reg.sector.all', 'sector', fitsSector, (value) => label('sector', value));
+  write(sectorFilter, 'reg.isicAll', 'sector', fitsIsic, isicText);
   write(stageFilter, 'reg.allStages', 'stage', (row, value) => stagesOf(row).includes(value), (value) => label('stage', value));
 
   // authorities from A to Z in the page's language
@@ -110,11 +106,11 @@ function showCounts() {
   authorityFilter.value = chosen;
 }
 
-/* The sectors as small chips: the first two, then "+N" */
+/* The ISIC4 sections as small chips: the first two, then "+N" ("Every economic sector" for general ones) */
 function sectorChips(row) {
-  const sectors = sectorsOf(row);
-  return sectors.slice(0, 2).map((sector) => `<span class="reg-chip">${safe(label('sector', sector))}</span>`).join('')
-    + (sectors.length > 2 ? `<span class="reg-chip">+${sectors.length - 2}</span>` : '');
+  const sections = isicOf(row);
+  return sections.slice(0, 2).map((code) => `<span class="reg-chip">${safe(isicText(code))}</span>`).join('')
+    + (sections.length > 2 ? `<span class="reg-chip">+${sections.length - 2}</span>` : '');
 }
 
 /* The authority's logo on white, or a tilted colored square with its initials */
