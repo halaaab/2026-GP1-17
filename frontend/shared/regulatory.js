@@ -1,18 +1,21 @@
 /* ==========================================================
    Regulatory requirements: the ONE place that knows the
-   regulatory_requirements table (migrations 0006, 0010 and 0012).
+   regulatory_requirements table (migrations 0006, 0010, 0012, 0013 and 0014).
 
-   Used by the founder Regulatory Explorer, the requirement details page
-   and the admin Regulatory page:
+   Used by the founder Regulatory Explorer, the requirement details page,
+   the admin Regulatory page and the assessment's roadmap:
 
-     import { loadRequirements, field, sectorsOf, stagesOf, label } from '../../../shared/regulatory.js';
+     import { loadRequirements, field, isicOf, stagesOf, label } from '../../../shared/regulatory.js';
      const list = await loadRequirements();     // null when it could not load
      field(row, 'authority')                    // Arabic when the page is in Arabic and there is an Arabic text
-     sectorsOf(row)                             // ['Fashion', 'Furniture']
+     isicOf(row)                                // ['C', 'G'] — its ISIC4 sections, or ['ALL']
      stagesOf(row)                              // ['Pre-operation', 'Hiring']
      label('stage', 'Pre-operation')            // "Pre-operation" / "ما قبل التشغيل"
 
-   Fixed lists (sectors, stages, mandatory, status) are translated with
+   Sectors are ISIC4 only (as in the survival model and the market indicators):
+   sections (A … U) for the filters, 2-digit divisions for the roadmap.
+
+   Fixed lists (stages, mandatory, status, ISIC4 sections) are translated with
    reg.<kind>.<value> keys in the translation files. A value with no key
    (for example a new stage typed by an admin) is shown as it is.
    ========================================================== */
@@ -23,8 +26,69 @@ import { getLanguage, t } from './language.js';
 const ROOT = new URL('..', import.meta.url).href;
 const DETAILS_PAGE = `${ROOT}pages/founder/regulatory-requirements/requirement-details/requirement-details.html`;
 
-/* The sectors a requirement can be for, as written in the dataset ("All" = every business) */
-export const SECTORS = ['All', 'AI & Software', 'Food & Beverages', 'Fashion', 'Furniture'];
+/* The 20 sections of ISIC Rev.4 used by GASTAT's Saudi classification (SSIC), in order.
+   The value is the international letter; ar is the letter GASTAT writes in Arabic.
+   Their names are in the translation files: reg.isic.A, reg.isic.B … (migration 0013). */
+export const ISIC_SECTIONS = [
+  { code: 'A', ar: 'أ' }, { code: 'B', ar: 'ب' }, { code: 'C', ar: 'ج' }, { code: 'D', ar: 'د' },
+  { code: 'E', ar: 'هـ' }, { code: 'F', ar: 'و' }, { code: 'G', ar: 'ز' }, { code: 'H', ar: 'ح' },
+  { code: 'I', ar: 'ط' }, { code: 'J', ar: 'ي' }, { code: 'K', ar: 'ك' }, { code: 'L', ar: 'ل' },
+  { code: 'M', ar: 'م' }, { code: 'N', ar: 'ن' }, { code: 'O', ar: 'س' }, { code: 'P', ar: 'ع' },
+  { code: 'Q', ar: 'ف' }, { code: 'R', ar: 'ص' }, { code: 'S', ar: 'ق' }, { code: 'U', ar: 'ش' },
+];
+
+/* The ISIC4 sections of a requirement: ['C', 'G'], or ['ALL'] when it applies to every business */
+export function isicOf(row) {
+  return Array.isArray(row.isic_sections) ? row.isic_sections : [];
+}
+
+/* Is the requirement for this ISIC4 section? Requirements for every business ('ALL') always are. */
+export function fitsIsic(row, code) {
+  const sections = isicOf(row);
+  return sections.includes('ALL') || sections.includes(code);
+}
+
+/* The 85 ISIC4 divisions (2 digits) in GASTAT's classification, for checking what admins type */
+export const ISIC_DIVISIONS = ['01', '02', '03', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14',
+  '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29',
+  '30', '31', '32', '33', '35', '36', '37', '38', '39', '41', '42', '43', '45', '46', '47',
+  '49', '50', '51', '52', '53', '55', '56', '58', '59', '60', '61', '62', '63', '64', '65',
+  '66', '68', '69', '70', '71', '72', '73', '74', '75', '77', '78', '79', '80', '81', '82',
+  '84', '85', '86', '87', '88', '90', '91', '93', '94', '95', '96', '99'];
+
+/* The ISIC4 divisions of an idea, from the sector the founder chose in the chat. They are
+   the divisions the market indicators link to each sector (datasets/market-indicators),
+   so the roadmap and the market numbers describe the same activities. */
+export const IDEA_DIVISIONS = {
+  ai: ['58', '62', '63'],          // publishing (incl. software), programming, information services
+  food: ['10', '11', '56'],        // food products, beverages, food and beverage service
+  fashion: ['13', '14', '15'],     // textiles, wearing apparel, leather
+  furniture: ['31'],               // furniture
+};
+
+/* The ISIC4 divisions of a requirement: ['10', '11'], or ['ALL'] when it applies to every business */
+export function divisionsOf(row) {
+  return Array.isArray(row.isic_divisions) ? row.isic_divisions : [];
+}
+
+/* Is the requirement for one of these divisions? Requirements for every business ('ALL') always are. */
+export function fitsDivisions(row, divisions) {
+  const own = divisionsOf(row);
+  return own.includes('ALL') || own.some((code) => divisions.includes(code));
+}
+
+/* The sections as words: "C · Manufacturing, G · Wholesale …" or "Every economic sector" */
+export function isicListText(row) {
+  return isicOf(row).map(isicText).join(getLanguage() === 'ar' ? '، ' : ', ');
+}
+
+/* A section with its letter in the page's language: "C · Manufacturing" / "ج · الصناعة التحويلية" */
+export function isicText(code) {
+  if (code === 'ALL') return t('reg.isicEvery');
+  const section = ISIC_SECTIONS.find((item) => item.code === code);
+  const letter = getLanguage() === 'ar' && section ? section.ar : code;
+  return `${letter} · ${t(`reg.isic.${code}`)}`;
+}
 
 /* The order business stages are shown in: from the idea to a running business */
 const STAGE_ORDER = ['Planning', 'Design', 'Pre-market', 'Establishment', 'Pre-operation', 'Product launch',
@@ -52,14 +116,14 @@ export async function loadRequirement(id) {
 }
 
 /* Up to 3 other requirements to suggest next to one: the same authority first,
-   then the same type, then the same sector. */
+   then the same type, then the same ISIC4 division. */
 export async function loadSimilar(row) {
   const all = await loadRequirements();
   if (!all) return [];
-  const sectors = sectorsOf(row);
+  const divisions = divisionsOf(row).filter((code) => code !== 'ALL');
   const score = (other) => (other.authority === row.authority ? 4 : 0)
     + (other.category === row.category ? 2 : 0)
-    + (sectorsOf(other).some((sector) => sectors.includes(sector)) ? 1 : 0);
+    + (divisionsOf(other).some((code) => divisions.includes(code)) ? 1 : 0);
   return all
     .filter((other) => other.requirement_id !== row.requirement_id && score(other) > 0)
     .sort((a, b) => score(b) - score(a) || a.requirement_id.localeCompare(b.requirement_id))
@@ -105,16 +169,11 @@ function keyOf(value) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
 }
 
-/* The words for a fixed value: label('sector', 'Fashion'), label('stage', 'Import'),
+/* The words for a fixed value: label('stage', 'Import'),
    label('mandatory', 'Conditional'), label('status', 'Active') */
 export function label(kind, value) {
   const key = `reg.${kind}.${keyOf(value)}`;
   return t(key) === key ? value : t(key);
-}
-
-/* "Fashion; Furniture" → ['Fashion', 'Furniture'] */
-export function sectorsOf(row) {
-  return (row.sector || '').split(';').map((item) => item.trim()).filter(Boolean);
 }
 
 /* "Pre-operation / Hiring" → ['Pre-operation', 'Hiring'] */
@@ -127,11 +186,6 @@ export function allStages(rows) {
   const found = [...new Set(rows.flatMap(stagesOf))];
   const rank = (stage) => (STAGE_ORDER.includes(stage) ? STAGE_ORDER.indexOf(stage) : STAGE_ORDER.length);
   return found.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
-}
-
-/* The sectors as words: "All sectors" or "Fashion, Furniture" */
-export function sectorsText(row) {
-  return sectorsOf(row).map((sector) => label('sector', sector)).join(getLanguage() === 'ar' ? '، ' : ', ');
 }
 
 /* The stages as words: "Pre-operation / Hiring" */

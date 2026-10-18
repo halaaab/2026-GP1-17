@@ -34,6 +34,7 @@
 
 import { getLanguage, t } from './language.js';
 import { supabase } from './supabase.js';
+import { IDEA_DIVISIONS, divisionsOf, fitsDivisions } from './regulatory.js';
 
 const ROOT = new URL('..', import.meta.url).href;
 const CHAT_PAGE = `${ROOT}pages/founder/chatbot/chatbot.html`;
@@ -95,9 +96,6 @@ export const AGENT_STEPS = ['agent.step.understand', 'agent.step.similar', 'agen
    filled from the Excel files in datasets/). What is still simple is HOW they are
    chosen: by the idea's sector. Later the similarity engine ranks the startups by
    meaning, and the Roadmap Agent decides which requirements apply to this venture. */
-
-/* Darb's four sectors: the answer in the chat → the sector name used in the datasets */
-const SECTORS = { ai: 'AI & Software', food: 'Food & Beverages', fashion: 'Fashion', furniture: 'Furniture' };
 
 /* How to find startups of a sector: which column to look in, and for which word */
 const STARTUP_SEARCH = {
@@ -190,16 +188,18 @@ async function loadRoadmap(assessment) {
     return [];
   }
 
-  const sectorName = SECTORS[assessment.sector] || '';
+  // the idea's ISIC4 divisions (the same ones as its market indicators); a requirement is
+  // for this idea when its own divisions include one of them, or when it is for every business
+  const divisions = IDEA_DIVISIONS[assessment.sector] || [];
   const willHire = assessment.hiring !== 'no';
 
   return data
     .filter((row) => row.regulatory_status === 'Active')
-    .filter((row) => row.sector === 'All' || (sectorName && row.sector.includes(sectorName)))
+    .filter((row) => fitsDivisions(row, divisions))
     .filter((row) => {
       const isRequired = row.mandatory === 'Required' || row.mandatory === 'Required when in scope';
-      const isForThisSector = row.sector !== 'All' && !row.sector.includes(';');
-      return (isRequired && (row.sector === 'All' ? row.mandatory === 'Required' : isForThisSector))
+      const forEveryBusiness = divisionsOf(row).includes('ALL');
+      return (isRequired && (forEveryBusiness ? row.mandatory === 'Required' : true))
         || ALWAYS_SHOWN.includes(row.requirement_id)
         || (willHire && WHEN_HIRING.includes(row.requirement_id));
     })
