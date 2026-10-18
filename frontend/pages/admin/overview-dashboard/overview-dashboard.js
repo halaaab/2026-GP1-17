@@ -117,7 +117,7 @@ async function load() {
     readAll('assessments', 'assessment_id, idea_id, status, fis_score, risk_level, started_at, completed_at, roadmap_generated_at'),
     readAll('startups', 'startup_id, sector, startup_description'),
     readAll('support_organisations', '*'),
-    readAll('regulatory_requirements', 'requirement_id, sector, last_verified'),
+    readAll('regulatory_requirements', 'requirement_id, last_verified'),
     readAll('market_indicators', 'record_id, year'),
   ]);
 
