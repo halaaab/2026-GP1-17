@@ -8,13 +8,16 @@
    The rows come straight from the dataset in datasets/incubators-accelerators,
    where a missing value is written as "—". clean() turns those into ''.
 
-   Each text field has an Arabic twin (name_ar, description_ar ..., migration 0008).
+   Each text field has an Arabic twin (name_ar, description_ar ..., migration 0012).
    text(program, 'description') gives the Arabic one when the site is in Arabic,
-   and the English one when the site is in English or the Arabic one is empty.
+   and the English one when the site is in English or there is no Arabic.
+   Until the database has the Arabic columns, the Arabic of the 19 dataset
+   programs comes from ./programs-ar.js.
    ========================================================== */
 
 import { supabase } from '../../../shared/supabase.js';
 import { getLanguage } from '../../../shared/language.js';
+import { PROGRAMS_AR } from './programs-ar.js';
 
 // Address of the frontend/ folder, so links work from any page depth
 const ROOT = new URL('../../../', import.meta.url).href;
@@ -39,11 +42,17 @@ export function clean(value) {
   return /^[—–-]*$/.test(text) ? '' : text;
 }
 
-/* A text field in the site's language: the Arabic twin when the site is in
+/* The Arabic of a text field, or '': the database column first (field + "_ar"),
+   then ./programs-ar.js for the programs of the dataset */
+export function arabicOf(program, field) {
+  return clean(program[`${field}_ar`]) || clean(PROGRAMS_AR[program.support_org_id]?.[field]);
+}
+
+/* A text field in the site's language: the Arabic one when the site is in
    Arabic and it has one, the English text otherwise */
 export function text(program, field) {
   if (getLanguage() === 'ar' && ARABIC_FIELDS.includes(field)) {
-    const arabic = clean(program[`${field}_ar`]);
+    const arabic = arabicOf(program, field);
     if (arabic) return arabic;
   }
   return clean(program[field]);
@@ -63,6 +72,15 @@ export function programType(program) {
 /* The chip color of each type */
 export const TYPE_CHIP = { incubator: 'chip-teal', accelerator: 'chip-navy', both: 'chip-navy', other: '' };
 
+/* The icon of each type (names from layout.js): a sprout grows, a rocket speeds up */
+export const TYPE_ICON = { incubator: 'sprout', accelerator: 'rocket', both: 'rocket', other: 'spark' };
+
+/* The program's color, from 0 to 5 (the same name always gets the same one).
+   The explorer's card and the details page's head use it, so they match. */
+export function colorOf(program) {
+  return [...clean(program.name)].reduce((sum, character) => sum + character.charCodeAt(0), 0) % 6;
+}
+
 /* "Technology / Deep Technology" → ['Technology', 'Deep Technology'].
    Words like "All sectors" are left out: isOpenToAll() answers that instead. */
 export function sectorList(program) {
@@ -72,7 +90,7 @@ export function sectorList(program) {
 
 /* Is the program open to every sector? */
 export function isOpenToAll(program) {
-  return ALL_SECTORS.test(clean(program.sector)) || ALL_SECTORS.test(clean(program.sector_ar));
+  return ALL_SECTORS.test(clean(program.sector)) || ALL_SECTORS.test(arabicOf(program, 'sector'));
 }
 
 /* "Riyadh, Saudi Arabia (Hybrid)" → "Riyadh" (in the site's language) */
@@ -106,7 +124,7 @@ export function websiteOf(program) {
   }
 }
 
-/* ---------- Logo (migration 0007) ---------- */
+/* ---------- Logo (migration 0011) ---------- */
 
 // The Storage bucket the admin page uploads logos to
 export const LOGO_BUCKET = 'program-logos';
