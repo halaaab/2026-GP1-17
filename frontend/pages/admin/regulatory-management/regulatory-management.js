@@ -2,14 +2,14 @@
    Regulatory Explorer. Search, four filters, add / edit in a side panel,
    and delete after a confirmation. */
 
-import { t } from '../../../shared/language.js';
+import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getCurrentUser } from '../../../shared/auth.js';
 import {
-  loadRequirements, field, label, sectorsOf, stagesOf, allStages, sectorsText, dateText, fillFilter, authorityColors,
-  SECTORS, MANDATORY, STATUSES,
+  loadRequirements, field, label, stagesOf, allStages, dateText, fillFilter, authorityColors, fitsIsic, divisionsOf, logoUrl, initials,
+  MANDATORY, STATUSES, ISIC_SECTIONS, ISIC_DIVISIONS, isicOf, isicText,
 } from '../../../shared/regulatory.js';
 import '../../../shared/guard.js';
 
@@ -36,8 +36,16 @@ const TEXT_COLUMNS = [
   'official_source_url', 'service_url', 'last_verified', 'founder_trigger_fields', 'notes',
 ];
 
-// An id like GEN-024 or FOOD-009: capital letters, a dash, numbers
-const ID_RULE = /^[A-Z]{2,6}-\d{3}$/;
+/* The ID of a new requirement. Admins never see or type it: it is the database's key.
+   GEN-024, GEN-025 … for requirements for every business, REQ-001, REQ-002 … for the others. */
+function nextId(sections) {
+  const prefix = sections.includes('ALL') ? 'GEN' : 'REQ';
+  const numbers = requirements
+    .filter((row) => row.requirement_id.startsWith(`${prefix}-`))
+    .map((row) => Number(row.requirement_id.slice(prefix.length + 1)))
+    .filter((number) => Number.isInteger(number));
+  return `${prefix}-${String(Math.max(0, ...numbers) + 1).padStart(3, '0')}`;
+}
 
 let requirements = [];
 let editingId = null;     // the requirement open in the panel, null when adding a new one
@@ -64,20 +72,20 @@ function pairs(columnEn, columnName) {
 
 function fillFilters() {
   fillFilter(filters.authority, 'reg.authority', 'reg.allAuthorities', pairs('authority', 'authority'));
-  fillFilter(filters.sector, 'reg.sector', 'reg.sector.all', SECTORS.filter((s) => s !== 'All').map((s) => [s, label('sector', s)]));
+  // the same 20 ISIC4 sections as the Regulatory Explorer
+  fillFilter(filters.sector, 'reg.isic', 'reg.isicAll', ISIC_SECTIONS.map((section) => [section.code, isicText(section.code)]));
   fillFilter(filters.type, 'regAdmin.type', 'regAdmin.allTypes', pairs('category', 'category'));
   fillFilter(filters.stage, 'reg.stage', 'reg.allStages', allStages(requirements).map((s) => [s, label('stage', s)]));
 }
 
 function fits(row) {
   const words = search.value.trim().toLowerCase();
-  const text = [row.requirement_id, row.name_en, row.name_ar, row.authority, row.authority_ar, row.category, row.category_ar]
+  const text = [row.name_en, row.name_ar, row.authority, row.authority_ar, row.category, row.category_ar]
     .join(' ').toLowerCase();
-  const sectors = sectorsOf(row);
 
   return text.includes(words)
     && (!filters.authority.value || row.authority === filters.authority.value)
-    && (!filters.sector.value || sectors.includes(filters.sector.value) || sectors.includes('All'))
+    && (!filters.sector.value || fitsIsic(row, filters.sector.value))
     && (!filters.type.value || row.category === filters.type.value)
     && (!filters.stage.value || stagesOf(row).includes(filters.stage.value));
 }
@@ -93,8 +101,12 @@ function showRows() {
   rows.innerHTML = visible.map((row) => `
     <tr class="reg-row" data-id="${row.requirement_id}" tabindex="0">
       <td>
-        <span class="cell-title"></span>
-        <span class="cell-detail"></span>
+        <div class="reg-name-cell">
+          ${logoUrl(row)
+    ? `<span class="reg-logo has-image"><img src="${logoUrl(row)}" alt="" loading="lazy"></span>`
+    : `<span class="reg-logo" aria-hidden="true">${initials(row.authority)}</span>`}
+          <span class="cell-title"></span>
+        </div>
       </td>
       <td class="hide-small"><span class="chip chip-pastel-${colors.get(row.authority) || 8} reg-authority"></span></td>
       <td class="hide-small text-2 reg-type"></td>
@@ -112,10 +124,9 @@ function showRows() {
   rows.querySelectorAll('tr').forEach((tr, index) => {
     const row = visible[index];
     tr.querySelector('.cell-title').textContent = field(row, 'name');
-    tr.querySelector('.cell-detail').textContent = `${row.requirement_id} · ${field(row, 'category')}`;
     tr.querySelector('.reg-authority').textContent = field(row, 'authority') || '—';
     tr.querySelector('.reg-type').textContent = field(row, 'category') || '—';
-    tr.querySelector('.reg-applies').textContent = sectorsText(row);
+    tr.querySelector('.reg-applies').textContent = isicOf(row).map(isicText).join(getLanguage() === 'ar' ? '، ' : ', ') || '—';
   });
 
   empty.textContent = t(loadFailed ? 'reg.loadError' : 'reg.noMatch');
@@ -147,10 +158,10 @@ function showFieldError(column, key) {
 }
 
 function clearErrors() {
-  ['id', 'name_en', 'sectors', 'official_source_url', 'service_url'].forEach((column) => showFieldError(column, ''));
+  ['name_en', 'isic', 'divisions', 'official_source_url', 'service_url'].forEach((column) => showFieldError(column, ''));
 }
 
-// The two dropdowns and the sector boxes, in the page's language
+// The two dropdowns and the ISIC4 boxes, in the page's language
 function fillFormChoices() {
   const mandatory = input('mandatory').value;
   const status = input('regulatory_status').value;
@@ -159,10 +170,11 @@ function fillFormChoices() {
   if (mandatory) input('mandatory').value = mandatory;
   if (status) input('regulatory_status').value = status;
 
-  const ticked = [...document.querySelectorAll('[name="sector"]:checked')].map((box) => box.value);
-  document.querySelector('#f-sectors').innerHTML = SECTORS.map((sector) => `
-    <label class="check"><input type="checkbox" name="sector" value="${sector}"> ${label('sector', sector)}</label>`).join('');
-  document.querySelectorAll('[name="sector"]').forEach((box) => { box.checked = ticked.includes(box.value); });
+  // the ISIC4 sections: "Every sector" first, then the 20 sections in their official order
+  const tickedIsic = [...document.querySelectorAll('[name="isic"]:checked')].map((box) => box.value);
+  document.querySelector('#f-isic').innerHTML = ['ALL', ...ISIC_SECTIONS.map((section) => section.code)].map((code) => `
+    <label class="check"><input type="checkbox" name="isic" value="${code}"> ${code === 'ALL' ? t('regAdmin.isicEvery') : isicText(code)}</label>`).join('');
+  document.querySelectorAll('[name="isic"]').forEach((box) => { box.checked = tickedIsic.includes(box.value); });
 
   // suggestions while typing an authority or a type (the English names already used)
   document.querySelector('#authority-list').innerHTML = pairs('authority', 'authority').map(([value]) => `<option value="${value}">`).join('');
@@ -193,25 +205,23 @@ input('authority').addEventListener('change', () => {
 // Opens the panel to edit a requirement, or to add a new one when id is null
 function openForm(id) {
   editingId = id;
-  const row = id ? findRequirement(id) : { mandatory: 'Conditional', regulatory_status: 'Active', sector: '' };
+  const row = id ? findRequirement(id) : { mandatory: 'Conditional', regulatory_status: 'Active' };
 
   fillFormChoices();
-  input('id').value = id || '';
-  input('id').disabled = Boolean(id);
   TEXT_COLUMNS.forEach((column) => { input(column).value = row[column] ?? ''; });
-  document.querySelectorAll('[name="sector"]').forEach((box) => { box.checked = sectorsOf(row).includes(box.value); });
+  document.querySelectorAll('[name="isic"]').forEach((box) => { box.checked = isicOf(row).includes(box.value); });
+  input('divisions').value = divisionsOf(row).filter((code) => code !== 'ALL').join(', ');
   clearErrors();
   showFormWords();
 
   panel.querySelector('.panel-body').scrollTop = 0;
   panel.classList.add('is-open');
-  (id ? input('name_en') : input('id')).focus();
+  input('name_en').focus();
 }
 
-// The panel title and the id hint depend on add or edit
+// The panel title depends on add or edit
 function showFormWords() {
   document.querySelector('#panel-title').textContent = t(editingId ? 'regAdmin.editTitle' : 'regAdmin.addTitle');
-  document.querySelector('#f-id-hint').textContent = t(editingId ? 'regAdmin.idLocked' : 'regAdmin.idHint');
 }
 
 function isWebAddress(value) {
@@ -226,20 +236,28 @@ form.addEventListener('submit', async (event) => {
     // an empty answer is saved as "no value", never as an empty text
     values[column] = input(column).value.trim() || null;
   });
-  values.sector = [...document.querySelectorAll('[name="sector"]:checked')].map((box) => box.value).join('; ');
-  const id = editingId || input('id').value.trim().toUpperCase();
+  // "Every sector" on its own when it is ticked, otherwise the ticked ISIC4 sections
+  const isic = [...document.querySelectorAll('[name="isic"]:checked')].map((box) => box.value);
+  values.isic_sections = isic.includes('ALL') ? ['ALL'] : isic;
+  // the ISIC4 divisions decide whose roadmap it is in; "Every sector" means every division
+  const divisions = input('divisions').value.split(/[\s,،;]+/).filter(Boolean).map((code) => code.padStart(2, '0'));
+  values.isic_divisions = values.isic_sections.includes('ALL') ? ['ALL'] : [...new Set(divisions)];
 
   // check the answers here first, so the admin sees each problem next to its field
   clearErrors();
   const problems = [];
-  if (!editingId && !ID_RULE.test(id)) problems.push(['id', 'regAdmin.idError']);
-  if (!editingId && findRequirement(id)) problems.push(['id', 'regAdmin.idTaken']);
   if (!values.name_en) problems.push(['name_en', 'regAdmin.nameRequired']);
-  if (!values.sector) problems.push(['sectors', 'regAdmin.sectorRequired']);
+  if (!values.isic_sections.length) problems.push(['isic', 'regAdmin.isicRequired']);
+  if (!values.isic_sections.includes('ALL')
+    && (!values.isic_divisions.length || values.isic_divisions.some((code) => !ISIC_DIVISIONS.includes(code)))) {
+    problems.push(['divisions', 'regAdmin.divisionsError']);
+  }
   if (!isWebAddress(values.official_source_url)) problems.push(['official_source_url', 'regAdmin.urlError']);
   if (!isWebAddress(values.service_url)) problems.push(['service_url', 'regAdmin.urlError']);
   problems.forEach(([column, key]) => showFieldError(column, key));
   if (problems.length) return;
+
+  const id = editingId || nextId(values.isic_sections);
 
   saveButton.classList.add('is-loading');
   let result;
@@ -254,13 +272,8 @@ form.addEventListener('submit', async (event) => {
   saveButton.classList.remove('is-loading');
 
   if (result.error) {
-    // 23505: another requirement already has this id
-    if (result.error.code === '23505') {
-      showFieldError('id', 'regAdmin.idTaken');
-    } else {
-      console.error('regulatory_requirements:', result.error.message);
-      showToast(t('founders.actionError'), 'risk');
-    }
+    console.error('regulatory_requirements:', result.error.message);
+    showToast(t('founders.actionError'), 'risk');
     return;
   }
 

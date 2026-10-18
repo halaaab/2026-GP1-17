@@ -8,7 +8,7 @@ import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadRequirement, loadSimilar, field, label, sectorsText, stagesText, colorOf, logoUrl, initials,
+  loadRequirement, loadSimilar, field, label, isicListText, stagesText, colorOf, logoUrl, initials,
   detailsLink, dateText,
 } from '../../../../shared/regulatory.js';
 
@@ -75,7 +75,7 @@ function show() {
   ].join('');
 
   // When it applies, and to which sectors
-  const lines = [field(row, 'applies_when'), t('reg.forSectors').replace('{sectors}', sectorsText(row))].filter(Boolean);
+  const lines = [field(row, 'applies_when'), t('reg.forSectors').replace('{sectors}', isicListText(row))].filter(Boolean);
   document.querySelector('#applies').innerHTML = lines.map((line) => `<li>${icon('checkCircle')}<span>${safe(line)}</span></li>`).join('');
 
   // What to do: numbered steps
@@ -95,6 +95,7 @@ function show() {
     // icon colors: the Saudi greens (tone-N in requirement-details.css)
     ['landmark', 1, 'reg.authority', field(row, 'authority')],
     ['file', 2, 'regAdmin.type', field(row, 'category')],
+    ['grid', 3, 'reg.isic', isicListText(row)],
     ['shield', 3, 'reg.obligation', row.mandatory ? label('mandatory', row.mandatory) : ''],
     ['flag', 4, 'reg.stage', stage],
     ['check', 5, 'regAdmin.status', row.regulatory_status ? label('status', row.regulatory_status) : ''],
@@ -117,7 +118,7 @@ function show() {
       <span class="req-similar-logo ${logoUrl(other) ? 'has-logo' : ''}" aria-hidden="true">${logoHtml(other)}</span>
       <span class="req-similar-text">
         <strong>${safe(field(other, 'name'))}</strong>
-        <span>${safe([field(other, 'category'), sectorsText(other)].filter(Boolean).join(comma))}</span>
+        <span>${safe([field(other, 'category'), isicListText(other)].filter(Boolean).join(comma))}</span>
       </span>
     </a>`).join('');
 }
