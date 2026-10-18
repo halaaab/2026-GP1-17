@@ -479,9 +479,9 @@ function roadmapFull() {
                 ${authorityLogo(step.authority)}
                 <div class="step-text">
                   <div class="step-title"><strong>${safe(say(step.title))}</strong>${typeChip(step)}</div>
-                  <span class="step-authority">${safe(step.authority)}</span>
-                  <p dir="auto">${safe(step.guidance)}</p>
-                  ${step.fees ? `<p class="step-fees" dir="auto"><b>${t('roadmap.fees')}</b> ${safe(shorten(step.fees, 150))}</p>` : ''}
+                  <span class="step-authority">${safe(say(step.authorityName))}</span>
+                  <p dir="auto">${safe(say(step.guidance))}</p>
+                  ${say(step.fees) ? `<p class="step-fees" dir="auto"><b>${t('roadmap.fees')}</b> ${safe(shorten(say(step.fees), 150))}</p>` : ''}
                   <div class="step-links">
                     ${step.link ? `<a class="rm-action" href="${safe(step.link)}" target="_blank" rel="noopener">${t('roadmap.apply')} ${icon('external')}</a>` : ''}
                     ${step.source ? `<a class="link" href="${safe(step.source)}" target="_blank" rel="noopener">${t('roadmap.source')}</a>` : ''}
@@ -509,7 +509,7 @@ function roadmapDiagram() {
             <div class="card rm-card">
               ${typeChip(step)}
               <strong>${safe(say(step.title))}</strong>
-              <span class="text-3">${safe(step.authority)}</span>
+              <span class="text-3">${safe(say(step.authorityName))}</span>
             </div>
           </li>`).join('')}
       </ol>

@@ -1666,6 +1666,14 @@ html[dir="rtl"] .x-timer {
 .about-text .eyebrow {
   color: var(--teal-text);
 }
+/* the two paragraphs: the same width, even line lengths, a small gap between them */
+.about-text .lead {
+  max-width: 560px;
+  text-wrap: pretty;
+}
+.about-text .lead + .lead {
+  margin-top: -6px;
+}
 /* the three things Darb is built on: an icon, a title and one line each */
 .about-points {
   display: flex;
@@ -1704,9 +1712,6 @@ html[dir="rtl"] .x-timer {
 .about-words strong {
   font-size: 15.5px;
   color: var(--text);
-}
-.about-note {
-  margin: 0;
 }
 
 .about-stage {

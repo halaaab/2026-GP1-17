@@ -1,9 +1,9 @@
 <!doctype html>
 <!--
   HISTORY
-  Every idea the founder has discussed with Darb: finished assessments and
-  conversations that are not finished yet. Each row opens its conversation,
-  its score, its roadmap or its report.
+  Every project the founder has discussed with Darb: finished assessments and
+  conversations that are not finished yet. At the top, four numbers about them.
+  Each card opens its conversation, its score, its roadmap or its report.
   The rows come from shared/assessments.js.
 -->
 <html lang="en" dir="ltr">
@@ -25,6 +25,14 @@
       <a class="btn btn-primary" href="../chatbot/chatbot.html" data-i18n="nav.newAssessment"></a>
     </div>
 
+    <!-- four numbers about the founder's work (history.js fills them) -->
+    <div class="stats" id="stats">
+      <div class="stat is-teal"><span class="stat-icon" data-icon="file"></span><strong data-stat="projects">0</strong><span data-i18n="history.stats.projects"></span></div>
+      <div class="stat is-mint"><span class="stat-icon" data-icon="checkCircle"></span><strong data-stat="assessed">0</strong><span data-i18n="history.stats.assessed"></span></div>
+      <div class="stat is-purple"><span class="stat-icon" data-icon="trendUp"></span><strong data-stat="average">—</strong><span data-i18n="history.stats.average"></span></div>
+      <div class="stat is-gold"><span class="stat-icon" data-icon="map"></span><strong data-stat="roadmaps">0</strong><span data-i18n="history.stats.roadmaps"></span></div>
+    </div>
+
     <div class="toolbar">
       <div class="segmented" id="filter">
         <button type="button" class="segmented-item is-active" data-filter="all" data-i18n="history.all"></button>
@@ -37,23 +45,9 @@
       </label>
     </div>
 
-    <div class="table-card">
-      <table class="table history-table">
-        <thead>
-          <tr>
-            <th data-i18n="history.idea"></th>
-            <th class="hide-small" data-i18n="history.sectorCity"></th>
-            <th data-i18n="history.score"></th>
-            <th class="hide-small" data-i18n="history.roadmap"></th>
-            <th class="hide-small" data-i18n="history.updated"></th>
-            <th></th>
-          </tr>
-        </thead>
-        <!-- history.js adds one row for each idea -->
-        <tbody id="rows"></tbody>
-      </table>
-      <p class="empty" id="empty" data-i18n="history.empty" hidden></p>
-    </div>
+    <!-- history.js adds one card for each project -->
+    <div class="projects" id="rows"></div>
+    <p class="empty" id="empty" data-i18n="history.empty" hidden></p>
 
     <!-- what the score colors mean -->
     <div class="legend">
