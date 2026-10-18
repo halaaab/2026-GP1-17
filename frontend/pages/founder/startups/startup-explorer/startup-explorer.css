@@ -308,6 +308,26 @@ html[dir="rtl"] .st-hero::after {
 .st-card:hover .st-card-logo {
   transform: rotate(0) scale(1.05);
 }
+/* with a logo: a straight white square, so any logo shows as it is */
+.st-card-logo.has-logo {
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 14px 24px -12px var(--strong), 0 0 0 1px var(--border);
+  transform: none;
+}
+.st-card:hover .st-card-logo.has-logo {
+  transform: scale(1.05);
+}
+/* a white logo (made for dark backgrounds) sits on the card's own dark color */
+.st-card-logo.has-logo.is-light {
+  background: var(--strong);
+}
+.st-card-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
 
 .st-card-body {
   display: flex;

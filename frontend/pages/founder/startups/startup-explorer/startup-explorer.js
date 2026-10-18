@@ -8,7 +8,7 @@ import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, initials, colorOf, detailsLink, descriptionOf, STAGES, REGIONS,
+  loadStartups, listOf, listText, label, colorOf, detailsLink, descriptionOf, nameOf, logoOf, logoHtml, STAGES, REGIONS,
 } from '../../../../shared/startups.js';
 
 const PAGE_SIZE = 12;   // four rows of three cards
@@ -37,7 +37,7 @@ function safe(text) {
 
 function matches(row, ignoreStage = false) {
   const words = search.value.trim().toLowerCase();
-  const searchable = [row.startup_name, row.startup_description, row.startup_description_ar, row.tags, row.products_services, listText(row, 'sector')]
+  const searchable = [row.startup_name, row.startup_name_ar, row.startup_description, row.startup_description_ar, row.tags, row.products_services, listText(row, 'sector')]
     .join(' ').toLowerCase();
 
   return (!words || searchable.includes(words))
@@ -107,7 +107,7 @@ function sectorChips(row) {
 }
 
 /* One card: a colored band with the funding stage and a big tilted square with
-   the initials, the name, what it does, the sector chips, and a footer with the
+   the logo (or the initials), the name, what it does, the sector chips, and a footer with the
    region and an arrow. The color is the startup's own (colorOf), so the details
    page opens in the same color. */
 function cardHtml(row, index) {
@@ -116,10 +116,10 @@ function cardHtml(row, index) {
     <a class="st-card color-${colorOf(row)} fade-up" style="--i: ${index}" href="${detailsLink(row.startup_id)}">
       <div class="st-card-band">
         ${stage ? `<span class="st-card-stage">${safe(stage)}</span>` : ''}
-        <span class="st-card-logo" aria-hidden="true">${safe(initials(row.startup_name))}</span>
+        <span class="st-card-logo ${logoOf(row) ? 'has-logo' : ''}" aria-hidden="true">${logoHtml(row)}</span>
       </div>
       <div class="st-card-body">
-        <h3 class="st-card-name">${safe(row.startup_name)}</h3>
+        <h3 class="st-card-name">${safe(nameOf(row))}</h3>
         <p class="st-card-about">${safe(descriptionOf(row) || t('startups.noDescription'))}</p>
         <div class="st-card-chips">${sectorChips(row)}</div>
       </div>

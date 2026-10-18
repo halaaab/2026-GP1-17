@@ -1,9 +1,11 @@
 <!doctype html>
 <!--
   INCUBATOR / ACCELERATOR DETAILS
-  One support program: who can apply, what it is, what it gives, funding,
+  One support program: who can apply, what it is, what it gives, its key facts
   and its official website. Opened from the explorer with ?id=<support_org_id>.
-  Visitors may open it too. The layout follows the Regulatory requirement page.
+  Visitors may open it too.
+  A colored head (the same color as the program's card), then two columns:
+  the sections on one side, a card with the key facts and the website on the other.
   The row comes from the support_organisations table (migration 0006), through ../programs.js.
 -->
 <html lang="en" dir="ltr">
@@ -24,7 +26,7 @@
 
     <!-- shown while the program loads -->
     <div class="detail-loading" id="loading">
-      <div class="skeleton detail-skeleton-title"></div>
+      <div class="skeleton detail-skeleton-hero"></div>
       <div class="skeleton detail-skeleton-line"></div>
       <div class="skeleton detail-skeleton-block"></div>
     </div>
@@ -38,58 +40,51 @@
     </div>
 
     <article class="detail" id="detail" hidden>
-      <header class="detail-head">
+      <!-- Head: logo, name, where it is, tags. The color class is set by the script. -->
+      <header class="detail-hero" id="detail-hero">
+        <span class="detail-hero-art" id="detail-art" aria-hidden="true"></span>
         <span class="detail-logo" id="detail-logo"></span>
         <div class="detail-title">
           <h2 id="detail-name"></h2>
-          <p class="detail-sub">
-            <span id="detail-place"></span>
-            <span class="detail-type" id="detail-type"></span>
-          </p>
+          <p class="detail-sub" id="detail-place"></p>
+          <div class="detail-tags" id="detail-tags"></div>
         </div>
-        <button type="button" class="btn btn-secondary detail-share" id="share"></button>
+        <button type="button" class="btn btn-secondary btn-sm detail-share" id="share"></button>
       </header>
 
-      <!-- key facts -->
-      <div class="detail-facts" id="facts"></div>
+      <div class="detail-layout">
+        <div class="detail-main">
+          <section class="detail-section" id="eligibility-section">
+            <h3 class="section-title" data-i18n="programs.eligibility"></h3>
+            <ul class="detail-applies" id="eligibility"></ul>
+          </section>
 
-      <section class="detail-section" id="eligibility-section">
-        <h3 class="section-title" data-i18n="programs.eligibility"></h3>
-        <ul class="detail-rows" id="eligibility"></ul>
-      </section>
+          <section class="detail-section">
+            <h3 class="section-title" data-i18n="programs.about"></h3>
+            <p class="detail-text" id="about"></p>
+          </section>
 
-      <section class="detail-section">
-        <h3 class="section-title" data-i18n="programs.about"></h3>
-        <p class="detail-text" id="about"></p>
-      </section>
+          <section class="detail-section" id="services-section">
+            <div class="detail-section-head">
+              <h3 class="section-title" data-i18n="programs.services"></h3>
+              <span class="detail-count" id="services-count"></span>
+            </div>
+            <ol class="detail-steps" id="services"></ol>
+          </section>
 
-      <section class="detail-section" id="services-section">
-        <h3 class="section-title" data-i18n="programs.services"></h3>
-        <ul class="detail-rows" id="services"></ul>
-      </section>
-
-      <section class="detail-section" id="funding-section">
-        <h3 class="section-title" data-i18n="programs.funding"></h3>
-        <p class="detail-text" id="funding"></p>
-      </section>
-
-      <section class="detail-section" id="website-section">
-        <h3 class="section-title" data-i18n="programs.website"></h3>
-        <div class="detail-source">
-          <span class="detail-source-logo" id="source-logo"></span>
-          <div class="detail-source-text">
-            <strong id="source-name"></strong>
-            <span id="source-url" dir="ltr"></span>
-          </div>
-          <a class="btn btn-primary btn-sm" id="website" target="_blank" rel="noopener"></a>
+          <section class="detail-section" id="similar-section">
+            <h3 class="section-title" data-i18n="programs.similar"></h3>
+            <div class="detail-similar-grid" id="similar"></div>
+          </section>
         </div>
-        <div class="detail-note" data-i18n="programs.verifyNote"></div>
-      </section>
 
-      <section class="detail-section detail-similar" id="similar-section">
-        <h3 class="section-title" data-i18n="programs.similar"></h3>
-        <div class="detail-similar-grid" id="similar"></div>
-      </section>
+        <!-- Key facts and the official website -->
+        <aside class="detail-side">
+          <div class="detail-facts" id="facts"></div>
+          <a class="btn detail-apply" id="website" target="_blank" rel="noopener"></a>
+          <div class="detail-note" id="note"></div>
+        </aside>
+      </div>
     </article>
   </main>
 

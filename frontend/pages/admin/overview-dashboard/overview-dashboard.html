@@ -6,7 +6,6 @@
     - the founder journey: where founders stop between signing up and opening a roadmap
     - score health: how the Founder Intelligence Scores are spread
     - activity rhythm: founder actions per day for the last 12 weeks
-    - demand vs coverage: what founders ask about, against the data Darb has for it
     - who is on Darb, data health (a to-do list for the admin) and the latest activity
   Everything is drawn by overview-dashboard.js; nothing here is sample data.
 -->
@@ -94,51 +93,24 @@
       </div>
     </section>
 
-    <div class="ov-row">
-      <!-- 5. Demand vs coverage -->
-      <section class="card ov-card ov-card-grow">
-        <div class="ov-card-head">
-          <div>
-            <h3 class="section-title" data-i18n="overview.coverage"></h3>
-            <p class="text-3" data-i18n="overview.coverageSub"></p>
-          </div>
+    <!-- 5. Who is on Darb -->
+    <section class="card ov-card ov-wide">
+      <div class="ov-card-head">
+        <div>
+          <h3 class="section-title" data-i18n="overview.people"></h3>
+          <p class="text-3" id="people-sub"></p>
         </div>
-        <div class="table-wrap">
-          <table class="table ov-coverage">
-            <thead>
-              <tr>
-                <th data-i18n="overview.sector"></th>
-                <th data-i18n="overview.demand"></th>
-                <th class="ov-num" data-i18n="overview.cStartups"></th>
-                <th class="ov-num" data-i18n="overview.cPrograms"></th>
-                <th class="ov-num" data-i18n="overview.cRules"></th>
-                <th data-i18n="overview.status"></th>
-              </tr>
-            </thead>
-            <tbody id="coverage"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- 6. Who is on Darb -->
-      <section class="card ov-card">
-        <div class="ov-card-head">
-          <div>
-            <h3 class="section-title" data-i18n="overview.people"></h3>
-            <p class="text-3" id="people-sub"></p>
-          </div>
-        </div>
-        <div class="segmented ov-tabs" id="people-tabs">
-          <button type="button" class="segmented-item is-active" data-group="type" data-i18n="overview.byType"></button>
-          <button type="button" class="segmented-item" data-group="region" data-i18n="overview.byRegion"></button>
-          <button type="button" class="segmented-item" data-group="locale" data-i18n="overview.byLanguage"></button>
-        </div>
-        <ul class="ov-bars" id="people"></ul>
-      </section>
-    </div>
+      </div>
+      <div class="segmented ov-tabs" id="people-tabs">
+        <button type="button" class="segmented-item is-active" data-group="type" data-i18n="overview.byType"></button>
+        <button type="button" class="segmented-item" data-group="region" data-i18n="overview.byRegion"></button>
+        <button type="button" class="segmented-item" data-group="locale" data-i18n="overview.byLanguage"></button>
+      </div>
+      <ul class="ov-bars" id="people"></ul>
+    </section>
 
     <div class="ov-row">
-      <!-- 7. Data health: what needs the admin -->
+      <!-- 6. Data health: what needs the admin -->
       <section class="card ov-card ov-card-grow">
         <div class="ov-card-head">
           <div>
@@ -150,7 +122,7 @@
         <ul class="ov-checks" id="health"></ul>
       </section>
 
-      <!-- 8. Latest activity -->
+      <!-- 7. Latest activity -->
       <section class="card ov-card">
         <div class="ov-card-head">
           <div>
@@ -170,6 +142,6 @@
 
   <script type="module" src="../../../shared/layout.js"></script>
   <script type="module" src="../../../shared/guard.js"></script>
-  <script type="module" src="overview-dashboard.js"></script>
+  <script type="module" src="overview-dashboard.js?v=2"></script>
 </body>
 </html>
