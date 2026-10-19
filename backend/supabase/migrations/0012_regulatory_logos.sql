@@ -30,5 +30,6 @@ update public.regulatory_requirements set authority_logo = case authority
   when 'Ministry of Commerce' then 'assets/images/authorities/mc.png'
   when 'Ministry of Commerce / Saudi Business Center' then 'assets/images/authorities/sbc.png'
   when 'Saudi Post (SPL)' then 'assets/images/authorities/spl.png'
-  else authority_logo   -- CST has no logo yet: its initials are shown
+  when 'Communications, Space and Technology Commission (CST)' then 'assets/images/authorities/cst.png'
+  else authority_logo
 end;
