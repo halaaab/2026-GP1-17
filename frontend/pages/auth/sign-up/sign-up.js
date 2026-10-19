@@ -242,7 +242,24 @@ function checkDetails() {
     if (!showError(control.name, problem)) allGood = false;
   });
 
+  // Darb is for founders located in Saudi Arabia
+  showNotInSaudi();
+  if (isOutsideSaudi()) allGood = false;
+
   return allGood;
+}
+
+// true when a country is chosen and it is not Saudi Arabia
+function isOutsideSaudi() {
+  const country = answerOf('country');
+  return country !== '' && country !== 'SA';
+}
+
+// The red box with an X under the country: shown while another country is chosen
+function showNotInSaudi() {
+  const outside = isOutsideSaudi();
+  document.querySelector('#not-in-saudi').hidden = !outside;
+  form.elements.country.classList.toggle('is-error', outside);
 }
 
 function checkStep(index) {
@@ -339,6 +356,8 @@ detailsStep.addEventListener('change', (event) => {
   if (name && answerOf(name) && document.querySelector(`[data-error-for="${name}"]`)) {
     showError(name, '');
   }
+  // say so the moment another country is chosen, not only on "Continue"
+  if (name === 'country') showNotInSaudi();
   updateDetails();
 });
 

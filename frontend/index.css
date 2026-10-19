@@ -17,7 +17,7 @@
     10. Report
     11. Explorers
     12. Trusted sources
-    13. About and map
+    13. About: phone and cards
     14. Call to action
     15. Tablet and phone
    ========================================================== */
@@ -186,7 +186,7 @@ html[dir="rtl"] .hero-photo {
 }
 html[dir="rtl"] .hero-title {
   font-size: clamp(36px, 4.8vw, 66px);
-  line-height: 1.3;
+  line-height: 1.2;
 }
 .hero-title .accent {
   color: var(--teal);
@@ -210,15 +210,13 @@ html[dir="rtl"] .hero-title {
   to   { transform: none; }
 }
 
-.hero-chip,
 .hero-lead,
-.hero-ticks {
+.hero-actions {
   animation: fade-up 0.8s var(--ease) both;
 }
 /* the words arrive after the haze has started to lift */
-.hero-chip    { animation-delay: 0.9s; }
 .hero-lead    { animation-delay: 1.5s; max-width: 540px; font-size: 17.5px; color: var(--text-nav); }
-.hero-ticks   { animation-delay: 1.9s; }
+.hero-actions { animation-delay: 1.9s; }
 
 /* The prompt box. The text inside is typed by index.js. */
 .composer {
@@ -281,9 +279,6 @@ html[dir="rtl"] .hero-title {
 /* index.js adds "is-sending" for a moment after each phrase is typed */
 .composer-send.is-sending {
   transform: translateY(-4px) scale(1.1);
-}
-.hero .hero-ticks {
-  justify-content: flex-start;
 }
 
 /* list with small check marks */
@@ -362,8 +357,76 @@ html[dir="rtl"] .hero-title {
   color: var(--navy);
   font-size: 10.5px;
 }
+/* each official source is shown by its logo */
+.marquee-track:has(.marquee-logo) {
+  align-items: center;
+  gap: 56px;
+  padding-inline-end: 56px;   /* the same space after the last logo, so the loop has no jump */
+}
+.marquee-logo {
+  flex-shrink: 0;
+  height: 40px;
+  width: auto;
+}
 @keyframes marquee {
   to { transform: translateX(-50%); }
+}
+
+/* "Supported by": one framed row. The words on one side, the supporters' logos
+   on the other, with a thin line between each logo. */
+.supporters {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px 48px;
+  margin-top: -64px;   /* sits close to the strip above it */
+  padding: 26px 36px;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--bg-subtle);
+}
+.supporters-label {
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+.supporters-logos {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 20px 0;
+}
+.supporters-logos img {
+  box-sizing: content-box;
+  height: 52px;
+  width: auto;
+  padding-inline: 40px;
+  border-inline-start: 1px solid var(--border-strong);
+}
+.supporters-logos img:first-child {
+  border-inline-start: none;
+}
+.supporters-logos img:last-child {
+  padding-inline-end: 0;
+}
+@media (max-width: 760px) {
+  .supporters {
+    flex-direction: column;
+    align-items: center;
+    margin-top: -32px;
+    padding: 24px 20px;
+  }
+  .supporters-logos {
+    justify-content: center;
+    gap: 20px 0;
+  }
+  .supporters-logos img,
+  .supporters-logos img:last-child {
+    height: 40px;
+    padding-inline: 18px;
+  }
 }
 
 /* ---------- 5. Feature blocks ---------- */
@@ -446,42 +509,197 @@ html[dir="rtl"] .link-arrow:hover svg {
 .lines span:first-child { width: 70%; background: var(--border-strong); }
 .lines span:last-child  { width: 45%; }
 
-/* ---------- 6. Chat preview ---------- */
+/* ---------- 6. Feature grid ----------
+   Six boxes in three columns. Each box is a small picture of the feature
+   (.feat-art) with its name and one sentence under it (.feat-text).
+   The pictures are built from white "plates" on a soft tinted background,
+   with small pieces (.float) that hover gently over them. */
 
-.chat-card {
+/* Extra colors for the landing page pictures. Navy and teal stay the main colors;
+   these four sit beside them. "-text" is dark enough to write with,
+   "-surface" is the pale version used behind a picture. */
+.landing {
+  --purple: #9275DF;  --purple-text: #5F45B5;  --purple-surface: #EDE7FB;
+  --coral:  #ED937B;  --coral-text:  #B9553A;  --coral-surface:  #FDEAE3;
+  --gold:   #E8B847;  --gold-text:   #8A6410;  --gold-surface:   #FCF2D6;
+  --mint:   #A9D7C4;  --mint-text:   #2C6E57;  --mint-surface:   #E0F2EA;
+  --teal-surface: #DDF0F2;
+  --navy-surface: #E7EEF5;
+}
+.chip-purple { background: var(--purple-surface); color: var(--purple-text); }
+.chip-coral  { background: var(--coral-surface);  color: var(--coral-text); }
+
+.features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: -56px;   /* sits closer to its title than a new section would */
+}
+.feat {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: var(--bg);
+  /* the box lifts a little under the mouse ("translate" is separate from the reveal movement) */
+  transition:
+    opacity 0.7s var(--ease),
+    transform 0.7s var(--ease),
+    translate 0.35s var(--ease),
+    box-shadow 0.35s var(--ease),
+    border-color 0.35s;
+  transition-delay: calc(var(--i, 0) * 90ms), calc(var(--i, 0) * 90ms), 0s, 0s, 0s;
+}
+.feat:hover {
+  translate: 0 -6px;
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-panel);
+}
+.feat-wide { grid-column: span 2; }
+.feat-full { grid-column: 1 / -1; }
+
+.feat-art {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 236px;
+  padding: 26px 22px;
+  overflow: hidden;
+  /* a soft pastel background: one color glows from the top corner (--c1),
+     another from the bottom corner (--c2) */
+  background:
+    radial-gradient(90% 80% at 85% 0%, var(--c1), transparent 62%),
+    radial-gradient(80% 90% at 0% 100%, var(--c2), transparent 60%),
+    var(--bg-subtle);
+}
+/* The two colors of a picture are always neighbours (teal with blue, purple with blue,
+   gold with peach), so they blend instead of clashing. */
+.feat-chat    { --c1: rgba(31, 142, 151, 0.22);  --c2: rgba(92, 143, 214, 0.18); }   /* teal and blue */
+.feat-score   { --c1: rgba(169, 215, 196, 0.60); --c2: rgba(31, 142, 151, 0.16); }   /* mint and teal */
+.feat-similar { --c1: rgba(146, 117, 223, 0.22); --c2: rgba(92, 143, 214, 0.18); }   /* purple and blue */
+.feat-market  { --c1: rgba(232, 184, 71, 0.26);  --c2: rgba(237, 147, 123, 0.16); }  /* gold and peach */
+.feat-road    { --c1: rgba(92, 143, 214, 0.20);  --c2: rgba(31, 142, 151, 0.18); }   /* blue and teal */
+.feat-report  { --c1: rgba(237, 147, 123, 0.22); --c2: rgba(232, 184, 71, 0.16); }   /* peach and gold */
+.feat-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 24px 24px;
+}
+.feat-text h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+}
+.feat-text p {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.features-note {
+  grid-column: 1 / -1;
+  margin: 0;
+  font-size: 12px;
+  text-align: center;
+  color: var(--text-3);
+}
+
+/* A small piece that hovers over the picture. --tilt turns it a little. */
+.float {
+  position: absolute;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  background: var(--bg);
   box-shadow: var(--shadow-float);
+  rotate: var(--tilt, 0deg);
+  animation: hover-up 5s ease-in-out infinite;
+}
+@keyframes hover-up {
+  50% { translate: 0 -7px; }
+}
+
+/* 1. Chat window */
+.feat-chat {
+  padding-block: 28px;
+}
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  width: min(440px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background: var(--bg);
+  box-shadow: var(--shadow-panel);
+  transition: rotate 0.5s var(--ease);
 }
 .chat-head {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--divider);
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
 }
 .chat-head div {
   display: flex;
   flex-direction: column;
-  line-height: 1.35;
   font-size: 13.5px;
+  line-height: 1.4;
 }
-.chat-head .text-3 {
-  font-size: 12px;
+.chat-head small {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.chat-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: linear-gradient(140deg, var(--teal), var(--navy));
+  color: #fff;
+}
+/* the Darb mark, turned white */
+.chat-avatar img {
+  width: 19px;
+  height: 19px;
+  filter: brightness(0) invert(1);
+}
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--good);
+  box-shadow: 0 0 0 3px var(--good-tint);
+  animation: blink 1.6s ease-in-out infinite;
+}
+@keyframes blink {
+  50% { opacity: 0.35; }
 }
 .chat-body {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  padding: 16px;
 }
+/* the messages arrive one after another once the box is on screen */
 .bubble {
   max-width: 84%;
   padding: 9px 13px;
   border-radius: 16px;
   font-size: 13.5px;
   line-height: 1.5;
-  /* messages arrive one after another once the card is on screen */
   opacity: 0;
   transform: translateY(10px) scale(0.97);
   transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
@@ -519,58 +737,43 @@ html[dir="rtl"] .link-arrow:hover svg {
 @keyframes typing {
   50% { opacity: 0.3; translate: 0 -3px; }
 }
-.chat-tools {
+.float-noted {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px 16px;
-  padding-top: 12px;
-  border-top: 1px solid var(--divider);
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
 }
-.chat-tools .eyebrow {
+.float .eyebrow {
   font-size: 10px;
 }
-.tool {
+.noted-row {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-nav);
+  justify-content: space-between;
+  gap: 14px;
 }
-.tool i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--teal);
-  animation: pulse-dot 1.6s ease-in-out infinite;
+.float-noted {
+  --tilt: 3deg;
+  inset-block-start: 26px;
+  inset-inline-end: 22px;
 }
-@keyframes pulse-dot {
-  50% { opacity: 0.3; }
-}
-
-/* ---------- 7. Score ---------- */
-
-.score-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.4fr);
-  gap: 16px;
-  margin-top: 40px;
-}
-.gauge-card {
+/* 2. Score: the gauge on a white plate, with what raised and lowered the score */
+.score-plate,
+.market-plate {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  text-align: center;
-}
-.gauge-card p {
-  margin: 0;
-  font-size: 12.5px;
+  gap: 10px;
+  padding: 22px 24px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
 }
 .gauge {
   position: relative;
-  width: min(240px, 100%);
+  width: 184px;
+  max-width: 100%;
 }
 .gauge svg {
   display: block;
@@ -580,199 +783,449 @@ html[dir="rtl"] .link-arrow:hover svg {
   position: absolute;
   inset-inline: 0;
   inset-block-end: -6px;
-  font-size: 58px;
+  font-size: 48px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.04em;
-  color: var(--good);
+  text-align: center;
+  color: var(--navy);
   font-variant-numeric: tabular-nums;
 }
-.gauge-scale {
-  display: flex;
-  justify-content: space-between;
-  width: min(240px, 100%);
-  font-size: 11.5px;
-  color: var(--text-3);
-}
-
-.wf-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 16px;
-  font-size: 15px;
-}
-.waterfall {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.wf-row {
-  display: grid;
-  grid-template-columns: 160px minmax(0, 1fr) 36px;
-  gap: 12px;
-  align-items: center;
-  font-size: 13px;
-  color: var(--text-2);
-}
-.wf-row-final {
-  padding-top: 12px;
-  border-top: 1px solid var(--divider);
-  color: var(--text);
-  font-weight: 800;
-}
-.wf-track {
-  position: relative;
-  height: 12px;
-  border-radius: var(--r-pill);
-  background: var(--bg-muted);
-}
-/* each bar grows from its start edge, one after another */
-.wf-bar {
-  position: absolute;
-  inset-block: 0;
-  border-radius: var(--r-pill);
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.9s var(--ease);
-  transition-delay: calc(0.3s + var(--i) * 0.16s);
-}
-html[dir="rtl"] .wf-bar {
-  transform-origin: right;
-}
-.is-visible .wf-bar {
-  transform: none;
-}
-.wf-base  { background: var(--border-strong); }
-.wf-up    { background: var(--good); }
-.wf-down  { background: var(--risk); }
-.wf-final { background: var(--good); }
-
-.wf-value {
-  font-weight: 700;
-  text-align: end;
-  direction: ltr;
-}
-.wf-value-up,
-.wf-value-final { color: var(--good-text); }
-.wf-value-down  { color: var(--risk-text); }
-
-.wf-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  margin-top: 16px;
-  font-size: 12px;
-  color: var(--text-2);
-}
-.wf-legend > span {
+.float-up,
+.float-down {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-}
-.wf-legend i {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-}
-
-.insights {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 16px;
-}
-.insight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.insight div {
-  display: flex;
-  flex-direction: column;
+  gap: 7px;
+  padding: 7px 11px;
+  border-radius: var(--r-pill);
   font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--text-nav);
 }
-.insight strong {
-  font-size: 14px;
+.float-up svg   { color: var(--good-text); }
+.float-down svg { color: var(--risk-text); }
+.float-up {
+  --tilt: -5deg;
+  inset-block-start: 22px;
+  inset-inline-start: 14px;
 }
-.insight-dot {
-  flex-shrink: 0;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.float-down {
+  --tilt: 4deg;
+  inset-block-end: 22px;
+  inset-inline-end: 14px;
+  animation-delay: -2.5s;
 }
-.insight-good { background: var(--good); box-shadow: 0 0 0 5px var(--good-tint); }
-.insight-risk { background: var(--risk); box-shadow: 0 0 0 5px var(--risk-tint); }
-.insight-info { background: var(--link-text); box-shadow: 0 0 0 5px var(--link-tint); }
 
-/* ---------- 8. Similar startups ---------- */
-
-.similar-stack {
+/* 3. Similar startups: three cards, the closest one in front */
+.feat-similar {
+  align-items: stretch;
+}
+.similar-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
-.similar-card {
+.similar-list li {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
-  box-shadow: var(--shadow-float);
-  /* cards slide in from the side, one after another */
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  /* the cards slide in from the side, one after another */
   opacity: 0;
-  transform: translateX(48px);
-  transition: opacity 0.7s var(--ease), transform 0.7s var(--ease);
-  transition-delay: calc(0.15s + var(--i) * 0.14s);
+  transform: translateX(36px);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+  transition-delay: calc(0.2s + var(--i) * 0.14s);
 }
-html[dir="rtl"] .similar-card {
-  transform: translateX(-48px);
+html[dir="rtl"] .similar-list li {
+  transform: translateX(-36px);
 }
-.is-visible .similar-card,
-html[dir="rtl"] .is-visible .similar-card {
+.is-visible .similar-list li,
+html[dir="rtl"] .is-visible .similar-list li {
   opacity: 1;
   transform: none;
 }
-/* each card steps a little further in */
-.similar-card:nth-child(2) { margin-inline-start: 28px; }
-.similar-card:nth-child(3) { margin-inline-start: 56px; }
-
-.similar-top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* the closest one is bigger; the others step back a little */
+.similar-list li:first-child {
+  box-shadow: var(--shadow-float);
 }
-.rank {
+.similar-list li:nth-child(2) { margin-inline: 10px; }
+.similar-list li:nth-child(3) { margin-inline: 20px; }
+.is-visible .similar-list li:nth-child(3) { opacity: 0.8; }
+.similar-list .chips {
+  width: 100%;
+}
+.similar-logo {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border-radius: 10px;
-  background: var(--navy);
+  width: 38px;
+  height: 38px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 11px;
   color: #fff;
+  font-size: 15px;
   font-weight: 800;
 }
-.similar-match {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
+/* a logo file, when there is one, covers the letter; the tile gets wider
+   so a logo made of a word (like Sary or Foodics) can still be read */
+.similar-logo {
+  position: relative;
 }
-.similar-match .bar {
+/* [class] makes this rule stronger than the colored tiles below, so a real logo
+   has no color, no letter and no box behind it */
+.similar-logo[class]:has(img) {
+  width: 92px;
+  height: 40px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: transparent;
+}
+.similar-logo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: var(--bg);
+}
+/* a real logo stands by itself, with no box around it */
+.similar-logo:has(img) img {
+  background: none;
+  object-position: center;
+}
+.similar-logo.is-1 { background: var(--purple); }
+.similar-logo.is-2 { background: var(--teal); }
+.similar-logo.is-3 { background: var(--navy); }
+.similar-logo.is-4 { background: var(--coral); }
+.similar-name {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+.similar-name small {
+  overflow: hidden;
+  font-size: 11.5px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--text-3);
+}
+.similar-match {
+  padding: 3px 8px;
+  border-radius: var(--r-pill);
+  background: var(--purple-surface);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--purple-text);
 }
 
-/* ---------- 9. Roadmap path ----------
+/* 4. Market: a small dashboard on a white plate.
+      Top: the activity and place. Then the main number with its change, and the employees.
+      Then two parts side by side: establishments by year, and the split by size.
+      The four sizes always use the same colors: navy, teal, purple, gold. */
+.feat-market {
+  padding: 22px;
+}
+.market-plate {
+  align-items: stretch;
+  gap: 12px;
+  width: min(540px, 100%);
+  padding: 14px 18px 12px;
+}
+.market-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+.market-top img {
+  width: auto;
+  height: 28px;
+}
+.market-where {
+  display: flex;
+  flex-direction: column;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text);
+}
+.market-where small {
+  font-size: 12px;
+  color: var(--text-2);
+}
+.market-main {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.market-figure {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-2);
+}
+.market-figure b {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+/* the employees: a supporting number, pushed to the far side */
+.market-figure.is-small {
+  margin-inline-start: auto;
+  padding-inline-start: 14px;
+  border-inline-start: 2px solid var(--gold);
+}
+.market-figure.is-small b {
+  font-size: 18px;
+}
+.market-change {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  margin-bottom: 4px;
+  padding: 4px 9px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.market-change b {
+  font-size: 12.5px;
+  color: var(--text);
+}
+.market-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 22px;
+}
+.market-part {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.market-part .eyebrow {
+  font-size: 10px;
+}
+/* one column per year, with the year under it */
+.columns {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  height: 74px;
+}
+.col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+.col b {
+  width: 100%;
+  height: calc(var(--h) * 0.78);
+  border-radius: 6px 6px 2px 2px;
+  background: rgba(31, 142, 151, 0.32);
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 0.8s var(--ease);
+}
+.col:last-child b { background: var(--teal); }
+.col:nth-child(2) b { transition-delay: 0.08s; }
+.col:nth-child(3) b { transition-delay: 0.16s; }
+.col:nth-child(4) b { transition-delay: 0.24s; }
+.col:nth-child(5) b { transition-delay: 0.32s; }
+.is-visible .col b {
+  transform: none;
+}
+.col i {
+  font-size: 10.5px;
+  font-style: normal;
+  color: var(--text-3);
+}
+.col:last-child i {
+  font-weight: 800;
+  color: var(--text);
+}
+/* one bar cut into the four sizes; together they are 100% */
+.size-strip {
+  display: flex;
+  gap: 2px;
+  height: 12px;
+}
+.size-strip span {
+  flex: var(--w);
+  min-width: 5px;
+  border-radius: 3px;
+}
+.size-names {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 5px 16px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.size-names > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.size-names i {
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+}
+.size-names b {
+  margin-inline-start: auto;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.size-strip span:nth-child(1), .size-names > span:nth-child(1) i { background: var(--navy); }
+.size-strip span:nth-child(2), .size-names > span:nth-child(2) i { background: var(--teal); }
+.size-strip span:nth-child(3), .size-names > span:nth-child(3) i { background: var(--purple); }
+.size-strip span:nth-child(4), .size-names > span:nth-child(4) i { background: var(--gold); }
+.market-source {
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* 5. Report: two pages that straighten when the box is hovered, and a download button */
+.report-stack {
+  position: relative;
+}
+.report-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  width: 150px;
+  padding: 18px 16px 44px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+  rotate: -4deg;
+  transition: rotate 0.5s var(--ease), translate 0.5s var(--ease);
+}
+.report-back {
+  position: absolute;
+  inset: 0;
+  rotate: 7deg;
+  translate: 22px 4px;
+  opacity: 0.75;
+}
+.feat:hover .report-page {
+  rotate: -1deg;
+  translate: 0 -4px;
+}
+.feat:hover .report-back {
+  rotate: 10deg;
+  translate: 34px 2px;
+}
+.report-arc {
+  width: 74px;
+  margin: 0 auto 4px;
+}
+.report-page span {
+  height: 7px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+}
+.report-page span:nth-of-type(1) { width: 60%; background: var(--navy); }
+.report-page span:nth-of-type(2) { background: var(--gold-surface); }
+.report-page span:nth-of-type(3) { width: 80%; background: var(--purple-surface); }
+.report-page span:nth-of-type(4) { width: 50%; background: var(--teal-surface); }
+.report-page b {
+  position: absolute;
+  inset-block-end: 12px;
+  inset-inline-start: 16px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--navy);
+  color: #fff;
+  font-size: 10.5px;
+}
+.report-inside {
+  --tilt: 3deg;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  inset-block-start: 22px;
+  inset-inline-end: 14px;
+  padding: 12px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-nav);
+  animation-delay: -2.5s;
+}
+.report-inside > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.report-inside svg {
+  padding: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  color: #fff;
+}
+/* each part of the report has the color of its own box above */
+.report-inside .is-1 svg { background: var(--mint-text); }   /* score */
+.report-inside .is-2 svg { background: var(--gold); }        /* market */
+.report-inside .is-3 svg { background: var(--purple); }      /* similar startups */
+.report-inside .is-4 svg { background: var(--teal); }        /* roadmap */
+.feat-report {
+  align-items: flex-start;
+  padding-inline-start: 34px;
+}
+.report-download {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inset-block-end: -14px;
+  inset-inline-end: -30px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  box-shadow: var(--shadow-brand);
+}
+
+/* 6. Roadmap path
    A line runs through the five steps and fills as you scroll.
    index.js sets --progress (0 to 1) on .road and adds "is-on"
    to each step the line has reached. */
-
+.feat-road {
+  padding: 28px 18px;
+}
 .road {
   position: relative;
-  margin-top: 48px;
+  width: 100%;
 }
 .road-line {
   position: absolute;
@@ -780,7 +1233,7 @@ html[dir="rtl"] .is-visible .similar-card {
   inset-inline: 10%;
   height: 3px;
   border-radius: var(--r-pill);
-  background: var(--border);
+  background: var(--border-strong);
 }
 .road-fill {
   position: relative;
@@ -792,7 +1245,7 @@ html[dir="rtl"] .is-visible .similar-card {
 html[dir="rtl"] .road-fill {
   background: linear-gradient(270deg, var(--teal), var(--navy));
 }
-/* the glowing dot travelling at the head of the line */
+/* the dot travelling at the head of the line */
 .road-fill::after {
   content: '';
   position: absolute;
@@ -805,12 +1258,11 @@ html[dir="rtl"] .road-fill {
   background: var(--navy);
   box-shadow: 0 0 0 5px rgba(31, 142, 151, 0.25);
 }
-
 .road-steps {
   position: relative;
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 14px;
+  gap: 10px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -834,94 +1286,62 @@ html[dir="rtl"] .road-fill {
   color: var(--text-3);
   font-size: 14px;
   font-weight: 800;
-  transition:
-    background 0.4s,
-    border-color 0.4s,
-    color 0.4s,
-    transform 0.4s var(--ease);
+  transition: background 0.4s, border-color 0.4s, color 0.4s, scale 0.4s var(--ease);
 }
+/* each step is a white card with the authority's logo */
 .road-card {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  align-items: center;
+  gap: 3px;
   width: 100%;
+  padding: 16px 10px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  background: var(--bg);
   font-size: 14px;
-  opacity: 0.45;
-  transform: translateY(8px);
-  transition: opacity 0.5s, transform 0.5s var(--ease), box-shadow 0.5s;
+  opacity: 0.5;
+  translate: 0 8px;
+  transition: opacity 0.5s, translate 0.5s var(--ease), box-shadow 0.5s;
+}
+.road-card img {
+  width: auto;
+  height: 30px;
+  margin-bottom: 8px;
+  filter: grayscale(1);
+  transition: filter 0.5s;
+}
+.road-card strong {
+  font-size: 13px;
+  line-height: 1.35;
 }
 .road-card .text-3 {
-  font-size: 12px;
+  font-size: 11.5px;
 }
+/* a step the line has passed: teal */
 .road-step.is-on .road-dot {
-  border-color: var(--navy);
-  background: var(--navy);
+  border-color: var(--teal);
+  background: var(--teal);
   color: #fff;
-  transform: scale(1.1);
 }
 .road-step.is-on .road-card {
   opacity: 1;
-  transform: none;
+  translate: 0 0;
+  box-shadow: var(--shadow-card);
+}
+/* the step the line is on now: navy, a little bigger, with a ring */
+.road-step.is-current .road-dot {
+  border-color: var(--navy);
+  background: var(--navy);
+  scale: 1.12;
+  box-shadow: 0 0 0 5px rgba(27, 68, 103, 0.16);
+}
+.road-step.is-current .road-card {
+  border-color: var(--navy);
   box-shadow: var(--shadow-float);
 }
-
-/* ---------- 10. Report ---------- */
-
-.report {
-  display: grid;
-  grid-template-columns: 200px minmax(0, 1fr);
-  gap: 40px;
-  align-items: center;
-  padding: 36px 40px;
-  border-radius: 24px;
-  background: var(--bg-subtle);
-  box-shadow: none;
-}
-.report-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
-}
-.report-art {
-  display: flex;
-  justify-content: center;
-}
-.report-page {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 150px;
-  padding: 24px 18px 44px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg);
-  box-shadow: var(--shadow-float);
-  rotate: -4deg;
-  transition: rotate 0.5s var(--ease), translate 0.5s var(--ease);
-}
-.report:hover .report-page {
-  rotate: 0deg;
-  translate: 0 -6px;
-}
-.report-page span {
-  height: 8px;
-  border-radius: var(--r-pill);
-  background: var(--bg-muted);
-}
-.report-page span:nth-child(1) { width: 60%; background: var(--navy); }
-.report-page span:nth-child(3) { width: 80%; }
-.report-page span:nth-child(4) { width: 50%; }
-.report-page b {
-  position: absolute;
-  inset-block-end: 12px;
-  inset-inline-start: 18px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: var(--risk);
-  color: #fff;
-  font-size: 10.5px;
+.road-step.is-on .road-card img {
+  filter: none;
 }
 
 /* ---------- 11. Explorers ----------
@@ -1098,6 +1518,31 @@ html[dir="rtl"] .x-timer {
 .mock-tile {
   gap: 12px;
 }
+/* a startup's logo beside its name */
+.mock-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.program-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+/* the authority's logo at the start of a requirement row */
+.req-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 56px;
+  height: 36px;
+}
+.req-logo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
 
 .programs {
   display: flex;
@@ -1112,17 +1557,6 @@ html[dir="rtl"] .x-timer {
 }
 .program-card:nth-child(2) { margin-inline-start: 40px; }
 .program-card:nth-child(3) { margin-inline-start: 16px; }
-.program-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  background: var(--navy);
-  color: #fff;
-}
 .program-text {
   display: flex;
   flex-direction: column;
@@ -1150,17 +1584,6 @@ html[dir="rtl"] .x-timer {
 }
 .req-row:last-child {
   border-bottom: none;
-}
-.req-abbr {
-  flex-shrink: 0;
-  min-width: 52px;
-  padding: 4px 6px;
-  border-radius: 8px;
-  background: var(--navy-tint);
-  color: var(--navy);
-  font-size: 10.5px;
-  font-weight: 800;
-  text-align: center;
 }
 .req-text {
   display: flex;
@@ -1225,68 +1648,443 @@ html[dir="rtl"] .x-timer {
   font-weight: 800;
 }
 
-/* ---------- 13. About and map ---------- */
+/* ---------- 13. About: the words on one side, a real phone photo on the other ----------
+   The words come first, so in Arabic they are on the right and the phone on the left. */
 
-.values {
+.about {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  width: 100%;
-  font-size: 12.5px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
 }
-.values strong {
-  font-size: 13.5px;
+.about-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+.about-text .eyebrow {
+  color: var(--teal-text);
+}
+/* the two paragraphs: the same width, even line lengths, a small gap between them */
+.about-text .lead {
+  max-width: 560px;
+  text-wrap: pretty;
+}
+.about-text .lead + .lead {
+  margin-top: -6px;
+}
+/* the three things Darb is built on: an icon, a title and one line each */
+.about-points {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+  margin: 12px 0 4px;
+  padding: 0;
+  list-style: none;
+}
+.about-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.about-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+}
+.about-point.is-1 .about-icon { background: var(--teal-surface);   color: var(--teal-text); }
+.about-point.is-2 .about-icon { background: var(--purple-surface); color: var(--purple-text); }
+.about-point.is-3 .about-icon { background: var(--navy-surface);   color: var(--navy); }
+.about-words {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.about-words strong {
+  font-size: 15.5px;
+  color: var(--text);
 }
 
-.map-wrap {
+.about-stage {
   position: relative;
-  padding: 12px;
+  display: flex;
+  justify-content: center;
 }
-.map-inner {
-  position: relative;
-}
-.map-svg {
-  display: block;
-  overflow: visible;
-}
-/* the dashed routes between cities keep flowing toward Riyadh */
-.map-routes path {
-  animation: route-flow 2.4s linear infinite;
-}
-@keyframes route-flow {
-  to { stroke-dashoffset: -20; }
-}
-.map-pin {
+/* soft color behind the hand */
+.about-rings {
   position: absolute;
-  width: 14px;
-  height: 14px;
-  margin: -7px;
-  border: 3px solid #fff;
+  inset: 4% 8%;
   border-radius: 50%;
-  background: var(--navy);
-  animation: ping 2.4s ease-out infinite;
-  animation-delay: calc(var(--i) * 0.35s);
+  background:
+    radial-gradient(closest-side, rgba(92, 143, 214, 0.20), transparent 72%),
+    radial-gradient(closest-side at 35% 62%, rgba(31, 142, 151, 0.20), transparent 72%);
 }
-@keyframes ping {
-  from { box-shadow: 0 0 0 0 rgba(27, 68, 103, 0.4); }
-  to   { box-shadow: 0 0 0 14px rgba(27, 68, 103, 0); }
+
+/* The phone is a real photo. Its blank screen starts 33.1% from the left and 8.9% from
+   the top of the picture, and is 35.9% wide and 77.5% tall; .phone-screen sits exactly there.
+   "multiply" makes the photo's white background see-through, so the soft color shows behind the hand. */
+.hand {
+  position: relative;
+  width: min(560px, 100%);
+  aspect-ratio: 1;
 }
-.map-label {
+.hand-photo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  mix-blend-mode: multiply;
+  /* the wrist fades out at the bottom instead of ending in a straight cut */
+  -webkit-mask-image: linear-gradient(#000 80%, transparent 99%);
+  mask-image: linear-gradient(#000 80%, transparent 99%);
+}
+.phone-screen {
   position: absolute;
-  padding: 3px 10px;
+  top: 8.75%;
+  left: 32.95%;             /* left, not "inline-start": the photo is the same in Arabic */
+  width: 35.9%;
+  height: 77.5%;
+  overflow: hidden;
+  border-radius: 9% / 4.1%;   /* the same round corners as the phone's glass, at any size */
+  background: var(--bg);
+}
+/* The notch at the top of the phone, drawn again over the white screen
+   (the screen covers the one in the photo). */
+.phone-screen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 24.6%;
+  width: 56%;
+  height: 4.2%;
+  border-radius: 0 0 22% 22% / 0 0 70% 70%;
+  background: #0A0A0C;
+  z-index: 2;
+}
+
+/* The assessment page inside the phone. It is built 360px wide, like on a real phone,
+   then shrunk to the width of the photo's screen. index.js measures the photo and sets
+   --fit (for example 0.55), so it always fits, whatever the size of the window. */
+.phone-app {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  width: 360px;
+  padding: 0 18px;
+  background: linear-gradient(180deg, #F3F7FA 0, var(--bg) 260px);
+  transform: scale(var(--fit, 0.55));
+  transform-origin: 0 0;
+}
+/* status bar: the time left of the notch, the icons right of it (like a real iPhone) */
+.app-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 38px;
+  padding: 2px 8px 0 24px;
+  color: var(--text);
+}
+.app-time {
+  font-family: -apple-system, 'SF Pro Text', var(--font-ui);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.app-status-icons {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  fill: currentColor;
+  scale: 0.68;
+  transform-origin: right center;
+}
+.app-battery {
+  position: relative;
+  width: 24px;
+  height: 11.5px;
+  padding: 1.5px;
+  border: 1.2px solid rgba(15, 36, 56, 0.45);
+  border-radius: 3.5px;
+}
+.app-battery::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: -3.5px;
+  width: 1.8px;
+  height: 4px;
+  border-radius: 0 1px 1px 0;
+  background: rgba(15, 36, 56, 0.45);
+}
+.app-battery i {
+  display: block;
+  width: 78%;
+  height: 100%;
+  border-radius: 1.5px;
+  background: var(--text);
+}
+/* the app's top bar */
+.app-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 10px 0 18px;
+}
+.app-round {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
   border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+html[dir="rtl"] .app-round:first-child svg {
+  transform: scaleX(-1);
+}
+.app-bar-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15.5px;
+}
+.app-bar-title img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.app-title {
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+.app-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.app-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
   border-radius: var(--r-pill);
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--bg-muted);
   font-size: 12px;
   font-weight: 700;
-  white-space: nowrap;
+  color: var(--text-nav);
 }
-.map-badge {
+.app-chip.is-teal { background: var(--teal-tint); color: var(--teal-text); }
+.app-chip.is-live { background: var(--good-tint); color: var(--good-text); }
+.app-chip.is-live i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--good);
+}
+/* the home bar at the bottom of the screen */
+.app-home {
   position: absolute;
-  inset-block-end: 0;
-  right: 12px;
-  padding: 6px 12px;
+  inset-block-end: 1.6%;
+  left: 50%;
+  width: 36%;
+  height: 0.9%;
+  min-height: 3px;
+  translate: -50% 0;
+  border-radius: var(--r-pill);
+  background: var(--text);
+}
+/* light falling across the glass */
+.phone-glass {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(125deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 30%),
+              linear-gradient(180deg, transparent 88%, rgba(255, 255, 255, 0.9) 100%);
+  pointer-events: none;
+}
+.app-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+  padding: 4px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+  font-size: 12.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--text-3);
+}
+.app-tabs span {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  border-radius: var(--r-pill);
+}
+/* the last tabs fade out, as if the row scrolls on */
+.app-tabs {
+  -webkit-mask-image: linear-gradient(to left, #000 72%, transparent 98%);
+  mask-image: linear-gradient(to left, #000 72%, transparent 98%);
+}
+html[dir="ltr"] .app-tabs {
+  -webkit-mask-image: linear-gradient(to right, #000 72%, transparent 98%);
+  mask-image: linear-gradient(to right, #000 72%, transparent 98%);
+}
+.app-tabs .is-active {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+}
+/* the blue box with the dial, the same as on the assessment page */
+.app-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 18px;
+  padding: 24px 18px 56px;
+  border-radius: var(--r-lg);
+  background: var(--gradient-brand);
+  color: #fff;
+  text-align: center;
+}
+.app-dial {
+  position: relative;
+  width: 210px;
+}
+.app-dial svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.app-number {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -4px;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  margin: 0;
+}
+.app-number strong {
+  font-size: 60px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+.app-number span {
   font-size: 12px;
+  font-weight: 700;
+  opacity: 0.7;
+}
+.app-label {
+  margin-top: 16px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: var(--teal-bright);
+}
+.app-verdict {
+  margin-top: 2px;
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+/* three small boxes that sit over the bottom edge of the blue box */
+.app-readings {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: -40px;
+  padding-inline: 10px;
+}
+.app-reading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+}
+.app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin-bottom: 6px;
+  border-radius: 9px;
+  background: var(--good-tint);
+  color: var(--good-text);
+}
+.app-reading small {
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-3);
+}
+.app-reading strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--good-text);
+}
+.app-box {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+}
+.app-box-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.app-box-title svg {
+  color: var(--good);
+}
+.app-move {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.app-move i {
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+}
+.app-move b {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--good);
+}
+.app-move em {
+  font-style: normal;
+  font-weight: 800;
+  text-align: end;
+  color: var(--good-text);
 }
 
 /* ---------- 14. Call to action ---------- */
@@ -1359,7 +2157,7 @@ html[dir="rtl"] .landing .hero-lead {
 html[dir="rtl"] .landing :is(.eyebrow, .chip, .tag, .pill) {
   letter-spacing: 0;
 }
-html[dir="rtl"] .landing :is(.bubble, .road-card, .source div, .values) {
+html[dir="rtl"] .landing :is(.bubble, .road-card, .source div, .about-words) {
   line-height: 1.8;
 }
 html[dir="rtl"] .landing .composer-text {
@@ -1376,16 +2174,12 @@ html[dir="rtl"] .landing .marquee-item b {
 
 /* Landing presentation: clear actions, quieter previews and section rhythm. */
 .hero {
-  min-height: 800px;
-  padding-block: 148px 80px;
+  min-height: 720px;
+  padding-block: 156px 80px;
 }
 .hero-text {
-  gap: 24px;
+  gap: 22px;
   max-width: 650px;
-}
-.hero-chip {
-  padding: 8px 14px;
-  border: 1px solid var(--teal-tint);
 }
 .hero-actions {
   display: flex;
@@ -1426,11 +2220,6 @@ html[dir="rtl"] .landing .composer-text {
   font-size: 15px;
   line-height: 1.7;
 }
-.landing .hero-ticks {
-  gap: 12px 20px;
-  font-size: 12px;
-  color: var(--text-nav);
-}
 .landing .section-head {
   gap: 18px;
 }
@@ -1439,22 +2228,6 @@ html[dir="rtl"] .landing .composer-text {
 }
 .section-head > .lead {
   max-width: 650px;
-}
-.landing .chat-card,
-.landing .gauge-card {
-  background: linear-gradient(150deg, var(--bg), var(--bg-subtle));
-  border-color: var(--border);
-  border-radius: 24px;
-  padding: 28px;
-}
-.landing .score-grid > .card {
-  border-radius: 24px;
-  padding: 28px;
-}
-.landing .insight {
-  background: var(--bg-subtle);
-  border-color: transparent;
-  box-shadow: none;
 }
 .landing .source {
   min-height: 88px;
@@ -1481,22 +2254,38 @@ html[dir="rtl"] .landing .composer-text {
    Bigger headings and darker text so the page reads with confidence,
    and real names in the preview cards. */
 
-.landing .headline-lg { font-size: clamp(32px, 4.8vw, 56px); }
-.landing .headline-md { font-size: clamp(27px, 3.4vw, 42px); }
+/* Calmer heading sizes: clear, but not shouting */
+.landing .headline-lg { font-size: clamp(26px, 3vw, 38px); }
+.landing .headline-md { font-size: clamp(22px, 2.3vw, 28px); }
 .landing .lead {
-  font-size: 17.5px;
+  font-size: 16px;
   color: var(--text-nav);
 }
 /* wide enough for each headline line to stay on one line */
 .landing .hero-text {
-  max-width: 780px;
+  max-width: 680px;
 }
 .landing .hero-title {
-  font-size: clamp(40px, 5.2vw, 74px);
+  font-size: clamp(34px, 4.2vw, 56px);
+}
+/* In Arabic the headline is short ("لكل فكرة دَرب."), so it sits on ONE line
+   (the space between the two words comes from the space in index.html) */
+html[dir="rtl"] .landing .hero-title .line {
+  display: inline-block;
+}
+html[dir="rtl"] .landing .hero-title {
+  font-size: clamp(34px, 4.2vw, 60px);
+  line-height: 1.3;
 }
 .landing .hero-lead {
-  max-width: 560px;
-  font-size: 19px;
+  max-width: 520px;
+  font-size: 17px;
+}
+.landing .x-title {
+  font-size: clamp(18px, 1.9vw, 22px);
+}
+.landing .cta .headline {
+  font-size: clamp(24px, 2.8vw, 34px);
 }
 
 /* a real name and one line about it, where the grey bars used to be */
@@ -1529,7 +2318,7 @@ html[dir="rtl"] .landing .composer-text {
 
 @media (max-width: 1000px) {
   .landing .hero-lead {
-    font-size: 17px;
+    font-size: 16px;
   }
 }
 
@@ -1601,11 +2390,16 @@ html[dir="rtl"] .landing .composer-text {
   }
 
   /* everything that was side by side becomes one column */
-  .split,
-  .score-grid,
-  .report {
+  .split {
     grid-template-columns: minmax(0, 1fr);
     gap: 32px;
+  }
+  /* the feature grid goes down to two columns; the last box (the report) fills its row */
+  .features {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .features .feat:last-of-type {
+    grid-column: 1 / -1;
   }
   /* text always comes before its picture */
   .split-reverse .split-text {
@@ -1614,6 +2408,12 @@ html[dir="rtl"] .landing .composer-text {
 
   .sources-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  /* About: the words first, then the phone under them */
+  .about {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
   }
 
   /* roadmap: the path runs down the side instead of across */
@@ -1646,12 +2446,19 @@ html[dir="rtl"] .landing .composer-text {
     flex-direction: row;
     text-align: start;
   }
+  .road-card {
+    align-items: flex-start;
+    padding: 12px 14px;
+  }
   .road-dot {
     flex-shrink: 0;
   }
 }
 
 @media (max-width: 640px) {
+  .hand {
+    width: min(360px, 100%);
+  }
   .hero-text {
     gap: 20px;
   }
@@ -1665,11 +2472,6 @@ html[dir="rtl"] .landing .composer-text {
   }
   .landing .composer {
     padding: 16px 18px;
-  }
-  .landing .score-grid > .card,
-  .landing .chat-card {
-    padding: 20px;
-    border-radius: 20px;
   }
   .landing {
     gap: 64px;
@@ -1692,25 +2494,34 @@ html[dir="rtl"] .landing .composer-text {
     text-align: center;
   }
 
-  .wf-row {
-    grid-template-columns: 104px minmax(0, 1fr) 32px;
-    gap: 8px;
-    font-size: 12px;
+  /* the feature grid becomes one column */
+  .features {
+    grid-template-columns: minmax(0, 1fr);
+    margin-top: -24px;
   }
-
-  .insights,
-  .values {
+  .feat-wide {
+    grid-column: auto;
+  }
+  /* on a phone the small pieces sit under the chat instead of over it */
+  .feat-chat .float {
+    position: static;
+    width: 100%;
+    rotate: none;
+    animation: none;
+  }
+  /* the market dashboard: its two parts go one under the other */
+  .feat-market {
+    padding: 16px;
+  }
+  .market-body {
     grid-template-columns: minmax(0, 1fr);
   }
+  .market-figure.is-small {
+    margin-inline-start: 0;
+  }
+
   .sources-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .report {
-    padding: 28px 18px;
-  }
-  .map-label {
-    font-size: 10.5px;
-    padding: 2px 7px;
   }
   .cta {
     padding: 48px 18px;
@@ -1719,7 +2530,6 @@ html[dir="rtl"] .landing .composer-text {
     width: 100%;
   }
 
-  .similar-card:nth-child(n),
   .program-card:nth-child(n) {
     margin-inline-start: 0;
   }
@@ -1736,10 +2546,14 @@ html[dir="rtl"] .landing .composer-text {
 @media (prefers-reduced-motion: reduce) {
   [data-reveal],
   .bubble,
-  .similar-card,
-  .wf-bar {
+  .similar-list li,
+  .col b {
     opacity: 1;
     transform: none;
+  }
+  .float,
+  .live-dot {
+    animation: none;
   }
   .hero-haze {
     display: none;
@@ -1748,4 +2562,69 @@ html[dir="rtl"] .landing .composer-text {
     display: none;
   }
 
+}
+
+/* ---------- Logos in the trusted sources grid ----------
+   A wall of tiles, five across. Each tile: the authority's logo centered in a box
+   of the same height (so wide and tall logos line up), then its name and what
+   Darb uses it for. */
+.landing .sources-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  max-width: 900px;       /* a compact block in the middle of the page */
+  margin-inline: auto;
+}
+.landing .source {
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  min-height: 0;
+  padding: 16px 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  text-align: center;
+  transition: border-color var(--dur), box-shadow var(--dur), transform var(--dur) var(--ease);
+}
+.landing .source:hover {
+  border-color: var(--border-strong);
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+/* the box every logo sits in */
+.source-logo {
+  width: 78%;   /* a little air on both sides of the widest logos */
+  height: 36px;
+  object-fit: contain;
+  object-position: center;
+}
+.landing .source div {
+  align-items: center;
+  gap: 1px;
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.landing .source .text-3 {
+  font-size: 11px;
+}
+@media (max-width: 1000px) {
+  .landing .sources-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .landing .sources-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .landing .source {
+    padding: 14px 8px 12px;
+  }
+  .source-logo {
+    height: 32px;
+  }
+  .marquee-logo {
+    height: 32px;
+  }
 }

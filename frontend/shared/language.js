@@ -60,7 +60,9 @@ export function translatePage(root = document) {
 /* Switches the whole page to 'en' or 'ar' and remembers the choice */
 export async function setLanguage(language) {
   const file = new URL(`../translations/${language}.json`, import.meta.url);
-  const response = await fetch(file);
+  // 'no-cache' = always check with the server for a newer file, so new words show up
+  // straight away instead of an old saved copy
+  const response = await fetch(file, { cache: 'no-cache' });
   words = await response.json();
 
   currentLanguage = language;

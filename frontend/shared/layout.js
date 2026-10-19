@@ -360,10 +360,10 @@ function setUpSidebarToggle() {
 
 // The landing page links jump to sections of the landing page itself
 const PUBLIC_LINKS = [
+  { label: 'nav.about',          section: 'about' },
   { label: 'nav.features',       section: 'features' },
   { label: 'nav.exploreSection', section: 'explore' },
   { label: 'nav.sources',        section: 'sources' },
-  { label: 'nav.about',          section: 'about' },
 ];
 
 function publicLinks() {

@@ -39,6 +39,7 @@ function errorKey(error) {
   if (message.includes('already registered'))        return 'error.emailTaken';
   if (message.includes('email not confirmed'))       return 'error.notConfirmed';
   if (message.includes('rate limit') || error?.status === 429) return 'error.tooMany';
+  if (message.includes('totp') || message.includes('mfa')) return 'error.code';
   if (message.includes('security purposes'))         return 'error.tooMany';
   if (message.includes('different from the old'))     return 'error.samePassword';
   if (message.includes('password'))                  return 'error.password';
@@ -238,45 +239,57 @@ export async function updatePassword(newPassword) {
 }
 
 /* ---------- Two-step sign-in for admins ----------
-   After the password, Darb emails the admin a 6-digit code and the admin
-   types it in. Supabase calls this an "email OTP" (one-time password). */
-
-/* How this browser signed in, read from the session: 'password', 'otp', 'oauth'... */
-async function signInMethods() {
-  const { data } = await supabase.auth.getSession();
-  if (!data.session) return [];
-
-  // the session token has three parts joined by dots; the middle one holds the details
-  const middle = data.session.access_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/');
-  const details = JSON.parse(atob(middle));
-  return (details.amr || []).map((entry) => entry.method);
-}
+   After the password, an admin enters a 6-digit code from an authenticator app
+   on their phone (Google Authenticator, Microsoft Authenticator...).
+   Supabase calls this "MFA" with a "TOTP factor". */
 
 /* Where the signed-in admin stands:
-     'done'  the emailed code was entered in this session
-     'code'  only the password so far; a code is still needed */
+     'done'   the code was entered in this session
+     'code'   the phone is set up; ask for a code
+     'setup'  no phone set up yet; show the QR code */
 export async function getSecondStep() {
-  const methods = await signInMethods();
-  return methods.includes('otp') || methods.includes('magiclink') ? 'done' : 'code';
+  const level = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (level.data && level.data.currentLevel === 'aal2') {
+    return 'done';
+  }
+
+  const factors = await supabase.auth.mfa.listFactors();
+  const phoneIsSetUp = factors.data && factors.data.totp.length > 0;
+  return phoneIsSetUp ? 'code' : 'setup';
 }
 
-/* Emails a new 6-digit code. Supabase allows one email per minute for each address. */
-export async function sendEmailCode(email) {
-  const { error } = await supabase.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: false },   // never creates an account
-  });
+/* Starts the one-time setup. Returns the QR code to scan and the same key as text. */
+export async function startAuthenticatorSetup() {
+  // throw away setups that were started earlier but never finished
+  const factors = await supabase.auth.mfa.listFactors();
+  const unfinished = (factors.data ? factors.data.all : []).filter((factor) => factor.status !== 'verified');
+  for (const factor of unfinished) {
+    await supabase.auth.mfa.unenroll({ factorId: factor.id });
+  }
 
+  const { data, error } = await supabase.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Darb admin' });
   if (error) {
     console.error('Supabase said:', error.status, error.message);
-    return { ok: false, error: error.status === 429 ? 'error.codeWait' : 'error.codeNotSent' };
+    return { ok: false, error: 'error.twoStepOff' };
   }
-  return { ok: true };
+
+  return { ok: true, factorId: data.id, qrCode: data.totp.qr_code, key: data.totp.secret };
 }
 
-/* Checks the 6-digit code from the email */
-export async function checkCode(email, code) {
-  const { error } = await supabase.auth.verifyOtp({ email, token: code, type: 'email' });
+/* Checks a 6-digit code. Pass the factorId from startAuthenticatorSetup during setup;
+   leave it out at a normal sign-in and the admin's phone is looked up. */
+export async function checkCode(code, factorId) {
+  let id = factorId;
+
+  if (!id) {
+    const factors = await supabase.auth.mfa.listFactors();
+    id = factors.data && factors.data.totp[0] ? factors.data.totp[0].id : null;
+  }
+  if (!id) {
+    return { ok: false, error: 'error.twoStepOff' };
+  }
+
+  const { error } = await supabase.auth.mfa.challengeAndVerify({ factorId: id, code });
   if (error) {
     return { ok: false, error: 'error.code' };
   }
@@ -311,7 +324,7 @@ export async function getAccount() {
   const user = data.user;
 
   // Is this an admin? After migration 0003 the admins table can only be read once the
-  // second step (the emailed code) is passed, so we first ask a small database function
+  // second step (the code from the authenticator app) is passed, so we first ask a small database function
   // that answers yes or no at any time. Before that migration, the function does not
   // exist and we simply read the table as before.
   const admin = await supabase.from('admins').select('*').eq('admin_id', user.id).maybeSingle();
@@ -337,18 +350,14 @@ export async function goToHomePage() {
 
   // If guard.js sent the person to log in, it remembered the page they wanted.
   // (That page's own guard checks again that they are allowed to see it.)
+  // Founders are taken back to that page. Admins always start on the overview.
   const wanted = sessionStorage.getItem('darb-next');
   sessionStorage.removeItem('darb-next');
 
   if (account.role === 'admin') {
-    // an admin must enter the emailed code before any admin page opens
+    // an admin must enter the code from the authenticator app before any admin page opens
     const step = await getSecondStep();
-    if (step === 'done') {
-      window.location.href = wanted || ROOT + PAGES.adminHome;
-    } else {
-      if (wanted) sessionStorage.setItem('darb-next', wanted);
-      window.location.href = ROOT + PAGES.adminLogin;
-    }
+    window.location.href = ROOT + (step === 'done' ? PAGES.adminHome : PAGES.adminLogin);
   } else if (account.role === 'founder') {
     if (account.profile.status === 'deactivated') {
       await supabase.auth.signOut();

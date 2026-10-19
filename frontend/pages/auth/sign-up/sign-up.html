@@ -143,6 +143,14 @@
             <!-- the list of countries is filled in by sign-up.js, in the page's language -->
             <select class="input" id="country" name="country" data-column="country_code" data-required data-searchable></select>
             <p class="field-error" data-error-for="country" hidden></p>
+            <!-- shown when a country other than Saudi Arabia is chosen: the person cannot register -->
+            <div class="alert alert-risk not-in-saudi" id="not-in-saudi" role="alert" hidden>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6M9 9l6 6"/></svg>
+              <div>
+                <strong data-i18n="error.notInSaudiTitle"></strong>
+                <span data-i18n="error.notInSaudi"></span>
+              </div>
+            </div>
           </div>
           <div class="field" data-show-when="country=SA">
             <label class="label is-required" for="region" data-i18n="signup.region"></label>
