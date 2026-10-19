@@ -210,15 +210,16 @@ async function loadRoadmap(assessment) {
     .map((row) => ({
       id: row.requirement_id,
       title: { en: row.name_en, ar: row.name_ar || row.name_en },
-      authority: row.authority || '',
+      authority: row.authority || '',   // in English: also used to find the authority's logo
+      authorityName: { en: row.authority || '', ar: row.authority_ar || row.authority || '' },
       // "what_darb_should_surface" is written as instructions for the agent, so until the
       // agent rewrites it for the founder, the plain "applies when" sentence is shown
-      guidance: row.applies_when || '',
+      guidance: { en: row.applies_when || '', ar: row.applies_when_ar || row.applies_when || '' },
       type: row.mandatory === 'Required' ? 'mandatory' : 'conditional',
       link: row.service_url || row.official_source_url || '',
       source: row.official_source_url || '',
       stage: row.business_stage || '',
-      fees: row.fees_thresholds || '',
+      fees: { en: row.fees_thresholds || '', ar: row.fees_thresholds_ar || row.fees_thresholds || '' },
     }));
 }
 
