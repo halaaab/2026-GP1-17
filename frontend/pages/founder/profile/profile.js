@@ -15,7 +15,6 @@ const fields = {
   fullName: document.querySelector('#full-name'),
   email: document.querySelector('#email'),
   phone: document.querySelector('#phone'),
-  country: document.querySelector('#country'),
   region: document.querySelector('#region'),
 };
 
@@ -27,13 +26,8 @@ const TYPE_LABELS = {
   other: 'signup.other',
 };
 
-// The same countries as the sign-up page: the 193 UN member states and Palestine.
-// The browser knows each name in Arabic and English, so only the codes are kept here.
-const COUNTRY_CODES = ('AF AL DZ AD AO AG AR AM AU AT AZ BS BH BD BB BY BE BZ BJ BT BO BA BW BR BN BG BF BI CV KH CM CA CF TD CL CN CO KM CG CD '
-  + 'CR CI HR CU CY CZ DK DJ DM DO EC EG SV GQ ER EE SZ ET FJ FI FR GA GM GE DE GH GR GD GT GN GW GY HT HN HU IS IN ID IR IQ IE IL IT JM JP '
-  + 'JO KZ KE KI KP KR KW KG LA LV LB LS LR LY LI LT LU MG MW MY MV ML MT MH MR MU MX FM MD MC MN ME MA MZ MM NA NR NP NL NZ NI NE NG MK NO '
-  + 'OM PK PW PA PG PY PE PH PL PT QA RO RU RW KN LC VC WS SM ST SN RS SC SL SG SK SI SB SO ZA SS ES LK SD SR SE CH SY TJ TZ TH TL TG TO TT '
-  + 'TN TR TM TV UG UA AE GB US UY UZ VU VE VN YE ZM ZW PS').split(' ');
+// Darb serves founders located in Saudi Arabia (story 39), so the country is fixed
+const COUNTRY = 'SA';
 
 // A Saudi mobile number without +966: 9 digits starting with 5
 const PHONE_RULE = /^5\d{8}$/;
@@ -58,29 +52,9 @@ function showFieldError(name, key) {
   message.hidden = !key;
 }
 
-// Saudi Arabia first, the rest sorted in the page's language (the same as sign-up)
-function fillCountries() {
-  const select = fields.country;
-  const language = getLanguage();
-  const chosen = select.value;
-  const names = new Intl.DisplayNames([language], { type: 'region' });
-
-  const countries = COUNTRY_CODES
-    .map((code) => ({ code, name: names.of(code) }))
-    .sort((a, b) => a.name.localeCompare(b.name, language));
-  countries.unshift({ code: 'SA', name: names.of('SA') });
-
-  select.innerHTML = `<option value="">${t('signup.select')}</option>`
-    + countries.map((country) => `<option value="${country.code}">${country.name}</option>`).join('');
-  select.value = chosen;
-
-  // tells the searchable box (shared/ui.js) to show the name in the new language
-  select.dispatchEvent(new Event('change', { bubbles: true }));
-}
-
-// The region is asked only for Saudi Arabia, as on the sign-up page
-function showRegion() {
-  document.querySelector('#region-row').hidden = fields.country.value !== 'SA';
+// The fixed country, "Saudi Arabia" / "المملكة العربية السعودية", in the page's language
+function showCountry() {
+  document.querySelector('#country').value = new Intl.DisplayNames([getLanguage()], { type: 'region' }).of(COUNTRY);
 }
 
 /* ---------- Showing the account ---------- */
@@ -89,10 +63,7 @@ function showProfile() {
   fields.fullName.value = profile.full_name || '';
   fields.email.value = email;
   fields.phone.value = (profile.phone || '').replace(/^\+966/, '');
-  fields.country.value = profile.country_code || '';
-  fields.country.dispatchEvent(new Event('change', { bubbles: true }));
   fields.region.value = profile.region || '';
-  showRegion();
   showReadOnly();
 }
 
@@ -120,16 +91,14 @@ form.addEventListener('submit', async (event) => {
   const fullName = fields.fullName.value.trim();
   const typedEmail = fields.email.value.trim().toLowerCase();
   const phone = fields.phone.value.replace(/\s/g, '').replace(/^0/, '');
-  const country = fields.country.value;
-  const region = country === 'SA' ? fields.region.value : '';
+  const region = fields.region.value;
 
   // check the answers here first, so the founder sees each problem next to its field
   const problems = {
     fullName: fullName ? '' : 'founders.nameRequired',
     email: EMAIL_RULE.test(typedEmail) ? '' : 'profile.emailError',
     phone: !phone || PHONE_RULE.test(phone) ? '' : 'profile.phoneError',
-    country: country ? '' : 'profile.countryRequired',
-    region: country !== 'SA' || region ? '' : 'profile.regionRequired',
+    region: region ? '' : 'profile.regionRequired',
   };
   Object.entries(problems).forEach(([name, key]) => showFieldError(name, key));
   if (Object.values(problems).some(Boolean)) return;
@@ -139,8 +108,8 @@ form.addEventListener('submit', async (event) => {
   const changes = {
     full_name: fullName,
     phone: phone ? `+966${phone}` : null,
-    country_code: country,
-    region: region || null,
+    country_code: COUNTRY,
+    region,
   };
   const { data, error } = await supabase.from('users').update(changes).eq('user_id', profile.user_id).select().single();
 
@@ -177,7 +146,6 @@ form.addEventListener('submit', async (event) => {
   showToast(t(emailResult ? 'profile.emailSentToast' : 'founders.saved'), 'good');
 });
 
-fields.country.addEventListener('change', showRegion);
 
 /* ---------- Language ---------- */
 
@@ -196,7 +164,7 @@ document.querySelector('.pf-language').addEventListener('click', async (event) =
 });
 
 document.addEventListener('darb:language', () => {
-  fillCountries();
+  showCountry();
   if (profile) showReadOnly();
   // the field errors are shown again in the new language when the form is saved
   Object.keys(fields).forEach((name) => showFieldError(name, ''));
@@ -235,7 +203,7 @@ if (account.role === 'founder') {
   email = user?.email || '';
   newEmail = user?.new_email || '';   // an email change still waiting for its confirmation link
 
-  fillCountries();
+  showCountry();
   showProfile();
   showAssessmentCount();
   document.querySelector('#status').hidden = true;

@@ -270,6 +270,10 @@ function fromRows(idea, assessment, messages) {
   };
 }
 
+/* true when the last getAssessments() could not reach the database (it then returns []),
+   so a page can tell "no ideas yet" apart from "could not load" and show the 500 page */
+export let assessmentsFailed = false;
+
 /* Every assessment of the signed-in founder, newest first.
    The database's security rules return only this founder's rows. */
 export async function getAssessments() {
@@ -278,6 +282,7 @@ export async function getAssessments() {
   const messages = await supabase.from('messages').select('assessment_id, sender_role, content').order('message_id');
 
   const failed = ideas.error || assessments.error || messages.error;
+  assessmentsFailed = Boolean(failed);
   if (failed) {
     report('load the history', failed);
     return [];

@@ -5,6 +5,7 @@
 import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import '../../../../shared/guard.js';
+import { showErrorPage } from '../../../../shared/errors.js';
 import {
   getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
 } from '../programs.js';
@@ -250,6 +251,7 @@ document.querySelector('#empty-icon').innerHTML = icon('sprout');
 
 const data = await getPrograms();
 loadFailed = data === null;
+if (loadFailed) showErrorPage(500);   // the programs could not be loaded: the 500 page offers "Try again"
 programs = data || [];
 
 fillDropdowns();

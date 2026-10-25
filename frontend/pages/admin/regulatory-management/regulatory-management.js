@@ -7,6 +7,7 @@ import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getCurrentUser } from '../../../shared/auth.js';
+import { showErrorPage } from '../../../shared/errors.js';
 import {
   loadRequirements, field, label, stagesOf, allStages, dateText, fillFilter, authorityColors, fitsIsic, divisionsOf, logoUrl, initials,
   MANDATORY, STATUSES, ISIC_SECTIONS, ISIC_DIVISIONS, isicOf, isicText,
@@ -354,6 +355,7 @@ if (data) {
   requirements = data;
 } else {
   loadFailed = true;
+  showErrorPage(500);   // the requirements could not be loaded: the 500 page offers "Try again"
 }
 loading = false;
 fillFilters();
