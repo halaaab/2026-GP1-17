@@ -1215,7 +1215,6 @@
   "profile.emailNotChanged": "The email could not be changed. Please try again.",
   "profile.phone": "Mobile number",
   "profile.phoneError": "Enter a Saudi mobile number: 9 digits starting with 5.",
-  "profile.countryRequired": "Choose your country.",
   "profile.regionRequired": "Choose your region.",
   "profile.preferences": "Preferences",
   "profile.preferencesSub": "How Darb talks to you.",
@@ -1298,6 +1297,6 @@
   "regAdmin.divisionsError": "Enter at least one valid ISIC4 division (2 digits, e.g. 10 or 56), or tick \"Every sector\".",
   "startupAdmin.nameAr": "Startup name (Arabic)",
   "startupAdmin.logo": "Logo link",
-  "startupAdmin.logoHint": "A link to the logo image (PNG, JPG or SVG). When empty, the initials are shown."
-
+  "startupAdmin.logoHint": "A link to the logo image (PNG, JPG or SVG). When empty, the initials are shown.",
+  "profile.countryHint": "Darb currently serves founders located in Saudi Arabia."
 }

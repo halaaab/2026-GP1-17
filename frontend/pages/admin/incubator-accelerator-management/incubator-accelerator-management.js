@@ -10,6 +10,7 @@ import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getCurrentUser } from '../../../shared/auth.js';
+import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 import {
   getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, detailsLink,
@@ -551,6 +552,7 @@ showAddButton();
 
 const data = await getPrograms();
 loadFailed = data === null;
+if (loadFailed) showErrorPage(500);   // the programs could not be loaded: the 500 page offers "Try again"
 programs = data || [];
 
 // After migration 0012 every row has the Arabic columns: show the Arabic part of the form

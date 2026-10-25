@@ -16,6 +16,7 @@ import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getAccount } from '../../../shared/auth.js';
+import { showErrorPage } from '../../../shared/errors.js';
 import { scoreBand, whenText } from '../../../shared/assessments.js';
 import { completeness } from '../../founder/incubators-accelerators/programs.js';
 import '../../../shared/guard.js';
@@ -120,6 +121,13 @@ async function load() {
     readAll('regulatory_requirements', 'requirement_id, last_verified'),
     readAll('market_indicators', 'record_id, year'),
   ]);
+
+  // nothing could be read (the database did not answer): the 500 page offers "Try again".
+  // When only some tables fail, the page still shows the rest with a warning.
+  if (results.every((result) => result.failed)) {
+    showErrorPage(500);
+    return null;
+  }
 
   const [users, ideas, assessments, startups, programs, requirements, market] = results.map((result) => result.rows);
   document.querySelector('#load-error').hidden = !results.some((result) => result.failed);
