@@ -6,6 +6,7 @@ import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
+import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 
 const rows = document.querySelector('#rows');
@@ -386,6 +387,7 @@ const { data, error } = await supabase.rpc('admin_list_founders');
 if (error) {
   loadFailed = true;
   console.error('admin_list_founders:', error.message);
+  showErrorPage(500);   // the list could not be loaded: the 500 page offers "Try again"
 } else {
   founders = data;
 }
