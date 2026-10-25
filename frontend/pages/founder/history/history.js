@@ -3,8 +3,9 @@
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import '../../../shared/guard.js';
+import { showErrorPage } from '../../../shared/errors.js';
 import {
-  say, label, scoreBand, whenText, chatLink, getAssessments,
+  say, label, scoreBand, whenText, chatLink, getAssessments, assessmentsFailed,
 } from '../../../shared/assessments.js';
 
 const rows = document.querySelector('#rows');
@@ -110,5 +111,9 @@ document.querySelectorAll('[data-icon]').forEach((box) => {
 });
 
 assessments = await getAssessments();
-showStats();
-showRows();
+if (assessmentsFailed) {
+  showErrorPage(500);   // the history could not be loaded: the 500 page offers "Try again"
+} else {
+  showStats();
+  showRows();
+}

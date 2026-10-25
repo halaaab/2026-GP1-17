@@ -1212,7 +1212,6 @@
   "profile.emailNotChanged": "تعذّر تغيير البريد الإلكتروني. حاول مرة أخرى.",
   "profile.phone": "رقم الجوال",
   "profile.phoneError": "أدخل رقم جوال سعودي: 9 أرقام تبدأ بـ 5.",
-  "profile.countryRequired": "اختر دولتك.",
   "profile.regionRequired": "اختر منطقتك.",
   "profile.preferences": "التفضيلات",
   "profile.preferencesSub": "كيف يتحدث معك درب.",
@@ -1295,6 +1294,6 @@
   "regAdmin.divisionsError": "أدخل قسمًا فرعيًا صحيحًا واحدًا على الأقل من ISIC4 (رقمان، مثل 10 أو 56)، أو اختر «جميع القطاعات».",
   "startupAdmin.nameAr": "اسم الشركة الناشئة (بالعربية)",
   "startupAdmin.logo": "رابط الشعار",
-  "startupAdmin.logoHint": "رابط صورة الشعار (PNG أو JPG أو SVG). إذا تُرك فارغًا تظهر الأحرف الأولى من الاسم."
-
+  "startupAdmin.logoHint": "رابط صورة الشعار (PNG أو JPG أو SVG). إذا تُرك فارغًا تظهر الأحرف الأولى من الاسم.",
+  "profile.countryHint": "يخدم درب حاليًا رواد الأعمال المقيمين في المملكة العربية السعودية."
 }

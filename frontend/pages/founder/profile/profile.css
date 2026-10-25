@@ -61,6 +61,13 @@
   font-weight: 600;
 }
 
+/* the country is fixed to Saudi Arabia: shown greyed, it cannot be changed */
+.pf-country {
+  background: var(--bg-tile);
+  color: var(--text-2);
+  cursor: default;
+}
+
 .pf-actions {
   display: flex;
   justify-content: flex-end;

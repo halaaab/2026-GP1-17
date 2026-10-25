@@ -8,6 +8,7 @@ import { t, getLanguage } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import '../../../../shared/guard.js';
+import { showErrorPage } from '../../../../shared/errors.js';
 import {
   getProgram, getPrograms, programType, sectorList, isOpenToAll, cityOf, text,
   listItems, websiteOf, detailsLink, logoOf, logoHtml, colorOf, TYPE_ICON,
@@ -175,7 +176,6 @@ document.addEventListener('darb:language', () => {
 /* ---------- Start ---------- */
 
 document.querySelector('#back-icon').innerHTML = icon('arrowBack');
-document.querySelector('#not-found-icon').innerHTML = icon('sprout');
 
 // Going back keeps the explorer's filters when the person came from there
 if (document.referrer.includes('incubators-accelerators-explorer')) {
@@ -183,11 +183,13 @@ if (document.referrer.includes('incubators-accelerators-explorer')) {
 }
 
 program = id ? await getProgram(id) : null;
-document.querySelector('#loading').hidden = true;
 
 if (!program) {
-  document.querySelector('#not-found').hidden = false;
+  // getProgram answers null both when the program does not exist and when the database
+  // did not answer; reading the list tells them apart: no list → 500, a list → 404
+  showErrorPage((await getPrograms()) === null ? 500 : 404);
 } else {
+  document.querySelector('#loading').hidden = true;
   similar = findSimilar((await getPrograms()) || []);
   document.querySelector('#detail').hidden = false;
   show();

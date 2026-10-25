@@ -1,8 +1,9 @@
 <!doctype html>
 <!--
   PROFILE (founder side)
-  The signed-in founder's account: name, email, mobile number, country and
-  region, the language Darb uses, logging out, and deleting the account.
+  The signed-in founder's account: name, email, mobile number, region (the
+  country is fixed to Saudi Arabia), the language Darb uses, logging out, and
+  deleting the account.
   Reads and saves the founder's own row in the users table (migrations 0001
   and 0002: a founder may edit only their own row). A new email is saved by
   Supabase Auth, which first emails a confirmation link. Deleting calls
@@ -65,14 +66,14 @@
                 <p class="field-error" id="phone-error" hidden></p>
               </div>
               <div class="field">
-                <label class="label is-required" for="country" data-i18n="signup.country"></label>
-                <!-- the list of countries is filled in by profile.js, in the page's language -->
-                <select class="input" id="country" data-searchable></select>
-                <p class="field-error" id="country-error" hidden></p>
+                <label class="label" for="country" data-i18n="signup.country"></label>
+                <!-- fixed: Darb serves founders located in Saudi Arabia. profile.js writes the name in the page's language -->
+                <input class="input pf-country" id="country" type="text" readonly>
+                <p class="field-hint" data-i18n="profile.countryHint"></p>
               </div>
             </div>
 
-            <div class="form-row" id="region-row">
+            <div class="form-row">
               <div class="field">
                 <label class="label is-required" for="region" data-i18n="signup.region"></label>
                 <select class="input" id="region">
