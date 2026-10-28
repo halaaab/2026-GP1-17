@@ -1,0 +1,115 @@
+/* Regulatory management page only. The table, toolbar, pills, panel, form
+   fields and modal come from shared/shared.css. */
+
+/* ---------- Table ---------- */
+
+.reg-row {
+  cursor: pointer;
+}
+.reg-row:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: -2px;
+}
+
+/* long requirement names wrap instead of making the table very wide */
+.reg-table .cell-title {
+  max-width: 320px;
+}
+
+/* the authority's logo next to the name, the same size as on the Startups and
+   Incubators & Accelerators pages (its initials when there is no logo) */
+.reg-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.reg-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--teal-tint);
+  color: var(--teal-text);
+  font-size: 12px;
+  font-weight: 800;
+}
+.reg-logo.has-image {
+  border-color: var(--border);
+  background: var(--bg);
+}
+.reg-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+
+/* the edit and delete icons at the end of each row */
+.reg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.btn-icon.is-danger:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+.reg-empty {
+  margin: 16px;
+}
+
+/* ---------- Form ---------- */
+
+/* the sector check boxes: no browser frame around the group */
+.reg-sectors {
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+.reg-sectors legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.reg-sector-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 18px;
+}
+
+/* the 20 ISIC4 sections have long names: one per line */
+.reg-isic-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.reg-sectors .field-hint {
+  margin: -2px 0 6px;
+}
+
+/* Cancel and Save share the footer equally */
+.reg-panel-foot .btn {
+  flex: 1;
+}
+
+/* Delete pop-up: the red icon above the title, as in the design */
+.reg-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* Phones: keep the requirement and the buttons */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  .reg-table {
+    min-width: 0;
+  }
+}

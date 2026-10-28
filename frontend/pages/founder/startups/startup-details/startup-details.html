@@ -1,0 +1,102 @@
+<!doctype html>
+<!--
+  STARTUP DETAILS (founder side, also open to visitors)
+  One startup: its sectors and market, what it does, its products, similar
+  startups, and its key facts and links. Opened from the Startup Explorer:
+    startup-details.html?id=ST_001
+  The same design as the incubator / accelerator details page: a colored head
+  (the same color as the startup's card), then two columns.
+  A missing startup opens the 404 page, a load failure the 500 page.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="startup-details.css">
+</head>
+<body data-layout="founder" data-page="startups" data-title="nav.startups" data-access="public">
+
+  <main>
+    <a class="std-back" id="back-link" href="../startup-explorer/startup-explorer.html">
+      <span id="back-icon"></span>
+      <span data-i18n="nav.startups"></span>
+    </a>
+
+    <!-- shown while the startup loads -->
+    <div class="std-loading" id="loading">
+      <div class="skeleton std-skeleton-hero"></div>
+      <div class="skeleton std-skeleton-line"></div>
+      <div class="skeleton std-skeleton-block"></div>
+    </div>
+
+    <article id="details" hidden>
+      <!-- Head: initials, name, region, tags. The color class is set by the script. -->
+      <header class="std-hero" id="hero">
+        <span class="std-hero-art" id="hero-art" aria-hidden="true"></span>
+        <span class="std-logo" id="logo" aria-hidden="true"></span>
+        <div class="std-title">
+          <h2 id="name"></h2>
+          <p class="std-sub" id="place"></p>
+          <div class="std-tags" id="tags"></div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm std-share" id="share">
+          <span id="share-icon"></span>
+          <span data-i18n="reg.share"></span>
+        </button>
+      </header>
+
+      <div class="std-layout">
+        <div class="std-main">
+          <!-- Sectors and market: a green box, a tick before each line -->
+          <section class="std-section" id="market-section">
+            <h3 class="section-title" data-i18n="startups.market"></h3>
+            <ul class="std-checks" id="market"></ul>
+          </section>
+
+          <section class="std-section">
+            <h3 class="section-title" data-i18n="startups.about"></h3>
+            <p class="std-text" id="about"></p>
+          </section>
+
+          <section class="std-section" id="products-section">
+            <div class="std-section-head">
+              <h3 class="section-title" data-i18n="startups.products"></h3>
+              <span class="std-count" id="products-count"></span>
+            </div>
+            <ol class="std-steps" id="products"></ol>
+          </section>
+
+          <section class="std-section" id="tags-section">
+            <h3 class="section-title" data-i18n="startups.tags"></h3>
+            <div class="std-chips" id="tag-chips"></div>
+          </section>
+
+          <section class="std-section" id="similar-section">
+            <h3 class="section-title" data-i18n="startups.similar"></h3>
+            <div class="std-similar-grid" id="similar"></div>
+          </section>
+        </div>
+
+        <!-- Key facts and the links -->
+        <aside class="std-side">
+          <div class="std-facts" id="facts"></div>
+          <a class="btn std-visit" id="website" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="startups.visitWebsite"></span><span id="website-icon"></span>
+          </a>
+          <a class="btn btn-secondary std-profile" id="profile" target="_blank" rel="noopener noreferrer">
+            <span data-i18n="startups.ecosystemProfile"></span><span id="profile-icon"></span>
+          </a>
+          <div class="std-note"><span id="note-icon"></span><span data-i18n="startups.sourceNote"></span></div>
+        </aside>
+      </div>
+    </article>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="../../../../shared/ui.js"></script>
+  <script type="module" src="startup-details.js"></script>
+</body>
+</html>

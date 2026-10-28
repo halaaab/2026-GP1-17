@@ -1,0 +1,215 @@
+<!doctype html>
+<!--
+  INCUBATORS & ACCELERATORS MANAGEMENT (admin console)
+  Every support program: search, filter by type and sector,
+  and edit or delete one from its row. "Add program" opens the same side panel empty.
+  The rows are the support_organisations table (migration 0006); only admins may change them.
+  Reading and the field helpers are shared with the founder pages: pages/founder/incubators-accelerators/programs.js
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="incubator-accelerator-management.css">
+</head>
+<body data-layout="admin" data-page="admin-incubators" data-title="admin.incubators" data-denied="403">
+
+  <main>
+    <div class="page-head manage-head">
+      <div>
+        <h2 class="page-title manage-title" data-i18n="programsAdmin.title"></h2>
+        <p class="text-2" data-i18n="programsAdmin.sub"></p>
+      </div>
+      <button type="button" class="btn btn-primary btn-lg manage-add" id="add-button"></button>
+    </div>
+
+    <div class="manage-filters">
+      <label class="search manage-search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="programsAdmin.search" data-i18n-aria-label="programsAdmin.search">
+      </label>
+      <span class="manage-select-wrap">
+        <select class="manage-select" id="type-filter" data-i18n-aria-label="programs.type">
+          <option value="" data-i18n="programsAdmin.allTypes"></option>
+          <option value="incubator" data-i18n="programs.incubators"></option>
+          <option value="accelerator" data-i18n="programs.accelerators"></option>
+        </select>
+      </span>
+      <span class="manage-select-wrap">
+        <select class="manage-select" id="sector-filter" data-i18n-aria-label="programs.sector">
+          <option value="" data-i18n="programs.allSectors"></option>
+        </select>
+      </span>
+    </div>
+
+    <div class="table-card manage-card">
+      <table class="table manage-table">
+        <thead>
+          <tr>
+            <th data-i18n="programs.program"></th>
+            <th data-i18n="programs.type"></th>
+            <th class="hide-small" data-i18n="programs.stage"></th>
+            <th class="hide-small" data-i18n="programsAdmin.appliesTo"></th>
+            <th class="hide-small" data-i18n="programsAdmin.updated"></th>
+            <th><span class="manage-hidden" data-i18n="programsAdmin.actions"></span></th>
+          </tr>
+        </thead>
+        <!-- incubator-accelerator-management.js adds one row for each program -->
+        <tbody id="rows"></tbody>
+      </table>
+      <p class="empty manage-empty" id="empty" hidden></p>
+    </div>
+
+    <!-- Add or edit one program -->
+    <aside class="panel manage-panel" id="program-panel" aria-labelledby="panel-title">
+      <div class="panel-head">
+        <div>
+          <h3 class="modal-title" id="panel-title"></h3>
+          <p class="text-3 manage-panel-sub" id="panel-sub"></p>
+        </div>
+        <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="programsAdmin.close" id="panel-close"></button>
+      </div>
+
+      <div class="panel-body">
+        <form class="form" id="program-form" novalidate>
+          <!-- Logo: a picture the founder pages show on the program's card and page -->
+          <div class="field">
+            <span class="label" id="logo-label"><span data-i18n="programsAdmin.f.logo"></span> *</span>
+            <div class="logo-picker" id="logo-picker">
+              <span class="logo-preview" id="logo-preview"></span>
+              <div class="logo-picker-text">
+                <div class="logo-picker-buttons">
+                  <button type="button" class="btn btn-secondary btn-sm" id="logo-choose" aria-describedby="logo-hint"></button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="logo-remove" data-i18n="programsAdmin.f.logoRemove"></button>
+                </div>
+                <p class="field-hint" id="logo-hint" data-i18n="programsAdmin.f.logoHint"></p>
+                <p class="field-error" id="logo-error" hidden></p>
+              </div>
+              <input class="logo-input" id="f-logo" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="logo-label" tabindex="-1">
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="f-name"><span data-i18n="programsAdmin.f.name"></span> *</label>
+            <input class="input" id="f-name" name="name" type="text" maxlength="200" required>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="f-type"><span data-i18n="programs.type"></span> *</label>
+              <select class="input" id="f-type" name="type">
+                <option value="Incubator" data-i18n="programs.type.incubator"></option>
+                <option value="Accelerator" data-i18n="programs.type.accelerator"></option>
+                <option value="Incubator / Accelerator" data-i18n="programs.type.both"></option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="label" for="f-location"><span data-i18n="programs.location"></span> *</label>
+              <input class="input" id="f-location" name="location" type="text" data-i18n-placeholder="programsAdmin.f.locationHint">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="f-sector"><span data-i18n="programs.sectors"></span> *</label>
+            <input class="input" id="f-sector" name="sector" type="text" data-i18n-placeholder="programsAdmin.f.sectorHint">
+            <p class="field-hint" data-i18n="programsAdmin.f.commaHint"></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-description"><span data-i18n="programs.about"></span> *</label>
+            <textarea class="input manage-textarea" id="f-description" name="description" rows="4"></textarea>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="f-stage"><span data-i18n="programs.stage"></span> *</label>
+              <input class="input" id="f-stage" name="target_stage" type="text" data-i18n-placeholder="programsAdmin.f.stageHint">
+            </div>
+            <div class="field">
+              <label class="label" for="f-duration" data-i18n="programs.duration"></label>
+              <input class="input" id="f-duration" name="program_duration" type="text" data-i18n-placeholder="programsAdmin.f.durationHint">
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="f-services"><span data-i18n="programs.services"></span> *</label>
+            <textarea class="input manage-textarea" id="f-services" name="services_support" rows="3"></textarea>
+            <p class="field-hint" data-i18n="programsAdmin.f.commaHint"></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-funding" data-i18n="programs.funding"></label>
+            <input class="input" id="f-funding" name="funding_investment" type="text" data-i18n-placeholder="programsAdmin.f.fundingHint">
+          </div>
+          <div class="field">
+            <label class="label" for="f-eligibility"><span data-i18n="programs.eligibility"></span> *</label>
+            <textarea class="input manage-textarea" id="f-eligibility" name="eligibility" rows="3"></textarea>
+            <p class="field-hint" data-i18n="programsAdmin.f.semicolonHint"></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-website"><span data-i18n="programsAdmin.f.website"></span> *</label>
+            <input class="input" id="f-website" name="website" type="url" dir="ltr" placeholder="https://">
+          </div>
+          <!-- Arabic version (migration 0012). Optional: an empty field shows the English text.
+               incubator-accelerator-management.js shows this part only when the Arabic columns exist. -->
+          <fieldset class="manage-arabic" id="arabic-section" hidden>
+            <legend class="manage-arabic-title" data-i18n="programsAdmin.arabic"></legend>
+            <p class="field-hint" data-i18n="programsAdmin.arabicHint"></p>
+            <div class="field">
+              <label class="label" for="f-name-ar" data-i18n="programsAdmin.f.name"></label>
+              <input class="input" id="f-name-ar" name="name_ar" type="text" dir="rtl" lang="ar">
+            </div>
+            <div class="field">
+              <label class="label" for="f-sector-ar" data-i18n="programs.sectors"></label>
+              <input class="input" id="f-sector-ar" name="sector_ar" type="text" dir="rtl" lang="ar">
+            </div>
+            <div class="field">
+              <label class="label" for="f-location-ar" data-i18n="programs.location"></label>
+              <input class="input" id="f-location-ar" name="location_ar" type="text" dir="rtl" lang="ar">
+            </div>
+            <div class="field">
+              <label class="label" for="f-description-ar" data-i18n="programs.about"></label>
+              <textarea class="input manage-textarea" id="f-description-ar" name="description_ar" rows="3" dir="rtl" lang="ar"></textarea>
+            </div>
+            <div class="field">
+              <label class="label" for="f-target-stage-ar" data-i18n="programs.stage"></label>
+              <input class="input" id="f-target-stage-ar" name="target_stage_ar" type="text" dir="rtl" lang="ar">
+            </div>
+            <div class="field">
+              <label class="label" for="f-program-duration-ar" data-i18n="programs.duration"></label>
+              <input class="input" id="f-program-duration-ar" name="program_duration_ar" type="text" dir="rtl" lang="ar">
+            </div>
+            <div class="field">
+              <label class="label" for="f-services-support-ar" data-i18n="programs.services"></label>
+              <textarea class="input manage-textarea" id="f-services-support-ar" name="services_support_ar" rows="3" dir="rtl" lang="ar"></textarea>
+            </div>
+            <div class="field">
+              <label class="label" for="f-funding-investment-ar" data-i18n="programs.funding"></label>
+              <input class="input" id="f-funding-investment-ar" name="funding_investment_ar" type="text" dir="rtl" lang="ar">
+            </div>
+            <div class="field">
+              <label class="label" for="f-eligibility-ar" data-i18n="programs.eligibility"></label>
+              <textarea class="input manage-textarea" id="f-eligibility-ar" name="eligibility_ar" rows="3" dir="rtl" lang="ar"></textarea>
+            </div>
+          </fieldset>
+        </form>
+      </div>
+
+      <div class="panel-foot">
+        <button type="button" class="btn btn-secondary" data-panel-close data-i18n="programsAdmin.cancel"></button>
+        <button type="button" class="btn btn-primary" id="save-button"></button>
+      </div>
+    </aside>
+
+    <dialog class="modal" id="delete-modal">
+      <h3 class="modal-title" data-i18n="programsAdmin.deleteTitle"></h3>
+      <p class="text-2" id="delete-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal-close data-i18n="programsAdmin.cancel"></button>
+        <button type="button" class="btn btn-danger" id="delete-confirm" data-i18n="programsAdmin.delete"></button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="incubator-accelerator-management.js"></script>
+</body>
+</html>

@@ -17,6 +17,7 @@
     11. App layout: sidebar, header, footer (built by layout.js)
     12. Public layout: top bar and footer for the landing page
     13. Auth layout: logo + centered card
+   13b. Error layout: logo + centered message (403, 404, 500)
     14. Responsive rules (tablet, phone, small phone)
 
    Rules:
@@ -566,6 +567,25 @@ textarea.input {
 .chip-navy { background: var(--navy-tint); color: var(--navy); }
 .chip-teal { background: var(--teal-tint); color: var(--teal-text); }
 
+/* Pastel chips: to tell apart kinds of things with no good / bad meaning
+   (user types, authorities). Avoid 6 (mint) next to a green status chip.
+   <span class="chip chip-pastel-3">Business Owner</span> */
+.chip-pastel-1 { background: var(--pastel-1-tint); color: var(--pastel-1-text); }
+.chip-pastel-2 { background: var(--pastel-2-tint); color: var(--pastel-2-text); }
+.chip-pastel-3 { background: var(--pastel-3-tint); color: var(--pastel-3-text); }
+.chip-pastel-4 { background: var(--pastel-4-tint); color: var(--pastel-4-text); }
+.chip-pastel-5 { background: var(--pastel-5-tint); color: var(--pastel-5-text); }
+.chip-pastel-6 { background: var(--pastel-6-tint); color: var(--pastel-6-text); }
+.chip-pastel-7 { background: var(--pastel-7-tint); color: var(--pastel-7-text); }
+.chip-pastel-8 { background: var(--pastel-8-tint); color: var(--pastel-8-text); }
+.chip-pastel-9  { background: var(--pastel-9-tint);  color: var(--pastel-9-text); }
+.chip-pastel-10 { background: var(--pastel-10-tint); color: var(--pastel-10-text); }
+.chip-pastel-11 { background: var(--pastel-11-tint); color: var(--pastel-11-text); }
+.chip-pastel-12 { background: var(--pastel-12-tint); color: var(--pastel-12-text); }
+.chip-pastel-13 { background: var(--pastel-13-tint); color: var(--pastel-13-text); }
+.chip-pastel-14 { background: var(--pastel-14-tint); color: var(--pastel-14-text); }
+.chip-pastel-15 { background: var(--pastel-15-tint); color: var(--pastel-15-text); }
+
 /* Small colored dot before the chip text: <span class="chip chip-good chip-dot">Operating</span> */
 .chip-dot::before {
   content: '';
@@ -607,6 +627,13 @@ textarea.input {
   background: var(--navy);
   border-color: var(--navy);
   color: #fff;
+}
+
+/* A dropdown filter that looks like a pill (explorers, admin lists)
+   <select class="pill"><option value="">Sector</option> ... </select> */
+select.pill {
+  max-width: 220px;   /* long option names are cut in the closed dropdown, shown in full when open */
+  padding-inline-end: 10px;
 }
 
 /* Language toggle, tabs, filters
@@ -1426,8 +1453,10 @@ body.sidebar-collapsed .header-toggle {
   padding: 10px;
   padding-inline-start: 18px;
   border-radius: 22px;
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: 0 1px 0 #fff inset, var(--shadow-panel);
+  border-color: var(--border);
+  /* almost solid, so the page sliding under the bar does not show through the links */
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: var(--shadow-float);
 }
 .public-header .brand-logo { height: 42px; }
 
@@ -1993,6 +2022,63 @@ html[dir="rtl"] .auth-title {
 /* Google button */
 .btn-google {
   gap: 10px;
+}
+
+/* ==========================================================
+   13b. Error layout (403, 404, 500 pages)
+   layout.js builds it for <body data-layout="error">:
+   the logo and the language button on top, the page's <main> centered.
+   ========================================================== */
+
+.error-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.error-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 24px;
+}
+
+.error-main {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 520px;
+  margin-inline: auto;
+  padding: 24px 16px 72px;
+  text-align: center;
+}
+.error-main p {
+  margin: 0;
+}
+
+/* the buttons under the message, side by side (stacked on a phone) */
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+@media (max-width: 640px) {
+  .error-top {
+    padding: 12px 16px;
+  }
+  .error-actions {
+    width: 100%;
+  }
+  .error-actions .btn {
+    flex: 1 1 100%;
+  }
 }
 
 /* ==========================================================

@@ -1,0 +1,131 @@
+<!doctype html>
+<!--
+  INCUBATORS & ACCELERATORS EXPLORER
+  Every support program in Darb: search, filter by type, sector and city,
+  and see them as cards. Each one opens its details page.
+  Visitors may open it too (data-access="public").
+  A purple banner over a photo of Riyadh, a search bar on its edge, then colored cards.
+  The rows come from the support_organisations table (migration 0006), through ../programs.js.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="incubators-accelerators-explorer.css">
+</head>
+<body data-layout="founder" data-page="incubators" data-title="nav.incubators" data-access="public">
+
+  <main>
+    <!-- Banner: title and totals over a photo of Riyadh's KAFD towers, with a growth chart on it -->
+    <section class="programs-hero">
+      <!-- the investment sign: rising bars, a gold line and a green growth arrow -->
+      <svg class="programs-growth" viewBox="0 0 300 170" aria-hidden="true">
+        <defs>
+          <linearGradient id="growth-bar" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#8DB8FF"/>
+            <stop offset="1" stop-color="#2B55BE"/>
+          </linearGradient>
+          <linearGradient id="growth-shine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.45"/>
+            <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+          </linearGradient>
+          <marker id="growth-head" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4.2" markerHeight="4.2" orient="auto-start-reverse">
+            <path d="M0 0 10 5 0 10 2.5 5Z" fill="#3BE39A"/>
+          </marker>
+        </defs>
+
+        <!-- a soft shadow under the bars -->
+        <ellipse cx="170" cy="166" rx="130" ry="4" fill="#000" opacity="0.25"/>
+
+        <!-- bars, small to tall -->
+        <g fill="url(#growth-bar)">
+          <rect x="58" y="146" width="22" height="20" rx="2"/>
+          <rect x="90" y="136" width="22" height="30" rx="2"/>
+          <rect x="122" y="124" width="22" height="42" rx="2"/>
+          <rect x="154" y="108" width="22" height="58" rx="2"/>
+          <rect x="186" y="90" width="22" height="76" rx="2"/>
+          <rect x="218" y="68" width="22" height="98" rx="2"/>
+          <rect x="250" y="42" width="22" height="124" rx="2"/>
+        </g>
+        <g fill="url(#growth-shine)">
+          <rect x="58" y="146" width="22" height="20" rx="2"/>
+          <rect x="90" y="136" width="22" height="30" rx="2"/>
+          <rect x="122" y="124" width="22" height="42" rx="2"/>
+          <rect x="154" y="108" width="22" height="58" rx="2"/>
+          <rect x="186" y="90" width="22" height="76" rx="2"/>
+          <rect x="218" y="68" width="22" height="98" rx="2"/>
+          <rect x="250" y="42" width="22" height="124" rx="2"/>
+        </g>
+
+        <!-- the gold line, then the green arrow over it -->
+        <polyline points="30,156 69,140 101,132 133,114 165,100 197,80 229,62 261,40" fill="none" stroke="#F2C14E" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+        <polyline class="programs-growth-arrow" points="20,150 62,132 96,128 128,104 160,94 194,64 226,58 284,10" fill="none" stroke="#3BE39A" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" marker-end="url(#growth-head)"/>
+      </svg>
+
+      <div class="programs-hero-text">
+        <span class="programs-hero-badge" data-i18n="programs.explore"></span>
+        <h2 class="programs-hero-title" data-i18n="programs.title"></h2>
+        <p data-i18n="programs.sub"></p>
+        <!-- the totals, filled by incubators-accelerators-explorer.js -->
+        <div class="programs-totals" id="totals" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Search and dropdowns, on the banner's lower edge -->
+    <form class="programs-filters" id="filters" role="search">
+      <label class="programs-search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="programs.search" data-i18n-aria-label="programs.search">
+      </label>
+      <span class="programs-select-wrap">
+        <select class="programs-select" id="sector-filter" data-i18n-aria-label="programs.sector">
+          <option value="" data-i18n="programs.sector"></option>
+        </select>
+      </span>
+      <span class="programs-select-wrap">
+        <select class="programs-select" id="city-filter" data-i18n-aria-label="programs.city">
+          <option value="" data-i18n="programs.city"></option>
+        </select>
+      </span>
+      <span class="programs-select-wrap">
+        <!-- the option text and its count are written by the script -->
+        <select class="programs-select" id="type-filter" data-i18n-aria-label="programs.type">
+          <option value="all" data-label="programs.all"></option>
+          <option value="incubator" data-label="programs.incubators"></option>
+          <option value="accelerator" data-label="programs.accelerators"></option>
+        </select>
+      </span>
+      <button type="submit" class="btn btn-primary programs-search-button" data-i18n="programs.searchButton"></button>
+    </form>
+
+    <div class="programs-bar" id="results">
+      <span class="programs-found" id="found"></span>
+    </div>
+
+    <!-- The cards -->
+    <div class="programs-cards" id="cards-view"></div>
+
+
+    <div class="empty programs-empty" id="empty" hidden>
+      <span class="empty-icon" id="empty-icon"></span>
+      <h3 class="section-title" id="empty-title"></h3>
+      <p class="text-2" id="empty-text"></p>
+      <button type="button" class="btn btn-secondary btn-sm" id="clear-filters" data-i18n="programs.clear"></button>
+    </div>
+
+    <div class="programs-pager" id="pager">
+      <span class="text-3" id="showing"></span>
+      <div class="programs-pager-buttons">
+        <button type="button" class="btn btn-secondary btn-sm" id="previous" data-i18n="programs.previous"></button>
+        <button type="button" class="btn btn-secondary btn-sm" id="next" data-i18n="programs.next"></button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="incubators-accelerators-explorer.js"></script>
+</body>
+</html>

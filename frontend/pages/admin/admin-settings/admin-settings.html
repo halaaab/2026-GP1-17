@@ -1,0 +1,188 @@
+<!doctype html>
+<!--
+  ADMIN PROFILE (admin console → Settings in the sidebar)
+  The signed-in admin's own account: name, username and phone (the columns an
+  admin may change on their own row, migration 0001), a new password, the
+  language, what they added to Darb, and logging out.
+  The email is read only: admin accounts are created by the Darb team.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="admin-settings.css">
+</head>
+<body data-layout="admin" data-page="settings" data-title="adminProfile.title" data-denied="403">
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="adminProfile.title"></h2>
+        <p class="text-2" data-i18n="adminProfile.sub"></p>
+      </div>
+    </div>
+
+    <!-- Who is signed in -->
+    <section class="card profile-hero fade-up">
+      <span class="avatar profile-avatar" id="hero-avatar"></span>
+      <div class="profile-hero-text">
+        <div class="profile-hero-name">
+          <h3 id="hero-name"></h3>
+          <span class="chip chip-navy" data-i18n="admin.badge"></span>
+        </div>
+        <p class="text-2 profile-hero-line" id="hero-line"></p>
+      </div>
+      <div class="profile-hero-facts">
+        <div class="profile-hero-fact">
+          <span class="text-3" data-i18n="adminProfile.since"></span>
+          <strong id="hero-since">—</strong>
+        </div>
+        <div class="profile-hero-fact">
+          <span class="text-3" data-i18n="adminProfile.lastSignIn"></span>
+          <strong id="hero-last">—</strong>
+        </div>
+        <div class="profile-hero-fact">
+          <span class="text-3" data-i18n="adminProfile.team"></span>
+          <strong id="hero-team">—</strong>
+        </div>
+      </div>
+    </section>
+
+    <div class="profile-columns">
+
+      <!-- Personal details -->
+      <section class="card profile-card fade-up" style="--i: 1">
+        <div class="profile-card-head">
+          <div>
+            <h3 class="section-title" data-i18n="adminProfile.details"></h3>
+            <p class="text-3" data-i18n="adminProfile.detailsSub"></p>
+          </div>
+        </div>
+
+        <form class="form" id="details-form" novalidate>
+          <div class="field">
+            <label class="label" for="full-name"><span data-i18n="adminProfile.fullName"></span> *</label>
+            <input class="input" id="full-name" type="text" maxlength="80" autocomplete="name" required>
+            <p class="field-error" id="full-name-error" hidden data-i18n="adminProfile.nameRequired"></p>
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="username"><span data-i18n="adminProfile.username"></span> *</label>
+              <div class="profile-prefix" dir="ltr">
+                <span class="profile-prefix-sign" aria-hidden="true">@</span>
+                <input class="input" id="username" type="text" dir="ltr" maxlength="20" autocomplete="username" required>
+              </div>
+              <p class="field-hint" id="username-hint" data-i18n="adminProfile.usernameHint"></p>
+              <p class="field-error" id="username-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="phone" data-i18n="adminProfile.phone"></label>
+              <div class="profile-prefix" dir="ltr">
+                <span class="profile-prefix-sign" dir="ltr">+966</span>
+                <input class="input" id="phone" type="tel" dir="ltr" inputmode="numeric" maxlength="9" placeholder="5XXXXXXXX" autocomplete="tel-national">
+              </div>
+              <p class="field-error" id="phone-error" hidden data-i18n="adminProfile.phoneError"></p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="label" for="email" data-i18n="adminProfile.email"></label>
+            <input class="input" id="email" type="email" dir="ltr" readonly>
+            <p class="field-hint" data-i18n="adminProfile.emailHint"></p>
+          </div>
+
+          <div class="profile-form-foot">
+            <span class="text-3" id="details-status"></span>
+            <button type="button" class="btn btn-secondary" id="details-reset" data-i18n="adminProfile.discard" disabled></button>
+            <button type="submit" class="btn btn-primary" id="details-save" data-i18n="adminProfile.save" disabled></button>
+          </div>
+        </form>
+      </section>
+
+      <div class="profile-side">
+
+        <!-- What this admin added to Darb -->
+        <section class="card profile-card fade-up" style="--i: 2">
+          <h3 class="section-title" data-i18n="adminProfile.work"></h3>
+          <p class="text-3" data-i18n="adminProfile.workSub"></p>
+          <div class="profile-work" id="work"></div>
+        </section>
+
+        <!-- Language -->
+        <section class="card profile-card fade-up" style="--i: 3">
+          <div class="profile-row">
+            <div>
+              <h3 class="section-title" data-i18n="adminProfile.language"></h3>
+              <p class="text-3" data-i18n="adminProfile.languageSub"></p>
+            </div>
+            <div class="segmented">
+              <button type="button" class="segmented-item" data-language="en">English</button>
+              <button type="button" class="segmented-item" data-language="ar">العربية</button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <!-- Security -->
+    <section class="card profile-card profile-security fade-up" style="--i: 4">
+      <div class="profile-card-head">
+        <div>
+          <h3 class="section-title" data-i18n="adminProfile.security"></h3>
+          <p class="text-3" data-i18n="adminProfile.securitySub"></p>
+        </div>
+        <span class="chip chip-good chip-dot" data-i18n="adminProfile.twoStepOn"></span>
+      </div>
+
+      <form class="form profile-password" id="password-form" novalidate>
+        <div class="form-row">
+          <div class="field">
+            <label class="label" for="new-password" data-i18n="adminProfile.newPassword"></label>
+            <div class="input-group">
+              <input class="input" id="new-password" type="password" autocomplete="new-password">
+              <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="adminProfile.showPassword" id="toggle-1"></button>
+            </div>
+          </div>
+          <div class="field">
+            <label class="label" for="confirm-password" data-i18n="adminProfile.confirmPassword"></label>
+            <div class="input-group">
+              <input class="input" id="confirm-password" type="password" autocomplete="new-password">
+              <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="adminProfile.showPassword" id="toggle-2"></button>
+            </div>
+            <p class="field-error" id="confirm-error" hidden data-i18n="adminProfile.passwordsDiffer"></p>
+          </div>
+        </div>
+
+        <ul class="rules" id="password-rules">
+          <li data-rule="length" data-i18n="reset.rule1"></li>
+          <li data-rule="lower" data-i18n="reset.rule2"></li>
+          <li data-rule="upper" data-i18n="reset.rule3"></li>
+          <li data-rule="number" data-i18n="reset.rule4"></li>
+          <li data-rule="symbol" data-i18n="reset.rule5"></li>
+        </ul>
+
+        <div class="profile-form-foot">
+          <button type="submit" class="btn btn-primary" id="password-save" data-i18n="adminProfile.updatePassword" disabled></button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Session -->
+    <section class="card profile-card profile-row fade-up" style="--i: 5">
+      <div>
+        <h3 class="section-title" data-i18n="adminProfile.session"></h3>
+        <p class="text-3" data-i18n="adminProfile.sessionSub"></p>
+      </div>
+      <button type="button" class="btn btn-secondary" data-logout data-i18n="auth.logout"></button>
+    </section>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="admin-settings.js"></script>
+</body>
+</html>

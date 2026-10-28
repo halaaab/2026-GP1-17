@@ -428,92 +428,56 @@ html[dir="rtl"] .trace[open] summary svg {
   background: var(--gradient-brand);
   color: var(--bg);
 }
-.roadmap-card .rm-list {
-  padding: 16px;
-}
 
 /* ==========================================================
-   4. The roadmap list (in the chat and in the panel)
+   4. Roadmap pieces used in the chat and in the assessment
    ========================================================== */
 
-.rm-list {
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.rm-step {
-  position: relative;
-  display: flex;
-  gap: 14px;
-  padding-bottom: 20px;
-}
-.rm-step:last-child {
-  padding-bottom: 0;
-}
-/* the line that joins one number to the next */
-.rm-step:not(:last-child)::before {
-  content: '';
-  position: absolute;
-  inset-block: 32px 0;
-  inset-inline-start: 15px;
-  width: 2px;
-  background: var(--divider);
-}
+/* the round step number */
 .rm-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   border: 1px solid var(--border-strong);
   border-radius: 50%;
   background: var(--bg);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 800;
 }
-.rm-step:first-child .rm-number {
-  border-color: var(--navy);
-  background: var(--navy);
-  color: var(--bg);
-}
-.rm-text {
+
+/* the short roadmap inside the chat: number, name and tag on one line */
+.rm-brief {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  margin: 0;
+  padding: 6px 16px;
+  list-style: none;
+}
+.rm-brief li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-block: 10px;
+  border-top: 1px solid var(--divider);
+  font-size: 14px;
+}
+.rm-brief li:first-child {
+  border-top: none;
+}
+.rm-brief strong {
   flex: 1;
   min-width: 0;
 }
-.rm-text p {
-  margin: 0;
-  font-size: 13px;
-  line-height: 1.5;
-}
-.rm-text .rm-authority {
-  font-weight: 700;
-  color: var(--text-nav);
-}
-.rm-title {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  min-height: 32px;
-  font-size: 14.5px;
-}
-.rm-links {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+
+/* the "Go to the service" link */
 .rm-action {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
   background: var(--link-tint);
   color: var(--link-text);
@@ -537,8 +501,24 @@ html[dir="rtl"] .trace[open] summary svg {
 
 .assess {
   display: none;
-  max-width: 760px;
+  max-width: 920px;
   margin-inline: auto;
+}
+
+/* The box: every block of the assessment sits in one of these */
+.box {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--bg);
+}
+.box-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  font-size: 14px;
+  font-weight: 800;
 }
 .assess.is-open {
   display: block;
@@ -623,8 +603,8 @@ html[dir="rtl"] .assess-back svg {
 .assess-body {
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  padding-top: 40px;
+  gap: 16px;
+  padding-top: 28px;
 }
 
 /* the "Assessment 72" button in the header is not needed while the assessment is open */
@@ -647,206 +627,257 @@ body.assess-open #header-actions {
   color: var(--text-3);
 }
 
-/* ----- The score on its path ----- */
+/* ----- Motion: the pieces of the page rise into place as they come on screen -----
+   panel.js adds "rise" to each piece and "is-in" when it is on the screen.
+   "is-still" on the page means no animation (printing, or less motion asked). */
 
-.fis {
-  padding-bottom: 8px;
+.rise {
+  opacity: 0;
+  transform: translateY(22px);
+  transition:
+    opacity 0.6s var(--ease),
+    transform 0.6s var(--ease);
+  transition-delay: calc(var(--i, 0) * 90ms);
 }
-.fis-label {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-3);
+.rise.is-in {
+  opacity: 1;
+  transform: none;
 }
-.fis-number {
+
+/* ----- The score: a blue box with the dial on one side and the verdict on the other ----- */
+
+.score-hero {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
+  padding: 40px 44px 104px;
+  border-radius: var(--r-lg);
+  background: var(--gradient-brand);
+  color: var(--bg);
+  box-shadow: var(--shadow-brand);
+}
+
+/* the dial: a thick half circle with the number inside */
+.dial {
+  position: relative;
+  width: 300px;
+  max-width: 100%;
+}
+.dial svg {
+  display: block;
+  width: 100%;
+  overflow: visible;
+}
+.dial path {
+  fill: none;
+  stroke-width: 18;
+  stroke-linecap: round;
+}
+.dial-track {
+  stroke: rgba(255, 255, 255, 0.16);
+}
+/* the arc is one color family, light teal to white, so nothing fights with the blue box */
+.dial-stop-start { stop-color: var(--teal-bright); }
+.dial-stop-end   { stop-color: var(--bg); }
+.dial-knob {
+  fill: var(--bg);
+  stroke: var(--navy-deep);
+  stroke-width: 5;
+}
+.dial-number {
+  position: absolute;
+  inset-inline: 0;
+  inset-block-end: -6px;
   display: flex;
   align-items: baseline;
-  gap: 12px;
-  margin-top: 4px;
+  justify-content: center;
+  gap: 6px;
 }
-.fis-number strong {
-  font-size: clamp(72px, 14vw, 112px);
+.dial-number strong {
+  font-size: 84px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.05em;
   font-variant-numeric: tabular-nums;
 }
-.fis-number span {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-3);
-}
-.fis.is-good .fis-number strong { color: var(--good); }
-.fis.is-warn .fis-number strong { color: var(--warn-text); }
-.fis.is-risk .fis-number strong { color: var(--risk); }
-.fis-sentence {
-  max-width: 560px;
-  margin-top: 12px;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text-nav);
-}
-
-/* the line from 0 to 100: three parts, one for each band */
-.fis-path {
-  position: relative;
-  display: flex;
-  gap: 4px;
-  margin-top: 36px;
-}
-.fis-part {
-  height: 6px;
-  border-radius: var(--r-pill);
-}
-.fis-part.is-risk { flex: 40; background: var(--risk-tint); }
-.fis-part.is-warn { flex: 30; background: var(--warn-tint); }
-.fis-part.is-good { flex: 30; background: var(--good-tint); }
-.fis.is-risk .fis-part.is-risk { background: var(--risk); }
-.fis.is-warn .fis-part.is-warn { background: var(--warn); }
-.fis.is-good .fis-part.is-good { background: var(--good); }
-
-/* the marker starts at 0 and slides to the score (panel.js sets where) */
-.fis-marker {
-  position: absolute;
-  inset-block-start: 50%;
-  inset-inline-start: 0;
-  width: 22px;
-  height: 22px;
-  margin-block-start: -11px;
-  margin-inline-start: -11px;
-  border: 5px solid currentColor;
-  border-radius: 50%;
-  background: var(--bg);
-  box-shadow: var(--shadow-sm);
-  transition: inset-inline-start 0.9s var(--ease);
-}
-.fis.is-good .fis-marker { color: var(--good); }
-.fis.is-warn .fis-marker { color: var(--warn); }
-.fis.is-risk .fis-marker { color: var(--risk); }
-
-/* 0 and 100 under the two ends of the line */
-.fis-scale {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 12px;
-  font-size: 12px;
-  color: var(--text-3);
-}
-
-/* ----- Survival potential, risk level, sector viability ----- */
-
-.readings {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin: 12px 0 0;
-  border-block: 1px solid var(--divider);
-}
-.readings div {
-  padding: 18px 20px;
-  border-inline-start: 1px solid var(--divider);
-}
-.readings div:first-child {
-  padding-inline-start: 0;
-  border-inline-start: none;
-}
-.readings dt {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-3);
-}
-.readings dd {
-  margin: 4px 0 0;
-  font-size: 19px;
-  font-weight: 800;
-}
-.readings .is-good { color: var(--good-text); }
-.readings .is-warn { color: var(--warn-text); }
-.readings .is-risk { color: var(--risk-text); }
-
-/* ----- What moved the score ----- */
-
-.moves-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 40px;
-  margin-top: 20px;
-}
-.moves-title {
-  margin: 0 0 12px;
-  font-size: 12.5px;
-  font-weight: 700;
-  color: var(--text-3);
-}
-.moves ul {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.moves li {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
+.dial-number span {
   font-size: 15px;
   font-weight: 700;
+  opacity: 0.7;
 }
-.moves-value {
-  flex-shrink: 0;
-  min-width: 34px;
-  font-size: 17px;
+
+/* the verdict in words */
+.score-verdict h3 {
+  margin: 6px 0 0;
+  font-size: clamp(24px, 3vw, 32px);
   font-weight: 800;
-  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
 }
-.moves-value.is-up   { color: var(--good-text); }
-.moves-value.is-down { color: var(--risk-text); }
+.fis-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--teal-bright);
+}
+.fis-sentence {
+  max-width: 380px;
+  margin-top: 12px;
+  font-size: 15.5px;
+  line-height: 1.6;
+  opacity: 0.88;
+}
 
-/* ----- Small tiles for the market numbers ----- */
+/* ----- Survival potential, risk level, sector viability -----
+   three tinted tiles that sit over the bottom edge of the picture */
 
-.kpis {
+.readings {
+  position: relative;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: -72px;
+  padding-inline: 24px;
 }
-.fact-label {
-  font-size: 11.5px;
+.reading {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+}
+.reading-icon,
+.stat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  margin-bottom: 10px;
+  border-radius: var(--r-sm);
+  background: var(--navy-tint);
+  color: var(--navy);
+}
+.reading.is-good .reading-icon, .stat-icon.is-good { background: var(--good-tint); color: var(--good-text); }
+.reading.is-warn .reading-icon, .stat-icon.is-warn { background: var(--warn-tint); color: var(--warn-text); }
+.reading.is-risk .reading-icon, .stat-icon.is-risk { background: var(--risk-tint); color: var(--risk-text); }
+.reading-name {
+  font-size: 12.5px;
   font-weight: 700;
   color: var(--text-3);
 }
-.activity strong {
-  font-size: 14px;
-  overflow-wrap: anywhere;
+.reading strong {
+  font-size: 21px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+.reading.is-good strong { color: var(--good-text); }
+.reading.is-warn strong { color: var(--warn-text); }
+.reading.is-risk strong { color: var(--risk-text); }
+.reading small {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
 }
 
-/* ----- Similar startups: a plain list with a line between them ----- */
+.score-moves {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
 
-.similar {
-  display: flex;
-  flex-direction: column;
+/* what pushes the score up, what pulls it down */
+.moves.is-up   .box-title svg { color: var(--good); }
+.moves.is-down .box-title svg { color: var(--risk); }
+.move {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 12px;
+  padding-block: 9px;
+  font-size: 14px;
+}
+.move-name {
+  font-weight: 600;
+}
+.move-bar {
+  height: 8px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+.move-bar span {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.9s var(--ease) 0.3s;
+}
+/* the bar grows to its length (--w, set by panel.js) once its box is on the screen */
+.moves.is-in .move-bar span,
+.assess.is-still .move-bar span {
+  width: var(--w);
+}
+.moves.is-up   .move-bar span { background: var(--good); }
+.moves.is-down .move-bar span { background: var(--risk); }
+.move strong {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+.moves.is-up   .move strong { color: var(--good-text); }
+.moves.is-down .move strong { color: var(--risk-text); }
+
+/* ----- Similar startups: two boxes in a row ----- */
+
+.startups {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
 }
 .startup {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-block: 20px;
-  border-top: 1px solid var(--divider);
-  font-size: 14px;
-  line-height: 1.6;
-}
-.startup:first-child {
-  padding-top: 4px;
-  border-top: none;
+  gap: 14px;
 }
 .startup-top {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
+  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+}
+.initial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: var(--r-sm);
+  font-size: 17px;
+  font-weight: 800;
+}
+.initial.is-navy { background: var(--navy-tint); color: var(--navy); }
+.initial.is-teal { background: var(--teal-tint); color: var(--teal-text); }
+.initial.is-good { background: var(--good-tint); color: var(--good-text); }
+.initial.is-warn { background: var(--warn-tint); color: var(--warn-text); }
+.startup-name {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
   font-size: 12.5px;
 }
-.startup-top strong {
-  font-size: 16px;
+.startup-name strong {
+  font-size: 15.5px;
+}
+.startup-about {
+  flex: 1;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-2);
 }
 .startup-actions {
   display: flex;
@@ -857,30 +888,279 @@ body.assess-open #header-actions {
   height: 13px;
 }
 
-/* ----- Market: enterprises by size ----- */
+/* ----- Market ----- */
 
-.sizes {
+/* four boxes: a number, its name and one plain sentence */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 18px;
+}
+.stat-box strong {
+  margin-top: 14px;
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-align: start;
+}
+.stat-box strong.is-good { color: var(--good-text); }
+.stat-box strong.is-risk { color: var(--risk-text); }
+.stat-name {
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.stat-box small {
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-3);
+}
+
+/* "What this means for you" */
+.meaning {
+  border-color: transparent;
+  background: var(--gradient-brand);
+  color: var(--bg);
+  box-shadow: var(--shadow-brand);
+}
+.meaning .box-title svg {
+  color: var(--teal-bright);
+}
+.meaning ul {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding-inline-start: 18px;
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+.meaning li::marker {
+  color: var(--teal-bright);
+}
+
+/* enterprises by size: one bar cut into four parts, with the names under it */
+.size-bar {
+  display: flex;
+  gap: 3px;
+  height: 14px;
+}
+.size-part {
+  flex: 0;
+  border-radius: 4px;
+  transition: flex-grow 1s var(--ease) 0.2s;
+}
+/* the four parts grow to their share (--w) once the box is on the screen */
+.sizes.is-in .size-part,
+.assess.is-still .size-part {
+  flex-grow: var(--w);
+}
+.size-part.is-1, .size-dot.is-1 { background: var(--navy); }
+.size-part.is-2, .size-dot.is-2 { background: var(--teal); }
+.size-part.is-3, .size-dot.is-3 { background: var(--warn); }
+.size-part.is-4, .size-dot.is-4 { background: var(--risk); }
+.size-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  margin-top: 14px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.size-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.size-legend strong {
+  color: var(--text);
+}
+.size-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+.market-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.market-source svg {
+  width: 13px;
+  height: 13px;
+}
+.source-logo {
+  height: 22px;
+}
+
+/* ----- Roadmap: three parts; in each, a line with numbered dots and a box beside each ----- */
+
+.phase {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.phase + .phase {
+  margin-top: 16px;
+}
+/* the part's name in a navy pill, with how many steps it has */
+.phase-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  font-size: 13px;
+}
+.phase-title span {
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: var(--navy);
+  color: var(--bg);
+  font-weight: 800;
+}
+.phase-title small {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.phase-steps {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
 }
-.sizes .section-title {
-  margin: 0 0 4px;
+/* the line that runs through the dots */
+.phase-steps::before {
+  content: '';
+  position: absolute;
+  inset-block: 8px;
+  inset-inline-start: 16px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(var(--teal), var(--navy));
+  opacity: 0.25;
 }
-.size-row {
-  display: grid;
-  grid-template-columns: 110px 1fr 56px;
+.step-row {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.step-dot {
+  position: relative;
+  display: inline-flex;
   align-items: center;
-  gap: 12px;
-  font-size: 13.5px;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  margin-top: 16px;
+  border: 3px solid var(--bg);
+  border-radius: 50%;
+  background: var(--navy);
+  color: var(--bg);
+  font-size: 13px;
+  font-weight: 800;
 }
-.size-row strong {
-  text-align: end;
-  font-variant-numeric: tabular-nums;
+.step-row.is-conditional .step-dot {
+  background: var(--warn);
+  color: var(--text);
 }
-.market-source {
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+  padding: 18px;
+  transition: box-shadow var(--dur), transform var(--dur) var(--ease);
+}
+.step:hover {
+  box-shadow: var(--shadow-card);
+  transform: translateY(-1px);
+}
+
+/* the authority's logo; its initials show when there is no logo file */
+.authority-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  overflow: hidden;
+}
+.authority-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.authority-logo b {
+  font-size: 13px;
+  color: var(--navy);
+}
+.authority-logo img + b {
+  display: none;
+}
+
+.step-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+.step-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 15px;
+}
+.step-authority {
   font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.step-text p {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.step-text .step-fees {
+  margin-top: 2px;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.step-fees b {
+  color: var(--text-nav);
+}
+.step-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-weight: 700;
 }
 
 /* ----- Roadmap: the diagram ----- */
@@ -1068,41 +1348,26 @@ body.assess-open #header-actions {
 .report-line strong {
   color: var(--text);
 }
-/* the section title above already says "Founder Intelligence Score" */
-.report .fis-label {
-  display: none;
-}
-/* in the report the score is a little smaller than on its own tab */
-.report .fis-number strong {
-  font-size: 72px;
-}
-.report .fis-path {
-  margin-top: 24px;
-}
-
-.report-startups {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px 28px;
-}
-.report-startup {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  font-size: 12.5px;
-}
-.report-startup strong {
-  font-size: 14.5px;
-}
-.report-startup p {
-  margin-top: 3px;
-  font-size: 12.5px;
-  line-height: 1.55;
-}
 
 /* ==========================================================
    6. Smaller screens
    ========================================================== */
+
+@media (max-width: 1000px) {
+  .score-hero {
+    gap: 32px;
+    padding-inline: 28px;
+  }
+  .dial {
+    width: 240px;
+  }
+  .dial-number strong {
+    font-size: 68px;
+  }
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
 
 @media (max-width: 640px) {
   .chat-home {
@@ -1121,34 +1386,61 @@ body.assess-open #header-actions {
   .assess-nav {
     gap: 18px;
   }
+  .box {
+    padding: 18px;
+  }
+  .score-moves,
+  .startups {
+    grid-template-columns: 1fr;
+  }
+  .score-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 28px;
+    padding: 28px 20px 84px;
+    text-align: center;
+  }
+  .dial {
+    width: 250px;
+  }
+  .dial-number strong {
+    font-size: 68px;
+  }
   .readings {
     grid-template-columns: 1fr;
+    gap: 10px;
+    margin-top: -56px;
+    padding-inline: 14px;
   }
-  .readings div,
-  .readings div:first-child {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    padding: 14px 0;
-    border-inline-start: none;
-    border-top: 1px solid var(--divider);
-  }
-  .readings div:first-child {
-    border-top: none;
-  }
-  .readings dd {
-    margin: 0;
-    font-size: 16px;
-  }
-  .moves-grid {
-    grid-template-columns: 1fr;
-    gap: 28px;
-  }
-  .kpis {
+  .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
-  .report-startups {
-    grid-template-columns: 1fr;
+  .stat-box strong {
+    font-size: 21px;
+  }
+  .step {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+  .step-text {
+    flex-basis: 100%;
+  }
+  .step-row {
+    gap: 10px;
+  }
+  .step-dot {
+    width: 28px;
+    height: 28px;
+    font-size: 12px;
+  }
+  .phase-steps::before {
+    inset-inline-start: 13px;
+  }
+  .step-title {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
   .report-cover img {
     height: 34px;
@@ -1213,27 +1505,34 @@ body.assess-open #header-actions {
     padding: 12px 0 0;
   }
 
-  /* smaller text on paper, so the report stays short */
-  .fis-sentence   { font-size: 13.5px; }
-  .moves li       { font-size: 12.5px; }
-  .rm-text p      { font-size: 11.5px; }
-  .rm-title       { font-size: 13px; min-height: 0; }
-  .rm-step        { padding-bottom: 12px; }
-  .tile-value     { font-size: 18px; }
+  /* smaller and tighter on paper, so the report stays short */
+  .box            { padding: 14px; }
+  .fis-sentence   { font-size: 13px; }
+  .move           { font-size: 12.5px; padding-block: 6px; }
+  .startup-about,
+  .step-text p    { font-size: 11.5px; }
+  .stat-box strong { font-size: 19px; margin-top: 8px; }
+  .step           { padding: 12px 14px; }
+  .startup-actions { display: none; }
+  .score-hero     { padding: 26px 28px 88px; gap: 32px; box-shadow: none; }
+  .dial           { width: 230px; }
+  .dial-number strong { font-size: 64px; }
+  .step:hover     { box-shadow: none; transform: none; }
 
   /* never cut one of these in the middle of a page */
   .report-cover,
-  .fis,
+  .box,
+  .stats,
+  .score-hero,
   .readings,
-  .moves,
-  .kpis,
-  .sizes,
-  .report-startup,
-  .rm-step {
+  .step-row,
+  .score-moves {
     break-inside: avoid;
   }
   /* and never leave a section title alone at the bottom of a page */
-  .report-head {
+  .report-head,
+  .report-line,
+  .phase-title {
     break-after: avoid;
   }
 

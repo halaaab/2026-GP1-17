@@ -1,33 +1,33 @@
-/* Admin login: email and password, then a 6-digit code sent to the admin's email.
+/* Admin login: email and password, then a code from the admin's phone.
    Only admin accounts get in. */
 
 import { t } from '../../../shared/language.js';
 import {
   logIn, logOut, getAccount, goToHomePage,
-  getSecondStep, sendEmailCode, checkCode,
+  getSecondStep, startAuthenticatorSetup, checkCode,
 } from '../../../shared/auth.js';
 
 const loginForm = document.querySelector('#login-form');
+const setupForm = document.querySelector('#setup-form');
 const codeForm = document.querySelector('#code-form');
 const submitButton = document.querySelector('#submit-button');
-const resendButton = document.querySelector('#resend-button');
 
-let adminEmail = '';   // the admin who passed the password step
+let setupFactorId = null;   // which phone setup we are in the middle of
 
-/* Shows one screen of the page: 'login' or 'code' */
+/* Shows one screen of the page: 'login', 'setup' or 'code' */
 function showScreen(name) {
   document.querySelectorAll('.screen').forEach((screen) => {
     screen.classList.toggle('is-active', screen.dataset.screen === name);
   });
-  document.querySelector(`.screen[data-screen="${name}"] input`).focus();
+  const firstBox = document.querySelector(`.screen[data-screen="${name}"] input`);
+  if (firstBox) firstBox.focus();
 }
 
-/* Shows a message in one of the boxes: 'form-error', 'code-error' or 'code-info'.
-   An empty key hides the box. */
-function showAlert(id, key) {
+/* Shows a message in one of the red boxes: 'form-error', 'setup-error' or 'code-error' */
+function showAlert(id, errorKey) {
   const box = document.querySelector(`#${id}`);
-  box.hidden = !key;
-  box.textContent = key ? t(key) : '';
+  box.hidden = !errorKey;
+  box.textContent = errorKey ? t(errorKey) : '';
 }
 
 function showFieldError(inputId, errorKey) {
@@ -38,34 +38,34 @@ function showFieldError(inputId, errorKey) {
   return !errorKey;
 }
 
-/* "We sent a 6-digit code to name@example.com" */
-function showCodeText() {
-  document.querySelector('#code-sub').textContent = t('adminLogin.codeSub').replace('{email}', adminEmail);
-}
-document.addEventListener('darb:language', showCodeText);
+/* ---------- The second step ---------- */
 
-/* Supabase sends one code per minute to an address. After a code is requested,
-   "Send a new code" waits and counts down, so nobody asks again too early. */
-const RESEND_WAIT = 60;   // seconds
-let resendTimer = null;
+/* Called once the password is accepted (or when an admin comes back already signed in).
+   Sends the admin on, or shows the screen for the code. */
+async function continueAfterPassword() {
+  const step = await getSecondStep();
 
-function startResendWait() {
-  let secondsLeft = RESEND_WAIT;
-  clearInterval(resendTimer);
-  resendButton.disabled = true;
+  if (step === 'done') {
+    await goToHomePage();
+    return;
+  }
 
-  const tick = () => {
-    if (secondsLeft <= 0) {
-      clearInterval(resendTimer);
-      resendButton.disabled = false;
-      resendButton.textContent = t('adminLogin.resend');
-      return;
-    }
-    resendButton.textContent = `${t('adminLogin.resend')} (${secondsLeft})`;
-    secondsLeft -= 1;
-  };
-  tick();
-  resendTimer = setInterval(tick, 1000);
+  if (step === 'code') {
+    showScreen('code');
+    return;
+  }
+
+  // first time: show the QR code to scan
+  const setup = await startAuthenticatorSetup();
+  showScreen('setup');
+
+  if (!setup.ok) {
+    showAlert('setup-error', setup.error);
+    return;
+  }
+  setupFactorId = setup.factorId;
+  document.querySelector('#qr-code').src = setup.qrCode;
+  document.querySelector('#setup-key').textContent = setup.key;
 }
 
 /* ---------- When the page opens ---------- */
@@ -76,7 +76,8 @@ if (account.role === 'admin') {
   if ((await getSecondStep()) === 'done') {
     await goToHomePage();
   } else {
-    // the password alone is not enough: start again so a fresh code is sent
+    // half signed in (for example with Google, or the page was reloaded before the code):
+    // start again, so the admin always types the password and then the code
     await logOut(false);
   }
 }
@@ -107,8 +108,7 @@ loginForm.addEventListener('submit', async (event) => {
 
   submitButton.classList.add('is-loading');
 
-  const email = loginForm.elements.email.value.trim();
-  const result = await logIn(email, loginForm.elements.password.value);
+  const result = await logIn(loginForm.elements.email.value.trim(), loginForm.elements.password.value);
 
   if (!result.ok) {
     submitButton.classList.remove('is-loading');
@@ -119,81 +119,65 @@ loginForm.addEventListener('submit', async (event) => {
   // The password was right, but is this an admin account?
   const signedIn = await getAccount();
 
-  if (signedIn.role !== 'admin') {
+  if (signedIn.role === 'admin') {
+    await continueAfterPassword();
+    submitButton.classList.remove('is-loading');
+  } else {
     // a founder account has no place here: sign it out again and stay on this page
     await logOut(false);
     submitButton.classList.remove('is-loading');
     showAlert('form-error', 'error.notAdmin');
+  }
+});
+
+/* ---------- 2. The 6-digit code (setup and normal sign-in work the same way) ---------- */
+
+async function submitCode(form, inputId, alertId, factorId) {
+  showAlert(alertId, '');
+
+  const code = form.elements.code.value.trim();
+  if (!/^\d{6}$/.test(code)) {
+    showFieldError(inputId, 'error.codeFormat');
     return;
   }
 
-  // an admin: email the code and ask for it
-  adminEmail = email;
-  const sent = await sendEmailCode(adminEmail);
-  submitButton.classList.remove('is-loading');
-  loginForm.elements.password.value = '';
-
-  showCodeText();
-  showAlert('code-info', '');
-  showAlert('code-error', sent.ok ? '' : sent.error);
-  showScreen('code');
-  startResendWait();
-});
-
-/* ---------- 2. The 6-digit code ---------- */
-
-const codeInput = codeForm.elements.code;
-
-// only digits can be typed
-codeInput.addEventListener('input', () => {
-  codeInput.value = codeInput.value.replace(/\D/g, '');
-  showFieldError('login-code', '');
-});
-
-codeForm.addEventListener('submit', async (event) => {
-  event.preventDefault();
-  showAlert('code-error', '');
-  showAlert('code-info', '');
-
-  if (!/^\d{6}$/.test(codeInput.value)) {
-    showFieldError('login-code', 'error.codeFormat');
-    return;
-  }
-
-  const button = codeForm.querySelector('button[type="submit"]');
+  const button = form.querySelector('button[type="submit"]');
   button.classList.add('is-loading');
-  const result = await checkCode(adminEmail, codeInput.value);
+  const result = await checkCode(code, factorId);
+  button.classList.remove('is-loading');
 
   if (!result.ok) {
-    button.classList.remove('is-loading');
-    showAlert('code-error', result.error);
-    codeInput.value = '';
-    codeInput.focus();
+    showAlert(alertId, result.error);
+    form.elements.code.value = '';
+    form.elements.code.focus();
     return;
   }
 
   await goToHomePage();
+}
+
+setupForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  submitCode(setupForm, 'setup-code', 'setup-error', setupFactorId);
 });
 
-// "Send a new code"
-resendButton.addEventListener('click', async () => {
-  showAlert('code-error', '');
-  showAlert('code-info', '');
+codeForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  submitCode(codeForm, 'login-code', 'code-error', null);
+});
 
-  resendButton.classList.add('is-loading');
-  const sent = await sendEmailCode(adminEmail);
-  resendButton.classList.remove('is-loading');
-
-  if (sent.ok) {
-    showAlert('code-info', 'adminLogin.resent');
-    startResendWait();
-  } else {
-    showAlert('code-error', sent.error);
-  }
+// only digits can be typed in the code boxes
+document.querySelectorAll('.code-input').forEach((input) => {
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, '');
+    showFieldError(input.id, '');
+  });
 });
 
 // "Sign in with a different account": sign out and show the first screen again
-document.querySelector('[data-other-account]').addEventListener('click', async () => {
-  await logOut(false);
-  showScreen('login');
+document.querySelectorAll('[data-other-account]').forEach((button) => {
+  button.addEventListener('click', async () => {
+    await logOut(false);
+    showScreen('login');
+  });
 });

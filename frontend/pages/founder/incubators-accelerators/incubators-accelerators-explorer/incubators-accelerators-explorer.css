@@ -1,0 +1,475 @@
+/* Incubators & Accelerators Explorer only: a purple banner over a photo of Riyadh,
+   a search bar on its lower edge (search, sector, city, type), and colored cards.
+   Buttons and the empty state come from shared/shared.css. */
+
+/* ---------- Banner ---------- */
+
+.programs-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 236px;
+  padding: 30px 32px 70px;
+  border-radius: 22px;
+  background: #262A66;
+  color: #fff;
+}
+/* the photo (the same one as the landing page), with more contrast, under the gradient */
+.programs-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: #E9E8F2 url('../../../../assets/images/hero-riyadh.jpg') right 0 top 38% / 66% auto no-repeat;
+  filter: brightness(0.72) contrast(1.75) saturate(1.35);
+}
+/* the photo faces the other way in Arabic, so the towers stay behind the empty side */
+html[dir="rtl"] .programs-hero::before {
+  transform: scaleX(-1);
+}
+/* over the photo: solid purple behind the text, fading so the towers show on the other side */
+.programs-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #262A66 0%, rgba(38, 42, 102, 0.9) 28%, rgba(60, 56, 130, 0.3) 52%, rgba(80, 66, 150, 0) 78%);
+}
+html[dir="rtl"] .programs-hero::after {
+  background: linear-gradient(270deg, #262A66 0%, rgba(38, 42, 102, 0.9) 28%, rgba(60, 56, 130, 0.3) 52%, rgba(80, 66, 150, 0) 78%);
+}
+
+/* the investment sign, standing on the banner's lower edge at the photo side */
+.programs-growth {
+  position: absolute;
+  bottom: 46px;
+  inset-inline-end: 28px;
+  width: min(36%, 330px);
+  height: auto;
+  overflow: visible;
+  pointer-events: none;
+}
+html[dir="rtl"] .programs-growth {
+  transform: scaleX(-1);
+}
+.programs-growth-arrow {
+  filter: drop-shadow(0 0 5px rgba(59, 227, 154, 0.8));
+}
+
+.programs-hero-text {
+  position: relative;
+  z-index: 1;
+  max-width: 540px;
+}
+.programs-hero-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--r-pill);
+  background: rgba(255, 255, 255, 0.12);
+  font-size: 12px;
+  font-weight: 700;
+}
+.programs-hero-title {
+  margin: 14px 0 6px;
+  font-size: clamp(26px, 3.4vw, 34px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.programs-hero-text p {
+  margin: 0;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.programs-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 20px;
+}
+.programs-total {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-block: 8px;
+  padding-inline: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.09);
+  backdrop-filter: blur(4px);
+}
+.programs-total-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.14);
+}
+.programs-total-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.programs-total-text {
+  display: flex;
+  flex-direction: column;
+}
+.programs-total-text strong {
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.15;
+}
+.programs-total-text span {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* ---------- Search bar, on the banner's lower edge ---------- */
+
+.programs-filters {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: -40px 20px 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+}
+.programs-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 200px;
+  height: 44px;
+  padding-inline: 14px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  background: var(--bg-muted);
+  color: var(--text-3);
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast), background var(--dur-fast);
+}
+.programs-search:focus-within {
+  border-color: var(--teal);
+  background: var(--bg);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.programs-search input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  font-size: 14px;
+}
+
+/* a select with a chevron at its end (drawn on the wrapper) */
+.programs-select-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 165px;
+  min-width: 120px;
+}
+.programs-select-wrap::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 16px;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  /* physical sides on purpose: the arrow points down in both languages */
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.programs-select {
+  width: 100%;
+  height: 44px;
+  padding-inline: 14px 36px;
+  border: 1px solid var(--border-strong);
+  border-radius: 11px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.programs-select:hover {
+  border-color: var(--teal);
+}
+.programs-select:focus-visible {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.programs-search-button {
+  height: 44px;
+  padding-inline: 24px;
+  border-radius: 11px;
+}
+
+.programs-bar {
+  margin: 28px 0 14px;
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.programs-found {
+  font-size: 14px;
+  color: var(--text-2);
+}
+.programs-found strong {
+  margin-inline-end: 2px;
+  font-size: 19px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+/* ---------- Cards ---------- */
+
+.programs-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+/* Each program has one of six blues, to match the banner (colorOf in ../programs.js):
+   --tint for the band, --ink for text on it, --strong for the big icon.
+   The details page uses the same six. */
+.color-0 { --tint: #E6F1FB; --ink: #2A6496; --strong: #4A90D9; }   /* sky */
+.color-1 { --tint: #E3ECFA; --ink: #1F4F8F; --strong: #2F6FD0; }   /* azure */
+.color-2 { --tint: #E5E8FA; --ink: #2F3F9E; --strong: #3B55C9; }   /* royal blue */
+.color-3 { --tint: #E8E7F8; --ink: #3D3A8F; --strong: #4E49B8; }   /* indigo */
+.color-4 { --tint: #E2E8F2; --ink: #1F3560; --strong: #263E73; }   /* navy */
+.color-5 { --tint: #ECEAFB; --ink: #4B45A8; --strong: #6A63D6; }   /* periwinkle */
+
+.programs-card {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+  color: inherit;
+  transition:
+    border-color var(--dur),
+    box-shadow var(--dur) var(--ease),
+    transform var(--dur) var(--ease);
+}
+.programs-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-float);
+  transform: translateY(-3px);
+}
+
+/* the colored band, with a soft pattern of triangles */
+.programs-card-band {
+  position: relative;
+  flex-shrink: 0;
+  height: 100px;
+  background:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='28' height='24'%3E%3Cpath d='M0 24 14 0l14 24Z' fill='%23fff' fill-opacity='.38'/%3E%3Cpath d='M0 0h14L0 24ZM28 0H14l14 24Z' fill='%23fff' fill-opacity='.12'/%3E%3C/svg%3E"),
+    var(--tint);
+}
+.programs-card-type {
+  position: absolute;
+  top: 14px;
+  inset-inline-start: 14px;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+  border-radius: 7px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.programs-card-icon {
+  position: absolute;
+  top: 16px;
+  inset-inline-end: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 18px;
+  background: var(--strong);
+  color: #fff;
+  box-shadow: 0 14px 24px -12px var(--strong);
+  transform: rotate(-8deg);
+  transition: transform var(--dur) var(--ease);
+}
+.programs-card-icon svg {
+  width: 28px;
+  height: 28px;
+}
+.programs-card:hover .programs-card-icon {
+  transform: rotate(0) scale(1.05);
+}
+/* with a logo: a straight white square, so any logo shows as it is */
+.programs-card-icon.has-logo {
+  overflow: hidden;
+  background: var(--bg);
+  box-shadow: 0 14px 24px -12px var(--strong), 0 0 0 1px var(--border);
+  transform: none;
+}
+.programs-card:hover .programs-card-icon.has-logo {
+  transform: scale(1.05);
+}
+.programs-card-icon img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
+
+.programs-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  padding: 18px 18px 0;
+}
+.programs-card-name {
+  margin: 0;
+  font-size: 16.5px;
+  font-weight: 800;
+  line-height: 1.4;
+}
+.programs-card-about {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--text-3);
+  /* two lines, then "…" */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.programs-card-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.programs-chip {
+  max-width: 100%;
+  padding: 3px 8px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.programs-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 16px 18px;
+}
+.programs-card-city {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.programs-card-city svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  color: var(--ink);
+}
+.programs-card-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--navy-deep);
+  color: #fff;
+  transition: transform var(--dur-fast), background var(--dur-fast);
+}
+.programs-card-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+.programs-card:hover .programs-card-arrow {
+  background: var(--strong);
+  transform: translateX(2px);
+}
+html[dir="rtl"] .programs-card-arrow svg {
+  transform: scaleX(-1);
+}
+html[dir="rtl"] .programs-card:hover .programs-card-arrow {
+  transform: translateX(-2px);
+}
+
+/* ---------- Empty state and pages ---------- */
+
+.programs-empty .section-title,
+.programs-empty p {
+  margin: 0;
+}
+
+.programs-pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  font-size: 13px;
+}
+.programs-pager-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+/* Phones */
+@media (max-width: 640px) {
+  .programs-hero {
+    padding: 22px 20px 64px;
+  }
+  /* on a phone the text covers the whole banner, so the photo is darkened more */
+  .programs-growth {
+    width: 55%;
+    opacity: 0.35;
+  }
+  .programs-hero::after,
+  html[dir="rtl"] .programs-hero::after {
+    background: rgba(38, 42, 102, 0.82);
+  }
+  .programs-filters {
+    margin-inline: 10px;
+  }
+  .programs-select-wrap {
+    flex: 1 1 120px;
+    min-width: 0;
+  }
+  .programs-search-button {
+    flex: 1 1 100%;
+  }
+}

@@ -1,0 +1,317 @@
+/* Incubators & accelerators management only. The table card, chips, panel
+   and modal come from shared/shared.css. */
+
+/* ---------- Head ---------- */
+
+.manage-head {
+  align-items: center;
+  margin-bottom: 24px;
+}
+.manage-title {
+  font-size: clamp(26px, 3.4vw, 34px);
+}
+.manage-head p {
+  margin-top: 6px;
+  font-size: 15px;
+}
+.manage-add {
+  border-radius: 14px;
+}
+
+/* ---------- Search and dropdown filters ---------- */
+
+.manage-filters {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.manage-search {
+  flex: 1 1 280px;
+  max-width: 400px;
+  height: 46px;
+  border-radius: 12px;
+}
+
+/* a pill with a chevron at its end (the chevron is drawn on the wrapper) */
+.manage-select-wrap {
+  position: relative;
+  display: inline-flex;
+  flex: 0 1 220px;
+  min-width: 150px;
+}
+.manage-select-wrap::after {
+  content: '';
+  position: absolute;
+  inset-inline-end: 20px;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  /* physical sides on purpose: the arrow points down in both languages */
+  border-right: 2px solid var(--text-2);
+  border-bottom: 2px solid var(--text-2);
+  transform: translateY(-70%) rotate(45deg);
+  pointer-events: none;
+}
+.manage-select {
+  width: 100%;
+  height: 44px;
+  padding-inline: 18px 42px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
+}
+.manage-select:hover {
+  border-color: var(--teal);
+}
+.manage-select:focus-visible {
+  outline: none;
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+
+/* ---------- Table ---------- */
+
+.manage-card {
+  border-radius: 16px;
+}
+.manage-table th {
+  padding-block: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+.manage-table td {
+  padding-block: 18px;
+}
+.manage-table tbody tr.is-selected td {
+  background: var(--bg-subtle);
+}
+
+.manage-name {
+  min-width: 200px;
+  max-width: 290px;
+}
+.manage-name .cell-title {
+  font-size: 15px;
+  line-height: 1.4;
+}
+.manage-name .cell-detail {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.manage-program {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* The program's logo, or its initials (from the founder pages' programs.js) */
+.program-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 13px;
+  font-weight: 800;
+}
+.program-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.program-logo.tone-0 { background: var(--teal-tint); color: var(--teal-text); border-color: transparent; }
+.program-logo.tone-1 { background: var(--navy-tint); color: var(--navy); border-color: transparent; }
+.program-logo.tone-2 { background: var(--link-tint); color: var(--link-text); border-color: transparent; }
+
+/* the type as a soft pill, like the authority on the regulatory page */
+.manage-chip {
+  padding: 5px 12px;
+  border-radius: var(--r-pill);
+  font-size: 12.5px;
+}
+
+.manage-text {
+  min-width: 110px;
+  max-width: 220px;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.manage-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.manage-actions .btn-icon {
+  color: var(--text-nav);
+}
+.manage-actions .manage-delete:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
+/* the actions column has a heading for screen readers only */
+.manage-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.manage-empty {
+  margin: 16px;
+}
+
+/* ---------- Side panel ---------- */
+
+/* the form needs more room than the default panel */
+.manage-panel {
+  width: min(520px, calc(100vw - 32px));
+}
+.manage-panel .modal-title {
+  margin: 0;
+}
+.manage-panel-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+}
+
+/* ---------- Logo picker ---------- */
+
+.logo-picker {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  transition: border-color var(--dur-fast), background var(--dur-fast);
+}
+.logo-picker.is-error {
+  border-color: var(--risk);
+  background: var(--risk-tint);
+}
+.logo-picker.is-dragging {
+  border-color: var(--teal);
+  background: var(--teal-tint);
+}
+
+.logo-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 76px;
+  height: 76px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: var(--shadow-card);
+}
+.logo-preview img {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  object-fit: contain;
+}
+.logo-preview .program-logo {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 0;
+  font-size: 22px;
+}
+
+.logo-picker-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.logo-picker-text p {
+  margin: 0;
+}
+.logo-picker-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* the real file box stays hidden; the "Upload logo" button opens it */
+.logo-input {
+  display: none;
+}
+
+/* ---------- Arabic version ---------- */
+
+.manage-arabic {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 8px 0 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  min-width: 0;
+}
+.manage-arabic-title {
+  padding: 0 6px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.manage-arabic .field-hint {
+  margin: 0;
+}
+
+.manage-textarea {
+  height: auto;
+  min-height: 84px;
+  padding-block: 10px;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+/* Phones: keep the program, its type and the buttons */
+@media (max-width: 640px) {
+  .hide-small {
+    display: none;
+  }
+  .manage-table {
+    min-width: 0;
+  }
+  .manage-search {
+    max-width: none;
+  }
+  .manage-select-wrap {
+    flex: 1 1 140px;
+  }
+  .manage-add {
+    width: 100%;
+  }
+}

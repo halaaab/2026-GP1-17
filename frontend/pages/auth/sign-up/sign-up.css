@@ -270,3 +270,16 @@ html[dir="rtl"] .step.is-active {
     flex: 1;
   }
 }
+
+/* The box that tells someone outside Saudi Arabia that they cannot register */
+.not-in-saudi svg {
+  flex-shrink: 0;
+}
+.not-in-saudi strong {
+  display: block;
+  margin-bottom: 2px;
+  font-weight: 800;
+}
+.not-in-saudi span {
+  font-weight: 500;
+}

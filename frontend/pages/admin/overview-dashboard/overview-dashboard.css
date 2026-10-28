@@ -1,0 +1,703 @@
+/* Admin overview only. Cards, chips, tables, bars and the segmented control
+   come from shared/shared.css. Every color is a token from shared/variables.css. */
+
+main {
+  /* the heatmap's five steps: one hue (teal), light to dark */
+  --ov-level-0: var(--bg-muted);
+  --ov-level-1: var(--teal-tint);
+  --ov-level-2: color-mix(in srgb, var(--teal) 45%, var(--teal-tint));
+  --ov-level-3: color-mix(in srgb, var(--teal) 75%, var(--teal-tint));
+  --ov-level-4: var(--teal-text);
+  --ov-cell: 16px;
+}
+
+/* ---------- Head ---------- */
+
+.ov-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+.ov-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.ov-hello {
+  font-size: clamp(28px, 4vw, 40px);
+}
+.ov-pulse {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 15px;
+}
+.ov-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ov-refresh.is-spinning svg {
+  animation: spin 0.8s linear infinite;
+}
+
+/* ---------- Layout ---------- */
+
+.ov-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.ov-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+/* a wider card on the start side */
+.ov-row:has(.ov-card-grow) {
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr);
+}
+
+.ov-wide {
+  margin-bottom: 14px;
+}
+
+.ov-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  padding: 20px;
+}
+.ov-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ov-card-head p {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+}
+
+.ov-empty {
+  padding: 24px 16px;
+  font-size: 13px;
+}
+
+.ov-updated {
+  margin: 4px 0 0;
+  font-size: 12px;
+  text-align: end;
+}
+
+/* ---------- 1. KPIs ---------- */
+
+.ov-kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.ov-skeleton {
+  height: 128px;
+}
+.ov-kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ov-kpi .stat-value {
+  font-size: 30px;
+}
+.ov-arrow {
+  display: inline-flex;
+}
+.ov-arrow svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.6;
+}
+.ov-arrow.is-down svg {
+  transform: rotate(180deg);
+}
+.ov-kpi-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.ov-kpi-link {
+  display: inline-flex;
+  color: var(--text-3);
+}
+.ov-kpi-link:hover {
+  color: var(--teal-text);
+}
+html[dir="rtl"] .ov-kpi-link svg,
+html[dir="rtl"] .ov-check-link svg {
+  transform: scaleX(-1);
+}
+
+/* sparkline */
+.ov-spark {
+  display: block;
+  width: 100%;
+  height: 40px;
+  overflow: visible;
+}
+.ov-spark-empty {
+  height: 40px;
+  border-bottom: 2px dashed var(--border);
+}
+.ov-spark-line {
+  fill: none;
+  stroke: var(--teal);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+.ov-spark-area {
+  fill: var(--teal-tint);
+  opacity: 0.8;
+}
+.ov-spark-dot {
+  fill: var(--teal);
+  stroke: var(--bg);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+.ov-spark-hit {
+  fill: transparent;
+}
+.ov-spark-hit:hover {
+  fill: var(--navy-tint);
+  opacity: 0.6;
+}
+
+/* ---------- 2. Founder journey ---------- */
+
+.ov-funnel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ov-step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ov-step-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.ov-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--navy-tint);
+  color: var(--navy);
+  font-size: 11px;
+  font-weight: 800;
+}
+.ov-step-count {
+  margin-inline-start: auto;
+  font-size: 14px;
+}
+.ov-step-kept {
+  min-width: 40px;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: var(--bg-muted);
+  color: var(--text-2);
+  font-size: 11.5px;
+  text-align: center;
+}
+.ov-step-bar {
+  display: flex;
+  align-items: center;
+  height: 14px;
+  border-radius: 7px;
+  background: var(--bg-tile);
+}
+.ov-step-fill {
+  height: 100%;
+  border-radius: 7px;
+  background: var(--gradient-brand);
+  transition: width 0.6s var(--ease);
+}
+
+.ov-insight {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--teal-tint);
+  color: var(--teal-text);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ov-insight svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ---------- 3. Score health ---------- */
+
+/* the three score bands; the same colors as the score chips everywhere in Darb */
+.ov-good { background: var(--good); }
+.ov-warn { background: var(--warn); }
+.ov-risk { background: var(--risk); }
+
+.ov-score-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.ov-score-big {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ov-score-number {
+  font-family: var(--font-display);
+  font-weight: var(--display-weight);
+  font-size: 44px;
+  line-height: 1;
+}
+.ov-score-facts {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 12.5px;
+  color: var(--text-2);
+}
+
+.ov-histogram {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 96px;
+  direction: ltr;   /* scores always run 0 → 100 */
+}
+.ov-bin {
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  height: 100%;
+  border-radius: 4px 4px 0 0;
+}
+.ov-bin:hover {
+  background: var(--bg-tile);
+}
+.ov-bin-fill {
+  width: 100%;
+  min-height: 2px;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.6s var(--ease);
+}
+/* 0, 40, 70 and 100 sit exactly at the band edges */
+.ov-axis {
+  position: relative;
+  height: 18px;
+  margin: 4px 0 14px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-3);
+}
+.ov-axis span {
+  position: absolute;
+  top: 3px;
+  transform: translateX(-50%);
+}
+.ov-axis span:first-child { transform: none; }
+.ov-axis span:last-child  { transform: translateX(-100%); }
+
+.ov-stack {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  overflow: hidden;
+  border-radius: var(--r-pill);
+}
+.ov-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 12.5px;
+}
+.ov-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-2);
+}
+.ov-legend i {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+.ov-legend strong {
+  color: var(--text);
+}
+.ov-risks {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+  font-size: 12.5px;
+}
+
+/* ---------- 4. Activity rhythm ---------- */
+
+.ov-scale {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11.5px;
+  color: var(--text-3);
+}
+.ov-scale span {
+  margin-inline: 4px;
+}
+.ov-scale i {
+  width: 13px;
+  height: 13px;
+  border-radius: 3px;
+}
+.ov-cell {
+  width: var(--ov-cell);
+  height: var(--ov-cell);
+  border-radius: 4px;
+}
+
+.ov-level-0 { background: var(--ov-level-0); }
+.ov-level-1 { background: var(--ov-level-1); }
+.ov-level-2 { background: var(--ov-level-2); }
+.ov-level-3 { background: var(--ov-level-3); }
+.ov-level-4 { background: var(--ov-level-4); }
+
+.ov-rhythm {
+  display: flex;
+  align-items: flex-start;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.ov-heatmap-wrap {
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 4px 6px;
+}
+.ov-heatmap {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    ".    months"
+    "days grid";
+  gap: 6px 8px;
+  padding-inline-end: 18px;   /* room for the last month's name */
+}
+.ov-heat-months {
+  grid-area: months;
+  display: grid;
+  grid-template-columns: repeat(12, var(--ov-cell));
+  gap: 4px;
+  font-size: 11px;
+  color: var(--text-3);
+  white-space: nowrap;
+}
+.ov-heat-days {
+  grid-area: days;
+  display: grid;
+  grid-template-rows: repeat(7, var(--ov-cell));
+  gap: 4px;
+  font-size: 11px;
+  line-height: var(--ov-cell);
+  color: var(--text-3);
+}
+.ov-heat-grid {
+  grid-area: grid;
+  display: grid;
+  grid-template-rows: repeat(7, var(--ov-cell));
+  grid-auto-flow: column;
+  grid-auto-columns: var(--ov-cell);
+  gap: 4px;
+}
+.ov-cell {
+  display: block;
+  transition: transform var(--dur-fast);
+}
+.ov-cell:not(.is-future):hover {
+  outline: 2px solid var(--navy);
+  outline-offset: 1px;
+}
+.ov-cell.is-future {
+  background: transparent;
+}
+
+.ov-rhythm-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(140px, 1fr));
+  gap: 10px;
+  flex: 1 1 300px;
+}
+.ov-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: var(--r-sm);
+  background: var(--bg-tile);
+  font-size: 12px;
+}
+.ov-fact strong {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+/* ---------- 5. Who is on Darb ---------- */
+
+.ov-tabs {
+  align-self: flex-start;
+}
+.ov-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ov-bar-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+.ov-bar-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.ov-bar-track {
+  height: 10px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+.ov-bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--navy);
+  transition: width 0.6s var(--ease);
+}
+.ov-bar-value {
+  min-width: 64px;
+  font-weight: 700;
+  text-align: end;
+}
+
+/* ---------- 6. Data health ---------- */
+
+.ov-ring {
+  position: relative;
+  flex-shrink: 0;
+  width: 60px;
+  height: 60px;
+}
+.ov-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.ov-ring circle {
+  fill: none;
+  stroke-width: 6;
+}
+.ov-ring-track {
+  stroke: var(--bg-muted);
+}
+.ov-ring-fill {
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.8s var(--ease);
+}
+.ov-good-stroke { stroke: var(--good); }
+.ov-warn-stroke { stroke: var(--warn); }
+.ov-risk-stroke { stroke: var(--risk); }
+.ov-ring strong {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ov-checks {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ov-check {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  border-top: 1px solid var(--divider);
+}
+.ov-check:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+.ov-check-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+.ov-check-icon svg {
+  width: 16px;
+  height: 16px;
+}
+.ov-check-icon.is-ok   { background: var(--good-tint); color: var(--good-text); }
+.ov-check-icon.is-todo { background: var(--warn-tint); color: var(--warn-text); }
+.ov-check-icon.is-info { background: var(--navy-tint); color: var(--navy); }
+.ov-check-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.ov-check-text .text-3 {
+  font-size: 12.5px;
+}
+.ov-check-link {
+  width: 32px;
+  flex-shrink: 0;
+}
+
+/* ---------- 7. Latest activity ---------- */
+
+.ov-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ov-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.ov-event-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.ov-event-text .text-3 {
+  font-size: 12px;
+}
+.ov-event-kind {
+  display: inline-flex;
+  color: var(--text-3);
+}
+.ov-event-kind svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* ---------- Tooltip ---------- */
+
+.ov-tip {
+  position: fixed;
+  z-index: 400;
+  max-width: 260px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--navy-deep);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  box-shadow: var(--shadow-float);
+  pointer-events: none;
+}
+
+/* ---------- Smaller screens ---------- */
+
+@media (max-width: 1100px) {
+  .ov-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .ov-row,
+  .ov-row:has(.ov-card-grow) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .ov-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ov-head {
+    align-items: stretch;
+  }
+  .ov-controls {
+    justify-content: space-between;
+  }
+  .ov-scale {
+    display: none;
+  }
+  .ov-rhythm-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

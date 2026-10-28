@@ -34,6 +34,7 @@
 
 import { getLanguage, t } from './language.js';
 import { supabase } from './supabase.js';
+import { IDEA_DIVISIONS, divisionsOf, fitsDivisions } from './regulatory.js';
 
 const ROOT = new URL('..', import.meta.url).href;
 const CHAT_PAGE = `${ROOT}pages/founder/chatbot/chatbot.html`;
@@ -95,9 +96,6 @@ export const AGENT_STEPS = ['agent.step.understand', 'agent.step.similar', 'agen
    filled from the Excel files in datasets/). What is still simple is HOW they are
    chosen: by the idea's sector. Later the similarity engine ranks the startups by
    meaning, and the Roadmap Agent decides which requirements apply to this venture. */
-
-/* Darb's four sectors: the answer in the chat → the sector name used in the datasets */
-const SECTORS = { ai: 'AI & Software', food: 'Food & Beverages', fashion: 'Fashion', furniture: 'Furniture' };
 
 /* How to find startups of a sector: which column to look in, and for which word */
 const STARTUP_SEARCH = {
@@ -170,12 +168,10 @@ async function loadMarket(assessment) {
     activity: { en: row.economic_activity_name_en, ar: row.economic_activity_name_ar || row.economic_activity_name_en },
     year: row.year,
     sourceUrl: row.source_url || '',
-    numbers: [
-      { label: 'market.establishments', value: row.enterprises_total },
-      { label: 'market.newEnterprises', value: row.new_enterprises_total },
-      { label: 'market.employees',      value: row.employees_total },
-      { label: 'market.growth',         value: row.enterprises_growth_pct, isPercent: true },
-    ].filter((number) => number.value !== null),
+    enterprises: row.enterprises_total,
+    newEnterprises: row.new_enterprises_total,
+    employees: row.employees_total,
+    growth: row.enterprises_growth_pct,   // percent, compared with the year before
     sizes: [
       { label: 'size.micro',  value: row.share_micro_pct },
       { label: 'size.small',  value: row.share_small_pct },
@@ -192,16 +188,18 @@ async function loadRoadmap(assessment) {
     return [];
   }
 
-  const sectorName = SECTORS[assessment.sector] || '';
+  // the idea's ISIC4 divisions (the same ones as its market indicators); a requirement is
+  // for this idea when its own divisions include one of them, or when it is for every business
+  const divisions = IDEA_DIVISIONS[assessment.sector] || [];
   const willHire = assessment.hiring !== 'no';
 
   return data
     .filter((row) => row.regulatory_status === 'Active')
-    .filter((row) => row.sector === 'All' || (sectorName && row.sector.includes(sectorName)))
+    .filter((row) => fitsDivisions(row, divisions))
     .filter((row) => {
       const isRequired = row.mandatory === 'Required' || row.mandatory === 'Required when in scope';
-      const isForThisSector = row.sector !== 'All' && !row.sector.includes(';');
-      return (isRequired && (row.sector === 'All' ? row.mandatory === 'Required' : isForThisSector))
+      const forEveryBusiness = divisionsOf(row).includes('ALL');
+      return (isRequired && (forEveryBusiness ? row.mandatory === 'Required' : true))
         || ALWAYS_SHOWN.includes(row.requirement_id)
         || (willHire && WHEN_HIRING.includes(row.requirement_id));
     })
@@ -212,13 +210,16 @@ async function loadRoadmap(assessment) {
     .map((row) => ({
       id: row.requirement_id,
       title: { en: row.name_en, ar: row.name_ar || row.name_en },
-      authority: row.authority || '',
+      authority: row.authority || '',   // in English: also used to find the authority's logo
+      authorityName: { en: row.authority || '', ar: row.authority_ar || row.authority || '' },
       // "what_darb_should_surface" is written as instructions for the agent, so until the
       // agent rewrites it for the founder, the plain "applies when" sentence is shown
-      guidance: row.applies_when || '',
+      guidance: { en: row.applies_when || '', ar: row.applies_when_ar || row.applies_when || '' },
       type: row.mandatory === 'Required' ? 'mandatory' : 'conditional',
       link: row.service_url || row.official_source_url || '',
       source: row.official_source_url || '',
+      stage: row.business_stage || '',
+      fees: { en: row.fees_thresholds || '', ar: row.fees_thresholds_ar || row.fees_thresholds || '' },
     }));
 }
 
@@ -269,6 +270,10 @@ function fromRows(idea, assessment, messages) {
   };
 }
 
+/* true when the last getAssessments() could not reach the database (it then returns []),
+   so a page can tell "no ideas yet" apart from "could not load" and show the 500 page */
+export let assessmentsFailed = false;
+
 /* Every assessment of the signed-in founder, newest first.
    The database's security rules return only this founder's rows. */
 export async function getAssessments() {
@@ -277,6 +282,7 @@ export async function getAssessments() {
   const messages = await supabase.from('messages').select('assessment_id, sender_role, content').order('message_id');
 
   const failed = ideas.error || assessments.error || messages.error;
+  assessmentsFailed = Boolean(failed);
   if (failed) {
     report('load the history', failed);
     return [];

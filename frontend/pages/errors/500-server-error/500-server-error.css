@@ -1,0 +1,8 @@
+/* 500 page only. The frame, buttons and texts come from shared/shared.css
+   (error layout, section 13b). */
+
+/* the warning sign in the risk color instead of teal */
+.server-error-icon {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}

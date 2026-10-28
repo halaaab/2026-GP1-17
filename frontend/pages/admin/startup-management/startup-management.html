@@ -1,0 +1,187 @@
+<!doctype html>
+<!--
+  STARTUP MANAGEMENT (admin console)
+  The same startups founders see in the Startup Explorer.
+  Admins search and filter them, add new ones, edit and delete them.
+  Reads and writes the startups table directly: its security rules
+  (migration 0006) let only admins add, edit and delete.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="startup-management.css">
+</head>
+<body data-layout="admin" data-page="admin-startups" data-title="admin.startups" data-denied="403">
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="startupAdmin.title"></h2>
+        <p class="text-2" data-i18n="startupAdmin.sub"></p>
+      </div>
+      <button type="button" class="btn btn-primary" id="add">
+        <span id="add-icon"></span>
+        <span data-i18n="startupAdmin.add"></span>
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <label class="search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="startupAdmin.search" data-i18n-aria-label="startupAdmin.search">
+      </label>
+      <select class="pill" id="sector-filter" data-i18n-aria-label="startups.sector"></select>
+      <select class="pill" id="stage-filter" data-i18n-aria-label="startups.stage"></select>
+      <select class="pill" id="region-filter" data-i18n-aria-label="startups.region"></select>
+    </div>
+
+    <div class="table-card">
+      <table class="table sm-table">
+        <thead>
+          <tr>
+            <th data-i18n="startupAdmin.startup"></th>
+            <th class="hide-small" data-i18n="startups.sector"></th>
+            <th class="hide-small" data-i18n="startups.stage"></th>
+            <th class="hide-small" data-i18n="startups.targetMarket"></th>
+            <th class="hide-small" data-i18n="regAdmin.updated"></th>
+            <th data-i18n-aria-label="founders.actions"></th>
+          </tr>
+        </thead>
+        <!-- startup-management.js adds one row for each startup -->
+        <tbody id="rows"></tbody>
+      </table>
+      <!-- shows a spinner while loading, then "no match" or the load error -->
+      <p class="empty sm-empty" id="empty"><span class="spinner"></span></p>
+    </div>
+
+    <div class="sm-foot">
+      <span class="text-3" id="count"></span>
+      <button type="button" class="btn btn-secondary btn-sm" id="more" data-i18n="startups.showMore" hidden></button>
+    </div>
+
+    <!-- Add or edit one startup. startup-management.js fills it. -->
+    <aside class="panel" id="startup-panel" aria-labelledby="panel-title">
+      <div class="panel-head">
+        <div>
+          <h3 class="modal-title" id="panel-title"></h3>
+          <p class="text-3 sm-panel-sub">
+            <span id="panel-sub"></span>
+            <a class="link" id="panel-view" target="_blank" rel="noopener" data-i18n="startupAdmin.viewAsFounder"></a>
+          </p>
+        </div>
+        <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
+      </div>
+
+      <form class="panel-body form" id="startup-form" novalidate>
+        <div class="field">
+          <label class="label is-required" for="f-startup_name" data-i18n="startupAdmin.name"></label>
+          <input class="input" id="f-startup_name" type="text" dir="auto">
+          <p class="field-error" id="f-startup_name-error" hidden></p>
+        </div>
+        <div class="field">
+          <label class="label" for="f-startup_name_ar" data-i18n="startupAdmin.nameAr"></label>
+          <input class="input" id="f-startup_name_ar" type="text" dir="rtl">
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-logo" data-i18n="startupAdmin.logo"></label>
+          <input class="input" id="f-logo" type="url" dir="ltr" placeholder="https://">
+          <p class="field-hint" data-i18n="startupAdmin.logoHint"></p>
+          <p class="field-error" id="f-logo-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-startup_description" data-i18n="startupAdmin.description"></label>
+          <textarea class="input" id="f-startup_description" dir="ltr"></textarea>
+        </div>
+        <div class="field">
+          <label class="label" for="f-startup_description_ar" data-i18n="startupAdmin.descriptionAr"></label>
+          <textarea class="input" id="f-startup_description_ar" dir="rtl"></textarea>
+          <p class="field-hint" data-i18n="startupAdmin.descriptionArHint"></p>
+        </div>
+
+        <fieldset class="field sm-choices">
+          <legend class="label is-required" data-i18n="startups.sector"></legend>
+          <!-- startup-management.js adds one checkbox for each sector, stage, region and market -->
+          <div class="sm-choice-list" id="f-sector"></div>
+          <p class="field-error" id="f-sector-error" hidden></p>
+        </fieldset>
+
+        <fieldset class="field sm-choices">
+          <legend class="label" data-i18n="startups.stage"></legend>
+          <div class="sm-choice-list" id="f-stage"></div>
+        </fieldset>
+
+        <fieldset class="field sm-choices">
+          <legend class="label" data-i18n="startups.region"></legend>
+          <div class="sm-choice-list" id="f-region"></div>
+        </fieldset>
+
+        <fieldset class="field sm-choices">
+          <legend class="label" data-i18n="startups.targetMarket"></legend>
+          <div class="sm-choice-list" id="f-target_market"></div>
+        </fieldset>
+
+        <div class="field">
+          <label class="label" for="f-country" data-i18n="startupAdmin.country"></label>
+          <input class="input" id="f-country" type="text" dir="ltr" list="country-list" placeholder="Saudi Arabia">
+          <datalist id="country-list"></datalist>
+          <p class="field-hint" data-i18n="startupAdmin.countryHint"></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-products_services" data-i18n="startups.products"></label>
+          <textarea class="input" id="f-products_services" dir="auto"></textarea>
+          <p class="field-hint" data-i18n="startupAdmin.productsHint"></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-tags" data-i18n="startups.tags"></label>
+          <input class="input" id="f-tags" type="text" dir="auto" placeholder="SaaS, E-Commerce">
+          <p class="field-hint" data-i18n="startupAdmin.tagsHint"></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-website" data-i18n="startups.website"></label>
+          <input class="input" id="f-website" type="url" dir="ltr" placeholder="https://">
+          <p class="field-error" id="f-website-error" hidden></p>
+        </div>
+        <div class="field">
+          <label class="label" for="f-ecosystemsa_profile_url" data-i18n="startups.ecosystemProfile"></label>
+          <input class="input" id="f-ecosystemsa_profile_url" type="url" dir="ltr" placeholder="https://ecosystemsa.com/">
+          <p class="field-error" id="f-ecosystemsa_profile_url-error" hidden></p>
+        </div>
+        <div class="field">
+          <label class="label" for="f-description_source" data-i18n="startupAdmin.source"></label>
+          <input class="input" id="f-description_source" type="url" dir="ltr" placeholder="https://">
+          <p class="field-hint" data-i18n="startupAdmin.sourceHint"></p>
+          <p class="field-error" id="f-description_source-error" hidden></p>
+        </div>
+      </form>
+
+      <div class="panel-foot sm-panel-foot">
+        <button type="button" class="btn btn-secondary" data-panel-close data-i18n="founders.cancel"></button>
+        <button type="submit" class="btn btn-primary" form="startup-form" id="save"></button>
+      </div>
+    </aside>
+
+    <dialog class="modal" id="delete-modal">
+      <span class="empty-icon sm-delete-icon" id="delete-icon"></span>
+      <h3 class="modal-title" data-i18n="startupAdmin.deleteTitle"></h3>
+      <p class="text-2" id="delete-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal-close data-i18n="founders.cancel"></button>
+        <button type="button" class="btn btn-danger" id="delete-confirm" data-i18n="startupAdmin.delete"></button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="startup-management.js"></script>
+</body>
+</html>

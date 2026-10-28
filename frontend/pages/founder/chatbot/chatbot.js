@@ -14,8 +14,9 @@ import { getAccount } from '../../../shared/auth.js';
 import {
   say, label, scoreBand, whenText, chatLink, loadResult,
   getAssessments, getAssessment, saveAssessment, saveMessage, newAssessment, sampleResult,
-  showSidebarHistory, AGENT_STEPS,
+  showSidebarHistory, AGENT_STEPS, assessmentsFailed,
 } from '../../../shared/assessments.js';
+import { showErrorPage } from '../../../shared/errors.js';
 import { showToast } from '../../../shared/ui.js';
 import { openPanel, closePanel, roadmapList } from './panel.js';
 
@@ -68,6 +69,8 @@ async function save() {
 /* ---------- Adding messages to the conversation ---------- */
 
 function scrollToEnd() {
+  // while the assessment is open the chat is hidden, so there is nothing to scroll to
+  if (document.body.classList.contains('assess-open')) return;
   window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
 }
 
@@ -572,9 +575,8 @@ if (address.get('id')) {
       openPanel(current, address.get('tab'));
     }
   } else {
-    await showHome();
-    addAgent(t('chat.notFound'));
-    chat.classList.add('is-started');
+    // the database did not answer → 500; the conversation does not exist (or is not this founder's) → 404
+    showErrorPage(assessmentsFailed ? 500 : 404);
   }
 } else {
   await showHome();
