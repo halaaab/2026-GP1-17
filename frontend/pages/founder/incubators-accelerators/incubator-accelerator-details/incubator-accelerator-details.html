@@ -1,0 +1,89 @@
+<!doctype html>
+<!--
+  INCUBATOR / ACCELERATOR DETAILS
+  One support program: who can apply, what it is, what it gives, its key facts
+  and its official website. Opened from the explorer with ?id=<support_org_id>.
+  Visitors may open it too.
+  A colored head (the same color as the program's card), then two columns:
+  the sections on one side, a card with the key facts and the website on the other.
+  The row comes from the support_organisations table (migration 0006), through ../programs.js.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="incubator-accelerator-details.css">
+</head>
+<body data-layout="founder" data-page="incubators" data-title="nav.incubators" data-access="public">
+
+  <main class="detail-page">
+    <a class="detail-back" id="back-link" href="../incubators-accelerators-explorer/incubators-accelerators-explorer.html">
+      <span id="back-icon"></span>
+      <span data-i18n="programs.back"></span>
+    </a>
+
+    <!-- shown while the program loads -->
+    <div class="detail-loading" id="loading">
+      <div class="skeleton detail-skeleton-hero"></div>
+      <div class="skeleton detail-skeleton-line"></div>
+      <div class="skeleton detail-skeleton-block"></div>
+    </div>
+
+    <!-- a wrong id or a removed program opens the 404 page; a load failure the 500 page -->
+
+    <article class="detail" id="detail" hidden>
+      <!-- Head: logo, name, where it is, tags. The color class is set by the script. -->
+      <header class="detail-hero" id="detail-hero">
+        <span class="detail-hero-art" id="detail-art" aria-hidden="true"></span>
+        <span class="detail-logo" id="detail-logo"></span>
+        <div class="detail-title">
+          <h2 id="detail-name"></h2>
+          <p class="detail-sub" id="detail-place"></p>
+          <div class="detail-tags" id="detail-tags"></div>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm detail-share" id="share"></button>
+      </header>
+
+      <div class="detail-layout">
+        <div class="detail-main">
+          <section class="detail-section" id="eligibility-section">
+            <h3 class="section-title" data-i18n="programs.eligibility"></h3>
+            <ul class="detail-applies" id="eligibility"></ul>
+          </section>
+
+          <section class="detail-section">
+            <h3 class="section-title" data-i18n="programs.about"></h3>
+            <p class="detail-text" id="about"></p>
+          </section>
+
+          <section class="detail-section" id="services-section">
+            <div class="detail-section-head">
+              <h3 class="section-title" data-i18n="programs.services"></h3>
+              <span class="detail-count" id="services-count"></span>
+            </div>
+            <ol class="detail-steps" id="services"></ol>
+          </section>
+
+          <section class="detail-section" id="similar-section">
+            <h3 class="section-title" data-i18n="programs.similar"></h3>
+            <div class="detail-similar-grid" id="similar"></div>
+          </section>
+        </div>
+
+        <!-- Key facts and the official website -->
+        <aside class="detail-side">
+          <div class="detail-facts" id="facts"></div>
+          <a class="btn detail-apply" id="website" target="_blank" rel="noopener"></a>
+          <div class="detail-note" id="note"></div>
+        </aside>
+      </div>
+    </article>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="incubator-accelerator-details.js"></script>
+</body>
+</html>

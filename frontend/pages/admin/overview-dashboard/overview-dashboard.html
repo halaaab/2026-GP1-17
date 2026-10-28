@@ -1,9 +1,13 @@
 <!doctype html>
 <!--
   ADMIN OVERVIEW (the admin's home page after signing in)
-  Empty for now: only the admin sidebar and header, which shared/layout.js adds.
-  shared/guard.js keeps the page for admins who passed the sign-in code.
-  The dashboard content goes inside <main>.
+  A live picture of Darb, read from the database the admin may see:
+    - the pulse: four KPIs for the chosen period, with the change from the period before
+    - the founder journey: where founders stop between signing up and opening a roadmap
+    - score health: how the Survival Scores are spread
+    - activity rhythm: founder actions per day for the last 12 weeks
+    - who is on Darb, data health (a to-do list for the admin) and the latest activity
+  Everything is drawn by overview-dashboard.js; nothing here is sample data.
 -->
 <html lang="en" dir="ltr">
 <head>
@@ -13,14 +17,131 @@
   <link rel="stylesheet" href="../../../shared/shared.css">
   <link rel="stylesheet" href="overview-dashboard.css">
 </head>
-<body data-layout="admin" data-page="overview" data-title="admin.overview">
+<body data-layout="admin" data-page="overview" data-title="admin.overview" data-denied="403">
 
   <main>
-    <!-- The overview dashboard goes here -->
+    <!-- Greeting and the period -->
+    <header class="ov-head">
+      <div class="ov-greeting">
+        <p class="eyebrow" id="today"></p>
+        <h2 class="display ov-hello" id="hello"></h2>
+        <p class="text-2 ov-pulse" id="pulse"></p>
+      </div>
+      <div class="ov-controls">
+        <div class="segmented" id="period" role="group" data-i18n-aria-label="overview.period">
+          <button type="button" class="segmented-item" data-days="7" data-i18n="overview.days7"></button>
+          <button type="button" class="segmented-item is-active" data-days="30" data-i18n="overview.days30"></button>
+          <button type="button" class="segmented-item" data-days="90" data-i18n="overview.days90"></button>
+        </div>
+        <button type="button" class="btn-icon ov-refresh" id="refresh" data-i18n-aria-label="overview.refresh"></button>
+      </div>
+    </header>
+
+    <div class="alert alert-risk" id="load-error" hidden data-i18n="overview.loadError"></div>
+
+    <!-- 1. The pulse: four KPIs -->
+    <section class="ov-kpis" id="kpis" aria-live="polite">
+      <div class="card ov-kpi"><div class="skeleton ov-skeleton"></div></div>
+      <div class="card ov-kpi"><div class="skeleton ov-skeleton"></div></div>
+      <div class="card ov-kpi"><div class="skeleton ov-skeleton"></div></div>
+      <div class="card ov-kpi"><div class="skeleton ov-skeleton"></div></div>
+    </section>
+
+    <div class="ov-row">
+      <!-- 2. Founder journey -->
+      <section class="card ov-card">
+        <div class="ov-card-head">
+          <div>
+            <h3 class="section-title" data-i18n="overview.journey"></h3>
+            <p class="text-3" data-i18n="overview.journeySub"></p>
+          </div>
+          <span class="chip" data-i18n="overview.allTime"></span>
+        </div>
+        <ol class="ov-funnel" id="funnel"></ol>
+        <p class="ov-insight" id="funnel-insight"></p>
+      </section>
+
+      <!-- 3. Score health -->
+      <section class="card ov-card">
+        <div class="ov-card-head">
+          <div>
+            <h3 class="section-title" data-i18n="overview.scores"></h3>
+            <p class="text-3" data-i18n="overview.scoresSub"></p>
+          </div>
+          <span class="chip chip-warn" data-i18n="overview.sampleScores"></span>
+        </div>
+        <div id="scores"></div>
+      </section>
+    </div>
+
+    <!-- 4. Activity rhythm -->
+    <section class="card ov-card ov-wide">
+      <div class="ov-card-head">
+        <div>
+          <h3 class="section-title" data-i18n="overview.rhythm"></h3>
+          <p class="text-3" data-i18n="overview.rhythmSub"></p>
+        </div>
+        <div class="ov-scale" aria-hidden="true">
+          <span data-i18n="overview.less"></span>
+          <i class="ov-level-0"></i><i class="ov-level-1"></i><i class="ov-level-2"></i><i class="ov-level-3"></i><i class="ov-level-4"></i>
+          <span data-i18n="overview.more"></span>
+        </div>
+      </div>
+      <div class="ov-rhythm">
+        <div class="ov-heatmap-wrap"><div class="ov-heatmap" id="heatmap"></div></div>
+        <div class="ov-rhythm-facts" id="rhythm-facts"></div>
+      </div>
+    </section>
+
+    <!-- 5. Who is on Darb -->
+    <section class="card ov-card ov-wide">
+      <div class="ov-card-head">
+        <div>
+          <h3 class="section-title" data-i18n="overview.people"></h3>
+          <p class="text-3" id="people-sub"></p>
+        </div>
+      </div>
+      <div class="segmented ov-tabs" id="people-tabs">
+        <button type="button" class="segmented-item is-active" data-group="type" data-i18n="overview.byType"></button>
+        <button type="button" class="segmented-item" data-group="region" data-i18n="overview.byRegion"></button>
+        <button type="button" class="segmented-item" data-group="locale" data-i18n="overview.byLanguage"></button>
+      </div>
+      <ul class="ov-bars" id="people"></ul>
+    </section>
+
+    <div class="ov-row">
+      <!-- 6. Data health: what needs the admin -->
+      <section class="card ov-card ov-card-grow">
+        <div class="ov-card-head">
+          <div>
+            <h3 class="section-title" data-i18n="overview.health"></h3>
+            <p class="text-3" data-i18n="overview.healthSub"></p>
+          </div>
+          <div class="ov-ring" id="health-ring"></div>
+        </div>
+        <ul class="ov-checks" id="health"></ul>
+      </section>
+
+      <!-- 7. Latest activity -->
+      <section class="card ov-card">
+        <div class="ov-card-head">
+          <div>
+            <h3 class="section-title" data-i18n="overview.latest"></h3>
+            <p class="text-3" data-i18n="overview.latestSub"></p>
+          </div>
+        </div>
+        <ul class="ov-feed" id="feed"></ul>
+      </section>
+    </div>
+
+    <p class="text-3 ov-updated" id="updated"></p>
+
+    <!-- one tooltip, shared by every chart -->
+    <div class="ov-tip" id="tip" role="tooltip" hidden></div>
   </main>
 
   <script type="module" src="../../../shared/layout.js"></script>
   <script type="module" src="../../../shared/guard.js"></script>
-  <script type="module" src="overview-dashboard.js"></script>
+  <script type="module" src="overview-dashboard.js?v=3"></script>
 </body>
 </html>

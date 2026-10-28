@@ -1,0 +1,81 @@
+<!doctype html>
+<!--
+  REGULATORY EXPLORER (founder side, also open to visitors)
+  Every regulatory requirement as a card: search, filter by authority, economic sector (the 20 ISIC4 sections)
+  and business stage. A card opens the requirement's details page.
+  Same design as the Startup Explorer (a banner, a search bar on its edge, then
+  colored cards), in six shades of green, with each authority's logo.
+  The rows come from the regulatory_requirements table (shared/regulatory.js).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="requirements-explorer.css">
+</head>
+<body data-layout="founder" data-page="requirements" data-title="nav.requirements" data-access="public">
+
+  <main>
+    <!-- Banner: title and totals over a picture of a historic Najdi palace rising from the desert -->
+    <section class="reg-hero">
+      <img class="reg-hero-art" src="../../../../assets/images/regulatory-hero.jpg" alt="" aria-hidden="true">
+
+      <div class="reg-hero-text">
+        <span class="reg-hero-badge" data-i18n="reg.explore"></span>
+        <h2 class="reg-hero-title" data-i18n="reg.title"></h2>
+        <p data-i18n="reg.sub"></p>
+        <!-- the totals, filled by requirements-explorer.js -->
+        <div class="reg-totals" id="totals" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Search and dropdowns, on the banner's lower edge. requirements-explorer.js fills the dropdowns. -->
+    <form class="reg-filters" id="filters" role="search">
+      <label class="reg-search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="reg.search" data-i18n-aria-label="reg.search">
+      </label>
+      <span class="reg-select-wrap">
+        <select class="reg-select" id="authority-filter" data-i18n-aria-label="reg.authority"></select>
+      </span>
+      <span class="reg-select-wrap">
+        <select class="reg-select" id="sector-filter" data-i18n-aria-label="reg.isic"></select>
+      </span>
+      <span class="reg-select-wrap">
+        <select class="reg-select" id="stage-filter" data-i18n-aria-label="reg.stage"></select>
+      </span>
+      <button type="submit" class="btn btn-primary reg-search-button" data-i18n="reg.searchButton"></button>
+    </form>
+
+    <div class="reg-bar" id="results">
+      <span class="reg-found" id="found"></span>
+    </div>
+
+    <!-- requirements-explorer.js adds one card for each requirement on this page -->
+    <div class="reg-cards" id="cards"></div>
+
+    <!-- shown while loading, then only when nothing matches -->
+    <div class="empty reg-empty" id="empty">
+      <span class="spinner" id="loading"></span>
+      <span class="empty-icon" id="empty-icon" hidden></span>
+      <h3 class="section-title" id="empty-title" data-i18n="reg.noMatch" hidden></h3>
+      <p class="text-2" id="empty-text" data-i18n="reg.noMatchText" hidden></p>
+      <button type="button" class="btn btn-secondary btn-sm" id="clear-filters" data-i18n="reg.clear" hidden></button>
+    </div>
+
+    <div class="reg-pager" id="pager" hidden>
+      <span class="text-3" id="showing"></span>
+      <div class="reg-pager-buttons">
+        <button type="button" class="btn btn-secondary btn-sm" id="previous" data-i18n="reg.previous"></button>
+        <button type="button" class="btn btn-secondary btn-sm" id="next" data-i18n="reg.next"></button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="requirements-explorer.js"></script>
+</body>
+</html>

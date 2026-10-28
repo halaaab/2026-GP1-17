@@ -1,0 +1,81 @@
+<!doctype html>
+<!--
+  STARTUP EXPLORER (founder side, also open to visitors)
+  Every startup as a card: search, filter by sector, region and funding stage.
+  A card opens the startup's details page.
+  Same design as the Incubators & Accelerators Explorer (a banner, a search bar on its
+  edge, then colored cards), with a photo of Riyadh's skyline in the banner.
+  The rows come from the startups table (shared/startups.js).
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../../shared/shared.css">
+  <link rel="stylesheet" href="startup-explorer.css">
+</head>
+<body data-layout="founder" data-page="startups" data-title="nav.startups" data-access="public">
+
+  <main>
+    <!-- Banner: title and totals over a photo of Riyadh's skyline seen from the desert -->
+    <section class="st-hero">
+      <img class="st-hero-photo" src="../../../../assets/images/startups-hero.jpg" alt="" aria-hidden="true">
+
+      <div class="st-hero-text">
+        <span class="st-hero-badge" data-i18n="startups.explore"></span>
+        <h2 class="st-hero-title" data-i18n="startups.title"></h2>
+        <p data-i18n="startups.sub"></p>
+        <!-- the totals, filled by startup-explorer.js -->
+        <div class="st-totals" id="totals" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- Search and dropdowns, on the banner's lower edge. startup-explorer.js fills the dropdowns. -->
+    <form class="st-filters" id="filters" role="search">
+      <label class="st-search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="startups.search" data-i18n-aria-label="startups.search">
+      </label>
+      <span class="st-select-wrap">
+        <select class="st-select" id="sector-filter" data-i18n-aria-label="startups.sector"></select>
+      </span>
+      <span class="st-select-wrap">
+        <select class="st-select" id="region-filter" data-i18n-aria-label="startups.region"></select>
+      </span>
+      <span class="st-select-wrap">
+        <select class="st-select" id="stage-filter" data-i18n-aria-label="startups.stage"></select>
+      </span>
+      <button type="submit" class="btn btn-primary st-search-button" data-i18n="startups.searchButton"></button>
+    </form>
+
+    <div class="st-bar" id="results">
+      <span class="st-found" id="found"></span>
+    </div>
+
+    <!-- startup-explorer.js adds one card for each startup on this page -->
+    <div class="st-cards" id="cards"></div>
+
+    <!-- shown while loading, then only when nothing matches -->
+    <div class="empty st-empty" id="empty">
+      <span class="spinner" id="loading"></span>
+      <span class="empty-icon" id="empty-icon" hidden></span>
+      <h3 class="section-title" id="empty-title" data-i18n="startups.noMatch" hidden></h3>
+      <p class="text-2" id="empty-text" data-i18n="startups.noMatchText" hidden></p>
+      <button type="button" class="btn btn-secondary btn-sm" id="clear-filters" data-i18n="startups.clear" hidden></button>
+    </div>
+
+    <div class="st-pager" id="pager" hidden>
+      <span class="text-3" id="showing"></span>
+      <div class="st-pager-buttons">
+        <button type="button" class="btn btn-secondary btn-sm" id="previous" data-i18n="startups.previous"></button>
+        <button type="button" class="btn btn-secondary btn-sm" id="next" data-i18n="startups.next"></button>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="../../../../shared/layout.js"></script>
+  <script type="module" src="../../../../shared/guard.js"></script>
+  <script type="module" src="startup-explorer.js"></script>
+</body>
+</html>

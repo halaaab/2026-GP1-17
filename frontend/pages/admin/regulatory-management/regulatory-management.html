@@ -1,0 +1,216 @@
+<!doctype html>
+<!--
+  REGULATORY MANAGEMENT (admin console)
+  The same regulatory requirements founders see in the Regulatory Explorer.
+  Admins search and filter them, add new ones, edit and delete them.
+  Reads and writes the regulatory_requirements table directly: its security
+  rules (migration 0006) let only admins add, edit and delete.
+-->
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Darb</title>
+  <link rel="stylesheet" href="../../../shared/shared.css">
+  <link rel="stylesheet" href="regulatory-management.css">
+</head>
+<body data-layout="admin" data-page="admin-regulatory" data-title="admin.regulatory" data-denied="403">
+
+  <main>
+    <div class="page-head">
+      <div>
+        <h2 class="page-title" data-i18n="regAdmin.title"></h2>
+        <p class="text-2" data-i18n="regAdmin.sub"></p>
+      </div>
+      <button type="button" class="btn btn-primary" id="add">
+        <span id="add-icon"></span>
+        <span data-i18n="regAdmin.add"></span>
+      </button>
+    </div>
+
+    <div class="toolbar">
+      <label class="search">
+        <span id="search-icon"></span>
+        <input type="search" id="search" data-i18n-placeholder="regAdmin.search" data-i18n-aria-label="regAdmin.search">
+      </label>
+      <select class="pill" id="authority-filter" data-i18n-aria-label="reg.authority"></select>
+      <select class="pill" id="sector-filter" data-i18n-aria-label="reg.isic"></select>
+      <select class="pill" id="type-filter" data-i18n-aria-label="regAdmin.type"></select>
+      <select class="pill" id="stage-filter" data-i18n-aria-label="reg.stage"></select>
+    </div>
+
+    <div class="table-card">
+      <table class="table reg-table">
+        <thead>
+          <tr>
+            <th data-i18n="regAdmin.requirement"></th>
+            <th class="hide-small" data-i18n="reg.authority"></th>
+            <th class="hide-small" data-i18n="regAdmin.type"></th>
+            <th class="hide-small" data-i18n="regAdmin.appliesTo"></th>
+            <th class="hide-small" data-i18n="regAdmin.updated"></th>
+            <th data-i18n-aria-label="founders.actions"></th>
+          </tr>
+        </thead>
+        <!-- regulatory-management.js adds one row for each requirement -->
+        <tbody id="rows"></tbody>
+      </table>
+      <!-- shows a spinner while loading, then "no match" or the load error -->
+      <p class="empty reg-empty" id="empty"><span class="spinner"></span></p>
+    </div>
+
+    <!-- Add or edit one requirement. regulatory-management.js fills it. -->
+    <aside class="panel" id="reg-panel" aria-labelledby="panel-title">
+      <div class="panel-head">
+        <h3 class="modal-title" id="panel-title"></h3>
+        <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
+      </div>
+
+      <!-- The requirement's ID is not in the form: it is made when a requirement is added
+           (regulatory-management.js, nextId) and only used inside the database -->
+      <form class="panel-body form" id="reg-form" novalidate>
+        <div class="field">
+          <label class="label" for="f-name_en" data-i18n="regAdmin.nameEn"></label>
+          <input class="input" id="f-name_en" type="text" dir="ltr">
+          <p class="field-error" id="f-name_en-error" hidden></p>
+        </div>
+        <div class="field">
+          <label class="label" for="f-name_ar" data-i18n="regAdmin.nameAr"></label>
+          <input class="input" id="f-name_ar" type="text" dir="rtl">
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-authority" data-i18n="regAdmin.authorityEn"></label>
+          <input class="input" id="f-authority" type="text" dir="ltr" list="authority-list">
+          <datalist id="authority-list"></datalist>
+        </div>
+        <div class="field">
+          <label class="label" for="f-authority_ar" data-i18n="regAdmin.authorityAr"></label>
+          <input class="input" id="f-authority_ar" type="text" dir="rtl">
+        </div>
+        <div class="field">
+          <label class="label" for="f-authority_logo" data-i18n="regAdmin.logo"></label>
+          <!-- regulatory-management.js lists the logos already in use; picking an authority fills it -->
+          <select class="input" id="f-authority_logo"></select>
+          <p class="field-hint" data-i18n="regAdmin.logoHint"></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-category" data-i18n="regAdmin.typeEn"></label>
+          <input class="input" id="f-category" type="text" dir="ltr" list="type-list">
+          <datalist id="type-list"></datalist>
+        </div>
+        <div class="field">
+          <label class="label" for="f-category_ar" data-i18n="regAdmin.typeAr"></label>
+          <input class="input" id="f-category_ar" type="text" dir="rtl">
+        </div>
+
+        <fieldset class="field reg-sectors">
+          <legend class="label" data-i18n="regAdmin.isic"></legend>
+          <p class="field-hint" data-i18n="regAdmin.isicHint"></p>
+          <!-- regulatory-management.js adds "Every sector" and one checkbox for each of the 20 ISIC4 sections -->
+          <div class="reg-isic-list" id="f-isic"></div>
+          <p class="field-error" id="f-isic-error" hidden></p>
+        </fieldset>
+
+        <div class="field">
+          <label class="label" for="f-divisions" data-i18n="regAdmin.divisions"></label>
+          <input class="input" id="f-divisions" type="text" dir="ltr" placeholder="10, 11, 56" autocomplete="off">
+          <p class="field-hint" data-i18n="regAdmin.divisionsHint"></p>
+          <p class="field-error" id="f-divisions-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-business_stage" data-i18n="reg.stage"></label>
+          <input class="input" id="f-business_stage" type="text" dir="ltr" placeholder="Pre-operation / Operation">
+          <p class="field-hint" data-i18n="regAdmin.stageHint"></p>
+        </div>
+
+        <div class="form-row">
+          <div class="field">
+            <label class="label" for="f-mandatory" data-i18n="regAdmin.mandatory"></label>
+            <select class="input" id="f-mandatory"></select>
+          </div>
+          <div class="field">
+            <label class="label" for="f-regulatory_status" data-i18n="regAdmin.status"></label>
+            <select class="input" id="f-regulatory_status"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-applies_when" data-i18n="regAdmin.appliesWhenEn"></label>
+          <textarea class="input" id="f-applies_when" dir="ltr"></textarea>
+        </div>
+        <div class="field">
+          <label class="label" for="f-applies_when_ar" data-i18n="regAdmin.appliesWhenAr"></label>
+          <textarea class="input" id="f-applies_when_ar" dir="rtl"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-what_darb_should_surface" data-i18n="regAdmin.guidanceEn"></label>
+          <textarea class="input" id="f-what_darb_should_surface" dir="ltr"></textarea>
+        </div>
+        <div class="field">
+          <label class="label" for="f-what_darb_should_surface_ar" data-i18n="regAdmin.guidanceAr"></label>
+          <textarea class="input" id="f-what_darb_should_surface_ar" dir="rtl"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-fees_thresholds" data-i18n="regAdmin.feesEn"></label>
+          <textarea class="input" id="f-fees_thresholds" dir="ltr"></textarea>
+        </div>
+        <div class="field">
+          <label class="label" for="f-fees_thresholds_ar" data-i18n="regAdmin.feesAr"></label>
+          <textarea class="input" id="f-fees_thresholds_ar" dir="rtl"></textarea>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-official_source_url" data-i18n="regAdmin.sourceUrl"></label>
+          <input class="input" id="f-official_source_url" type="url" dir="ltr" placeholder="https://">
+          <p class="field-error" id="f-official_source_url-error" hidden></p>
+        </div>
+        <div class="field">
+          <label class="label" for="f-service_url" data-i18n="regAdmin.serviceUrl"></label>
+          <input class="input" id="f-service_url" type="url" dir="ltr" placeholder="https://">
+          <p class="field-error" id="f-service_url-error" hidden></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-last_verified" data-i18n="regAdmin.lastVerified"></label>
+          <input class="input" id="f-last_verified" type="date">
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-founder_trigger_fields" data-i18n="regAdmin.triggers"></label>
+          <input class="input" id="f-founder_trigger_fields" type="text" dir="ltr" placeholder="legal_form; city">
+          <p class="field-hint" data-i18n="regAdmin.triggersHint"></p>
+        </div>
+
+        <div class="field">
+          <label class="label" for="f-notes" data-i18n="regAdmin.notes"></label>
+          <textarea class="input" id="f-notes" dir="ltr"></textarea>
+        </div>
+      </form>
+
+      <div class="panel-foot reg-panel-foot">
+        <button type="button" class="btn btn-secondary" data-panel-close data-i18n="founders.cancel"></button>
+        <button type="submit" class="btn btn-primary" form="reg-form" id="save" data-i18n="founders.save"></button>
+      </div>
+    </aside>
+
+    <dialog class="modal" id="delete-modal">
+      <span class="empty-icon reg-delete-icon" id="delete-icon"></span>
+      <h3 class="modal-title" data-i18n="regAdmin.deleteTitle"></h3>
+      <p class="text-2" id="delete-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal-close data-i18n="founders.cancel"></button>
+        <button type="button" class="btn btn-danger" id="delete-confirm" data-i18n="regAdmin.delete"></button>
+      </div>
+    </dialog>
+  </main>
+
+  <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/guard.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
+  <script type="module" src="regulatory-management.js"></script>
+</body>
+</html>

@@ -6,13 +6,17 @@
      <script type="module" src="../../../shared/guard.js"></script>
 
    It reads data-layout on <body> and does the rest:
-     data-layout="admin"    only admins get in, and only after the code from their phone
+     data-layout="admin"    only admins get in, and only after the code from the authenticator app on their phone
      data-layout="founder"  only founders get in
    Anyone else is sent to the right login page (or to their own first page).
 
    A founder page that visitors may also see, like the explorers, adds
    data-access="public" to <body>: nobody is sent away, and signed-in people
    still see their name in the sidebar.
+
+   A page that should show the 403 "no access" page to the wrong kind of
+   account adds data-denied="403" to <body> (the others send that account
+   to its own first page, as before).
 
    The guard also:
      - shows the signed-in person's name at the bottom of the sidebar
@@ -39,10 +43,14 @@ const PAGES = {
   signUp:      'pages/auth/sign-up/sign-up.html',
   founderHome: 'pages/founder/chatbot/chatbot.html',
   adminHome:   'pages/admin/overview-dashboard/overview-dashboard.html',
+  noAccess:    'pages/errors/403-no-access/403-no-access.html',
 };
 
 const neededRole = document.body.dataset.layout;               // 'admin' or 'founder'
 const isPublic = document.body.dataset.access === 'public';    // visitors allowed too
+// data-denied="403": the wrong kind of account sees the "no access" page
+// instead of being sent to its own first page
+const showsNoAccess = document.body.dataset.denied === '403';
 
 // The page's content stays hidden until we know the person may see it (see shared.css)
 document.body.classList.add('is-guarded');
@@ -55,6 +63,11 @@ function sendTo(page) {
 function sendToLogin(page) {
   sessionStorage.setItem('darb-next', window.location.href);
   sendTo(page);
+}
+
+// The 403 page remembers the page that was refused, so "Log in with another account" can return to it
+function sendToNoAccess() {
+  sendTo(`${PAGES.noAccess}?from=${encodeURIComponent(window.location.href)}`);
 }
 
 /* Who is signed in: { role: 'admin' | 'founder' | 'new' | 'none', profile } */
@@ -71,6 +84,8 @@ if (account.role === 'founder' && account.profile.status === 'deactivated') {
     sendToLogin(neededRole === 'admin' ? PAGES.adminLogin : PAGES.login);
   } else if (account.role === 'new') {
     sendTo(PAGES.signUp);          // signed in with Google, profile not finished
+  } else if (showsNoAccess) {
+    sendToNoAccess();              // the wrong kind of account, on a page that asks for 403
   } else if (account.role === 'admin') {
     sendTo(PAGES.adminHome);       // an admin on a founder page
   } else {
@@ -78,7 +93,7 @@ if (account.role === 'founder' && account.profile.status === 'deactivated') {
   }
 }
 
-// An admin page also needs the second step: the code Darb emailed to the admin.
+// An admin page also needs the second step: the code from the admin's authenticator app.
 // Without it, the admin goes back to the admin login, which asks for the code.
 if (allowed && neededRole === 'admin' && (await getSecondStep()) !== 'done') {
   allowed = false;

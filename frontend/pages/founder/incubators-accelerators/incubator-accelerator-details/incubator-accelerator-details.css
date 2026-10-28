@@ -1,0 +1,463 @@
+/* Incubator / accelerator details only: a colored head (the program's color,
+   as on its card in the explorer), then two columns, the sections and a side
+   card with the key facts and the website. Buttons and chips come from shared/shared.css. */
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+.detail-back:hover {
+  color: var(--text);
+}
+.detail-back svg {
+  width: 16px;
+  height: 16px;
+}
+html[dir="rtl"] .detail-back svg {
+  transform: scaleX(-1);
+}
+
+/* ---------- Loading ---------- */
+
+.detail-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.detail-skeleton-hero  { height: 140px; border-radius: 22px; }
+.detail-skeleton-line  { height: 18px; width: 30%; }
+.detail-skeleton-block { height: 90px; }
+
+/* ---------- The six program blues (colorOf in ../programs.js, same as the explorer) ---------- */
+
+.color-0 { --tint: #E6F1FB; --ink: #2A6496; --strong: #4A90D9; }   /* sky */
+.color-1 { --tint: #E3ECFA; --ink: #1F4F8F; --strong: #2F6FD0; }   /* azure */
+.color-2 { --tint: #E5E8FA; --ink: #2F3F9E; --strong: #3B55C9; }   /* royal blue */
+.color-3 { --tint: #E8E7F8; --ink: #3D3A8F; --strong: #4E49B8; }   /* indigo */
+.color-4 { --tint: #E2E8F2; --ink: #1F3560; --strong: #263E73; }   /* navy */
+.color-5 { --tint: #ECEAFB; --ink: #4B45A8; --strong: #6A63D6; }   /* periwinkle */
+
+/* ---------- Head ---------- */
+
+.detail-hero {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  overflow: hidden;
+  padding: 26px;
+  border-radius: 22px;
+  /* a soft grid of dots over the program's color */
+  background:
+    radial-gradient(color-mix(in srgb, var(--ink) 16%, transparent) 1px, transparent 1.6px) 0 0 / 14px 14px,
+    var(--tint);
+}
+
+/* the type's icon, big and faint, at the end of the head */
+.detail-hero-art {
+  position: absolute;
+  inset-inline-end: 34px;
+  bottom: -34px;
+  color: var(--strong);
+  opacity: 0.16;
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.detail-hero-art svg {
+  width: 170px;
+  height: 170px;
+  stroke-width: 1.6;
+}
+
+.detail-title {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+.detail-title h2 {
+  margin: 4px 0 0;
+  font-size: clamp(24px, 3.4vw, 32px);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+.detail-sub {
+  margin: 6px 0 0;
+  font-size: 15px;
+  color: var(--text-2);
+}
+.detail-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+.detail-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+.detail-tag.is-strong {
+  color: var(--ink);
+}
+.detail-tag svg {
+  width: 14px;
+  height: 14px;
+}
+
+.detail-share {
+  position: relative;
+  flex-shrink: 0;
+  border-color: transparent;
+  box-shadow: var(--shadow-sm);
+}
+
+/* The program's logo, or its initials (from ../programs.js) */
+.program-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--bg-tile);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 800;
+}
+.program-logo.has-image {
+  background: var(--bg);
+}
+.program-logo img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.program-logo.tone-0 { background: var(--teal-tint); color: var(--teal-text); }
+.program-logo.tone-1 { background: var(--navy-tint); color: var(--navy); }
+.program-logo.tone-2 { background: var(--link-tint); color: var(--link-text); }
+
+/* the big logo in the head: a white tile, lifted */
+.detail-logo {
+  position: relative;
+}
+.detail-logo .program-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  box-shadow: 0 14px 28px -14px var(--strong);
+  font-size: 22px;
+}
+.detail-logo .program-logo.has-image {
+  background: var(--bg);
+}
+.detail-logo .program-logo img {
+  padding: 9px;
+}
+
+/* ---------- Two columns ---------- */
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  align-items: start;
+  gap: 28px;
+  margin-top: 26px;
+}
+
+.detail-main {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-width: 0;
+}
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.detail-section .section-title {
+  margin: 0;
+  font-size: 17px;
+}
+.detail-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.detail-count {
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--pastel-1-tint);
+  color: var(--pastel-1-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Who can apply: a green box, a tick before each condition */
+.detail-applies {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid color-mix(in srgb, var(--good) 18%, transparent);
+  border-radius: 14px;
+  background: var(--good-tint);
+  list-style: none;
+}
+.detail-applies li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.detail-applies svg {
+  flex-shrink: 0;
+  width: 19px;
+  height: 19px;
+  margin-top: 2px;
+  color: var(--good-text);
+}
+
+.detail-text {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.8;
+  color: var(--text-2);
+}
+
+/* What you get: numbered rows, each in its own box */
+.detail-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.detail-steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  font-size: 15px;
+  line-height: 1.55;
+}
+.detail-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: var(--pastel-1-tint);
+  color: var(--pastel-1-text);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* ---------- Side card ---------- */
+
+.detail-side {
+  position: sticky;
+  top: calc(var(--header-h) + 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--bg);
+  box-shadow: var(--shadow-float);
+}
+.detail-facts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.detail-fact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--bg-tile);
+}
+.detail-fact-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 9px;
+}
+.detail-fact-icon svg {
+  width: 17px;
+  height: 17px;
+}
+.detail-fact-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.detail-fact-label {
+  font-size: 12px;
+  color: var(--text-3);
+}
+.detail-fact-value {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.detail-apply {
+  height: 46px;
+  margin-top: 4px;
+  border-radius: 12px;
+  background: var(--navy-deep);
+  color: #fff;
+}
+.detail-apply:hover {
+  background: var(--navy);
+}
+.detail-apply svg {
+  width: 15px;
+  height: 15px;
+}
+
+.detail-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--warn-tint);
+  color: var(--warn-text);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+.detail-note svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+}
+
+/* ---------- Similar programs ---------- */
+
+.detail-similar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+.detail-similar-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: inherit;
+  transition: border-color var(--dur-fast), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+.detail-similar-card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card);
+  transform: translateY(-2px);
+}
+.detail-similar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: var(--strong);
+  color: #fff;
+}
+.detail-similar-icon svg {
+  width: 20px;
+  height: 20px;
+}
+/* with a logo: a white square, so the logo shows as it is */
+.detail-similar-icon.has-logo {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.detail-similar-icon img {
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  object-fit: contain;
+}
+.detail-similar-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.detail-similar-text strong {
+  font-size: 14px;
+  line-height: 1.35;
+}
+.detail-similar-text span {
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+
+/* ---------- Narrow screens: one column, the side card under the head ---------- */
+
+@media (max-width: 900px) {
+  .detail-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .detail-side {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .detail-hero {
+    flex-wrap: wrap;
+    padding: 20px;
+  }
+  .detail-logo .program-logo {
+    width: 60px;
+    height: 60px;
+  }
+  .detail-share {
+    position: absolute;
+    top: 16px;
+    inset-inline-end: 16px;
+  }
+}
