@@ -8,15 +8,14 @@ import {
   Observability,
   SensitiveDataFilter,
 } from '@mastra/observability';
-import { agent } from './agents/agent';
-import { startScheduleTool, stopScheduleTool } from './tools/schedule-tools';
+import { competitorAgent } from './agents/competitor-agent';
+import { conversationalAgent } from './agents/conversational-agent';
 
 export const mastra = new Mastra({
   bundler: {
     externals: ['@duckdb/node-bindings'],
   },
-  agents: { agent },
-  tools: { startScheduleTool, stopScheduleTool },
+  agents: { conversationalAgent, competitorAgent },
   storage: new MastraCompositeStore({
     id: 'composite-storage',
     default: new LibSQLStore({
