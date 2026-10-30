@@ -8,4 +8,4 @@ This folder holds the Supabase project files.
 | `supabase/seed/` | Starting data for the database |
 | `supabase/email-templates/` | Emails sent to users, such as sign-up confirmation |
 
-The agents will be in `agent-server/`, and the survival model code is in `ml/`.
+The agents are in `agent-server/`, and the survival model code is in `ml/`.

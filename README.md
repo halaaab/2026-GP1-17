@@ -69,12 +69,11 @@ Chat messages go to the agent server. Everything else, such as sign-in, the expl
 .
 ├── frontend/     # Web application (HTML, CSS, JavaScript)
 ├── backend/      # Supabase migrations, seed data and email templates
-├── ml/           # Survival model code
+├── agent-server/ # AI agents (Mastra, TypeScript) — see agent-server/README.md
+├── ml/           # Survival model code — see ml/README.md
 ├── datasets/     # Where the data lives — see datasets/README.md
 └── resources/    # Research papers + project docs (proposal, sprint reports & diagrams)
 ```
-
-The agent server will be added in `agent-server/`.
 
 ## Documentation
 
