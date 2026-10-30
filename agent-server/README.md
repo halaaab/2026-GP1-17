@@ -28,17 +28,9 @@ Run these commands from the `agent-server` folder:
    npm run dev
    ```
 
-5. Open http://localhost:4111 to use Mastra Studio, a test page for chatting with the agents.
-
-6. Choose **Agent** and send `Hello, what can you do?`. If it answers, you are set up.
+5. Open http://localhost:4111 to use Mastra Studio, a test page for chatting with the agents. If you can see **Conversational Agent**, you are set up.
 
 To stop the server, press `Ctrl + C` in the terminal.
-
-## Be careful with the example agent
-
-The agent called **Agent** came with the Mastra template. It is only here to check that the setup works, and it will be removed before we build Darb's agents.
-
-It can run commands on your computer and create schedules that keep using paid OpenAI credit. Skip its suggested prompts, and decline any request to run a command or change a file.
 
 ## Project rules
 
@@ -55,11 +47,52 @@ It can run commands on your computer and create schedules that keep using paid O
 | Competitor Agent | Finds similar startups and computes the Idea Similarity Score. |
 | Founder Roadmap Agent | Builds the ordered roadmap of regulatory and practical steps. |
 
-## Folders
+## How the agents connect
 
-| Folder | What goes in it |
+```
+Conversational Agent
+ ├── delegate-competitor-analysis → Competitor Agent
+ │                                   ├── web-search
+ │                                   ├── similarity-search
+ │                                   ├── extract-and-verify-profile
+ │                                   └── build-comparison-matrix
+ └── predict-survival → ML service
+```
+
+The two tools of the Conversational Agent are connected. The Competitor Agent's four tools are not built yet, and `predict-survival` returns `model_not_connected` until the ML service is ready.
+
+## Where everything goes
+
+| To work on | Put it in |
 |---|---|
-| `src/mastra/agents/` | The AI agents |
-| `src/mastra/tools/` | The actions an agent can take |
-| `src/mastra/config/` | Settings, such as the approved websites and the models |
-| `src/mastra/lib/` | Shared helpers, such as the Supabase connection |
+| An agent or its instructions | `src/mastra/agents/` |
+| A tool's code | `src/mastra/tools/`, one file per tool |
+| Tavily search | `src/mastra/tools/web-search.ts` |
+| Approved websites | `src/mastra/config/approved-domains.ts` |
+| Which AI model each agent uses | `src/mastra/config/models.ts` |
+| The Supabase connection | `src/mastra/lib/supabase.ts` |
+| Registering a new agent | `src/mastra/index.ts` |
+| Calling the model from the agents | `src/mastra/tools/predict-survival.ts` |
+| The model's FastAPI service | `ml/src/` in the repository root |
+| A new key | Your own `.env`, with its name and a comment added to `.env.example` |
+
+## Add or remove a tool
+
+To add a tool:
+
+1. Write it in its own file in `src/mastra/tools/`, with Zod schemas for what goes in and comes out.
+2. Add it to the `tools` list of the agent that uses it, in `src/mastra/agents/`.
+3. Test it in Studio.
+4. Push your own branch and open a pull request to `dev`.
+
+To remove a tool, delete its file and its line in the agent's `tools` list.
+
+The Conversational Agent only knows its two tools. You can change the Competitor Agent's tools without touching it, as long as `delegate-competitor-analysis` keeps the same output.
+
+## Arabic and English
+
+- Agents reply in the founder's language. There is one set of instructions, written in English.
+- Web search covers both languages, because a startup may appear in only one.
+- Tools return numbers and fixed codes, such as `model_not_connected`, instead of sentences. The agent or the website turns them into words.
+- Company names stay as the source writes them.
+- Test every change in both languages.
