@@ -103,12 +103,12 @@
 
         <div class="form">
           <div class="field">
-            <label class="label" for="fullName" data-i18n="auth.fullName"></label>
+            <label class="label is-required" for="fullName" data-i18n="auth.fullName"></label>
             <input class="input" id="fullName" name="fullName" type="text" autocomplete="name" data-i18n-placeholder="auth.fullNamePlaceholder">
             <p class="field-error" data-error-for="fullName" hidden></p>
           </div>
           <div class="field">
-            <label class="label" for="username" data-i18n="auth.username"></label>
+            <label class="label is-required" for="username" data-i18n="auth.username"></label>
             <input class="input" id="username" name="username" type="text" autocomplete="username" dir="ltr" data-i18n-placeholder="auth.usernamePlaceholder">
             <p class="field-hint" data-i18n="auth.usernameHint"></p>
             <p class="field-error" data-error-for="username" hidden></p>
@@ -231,13 +231,9 @@
           </div>
           <div class="field" data-show-when="studentExperience=yes">
             <label class="label is-required" for="studentSector" data-i18n="signup.projectSector"></label>
-            <select class="input" id="studentSector" name="studentSector" data-column="project_sector" data-required>
+            <select class="input" id="studentSector" name="studentSector" data-sectors data-column="project_sector" data-required>
+              <!-- sign-up.js adds Darb's sectors (the same list as the startups) and "Other" -->
               <option value="" data-i18n="signup.select"></option>
-              <option value="ai_software" data-i18n="signup.sector.ai_software"></option>
-              <option value="ecommerce" data-i18n="signup.sector.ecommerce"></option>
-              <option value="fintech" data-i18n="signup.sector.fintech"></option>
-              <option value="food_beverage" data-i18n="signup.sector.food_beverage"></option>
-              <option value="other" data-i18n="signup.sector.other"></option>
             </select>
             <p class="field-error" data-error-for="studentSector" hidden></p>
           </div>
@@ -265,13 +261,9 @@
         <div class="form details" data-for="entrepreneur" hidden>
           <div class="field">
             <label class="label is-required" for="entrepreneurSector" data-i18n="signup.projectSector"></label>
-            <select class="input" id="entrepreneurSector" name="entrepreneurSector" data-column="project_sector" data-required>
+            <select class="input" id="entrepreneurSector" name="entrepreneurSector" data-sectors data-column="project_sector" data-required>
+              <!-- sign-up.js adds Darb's sectors (the same list as the startups) and "Other" -->
               <option value="" data-i18n="signup.select"></option>
-              <option value="ai_software" data-i18n="signup.sector.ai_software"></option>
-              <option value="ecommerce" data-i18n="signup.sector.ecommerce"></option>
-              <option value="fintech" data-i18n="signup.sector.fintech"></option>
-              <option value="food_beverage" data-i18n="signup.sector.food_beverage"></option>
-              <option value="other" data-i18n="signup.sector.other"></option>
             </select>
             <p class="field-error" data-error-for="entrepreneurSector" hidden></p>
           </div>
@@ -299,13 +291,9 @@
         <div class="form details" data-for="business_owner" hidden>
           <div class="field">
             <label class="label is-required" for="businessSector" data-i18n="signup.businessSector"></label>
-            <select class="input" id="businessSector" name="businessSector" data-column="current_business_sector" data-required>
+            <select class="input" id="businessSector" name="businessSector" data-sectors data-column="current_business_sector" data-required>
+              <!-- sign-up.js adds Darb's sectors (the same list as the startups) and "Other" -->
               <option value="" data-i18n="signup.select"></option>
-              <option value="ai_software" data-i18n="signup.sector.ai_software"></option>
-              <option value="ecommerce" data-i18n="signup.sector.ecommerce"></option>
-              <option value="fintech" data-i18n="signup.sector.fintech"></option>
-              <option value="food_beverage" data-i18n="signup.sector.food_beverage"></option>
-              <option value="other" data-i18n="signup.sector.other"></option>
             </select>
             <p class="field-error" data-error-for="businessSector" hidden></p>
           </div>
@@ -357,29 +345,6 @@
             <input class="input" id="investorTypeOther" name="investorTypeOther" type="text" maxlength="80" data-column="investor_type" data-required>
             <p class="field-error" data-error-for="investorTypeOther" hidden></p>
           </div>
-          <div class="field" data-show-when="investorType!=individual&investorType!=">
-            <label class="label is-required" for="investorEntity" data-i18n="signup.entity"></label>
-            <select class="input" id="investorEntity" name="investorEntity" data-column="organisation_name" data-required data-searchable>
-              <option value="" data-i18n="signup.select"></option>
-              <option value="STV" data-i18n="signup.entity.0"></option>
-              <option value="Sanabil Investments" data-i18n="signup.entity.1"></option>
-              <option value="Saudi Venture Capital Company (SVC)" data-i18n="signup.entity.2"></option>
-              <option value="Raed Ventures" data-i18n="signup.entity.3"></option>
-              <option value="Wa’ed Ventures" data-i18n="signup.entity.4"></option>
-              <option value="Impact46" data-i18n="signup.entity.5"></option>
-              <option value="Merak Capital" data-i18n="signup.entity.6"></option>
-              <option value="Nama Ventures" data-i18n="signup.entity.7"></option>
-              <option value="Vision Ventures" data-i18n="signup.entity.8"></option>
-              <option value="Hala Ventures" data-i18n="signup.entity.9"></option>
-              <option value="other" data-i18n="signup.entity.10"></option>
-            </select>
-            <p class="field-error" data-error-for="investorEntity" hidden></p>
-          </div>
-          <div class="field" data-show-when="investorEntity=other">
-            <label class="label is-required" for="investorEntityOther" data-i18n="signup.entityName"></label>
-            <input class="input" id="investorEntityOther" name="investorEntityOther" type="text" maxlength="80" data-column="organisation_name" data-required>
-            <p class="field-error" data-error-for="investorEntityOther" hidden></p>
-          </div>
         </div>
 
         <!-- Other -->
@@ -407,12 +372,12 @@
 
         <div class="form">
           <div class="field">
-            <label class="label" for="email" data-i18n="auth.email"></label>
+            <label class="label is-required" for="email" data-i18n="auth.email"></label>
             <input class="input" id="email" name="email" type="email" autocomplete="email" dir="ltr" data-i18n-placeholder="auth.emailPlaceholder">
             <p class="field-error" data-error-for="email" hidden></p>
           </div>
           <div class="field">
-            <label class="label" for="password" data-i18n="auth.password"></label>
+            <label class="label is-required" for="password" data-i18n="auth.password"></label>
             <div class="input-group">
               <input class="input" id="password" name="password" type="password" autocomplete="new-password" dir="ltr" data-i18n-placeholder="auth.passwordPlaceholder">
               <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="auth.showPassword">

@@ -8,11 +8,10 @@ import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, colorOf, detailsLink, descriptionOf, nameOf, logoOf, logoHtml, STAGES, REGIONS,
-} from '../../../../shared/startups.js';
+  loadStartups, listOf, listText, label, colorOf, detailsLink, descriptionOf, nameOf, logoOf, logoHtml, STAGES, SAUDI_REGIONS,
+} from '../../../../shared/startups.js?v=3';
 
 const PAGE_SIZE = 12;   // four rows of three cards
-const SAUDI_REGIONS = REGIONS.slice(0, 6);
 
 const cards = document.querySelector('#cards');
 const search = document.querySelector('#search');
@@ -61,25 +60,32 @@ function showTotals() {
     + total(saudi.length, t('startups.statSaudi'), 'map');
 }
 
-/* The sector and region dropdowns list what the startups really have, most common first,
-   with how many each has. The values are the database's English words, so a choice
-   stays chosen when the language changes; only the words are redrawn. */
+/* The sector dropdown lists what the startups really have, most common first, with how
+   many each has. The region dropdown lists the Saudi regions that have startups, in the
+   order of the 13 regions (then any other place a startup has); a region shows up once
+   a startup in it is added. Both start with "All". The values are the database's English words, so a
+   choice stays chosen when the language changes; only the words are redrawn. */
 function fillDropdowns() {
-  const tally = (column) => {
-    const counts = new Map();
-    startups.flatMap((row) => listOf(row, column)).forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
-    return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const counts = (column) => {
+    const found = new Map();
+    startups.flatMap((row) => listOf(row, column)).forEach((value) => found.set(value, (found.get(value) || 0) + 1));
+    return found;
   };
 
-  const fill = (select, nameKey, kind, column) => {
+  const fill = (select, allKey, kind, pairs) => {
     const chosen = select.value;
-    select.innerHTML = `<option value="">${t(nameKey)}</option>`
-      + tally(column).map(([value, count]) => `<option value="${safe(value)}">${safe(label(kind, value))} (${count})</option>`).join('');
+    select.innerHTML = `<option value="">${t(allKey)} (${startups.length})</option>`
+      + pairs.map(([value, count]) => `<option value="${safe(value)}">${safe(label(kind, value))} (${count})</option>`).join('');
     select.value = chosen;
   };
 
-  fill(sectorFilter, 'startups.sector', 'sector', 'sector');
-  fill(regionFilter, 'startups.region', 'region', 'region');
+  const sectors = [...counts('sector')].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const regions = counts('region');
+  const otherPlaces = [...regions.keys()].filter((region) => !SAUDI_REGIONS.includes(region)).sort();
+  const regionPairs = [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces].map((region) => [region, regions.get(region)]);
+
+  fill(sectorFilter, 'startups.allSectors', 'sector', sectors);
+  fill(regionFilter, 'startups.allRegions', 'region', regionPairs);
 
   // the stages go from the earliest to the latest
   const chosen = stageFilter.value;
@@ -194,7 +200,7 @@ sectorFilter.addEventListener('change', startOver);
 regionFilter.addEventListener('change', startOver);
 stageFilter.addEventListener('change', startOver);
 
-// The list already follows what is typed; the Search button takes the person down to it
+// The list already follows what is typed; pressing Enter in the search box takes the person down to it
 document.querySelector('#filters').addEventListener('submit', (event) => {
   event.preventDefault();
   startOver();

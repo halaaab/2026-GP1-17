@@ -1,8 +1,8 @@
 <!doctype html>
 <!--
   REQUIREMENT DETAILS (founder side, also open to visitors)
-  One regulatory requirement: when it applies, what to do, the fees, similar
-  requirements, and its key facts and official links. Opened from the Regulatory Explorer:
+  One regulatory requirement: when it applies, what to do, the fees, and its
+  key facts and official links. Opened from the Regulatory Explorer:
     requirement-details.html?id=GEN-001
   The same design as the Startup details page: a colored head (the same color
   as the requirement's card), then two columns.
@@ -14,7 +14,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Darb</title>
   <link rel="stylesheet" href="../../../../shared/shared.css">
-  <link rel="stylesheet" href="requirement-details.css">
+  <link rel="stylesheet" href="requirement-details.css?v=3">
 </head>
 <body data-layout="founder" data-page="requirements" data-title="nav.requirements" data-access="public">
 
@@ -69,10 +69,6 @@
             <p class="req-text" id="fees"></p>
           </section>
 
-          <section class="req-section" id="similar-section">
-            <h3 class="section-title" data-i18n="reg.similar"></h3>
-            <div class="req-similar-grid" id="similar"></div>
-          </section>
         </div>
 
         <!-- Key facts and the official links -->
@@ -93,6 +89,6 @@
   <script type="module" src="../../../../shared/layout.js"></script>
   <script type="module" src="../../../../shared/guard.js"></script>
   <script type="module" src="../../../../shared/ui.js"></script>
-  <script type="module" src="requirement-details.js"></script>
+  <script type="module" src="requirement-details.js?v=3"></script>
 </body>
 </html>

@@ -22,6 +22,10 @@
   margin: 2px 0 16px;
   font-size: 12.5px;
 }
+/* the Preferences card has no subtitle, so the title keeps the same gap below it */
+#language-label {
+  margin-top: 16px;
+}
 
 /* ---------- Personal details: the initials, then the fields ---------- */
 

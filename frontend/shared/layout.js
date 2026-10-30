@@ -54,9 +54,10 @@ const ADMIN_MENU = [
   {
     label: 'admin.platformData',
     items: [
-      { id: 'admin-startups',   label: 'admin.startups',   icon: 'briefcase', href: 'pages/admin/startup-management/startup-management.html' },
-      { id: 'admin-regulatory', label: 'admin.regulatory', icon: 'shield',    href: 'pages/admin/regulatory-management/regulatory-management.html' },
-      { id: 'admin-incubators', label: 'admin.incubators', icon: 'sprout',    href: 'pages/admin/incubator-accelerator-management/incubator-accelerator-management.html' },
+      // the same order and icons as the founder's Explore menu
+      { id: 'admin-startups',   label: 'admin.startups',   icon: 'store',  href: 'pages/admin/startup-management/startup-management.html' },
+      { id: 'admin-incubators', label: 'admin.incubators', icon: 'rocket', href: 'pages/admin/incubator-accelerator-management/incubator-accelerator-management.html' },
+      { id: 'admin-regulatory', label: 'admin.regulatory', icon: 'shield', href: 'pages/admin/regulatory-management/regulatory-management.html' },
     ],
   },
 ];

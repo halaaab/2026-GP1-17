@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
   INCUBATORS & ACCELERATORS EXPLORER
-  Every support program in Darb: search, filter by type, sector and city,
+  Every support program in Darb: search, filter by type, sector and region,
   and see them as cards. Each one opens its details page.
   Visitors may open it too (data-access="public").
   A purple banner over a photo of Riyadh, a search bar on its edge, then colored cards.
@@ -13,7 +13,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Darb</title>
   <link rel="stylesheet" href="../../../../shared/shared.css">
-  <link rel="stylesheet" href="incubators-accelerators-explorer.css">
+  <link rel="stylesheet" href="incubators-accelerators-explorer.css?v=3">
 </head>
 <body data-layout="founder" data-page="incubators" data-title="nav.incubators" data-access="public">
 
@@ -81,12 +81,10 @@
       </label>
       <span class="programs-select-wrap">
         <select class="programs-select" id="sector-filter" data-i18n-aria-label="programs.sector">
-          <option value="" data-i18n="programs.sector"></option>
         </select>
       </span>
       <span class="programs-select-wrap">
-        <select class="programs-select" id="city-filter" data-i18n-aria-label="programs.city">
-          <option value="" data-i18n="programs.city"></option>
+        <select class="programs-select" id="region-filter" data-i18n-aria-label="programs.region">
         </select>
       </span>
       <span class="programs-select-wrap">
@@ -97,7 +95,6 @@
           <option value="accelerator" data-label="programs.accelerators"></option>
         </select>
       </span>
-      <button type="submit" class="btn btn-primary programs-search-button" data-i18n="programs.searchButton"></button>
     </form>
 
     <div class="programs-bar" id="results">
@@ -126,6 +123,6 @@
 
   <script type="module" src="../../../../shared/layout.js"></script>
   <script type="module" src="../../../../shared/guard.js"></script>
-  <script type="module" src="incubators-accelerators-explorer.js"></script>
+  <script type="module" src="incubators-accelerators-explorer.js?v=3"></script>
 </body>
 </html>

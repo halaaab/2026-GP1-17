@@ -10,7 +10,7 @@ import { showErrorPage } from '../../../../shared/errors.js';
 import {
   loadRequirements, field, label, isicOf, stagesOf, allStages, stagesText,
   colorOf, logoUrl, initials, detailsLink, ISIC_SECTIONS, fitsIsic, isicText,
-} from '../../../../shared/regulatory.js';
+} from '../../../../shared/regulatory.js?v=3';
 
 const PAGE_SIZE = 12;   // four rows of three cards
 
@@ -212,7 +212,7 @@ authorityFilter.addEventListener('change', startOver);
 sectorFilter.addEventListener('change', startOver);
 stageFilter.addEventListener('change', startOver);
 
-// The list already follows what is typed; the Search button takes the person down to it
+// The list already follows what is typed; pressing Enter in the search box takes the person down to it
 document.querySelector('#filters').addEventListener('submit', (event) => {
   event.preventDefault();
   startOver();

@@ -1,8 +1,7 @@
 /* Incubator / accelerator details: one program, opened with ?id=<support_org_id>.
    A colored head (the program's color, as on its card in the explorer), then
-   two columns: who can apply, about, what you get and similar programs on one
-   side; the key facts and the official website in a card on the other.
-   Similar programs: up to three (same sectors, then same type, then same city). */
+   two columns: target audience, about and what you get on one side; the key
+   facts and the official website in a card on the other. */
 
 import { t, getLanguage } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
@@ -10,37 +9,16 @@ import { showToast } from '../../../../shared/ui.js';
 import '../../../../shared/guard.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  getProgram, getPrograms, programType, sectorList, isOpenToAll, cityOf, text,
-  listItems, websiteOf, detailsLink, logoOf, logoHtml, colorOf, TYPE_ICON,
-} from '../programs.js';
+  getProgram, getPrograms, programType, sectorList, isOpenToAll, text,
+  listItems, websiteOf, logoHtml, colorOf, TYPE_ICON,
+} from '../programs.js?v=3';
 
 const id = new URLSearchParams(window.location.search).get('id');
 let program = null;
-let similar = [];
 
 // Program text is typed by admins, so it is escaped before it goes into HTML
 function safe(text) {
   return String(text ?? '').replace(/[&<>"']/g, (character) => `&#${character.charCodeAt(0)};`);
-}
-
-/* ---------- Similar programs ----------
-   Score: 2 for every shared sector, 1 for the same type, 1 for the same city. */
-
-function findSimilar(all) {
-  const mySectors = sectorList(program).map((sector) => sector.toLowerCase());
-  return all
-    .filter((other) => other.support_org_id !== program.support_org_id)
-    .map((other) => {
-      const shared = sectorList(other).filter((sector) => mySectors.includes(sector.toLowerCase())).length;
-      const score = shared * 2
-        + (programType(other) === programType(program) ? 1 : 0)
-        + (cityOf(other) && cityOf(other) === cityOf(program) ? 1 : 0);
-      return { other, score };
-    })
-    .filter((item) => item.score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
-    .map((item) => item.other);
 }
 
 /* ---------- Drawing ---------- */
@@ -95,7 +73,7 @@ function show() {
     ...sectorTags.map((sector) => `<span class="detail-tag">${safe(sector)}</span>`),
   ].join('');
 
-  // Who can apply: each condition, then the sectors it is for
+  // Target audience: each condition, then the sectors it is for
   const rules = listItems(text(program, 'eligibility'));
   const sectorLine = isOpenToAll(program) ? t('programs.openToAll') : sectors.join(t('programs.listComma'));
   if (sectorLine) rules.push(t('programs.focusRow').replace('{list}', sectorLine));
@@ -129,18 +107,6 @@ function show() {
   websiteButton.innerHTML = `<span>${t('programs.visit')}</span>${icon('external')}`;
   document.querySelector('#note').innerHTML = `${INFO}<span>${t('programs.verifyNote')}</span>`;
 
-  // Similar programs, each in its own color: its logo, or its type's icon when it has none
-  document.querySelector('#similar-section').hidden = similar.length === 0;
-  document.querySelector('#similar').innerHTML = similar.map((other, index) => `
-    <a class="detail-similar-card color-${colorOf(other)} fade-up" style="--i: ${index}" href="${detailsLink(other.support_org_id)}">
-      <span class="detail-similar-icon ${logoOf(other) ? 'has-logo' : ''}" aria-hidden="true">
-        ${logoOf(other) ? `<img src="${safe(logoOf(other))}" alt="" loading="lazy">` : icon(TYPE_ICON[programType(other)])}
-      </span>
-      <span class="detail-similar-text">
-        <strong>${safe(text(other, 'name'))}</strong>
-        <span>${t(`programs.type.${programType(other)}`)} · ${safe(cityOf(other) || '—')}</span>
-      </span>
-    </a>`).join('');
 }
 
 /* ---------- Share ----------
@@ -190,7 +156,6 @@ if (!program) {
   showErrorPage((await getPrograms()) === null ? 500 : 404);
 } else {
   document.querySelector('#loading').hidden = true;
-  similar = findSimilar((await getPrograms()) || []);
   document.querySelector('#detail').hidden = false;
   show();
 }
