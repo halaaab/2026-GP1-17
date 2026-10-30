@@ -51,6 +51,13 @@ export const REGIONS = [
   'North America', 'LATAM', 'South America', 'Oceania',
 ];
 
+/* The 13 regions of Saudi Arabia, in this order in the founder explorers' region filters.
+   A filter shows only the regions that have something in them. */
+export const SAUDI_REGIONS = [
+  'Riyadh', 'Makkah', 'Madinah', 'Eastern', 'Qassim', 'Asir', 'Tabuk',
+  'Hail', 'Northern Borders', 'Jazan', 'Najran', 'Al Baha', 'Al Jouf',
+];
+
 export const MARKETS = ['B2B', 'B2C', 'B2G', 'B2B2C'];
 
 /* Every startup, sorted by name. Returns null when loading failed.
@@ -77,37 +84,6 @@ export async function loadStartup(id) {
   const { data, error } = await supabase.from('startups').select('*').eq('startup_id', id).maybeSingle();
   if (error) console.error('startups:', error.message);
   return { startup: data || null, failed: Boolean(error) };
-}
-
-/* Up to three startups like this one, for its details page.
-   Only startups in its first sector are read. Each gets 2 points for every sector
-   it shares, 1 for the same funding stage and 1 for a shared region; the best three
-   are kept. Returns [] when there are none or they could not be loaded. */
-export async function loadSimilar(row) {
-  const sectors = listOf(row, 'sector');
-  if (sectors.length === 0) return [];
-
-  const { data, error } = await supabase.from('startups').select('*')
-    .ilike('sector', `%${sectors[0]}%`).neq('startup_id', row.startup_id).limit(60);
-  if (error) {
-    console.error('startups:', error.message);
-    return [];
-  }
-
-  const stages = listOf(row, 'stage');
-  const regions = listOf(row, 'region');
-  const shared = (other, column, mine) => listOf(other, column).filter((value) => mine.includes(value)).length;
-
-  return data
-    .map((other) => ({
-      other,
-      score: shared(other, 'sector', sectors) * 2
-        + (shared(other, 'stage', stages) ? 1 : 0)
-        + (shared(other, 'region', regions) ? 1 : 0),
-    }))
-    .sort((a, b) => b.score - a.score || a.other.startup_name.localeCompare(b.other.startup_name))
-    .slice(0, 3)
-    .map((item) => item.other);
 }
 
 /* "Seed; Series A" → ['Seed', 'Series A'] (sector, stage, region, target_market, products_services) */

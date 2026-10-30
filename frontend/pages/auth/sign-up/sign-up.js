@@ -2,6 +2,7 @@
    The same page finishes the profile of people who signed in with Google. */
 
 import { t, getLanguage } from '../../../shared/language.js';
+import { SECTORS, label } from '../../../shared/startups.js';
 import { signUp, completeProfile, isUsernameFree, logInWithGoogle, getAccount, getCurrentUser, goToHomePage, PASSWORD_RULES, isGoodPassword, passwordProblem } from '../../../shared/auth.js';
 
 const form = document.querySelector('#sign-up-form');
@@ -83,6 +84,24 @@ function fillCountries() {
   select.dispatchEvent(new Event('change', { bubbles: true }));
 }
 
+/* The sector dropdowns (data-sectors): Darb's sectors, the same list as the startups,
+   A to Z in the page's language, then "Other" (which opens a box to type it).
+   The saved value is the English sector name, so founders and startups match. */
+function fillSectors() {
+  const language = getLanguage();
+  const sectors = SECTORS
+    .map((sector) => ({ value: sector, name: label('sector', sector) }))
+    .sort((first, second) => first.name.localeCompare(second.name, language));
+
+  form.querySelectorAll('select[data-sectors]').forEach((select) => {
+    const chosenBefore = select.value;
+    select.innerHTML = `<option value="">${t('signup.select')}</option>`
+      + sectors.map((sector) => `<option value="${sector.value}">${sector.name}</option>`).join('')
+      + `<option value="other">${t('signup.sector.other')}</option>`;
+    select.value = chosenBefore;
+  });
+}
+
 /* ---------- Which details fields are showing ----------
    Each field in the details step can carry data-show-when, for example
    data-show-when="country=SA". A field also hides when it belongs to a
@@ -157,6 +176,7 @@ function onLanguage() {
     select.dataset.emptyText = t('signup.noResults');
   });
   fillCountries();
+  fillSectors();
   updateWords();
 }
 

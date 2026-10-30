@@ -209,7 +209,7 @@ html[dir="rtl"] .detail-back svg {
   font-weight: 700;
 }
 
-/* Who can apply: a green box, a tick before each condition */
+/* Target audience: a green box, a tick before each condition */
 .detail-applies {
   display: flex;
   flex-direction: column;
@@ -367,71 +367,6 @@ html[dir="rtl"] .detail-back svg {
   width: 16px;
   height: 16px;
   margin-top: 1px;
-}
-
-/* ---------- Similar programs ---------- */
-
-.detail-similar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 10px;
-}
-.detail-similar-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg);
-  color: inherit;
-  transition: border-color var(--dur-fast), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
-}
-.detail-similar-card:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-2px);
-}
-.detail-similar-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
-  background: var(--strong);
-  color: #fff;
-}
-.detail-similar-icon svg {
-  width: 20px;
-  height: 20px;
-}
-/* with a logo: a white square, so the logo shows as it is */
-.detail-similar-icon.has-logo {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: var(--bg);
-}
-.detail-similar-icon img {
-  width: 100%;
-  height: 100%;
-  padding: 5px;
-  object-fit: contain;
-}
-.detail-similar-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.detail-similar-text strong {
-  font-size: 14px;
-  line-height: 1.35;
-}
-.detail-similar-text span {
-  font-size: 12.5px;
-  color: var(--text-3);
 }
 
 /* ---------- Narrow screens: one column, the side card under the head ---------- */

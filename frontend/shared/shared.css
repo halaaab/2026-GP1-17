@@ -633,7 +633,33 @@ textarea.input {
    <select class="pill"><option value="">Sector</option> ... </select> */
 select.pill {
   max-width: 220px;   /* long option names are cut in the closed dropdown, shown in full when open */
-  padding-inline-end: 10px;
+}
+
+/* Every dropdown (pill filters and form boxes) gets the same soft rounded arrow
+   instead of the browser's own. It sits on the end side (left in Arabic) and
+   turns teal with the border on hover and focus. */
+select.pill,
+select.input {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: 38px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B7B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+  cursor: pointer;
+}
+html[dir="rtl"] select.pill,
+html[dir="rtl"] select.input {
+  background-position: left 14px center;
+}
+select.pill:hover,
+select.pill:focus,
+select.input:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231F8E97' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+select.input:disabled {
+  cursor: not-allowed;
 }
 
 /* Language toggle, tabs, filters

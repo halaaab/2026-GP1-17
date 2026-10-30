@@ -1,5 +1,5 @@
 /* Incubators & accelerators management: the list of support programs with a
-   search box and type / sector filters. Each row has an edit button
+   search box and type / sector / region filters. Each row has an edit button
    (opens the side panel) and a delete button (asks first). "Add program" opens
    the same panel empty. Only admins can save (database rules, migration 0006).
    Every program needs a logo (migration 0011): it is shrunk in the browser,
@@ -13,9 +13,10 @@ import { getCurrentUser } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 import {
-  getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, detailsLink,
+  getPrograms, programType, sectorList, isOpenToAll, regionOf, clean, detailsLink,
   text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
-} from '../../founder/incubators-accelerators/programs.js';
+} from '../../founder/incubators-accelerators/programs.js?v=3';
+import { SAUDI_REGIONS, label } from '../../../shared/startups.js?v=3';
 
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;   // what an admin may pick; it is shrunk before upload
@@ -31,6 +32,7 @@ const rows = document.querySelector('#rows');
 const search = document.querySelector('#search');
 const typeFilter = document.querySelector('#type-filter');
 const sectorFilter = document.querySelector('#sector-filter');
+const regionFilter = document.querySelector('#region-filter');
 const empty = document.querySelector('#empty');
 const panel = document.querySelector('#program-panel');
 const form = document.querySelector('#program-form');
@@ -46,9 +48,11 @@ const FIELDS = ['name', 'type', 'location', 'sector', 'description', 'target_sta
 const OPTIONAL = ['program_duration', 'funding_investment'];
 const REQUIRED = FIELDS.filter((field) => !OPTIONAL.includes(field));
 
-// The Arabic twins of the text fields (migration 0012). All optional:
-// the founder pages show the English text where the Arabic one is empty.
-const ARABIC = ARABIC_FIELDS.map((field) => `${field}_ar`);
+// The Arabic twins of the text fields (migration 0012).
+// location_ar has no box of its own: it is written from the chosen region (see locationOf).
+const ARABIC = ARABIC_FIELDS.map((field) => `${field}_ar`).filter((field) => field !== 'location_ar');
+// An Arabic field is required when its English twin is (duration and funding stay optional)
+const REQUIRED_ARABIC = ARABIC.filter((field) => !OPTIONAL.includes(field.replace(/_ar$/, '')));
 let hasArabic = false;   // true once the table has the Arabic columns
 
 let programs = [];
@@ -86,7 +90,16 @@ function appliesTo(program) {
 
 /* ---------- Filters ---------- */
 
-// The sector dropdown lists the sectors the programs really have, A to Z, in the page's language
+// The program's region in the Kingdom, in the page's language: "Eastern Province",
+// "All of Saudi Arabia" for a program that covers the whole country, '' when unknown
+function regionText(program) {
+  const region = regionOf(program);
+  if (region === 'saudi') return t('programs.nationwide');
+  return region ? label('region', region) : '';
+}
+
+// The sector dropdown lists the sectors the programs really have, A to Z, in the page's language.
+// The region dropdown lists the Saudi regions that have a program, in the order of the 13 regions.
 function fillDropdowns() {
   const keep = sectorFilter.value;
   const sorted = (values) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
@@ -96,6 +109,13 @@ function fillDropdowns() {
   sectorFilter.insertAdjacentHTML('beforeend', options(sorted(programs.flatMap(sectorList))));
 
   sectorFilter.value = keep;
+
+  const keepRegion = regionFilter.value;
+  regionFilter.querySelectorAll('option:not(:first-child)').forEach((option) => option.remove());
+  regionFilter.insertAdjacentHTML('beforeend', SAUDI_REGIONS
+    .filter((region) => programs.some((program) => regionOf(program) === region))
+    .map((region) => `<option value="${safe(region)}">${safe(label('region', region))}</option>`).join(''));
+  regionFilter.value = keepRegion;
 }
 
 function matches(program) {
@@ -103,10 +123,13 @@ function matches(program) {
   const kind = programType(program);
   const fitsSearch = ['name', 'sector', 'location', 'target_stage']
     .flatMap((field) => [clean(program[field]), arabicOf(program, field)])
+    .concat(regionText(program))
     .join(' ').toLowerCase().includes(words);
   const fitsType = !typeFilter.value || kind === typeFilter.value || kind === 'both';
   const fitsSector = !sectorFilter.value || sectorList(program).includes(sectorFilter.value) || isOpenToAll(program);
-  return fitsSearch && fitsType && fitsSector;
+  // a program for all of Saudi Arabia fits any region (the same as the founder explorer)
+  const fitsRegion = !regionFilter.value || regionOf(program) === regionFilter.value || regionOf(program) === 'saudi';
+  return fitsSearch && fitsType && fitsSector && fitsRegion;
 }
 
 /* ---------- The table ---------- */
@@ -117,7 +140,7 @@ function showRows() {
   rows.innerHTML = visible.map((program) => {
     const kind = programType(program);
     const name = text(program, 'name');
-    const place = cityOf(program);
+    const place = regionText(program);
     return `
       <tr class="${program.support_org_id === selectedId ? 'is-selected' : ''}">
         <td class="manage-name">
@@ -146,6 +169,48 @@ function showRows() {
   empty.hidden = visible.length > 0;
 }
 
+/* ---------- The region of a program ----------
+   The form asks for the region in the Kingdom, not a city. The region is saved as the
+   program's location in both languages, "Eastern Province, Saudi Arabia", so the
+   explorers find it with regionOf(). */
+
+const REGION_WORDS = {
+  Riyadh: ['Riyadh', 'الرياض'],
+  Makkah: ['Makkah', 'مكة المكرمة'],
+  Madinah: ['Madinah', 'المدينة المنورة'],
+  Eastern: ['Eastern Province', 'المنطقة الشرقية'],
+  Qassim: ['Qassim', 'القصيم'],
+  Asir: ['Asir', 'عسير'],
+  Tabuk: ['Tabuk', 'تبوك'],
+  Hail: ['Hail', 'حائل'],
+  'Northern Borders': ['Northern Borders', 'الحدود الشمالية'],
+  Jazan: ['Jazan', 'جازان'],
+  Najran: ['Najran', 'نجران'],
+  'Al Baha': ['Al Baha', 'الباحة'],
+  'Al Jouf': ['Al Jouf', 'الجوف'],
+};
+
+// The choices: "Choose a region", all of Saudi Arabia, then the 13 regions
+function fillRegionChoices() {
+  const select = form.elements.location;
+  const keep = select.value;
+  select.innerHTML = `<option value="">${t('programsAdmin.f.chooseRegion')}</option>`
+    + `<option value="saudi">${t('programs.nationwide')}</option>`
+    + SAUDI_REGIONS.map((region) => `<option value="${safe(region)}">${safe(label('region', region))}</option>`).join('');
+  select.value = keep;
+}
+
+/* The location to save, in English and Arabic. A program edited without changing
+   its region keeps its own words ("Thuwal, Saudi Arabia / KAUST"). */
+function locationOf(region, program) {
+  if (program && regionOf(program) === region) {
+    return { location: clean(program.location) || null, location_ar: arabicOf(program, 'location') || null };
+  }
+  if (region === 'saudi') return { location: 'Saudi Arabia', location_ar: 'المملكة العربية السعودية' };
+  const [english, arabic] = REGION_WORDS[region];
+  return { location: `${english}, Saudi Arabia`, location_ar: `${arabic}، المملكة العربية السعودية` };
+}
+
 /* ---------- The side panel ---------- */
 
 function fillForm(program) {
@@ -165,6 +230,9 @@ function fillForm(program) {
     form.elements[field].value = program ? arabicOf(program, field.replace(/_ar$/, '')) : '';
   });
   if (!program) typeSelect.value = 'Incubator';
+  // the location box is a region choice: its value is the program's region
+  fillRegionChoices();
+  form.elements.location.value = program ? regionOf(program) : '';
 
   clearErrors();
 }
@@ -192,6 +260,11 @@ function closePanel() {
   showRows();
 }
 
+// "AlMashtal will be removed from the list ..." in the page's language
+function deleteText() {
+  return t('programsAdmin.deleteText').replace('{name}', text(findProgram(deleteId), 'name'));
+}
+
 // The edit and delete buttons in each row
 rows.addEventListener('click', (event) => {
   const edit = event.target.closest('[data-edit]');
@@ -203,7 +276,7 @@ rows.addEventListener('click', (event) => {
   const remove = event.target.closest('[data-delete]');
   if (remove) {
     deleteId = remove.dataset.delete;
-    document.querySelector('#delete-text').textContent = t('programsAdmin.deleteText').replace('{name}', text(findProgram(deleteId), 'name'));
+    document.querySelector('#delete-text').textContent = deleteText();
     deleteModal.showModal();
   }
 });
@@ -356,6 +429,12 @@ function formValues() {
       values[field] = form.elements[field].value.trim() || null;
     });
   }
+  // the chosen region becomes the location (and its Arabic twin)
+  if (values.location) {
+    const place = locationOf(values.location, selectedId ? findProgram(selectedId) : null);
+    values.location = place.location;
+    if (hasArabic) values.location_ar = place.location_ar;
+  }
   return values;
 }
 
@@ -393,7 +472,7 @@ function showError(input, key) {
 }
 
 function clearErrors() {
-  FIELDS.forEach((field) => showError(form.elements[field], ''));
+  [...FIELDS, ...ARABIC].forEach((field) => showError(form.elements[field], ''));
   logoError.hidden = true;
   document.querySelector('#logo-picker').classList.remove('is-error');
 }
@@ -415,6 +494,16 @@ function checkForm(values) {
     showError(input, key);
     if (key && !first) first = input;
   });
+
+  // the Arabic version, when the database has its columns
+  if (hasArabic) {
+    REQUIRED_ARABIC.forEach((field) => {
+      const input = form.elements[field];
+      const key = values[field] ? '' : 'programsAdmin.required';
+      showError(input, key);
+      if (key && !first) first = input;
+    });
+  }
 
   const logoMissing = !hasLogo();
   document.querySelector('#logo-picker').classList.toggle('is-error', logoMissing);
@@ -526,9 +615,11 @@ deleteConfirm.addEventListener('click', async () => {
 /* ---------- Search and filters ---------- */
 
 search.addEventListener('input', showRows);
-[typeFilter, sectorFilter].forEach((select) => select.addEventListener('change', showRows));
+[typeFilter, sectorFilter, regionFilter].forEach((select) => select.addEventListener('change', showRows));
 
 document.querySelector('#add-button').addEventListener('click', () => openPanel(null));
+
+document.querySelector('#delete-icon').innerHTML = icon('trash');
 
 function showAddButton() {
   document.querySelector('#add-button').innerHTML = `${icon('plus')}<span>${t('programsAdmin.add')}</span>`;
@@ -536,7 +627,9 @@ function showAddButton() {
 
 // dates and labels are text in the current language, so draw them again when it changes
 document.addEventListener('darb:language', () => {
+  if (deleteModal.open) document.querySelector('#delete-text').textContent = deleteText();
   sectorFilter.value = '';
+  fillRegionChoices();
   fillDropdowns();
   showAddButton();
   showSaveLabel();

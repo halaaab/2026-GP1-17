@@ -217,6 +217,13 @@ export async function logOut(goToLoginPage = true) {
    It answers ok even when no account has that email, so nobody can use
    this form to find out who has a Darb account. */
 export async function sendPasswordReset(email) {
+  // the email is written in the language saved on the account: make it the page's language
+  // (migration 0016; without it the email keeps the account's language)
+  await supabase.rpc('set_email_language', {
+    target_email: email,
+    language: document.documentElement.lang === 'en' ? 'en' : 'ar',
+  });
+
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: ROOT + PAGES.resetPassword,
   });

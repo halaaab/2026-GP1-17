@@ -5,12 +5,11 @@
 
    Sections, in page order:
      1. KPIs for the chosen period (7, 30 or 90 days), each with its change and a sparkline
-     2. Founder journey: signed up → described an idea → got a score → opened a roadmap
-     3. Score health: how the scores are spread across the three bands
-     4. Activity rhythm: founder actions per day, last 12 weeks
-     5. Who is on Darb: founders by type, region or language
-     6. Data health: what needs the admin's attention, with links to fix it
-     7. Latest activity */
+     2. Score health: how the scores are spread across the three bands
+     3. Activity rhythm: founder actions per day, last 12 weeks
+     4. Target audience: by founder type or region, how far each group's founders get
+     5. Data health: what needs the admin's attention, with links to fix it
+     6. Latest activity */
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
@@ -42,7 +41,7 @@ const TYPE_WORDS = {
 
 let data = null;       // everything loaded from the database
 let days = 30;         // the KPI period
-let peopleGroup = 'type';
+let peopleGroup = 'type';   // the Target audience rows: 'type' or 'region'
 let adminName = '';
 let loadedAt = null;
 
@@ -171,7 +170,7 @@ document.addEventListener('pointerout', (event) => {
 // a chart drawn again, or the page scrolled, leaves nothing under the pointer
 window.addEventListener('scroll', () => { tip.hidden = true; }, true);
 
-/* ---------- Head: greeting and pulse ---------- */
+/* ---------- Head: greeting ---------- */
 
 function showHead() {
   const hour = new Date().getHours();
@@ -181,13 +180,6 @@ function showHead() {
   });
   document.querySelector('#hello').textContent = fill(`overview.hello.${part}`, { name: adminName || t('role.admin') });
   document.querySelector('#refresh').innerHTML = icon('chevrons');
-}
-
-function showPulse({ founders, ideas, done }) {
-  const pulse = document.querySelector('#pulse');
-  pulse.textContent = founders + ideas + done === 0
-    ? fill('overview.pulseQuiet', { days })
-    : fill('overview.pulse', { days, founders: number(founders), ideas: number(ideas), done: number(done) });
 }
 
 /* ---------- 1. KPIs ---------- */
@@ -338,54 +330,9 @@ function showKpis() {
   ];
 
   document.querySelector('#kpis').innerHTML = cards.map(kpiCard).join('');
-  showPulse({ founders: newFounders.length, ideas: newIdeas.length, done: done.length });
 }
 
-/* ---------- 2. Founder journey ---------- */
-
-function showFunnel() {
-  const founderOf = (assessment) => data.ideaById.get(assessment.idea_id)?.user_id;
-
-  const steps = [
-    { key: 'overview.fSigned',  people: new Set(data.users.map((user) => user.user_id)) },
-    { key: 'overview.fIdea',    people: new Set(data.ideas.map((idea) => idea.user_id)) },
-    { key: 'overview.fScore',   people: new Set(data.assessments.filter((item) => item.fis_score !== null).map(founderOf).filter(Boolean)) },
-    { key: 'overview.fRoadmap', people: new Set(data.assessments.filter((item) => item.roadmap_generated_at).map(founderOf).filter(Boolean)) },
-  ].map((step) => ({ ...step, count: step.people.size }));
-
-  const first = steps[0].count;
-  let biggestDrop = null;
-
-  document.querySelector('#funnel').innerHTML = steps.map((step, index) => {
-    const share = percent(step.count, first);
-    const previous = index > 0 ? steps[index - 1].count : null;
-    const kept = previous ? percent(step.count, previous) : null;
-    if (previous && (!biggestDrop || 100 - kept > biggestDrop.lost)) {
-      biggestDrop = { lost: 100 - kept, from: steps[index - 1].key, to: step.key };
-    }
-    return `
-      <li class="ov-step">
-        <div class="ov-step-label">
-          <span class="ov-step-number">${index + 1}</span>
-          <span>${t(step.key)}</span>
-          <strong class="ov-step-count">${number(step.count)}</strong>
-          ${kept !== null ? `<span class="ov-step-kept" title="${safe(t('overview.keptTitle'))}">${kept}%</span>` : ''}
-        </div>
-        <div class="ov-step-bar" data-tip="${safe(`${t(step.key)} · ${number(step.count)} (${share}%)`)}">
-          <div class="ov-step-fill" style="width: ${first ? Math.max(share, 1.5) : 0}%"></div>
-        </div>
-      </li>`;
-  }).join('');
-
-  const insight = document.querySelector('#funnel-insight');
-  insight.innerHTML = first === 0
-    ? `${icon('spark')}<span>${t('overview.fEmpty')}</span>`
-    : biggestDrop && biggestDrop.lost > 0
-      ? `${icon('spark')}<span>${fill('overview.fInsight', { from: t(biggestDrop.from), to: t(biggestDrop.to), n: biggestDrop.lost })}</span>`
-      : `${icon('check')}<span>${t('overview.fNoDrop')}</span>`;
-}
-
-/* ---------- 3. Score health ---------- */
+/* ---------- 2. Score health ---------- */
 
 function showScores() {
   const scores = data.assessments.map((item) => item.fis_score).filter((score) => score !== null);
@@ -444,7 +391,7 @@ function showScores() {
     ${risks.length ? `<div class="ov-risks"><span class="text-3">${t('overview.riskLevels')}</span>${risks.map((risk) => `<span class="chip">${t(`overview.risk.${risk.level}`)} · ${number(risk.count)}</span>`).join('')}</div>` : ''}`;
 }
 
-/* ---------- 4. Activity rhythm ---------- */
+/* ---------- 3. Activity rhythm ---------- */
 
 function showRhythm() {
   // founder actions: signing up, describing an idea, finishing an assessment
@@ -529,7 +476,7 @@ function showRhythm() {
     ].join('');
 }
 
-/* ---------- 5. Who is on Darb ---------- */
+/* ---------- 4. Target audience ---------- */
 
 function groupName(group, value) {
   if (!value) return t('overview.notSet');
@@ -539,33 +486,69 @@ function groupName(group, value) {
   return t(key) === key ? value : t(key);
 }
 
+/* One row per founder type (or region): how many founders, how many of them described
+   an idea and finished an assessment, and their average score. So the admin sees which
+   audience really uses Darb and where it stops. Biggest group first. */
 function showPeople() {
-  const counts = new Map();
-  data.users.forEach((user) => {
-    const value = user[peopleGroup === 'type' ? 'user_type' : peopleGroup] || '';
-    counts.set(value, (counts.get(value) || 0) + 1);
-  });
+  const total = data.users.length;
+  const column = peopleGroup === 'type' ? 'user_type' : 'region';
+  document.querySelector('#people-sub').textContent = fill('overview.peopleSub', { n: number(total) });
+  document.querySelector('#people-group-head').textContent = t(peopleGroup === 'type' ? 'overview.byType' : 'overview.byRegion');
 
-  // the six biggest groups, then the rest together
-  let groups = [...counts].sort((a, b) => b[1] - a[1]);
-  if (groups.length > 7) {
-    const rest = groups.slice(6).reduce((sum, [, count]) => sum + count, 0);
-    groups = [...groups.slice(0, 6), ['__other', rest]];
+  if (total === 0) {
+    document.querySelector('#people').innerHTML = `<tr><td colspan="5" class="text-3">${t('overview.peopleEmpty')}</td></tr>`;
+    document.querySelector('#people-note').hidden = true;
+    return;
   }
-  const top = Math.max(1, ...groups.map(([, count]) => count));
 
-  document.querySelector('#people-sub').textContent = fill('overview.peopleSub', { n: number(data.users.length) });
-  document.querySelector('#people').innerHTML = groups.length === 0
-    ? `<li class="text-3">${t('overview.peopleEmpty')}</li>`
-    : groups.map(([value, count]) => `
-      <li class="ov-bar-row" data-tip="${safe(`${value === '__other' ? t('overview.others') : groupName(peopleGroup, value)} · ${number(count)} (${percent(count, data.users.length)}%)`)}">
-        <span class="ov-bar-label">${safe(value === '__other' ? t('overview.others') : groupName(peopleGroup, value))}</span>
-        <div class="ov-bar-track"><div class="ov-bar-fill" style="width: ${(count / top) * 100}%"></div></div>
-        <span class="ov-bar-value">${number(count)} <span class="text-3">${percent(count, data.users.length)}%</span></span>
-      </li>`).join('');
+  // what each founder has done: an idea, a finished assessment, their scores
+  const withIdea = new Set(data.ideas.map((idea) => idea.user_id));
+  const scoresOf = new Map();
+  data.assessments
+    .filter((item) => item.fis_score !== null && item.completed_at)
+    .forEach((item) => {
+      const founder = data.ideaById.get(item.idea_id)?.user_id;
+      if (founder) scoresOf.set(founder, [...(scoresOf.get(founder) || []), item.fis_score]);
+    });
+
+  const groups = new Map();
+  data.users.forEach((user) => {
+    const value = user[column] || '';
+    groups.set(value, [...(groups.get(value) || []), user]);
+  });
+  const rows = [...groups].sort((a, b) => b[1].length - a[1].length);
+
+  // "2/5" with a small bar of the same share
+  const progress = (part, whole) => `
+    <div class="ov-progress" data-tip="${safe(`${number(part)} / ${number(whole)} (${percent(part, whole)}%)`)}">
+      <span class="ov-progress-text">${number(part)}<span class="text-3">/${number(whole)}</span></span>
+      <span class="ov-progress-track"><span class="ov-progress-fill" style="width: ${percent(part, whole)}%"></span></span>
+    </div>`;
+
+  document.querySelector('#people').innerHTML = rows.map(([value, founders]) => {
+    const ideas = founders.filter((user) => withIdea.has(user.user_id)).length;
+    const assessed = founders.filter((user) => scoresOf.has(user.user_id)).length;
+    const scores = founders.flatMap((user) => scoresOf.get(user.user_id) || []);
+    const average = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    return `
+      <tr>
+        <td class="ov-audience-name">${safe(groupName(peopleGroup, value))}</td>
+        <td><strong>${number(founders.length)}</strong> <span class="text-3">${percent(founders.length, total)}%</span></td>
+        <td>${progress(ideas, founders.length)}</td>
+        <td>${progress(assessed, founders.length)}</td>
+        <td>${average === null ? '<span class="text-3">—</span>' : `<span class="chip chip-${scoreBand(average)}">${average}</span>`}</td>
+      </tr>`;
+  }).join('');
+
+  // founders without a region cannot be counted in any region: send the admin to fix them
+  const noRegion = data.users.filter((user) => !user.region).length;
+  const note = document.querySelector('#people-note');
+  note.hidden = noRegion === 0;
+  note.href = `${ROOT}${PAGES.founders}`;
+  note.innerHTML = `${icon('info')}<span>${fill('overview.noRegion', { n: number(noRegion) })}</span>${icon('chevron')}`;
 }
 
-/* ---------- 6. Data health ---------- */
+/* ---------- 5. Data health ---------- */
 
 function showHealth() {
   const now = Date.now();
@@ -642,7 +625,7 @@ function showHealth() {
     </li>`).join('');
 }
 
-/* ---------- 7. Latest activity ---------- */
+/* ---------- 6. Latest activity ---------- */
 
 function showFeed() {
   const nameOf = (userId) => data.userById.get(userId)?.full_name || t('overview.aFounder');
@@ -690,7 +673,6 @@ function showAll() {
   showHead();
   if (!data) return;
   showKpis();
-  showFunnel();
   showScores();
   showRhythm();
   showPeople();
@@ -702,6 +684,15 @@ function showAll() {
 }
 
 /* ---------- Events ---------- */
+
+document.querySelector('#people-tabs').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-group]');
+  if (!button || !data) return;
+  peopleGroup = button.dataset.group;
+  document.querySelectorAll('[data-group]').forEach((item) => item.classList.toggle('is-active', item === button));
+  tip.hidden = true;
+  showPeople();
+});
 
 document.querySelector('#period').addEventListener('click', (event) => {
   const button = event.target.closest('[data-days]');
@@ -715,14 +706,6 @@ document.querySelector('#period').addEventListener('click', (event) => {
   }
   tip.hidden = true;
   showKpis();
-});
-
-document.querySelector('#people-tabs').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-group]');
-  if (!button || !data) return;
-  peopleGroup = button.dataset.group;
-  document.querySelectorAll('[data-group]').forEach((item) => item.classList.toggle('is-active', item === button));
-  showPeople();
 });
 
 const refreshButton = document.querySelector('#refresh');
