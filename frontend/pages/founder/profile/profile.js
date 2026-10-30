@@ -5,7 +5,7 @@ import { icon, setSidebarUser } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getAccount, getCurrentUser, logOut } from '../../../shared/auth.js';
-import { dateText } from '../../../shared/regulatory.js';
+import { dateText } from '../../../shared/regulatory.js?v=3';
 
 const ROOT = new URL('../../../', import.meta.url).href;
 

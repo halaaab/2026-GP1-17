@@ -297,6 +297,13 @@
   resize: vertical;
 }
 
+/* the red trash at the top of the delete dialog (the same as the other admin pages) */
+.manage-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
 /* Phones: keep the program, its type and the buttons */
 @media (max-width: 640px) {
   .hide-small {
