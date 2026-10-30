@@ -1,20 +1,19 @@
 /* Startup details: one startup, read from ?id= in the address.
    A colored head (the startup's color, as on its card in the explorer), then
-   two columns: sectors and market, about, products and services, tags and
-   similar startups on one side; the key facts and the links in a card on the other. */
+   two columns: sectors and market, about, products and services and tags
+   on one side; the key facts and the links in a card on the other. */
 
 import { t, getLanguage } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartup, loadSimilar, listOf, listText, label, tagsOf, countryName, colorOf, detailsLink, descriptionOf,
+  loadStartup, listOf, listText, label, tagsOf, countryName, colorOf, descriptionOf,
   nameOf, logoOf, logoHtml,
-} from '../../../../shared/startups.js';
+} from '../../../../shared/startups.js?v=3';
 
 const id = new URLSearchParams(window.location.search).get('id');
 let startup = null;
-let similar = [];
 
 // Startup text comes from the dataset, so it is escaped before it goes into HTML
 function safe(text) {
@@ -100,16 +99,6 @@ function show() {
   setLink(document.querySelector('#website'), row.website);
   setLink(document.querySelector('#profile'), row.ecosystemsa_profile_url);
 
-  // Similar startups, each in its own color
-  document.querySelector('#similar-section').hidden = similar.length === 0;
-  document.querySelector('#similar').innerHTML = similar.map((other, index) => `
-    <a class="std-similar-card color-${colorOf(other)} fade-up" style="--i: ${index}" href="${detailsLink(other.startup_id)}">
-      <span class="std-similar-logo ${logoOf(other) ? 'has-logo' : ''}" aria-hidden="true">${logoHtml(other)}</span>
-      <span class="std-similar-text">
-        <strong>${safe(nameOf(other))}</strong>
-        <span>${safe([listText(other, 'stage'), listText(other, 'region', comma)].filter(Boolean).join(' · ') || '—')}</span>
-      </span>
-    </a>`).join('');
 }
 
 /* ---------- Share ----------
@@ -159,7 +148,6 @@ if (result.failed) {
   showErrorPage(404);
 } else {
   startup = result.startup;
-  similar = await loadSimilar(startup);
   document.querySelector('#loading').hidden = true;
   document.querySelector('#details').hidden = false;
   show();

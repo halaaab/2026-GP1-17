@@ -1,13 +1,10 @@
 # Datasets
 
-Raw, validated data used by Darb’s models and exploration tools.
+Data files are not stored in this repository.
 
-| Folder | Dataset | Used by | Source |
-|---|---|---|---|
-| `survival-model/` | Historical startup data | Survival Prediction Model | Zid or Crunchbase |
-| `market-indicators/` | Saudi market indicators | Market Insights | Monsha’at Business Atlas |
-| `regulatory-requirements/` | Saudi regulatory and licensing data | Founder Roadmap Agent | Official Saudi government sources |
-| `idea-similarity/` | Startup profiles | Idea Similarity Engine | EcosystemSA and public entrepreneurship websites |
-| `incubators-accelerators/` | Incubator and accelerator profiles | Incubators & Accelerators Explorer | EcosystemSA and public entrepreneurship websites |
+| Data | Where it lives | Used by |
+|---|---|---|
+| Survival model data (Ministry of Commerce, GASTAT, SAMA, Monsha'at) | [Darb DataSets on Google Drive](https://drive.google.com/drive/folders/1Y_TN68LIO1xkOmbi0Y8auEvB09Mh_1gc) | Survival Prediction Model |
+| Startups, regulatory requirements, incubators and accelerators, market indicators | Supabase database | Website and agents |
 
-> Data is provided in its validated raw form. Missing values are not inferred.
+Never commit data files to GitHub.

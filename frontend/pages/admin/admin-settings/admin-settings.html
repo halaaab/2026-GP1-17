@@ -63,14 +63,14 @@
 
         <form class="form" id="details-form" novalidate>
           <div class="field">
-            <label class="label" for="full-name"><span data-i18n="adminProfile.fullName"></span> *</label>
+            <label class="label is-required" for="full-name" data-i18n="adminProfile.fullName"></label>
             <input class="input" id="full-name" type="text" maxlength="80" autocomplete="name" required>
             <p class="field-error" id="full-name-error" hidden data-i18n="adminProfile.nameRequired"></p>
           </div>
 
           <div class="form-row">
             <div class="field">
-              <label class="label" for="username"><span data-i18n="adminProfile.username"></span> *</label>
+              <label class="label is-required" for="username" data-i18n="adminProfile.username"></label>
               <div class="profile-prefix" dir="ltr">
                 <span class="profile-prefix-sign" aria-hidden="true">@</span>
                 <input class="input" id="username" type="text" dir="ltr" maxlength="20" autocomplete="username" required>
@@ -140,14 +140,14 @@
       <form class="form profile-password" id="password-form" novalidate>
         <div class="form-row">
           <div class="field">
-            <label class="label" for="new-password" data-i18n="adminProfile.newPassword"></label>
+            <label class="label is-required" for="new-password" data-i18n="adminProfile.newPassword"></label>
             <div class="input-group">
               <input class="input" id="new-password" type="password" autocomplete="new-password">
               <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="adminProfile.showPassword" id="toggle-1"></button>
             </div>
           </div>
           <div class="field">
-            <label class="label" for="confirm-password" data-i18n="adminProfile.confirmPassword"></label>
+            <label class="label is-required" for="confirm-password" data-i18n="adminProfile.confirmPassword"></label>
             <div class="input-group">
               <input class="input" id="confirm-password" type="password" autocomplete="new-password">
               <button type="button" class="btn-icon" data-password-toggle data-i18n-aria-label="adminProfile.showPassword" id="toggle-2"></button>

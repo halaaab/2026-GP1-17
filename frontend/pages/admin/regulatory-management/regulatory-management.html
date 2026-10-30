@@ -69,7 +69,7 @@
            (regulatory-management.js, nextId) and only used inside the database -->
       <form class="panel-body form" id="reg-form" novalidate>
         <div class="field">
-          <label class="label" for="f-name_en" data-i18n="regAdmin.nameEn"></label>
+          <label class="label is-required" for="f-name_en" data-i18n="regAdmin.nameEn"></label>
           <input class="input" id="f-name_en" type="text" dir="ltr">
           <p class="field-error" id="f-name_en-error" hidden></p>
         </div>
@@ -105,7 +105,7 @@
         </div>
 
         <fieldset class="field reg-sectors">
-          <legend class="label" data-i18n="regAdmin.isic"></legend>
+          <legend class="label is-required" data-i18n="regAdmin.isic"></legend>
           <p class="field-hint" data-i18n="regAdmin.isicHint"></p>
           <!-- regulatory-management.js adds "Every sector" and one checkbox for each of the 20 ISIC4 sections -->
           <div class="reg-isic-list" id="f-isic"></div>
@@ -113,7 +113,7 @@
         </fieldset>
 
         <div class="field">
-          <label class="label" for="f-divisions" data-i18n="regAdmin.divisions"></label>
+          <label class="label is-required" for="f-divisions" data-i18n="regAdmin.divisions"></label>
           <input class="input" id="f-divisions" type="text" dir="ltr" placeholder="10, 11, 56" autocomplete="off">
           <p class="field-hint" data-i18n="regAdmin.divisionsHint"></p>
           <p class="field-error" id="f-divisions-error" hidden></p>

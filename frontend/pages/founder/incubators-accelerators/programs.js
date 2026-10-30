@@ -99,6 +99,34 @@ export function cityOf(program) {
   return first || '';
 }
 
+/* The Saudi region of each city a program can be in, so the explorer can filter by
+   the 13 regions (the same names as the startups: SAUDI_REGIONS in shared/startups.js) */
+const CITY_REGIONS = {
+  riyadh: 'Riyadh',
+  jeddah: 'Makkah', makkah: 'Makkah', taif: 'Makkah', thuwal: 'Makkah', rabigh: 'Makkah',
+  madinah: 'Madinah', yanbu: 'Madinah', alula: 'Madinah',
+  dammam: 'Eastern', al_khobar: 'Eastern', khobar: 'Eastern', dhahran: 'Eastern', al_ahsa: 'Eastern',
+  jubail: 'Eastern', qatif: 'Eastern', hafar_al_batin: 'Eastern', eastern_province: 'Eastern',
+  buraidah: 'Qassim', unaizah: 'Qassim', qassim: 'Qassim',
+  abha: 'Asir', khamis_mushait: 'Asir', asir: 'Asir',
+  tabuk: 'Tabuk', neom: 'Tabuk',
+  hail: 'Hail',
+  arar: 'Northern Borders', northern_borders: 'Northern Borders',
+  jazan: 'Jazan',
+  najran: 'Najran',
+  al_baha: 'Al Baha',
+  sakaka: 'Al Jouf', al_jouf: 'Al Jouf',
+};
+
+/* The program's Saudi region ("Al Khobar, Saudi Arabia" → 'Eastern'), 'saudi' for a
+   program that covers all of Saudi Arabia, or '' when the place is not known */
+export function regionOf(program) {
+  const first = clean(program.location).split(/[,،(—–/]/)[0].trim();
+  const key = first.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  if (key === 'saudi_arabia') return 'saudi';
+  return CITY_REGIONS[key] || '';
+}
+
 /* A list written in one cell: "Mentorship, workshops; networking" → ['Mentorship', 'workshops', 'networking'].
    A cell with ";" is split only there, because its parts can contain commas themselves.
    Arabic cells use "،" and "؛" the same way. */

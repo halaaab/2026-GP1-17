@@ -1,5 +1,5 @@
 /* Incubators & Accelerators Explorer: every support program, with a search box,
-   type / sector / city filters, colored cards, and pages of 12.
+   type / sector / region filters, colored cards, and pages of 12.
    The filters are kept in the address (?q=...&type=...), so a filtered list can be shared. */
 
 import { t } from '../../../../shared/language.js';
@@ -7,15 +7,16 @@ import { icon } from '../../../../shared/layout.js';
 import '../../../../shared/guard.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  getPrograms, programType, sectorList, isOpenToAll, cityOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
-} from '../programs.js';
+  getPrograms, programType, sectorList, isOpenToAll, cityOf, regionOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
+} from '../programs.js?v=3';
+import { SAUDI_REGIONS, label } from '../../../../shared/startups.js?v=3';
 
 const PAGE_SIZE = 12;   // four rows of three cards
 
 const cards = document.querySelector('#cards-view');
 const search = document.querySelector('#search');
 const sectorFilter = document.querySelector('#sector-filter');
-const cityFilter = document.querySelector('#city-filter');
+const regionFilter = document.querySelector('#region-filter');
 const typeFilter = document.querySelector('#type-filter');
 const empty = document.querySelector('#empty');
 const pager = document.querySelector('#pager');
@@ -48,9 +49,10 @@ function matches(program, ignoreType = false) {
   const fitsType = ignoreType || type === 'all' || programType(program) === type || programType(program) === 'both';
   // a program open to every sector fits any sector filter
   const fitsSector = !sectorFilter.value || sectorList(program).includes(sectorFilter.value) || isOpenToAll(program);
-  const fitsCity = !cityFilter.value || cityOf(program) === cityFilter.value;
+  // a program for all of Saudi Arabia fits any region filter
+  const fitsRegion = !regionFilter.value || regionOf(program) === regionFilter.value || regionOf(program) === 'saudi';
 
-  return fitsSearch && fitsType && fitsSector && fitsCity;
+  return fitsSearch && fitsType && fitsSector && fitsRegion;
 }
 
 /* ---------- Drawing ---------- */
@@ -125,7 +127,7 @@ function show() {
 
   // Nothing to show: the database failed, it is empty, or the filters found nothing
   empty.hidden = visible.length > 0;
-  const filtersOn = search.value || sectorFilter.value || cityFilter.value || type !== 'all';
+  const filtersOn = search.value || sectorFilter.value || regionFilter.value || type !== 'all';
   const state = loadFailed ? 'error' : programs.length === 0 ? 'none' : 'noMatch';
   document.querySelector('#empty-title').textContent = t(`programs.empty.${state}`);
   document.querySelector('#empty-text').textContent = t(`programs.empty.${state}Text`);
@@ -143,11 +145,14 @@ function show() {
   rememberFilters();
 }
 
-/* The sector and city dropdowns list what the programs really have, most common first,
-   in the site's language. They are filled again when the language changes. */
+/* The sector dropdown lists what the programs really have, most common first, in the
+   site's language. The region dropdown lists the Saudi regions that have a program, in the
+   order of the 13 regions (a region shows up once a program in it is added); a program
+   for all of Saudi Arabia counts in every region. Both start with "All". They are filled again when
+   the language changes; the region values are English words, so a chosen region stays chosen. */
 function fillDropdowns() {
-  sectorFilter.querySelectorAll('option:not(:first-child)').forEach((option) => option.remove());
-  cityFilter.querySelectorAll('option:not(:first-child)').forEach((option) => option.remove());
+  const chosenSector = sectorFilter.value;
+  const chosenRegion = regionFilter.value;
 
   const tally = (values) => {
     const counts = new Map();
@@ -156,10 +161,15 @@ function fillDropdowns() {
   };
 
   const sectors = tally(programs.flatMap(sectorList));
-  const cities = tally(programs.map(cityOf).filter(Boolean));
+  const inRegion = (region) => programs.filter((program) => [region, 'saudi'].includes(regionOf(program))).length;
 
-  sectorFilter.insertAdjacentHTML('beforeend', sectors.map(([name, count]) => `<option value="${safe(name)}">${safe(name)} (${count})</option>`).join(''));
-  cityFilter.insertAdjacentHTML('beforeend', cities.map(([name, count]) => `<option value="${safe(name)}">${safe(name)} (${count})</option>`).join(''));
+  sectorFilter.innerHTML = `<option value="">${t('programs.allSectors')} (${programs.length})</option>`
+    + sectors.map(([name, count]) => `<option value="${safe(name)}">${safe(name)} (${count})</option>`).join('');
+  regionFilter.innerHTML = `<option value="">${t('programs.allRegions')} (${programs.length})</option>`
+    + SAUDI_REGIONS.filter((region) => programs.some((program) => regionOf(program) === region)).map((region) => `<option value="${safe(region)}">${safe(label('region', region))} (${inRegion(region)})</option>`).join('');
+
+  sectorFilter.value = chosenSector;
+  regionFilter.value = chosenRegion;
 }
 
 /* ---------- The address keeps the filters ---------- */
@@ -169,7 +179,7 @@ function rememberFilters() {
   if (search.value) params.set('q', search.value);
   if (type !== 'all') params.set('type', type);
   if (sectorFilter.value) params.set('sector', sectorFilter.value);
-  if (cityFilter.value) params.set('city', cityFilter.value);
+  if (regionFilter.value) params.set('region', regionFilter.value);
   if (page > 0) params.set('page', page + 1);
   const query = params.toString();
   history.replaceState(null, '', query ? `?${query}` : window.location.pathname);
@@ -180,7 +190,7 @@ function readFilters() {
   search.value = params.get('q') || '';
   type = ['incubator', 'accelerator'].includes(params.get('type')) ? params.get('type') : 'all';
   sectorFilter.value = params.get('sector') || '';
-  cityFilter.value = params.get('city') || '';
+  regionFilter.value = params.get('region') || '';
   page = Math.max(0, (Number(params.get('page')) || 1) - 1);
   typeFilter.value = type;
 }
@@ -194,14 +204,14 @@ function startOver() {
 
 search.addEventListener('input', startOver);
 
-// The list already follows what is typed; the Search button takes the person down to it
+// The list already follows what is typed; pressing Enter in the search box takes the person down to it
 document.querySelector('#filters').addEventListener('submit', (event) => {
   event.preventDefault();
   startOver();
   document.querySelector('#results').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 sectorFilter.addEventListener('change', startOver);
-cityFilter.addEventListener('change', startOver);
+regionFilter.addEventListener('change', startOver);
 
 typeFilter.addEventListener('change', () => {
   type = typeFilter.value;
@@ -211,7 +221,7 @@ typeFilter.addEventListener('change', () => {
 document.querySelector('#clear-filters').addEventListener('click', () => {
   search.value = '';
   sectorFilter.value = '';
-  cityFilter.value = '';
+  regionFilter.value = '';
   type = 'all';
   typeFilter.value = 'all';
   startOver();
@@ -229,13 +239,12 @@ document.querySelector('#next').addEventListener('click', () => {
 });
 
 // labels and program text are in the current language, so draw them again when it changes.
-// A chosen sector or city is in the old language, so those two filters start over.
+// A chosen sector is in the old language, so that filter starts over (the region stays: its value is an English word).
 let shownLanguage = null;
 document.addEventListener('darb:language', () => {
   const language = document.documentElement.lang;
   if (shownLanguage && language !== shownLanguage) {
     sectorFilter.value = '';
-    cityFilter.value = '';
     page = 0;
   }
   shownLanguage = language;
