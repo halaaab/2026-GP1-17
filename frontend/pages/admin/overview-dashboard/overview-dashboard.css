@@ -30,11 +30,6 @@ main {
 .ov-hello {
   font-size: clamp(28px, 4vw, 40px);
 }
-.ov-pulse {
-  margin: 0;
-  max-width: 62ch;
-  font-size: 15px;
-}
 .ov-controls {
   display: flex;
   align-items: center;
@@ -184,86 +179,7 @@ html[dir="rtl"] .ov-check-link svg {
   opacity: 0.6;
 }
 
-/* ---------- 2. Founder journey ---------- */
-
-.ov-funnel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ov-step {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.ov-step-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.ov-step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--navy-tint);
-  color: var(--navy);
-  font-size: 11px;
-  font-weight: 800;
-}
-.ov-step-count {
-  margin-inline-start: auto;
-  font-size: 14px;
-}
-.ov-step-kept {
-  min-width: 40px;
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: var(--bg-muted);
-  color: var(--text-2);
-  font-size: 11.5px;
-  text-align: center;
-}
-.ov-step-bar {
-  display: flex;
-  align-items: center;
-  height: 14px;
-  border-radius: 7px;
-  background: var(--bg-tile);
-}
-.ov-step-fill {
-  height: 100%;
-  border-radius: 7px;
-  background: var(--gradient-brand);
-  transition: width 0.6s var(--ease);
-}
-
-.ov-insight {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  margin: 0;
-  padding: 10px 12px;
-  border-radius: var(--r-sm);
-  background: var(--teal-tint);
-  color: var(--teal-text);
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.5;
-}
-.ov-insight svg {
-  flex-shrink: 0;
-  margin-top: 1px;
-}
-
-/* ---------- 3. Score health ---------- */
+/* ---------- 2. Score health ---------- */
 
 /* the three score bands; the same colors as the score chips everywhere in Darb */
 .ov-good { background: var(--good); }
@@ -376,7 +292,7 @@ html[dir="rtl"] .ov-check-link svg {
   font-size: 12.5px;
 }
 
-/* ---------- 4. Activity rhythm ---------- */
+/* ---------- 3. Activity rhythm ---------- */
 
 .ov-scale {
   display: flex;
@@ -484,51 +400,68 @@ html[dir="rtl"] .ov-check-link svg {
   font-weight: 800;
 }
 
-/* ---------- 5. Who is on Darb ---------- */
+/* ---------- 4. Target audience ---------- */
 
-.ov-tabs {
-  align-self: flex-start;
+.ov-audience-name {
+  font-weight: 600;
+  white-space: nowrap;
 }
-.ov-bars {
+/* "2/5" and a small bar of the same share */
+.ov-progress {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ov-bar-row {
-  display: grid;
-  grid-template-columns: minmax(90px, 1fr) minmax(0, 1.4fr) auto;
   align-items: center;
   gap: 10px;
-  font-size: 13px;
+  min-width: 140px;
 }
-.ov-bar-label {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-weight: 600;
+.ov-progress-text {
+  min-width: 38px;
+  font-weight: 700;
 }
-.ov-bar-track {
-  height: 10px;
+.ov-progress-track {
+  flex: 1;
+  max-width: 120px;
+  height: 6px;
   border-radius: var(--r-pill);
   background: var(--bg-muted);
   overflow: hidden;
 }
-.ov-bar-fill {
+.ov-progress-fill {
+  display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--navy);
+  background: var(--teal);
   transition: width 0.6s var(--ease);
 }
-.ov-bar-value {
-  min-width: 64px;
-  font-weight: 700;
-  text-align: end;
+/* "3 founders have no region" → the Founders page */
+.ov-audience-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: var(--warn-tint);
+  color: var(--warn-text);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.ov-audience-note[hidden] {
+  display: none;
+}
+.ov-audience-note span {
+  flex: 1;
+}
+.ov-audience-note svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+html[dir="rtl"] .ov-audience-note svg:last-child {
+  transform: scaleX(-1);
 }
 
-/* ---------- 6. Data health ---------- */
+/* ---------- 5. Data health ---------- */
 
 .ov-ring {
   position: relative;
@@ -615,7 +548,7 @@ html[dir="rtl"] .ov-check-link svg {
   flex-shrink: 0;
 }
 
-/* ---------- 7. Latest activity ---------- */
+/* ---------- 6. Latest activity ---------- */
 
 .ov-feed {
   display: flex;

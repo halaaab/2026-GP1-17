@@ -75,6 +75,24 @@ export async function setLanguage(language) {
 
   // Lets a page react to the change: document.addEventListener('darb:language', ...)
   document.dispatchEvent(new CustomEvent('darb:language'));
+
+  rememberOnAccount(language);
+}
+
+/* The emails Supabase sends (reset password ...) are written in the language saved on
+   the account (user_metadata.locale). When someone signed in uses the other language,
+   it is saved on the account too, so their next email starts in that language. */
+async function rememberOnAccount(language) {
+  try {
+    const { supabase } = await import('./supabase.js');
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (user && user.user_metadata?.locale !== language) {
+      await supabase.auth.updateUser({ data: { locale: language } });
+    }
+  } catch {
+    // only the email language depends on it; the page itself already switched
+  }
 }
 
 /* Call once when the page loads. layout.js already does this for you. */
