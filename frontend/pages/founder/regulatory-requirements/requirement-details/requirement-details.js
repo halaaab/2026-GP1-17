@@ -1,20 +1,18 @@
 /* Requirement details: one regulatory requirement, read from ?id= in the address.
    A colored head (the requirement's color, as on its card in the explorer), then
-   two columns: when it applies, what to do, the fees and similar requirements on
-   one side; the key facts and the official links in a card on the other. */
+   two columns: when it applies, what to do and the fees on one side; the key facts and the official links in a card on the other. */
 
-import { t, getLanguage } from '../../../../shared/language.js';
+import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showToast } from '../../../../shared/ui.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadRequirement, loadSimilar, field, label, isicListText, stagesText, colorOf, logoUrl, initials,
-  detailsLink, dateText,
-} from '../../../../shared/regulatory.js';
+  loadRequirement, field, label, isicListText, stagesText, colorOf, logoUrl, initials,
+  dateText,
+} from '../../../../shared/regulatory.js?v=3';
 
 const id = new URLSearchParams(window.location.search).get('id');
 let requirement = null;
-let similar = [];
 
 // Requirement text comes from the database, so it is escaped before it goes into HTML
 function safe(text) {
@@ -110,17 +108,6 @@ function show() {
     ? t('reg.verifiedOn').replace('{date}', dateText(row.last_verified))
     : t('reg.mayChange');
 
-  // Similar requirements, each in its own color
-  const comma = getLanguage() === 'ar' ? '، ' : ', ';
-  document.querySelector('#similar-section').hidden = similar.length === 0;
-  document.querySelector('#similar').innerHTML = similar.map((other, index) => `
-    <a class="req-similar-card color-${colorOf(other)} fade-up" style="--i: ${index}" href="${detailsLink(other.requirement_id)}">
-      <span class="req-similar-logo ${logoUrl(other) ? 'has-logo' : ''}" aria-hidden="true">${logoHtml(other)}</span>
-      <span class="req-similar-text">
-        <strong>${safe(field(other, 'name'))}</strong>
-        <span>${safe([field(other, 'category'), isicListText(other)].filter(Boolean).join(comma))}</span>
-      </span>
-    </a>`).join('');
 }
 
 /* ---------- Share ----------
@@ -170,7 +157,6 @@ if (result.failed) {
   showErrorPage(404);
 } else {
   requirement = result.requirement;
-  similar = await loadSimilar(requirement);
   document.querySelector('#loading').hidden = true;
   document.querySelector('#details').hidden = false;
   show();

@@ -115,21 +115,6 @@ export async function loadRequirement(id) {
   return { requirement: data || null, failed: Boolean(error) };
 }
 
-/* Up to 3 other requirements to suggest next to one: the same authority first,
-   then the same type, then the same ISIC4 division. */
-export async function loadSimilar(row) {
-  const all = await loadRequirements();
-  if (!all) return [];
-  const divisions = divisionsOf(row).filter((code) => code !== 'ALL');
-  const score = (other) => (other.authority === row.authority ? 4 : 0)
-    + (other.category === row.category ? 2 : 0)
-    + (divisionsOf(other).some((code) => divisions.includes(code)) ? 1 : 0);
-  return all
-    .filter((other) => other.requirement_id !== row.requirement_id && score(other) > 0)
-    .sort((a, b) => score(b) - score(a) || a.requirement_id.localeCompare(b.requirement_id))
-    .slice(0, 3);
-}
-
 /* ---------- Look: color, logo, initials ---------- */
 
 /* The requirement's color, from 0 to 5 (six shades of green, color-N in the explorer and

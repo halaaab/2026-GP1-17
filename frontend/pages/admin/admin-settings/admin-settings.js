@@ -107,15 +107,16 @@ function checkDetails() {
   const usernameOk = USERNAME_PATTERN.test(username.value.trim());
   const phoneOk = !phone.value || PHONE_PATTERN.test(phone.value.replace(/\D/g, ''));
 
-  document.querySelector('#full-name-error').hidden = nameOk || !fullName.value;
+  // an empty required field says so too, the same as the founder profile
+  document.querySelector('#full-name-error').hidden = nameOk;
   const usernameError = document.querySelector('#username-error');
-  usernameError.hidden = usernameOk || !username.value;
-  usernameError.textContent = t('adminProfile.usernameFormat');
+  usernameError.hidden = usernameOk;
+  usernameError.textContent = t(username.value.trim() ? 'adminProfile.usernameFormat' : 'adminProfile.usernameRequired');
   document.querySelector('#username-hint').hidden = !usernameError.hidden;
   document.querySelector('#phone-error').hidden = phoneOk;
 
-  fullName.classList.toggle('is-error', !nameOk && Boolean(fullName.value));
-  username.classList.toggle('is-error', !usernameOk && Boolean(username.value));
+  fullName.classList.toggle('is-error', !nameOk);
+  username.classList.toggle('is-error', !usernameOk);
   phone.classList.toggle('is-error', !phoneOk);
 
   const changed = hasChanges();

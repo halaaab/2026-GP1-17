@@ -207,11 +207,6 @@ html[dir="rtl"] .reg-hero::after {
   border-color: var(--teal);
   box-shadow: 0 0 0 4px var(--teal-tint);
 }
-.reg-search-button {
-  height: 44px;
-  padding-inline: 24px;
-  border-radius: 11px;
-}
 
 .reg-bar {
   margin: 28px 0 14px;
@@ -466,8 +461,5 @@ html[dir="rtl"] .reg-card:hover .reg-card-arrow {
   .reg-select-wrap {
     flex: 1 1 120px;
     min-width: 0;
-  }
-  .reg-search-button {
-    flex: 1 1 100%;
   }
 }
