@@ -120,7 +120,6 @@
         <p class="eyebrow" data-i18n="landing.aboutKicker"></p>
         <h2 class="headline headline-lg" data-i18n="landing.aboutTitle"></h2>
         <p class="lead" data-i18n="landing.aboutP1"></p>
-        <p class="lead" data-i18n="landing.aboutP2"></p>
         <ul class="about-points">
           <li class="about-point is-1">
             <span class="about-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
@@ -138,15 +137,13 @@
       </div>
 
       <div class="about-stage" data-reveal aria-hidden="true">
-        <!-- soft color behind the hand -->
-        <div class="about-rings"></div>
+        <!-- soft circles behind the phone -->
+        <div class="about-orbits"><i></i><i></i><i></i></div>
 
-        <!-- A real photo of a hand holding a phone (assets/images/hand-phone.jpg).
-             "phone-screen" sits exactly over the photo's blank screen.
+        <!-- The phone is drawn with CSS.
              "phone-app" inside it is the assessment page, built at its real phone size
              (360px wide) and then shrunk to fit, so it looks the same as in Darb. -->
-        <div class="hand">
-          <img class="hand-photo" src="assets/images/hand-phone.jpg" alt="" width="1400" height="1400">
+        <div class="device">
           <div class="phone-screen">
             <div class="phone-app">
               <!-- the phone's own status bar: time on one side of the notch, signal, wifi and battery on the other -->
@@ -180,10 +177,10 @@
                   <svg viewBox="0 0 220 122">
                     <defs><linearGradient id="app-dial-colors" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6FD3DA"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient></defs>
                     <path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="rgba(255,255,255,0.16)" stroke-width="18" stroke-linecap="round"/>
-                    <path d="M20 110 A90 90 0 0 1 200 110" fill="none" stroke="url(#app-dial-colors)" stroke-width="18" stroke-linecap="round" stroke-dasharray="282.7" stroke-dashoffset="79.2"/>
-                    <circle cx="167.4" cy="40.6" r="9" fill="#FFFFFF" stroke="#0E2A42" stroke-width="5"/>
+                    <path d="M20 110 A90 90 0 0 1 200 110" fill="none" id="app-dial-arc" stroke="url(#app-dial-colors)" stroke-width="18" stroke-linecap="round" stroke-dasharray="282.7" stroke-dashoffset="79.2"/>
+                    <circle id="app-dial-knob" cx="167.4" cy="40.6" r="9" fill="#FFFFFF" stroke="#0E2A42" stroke-width="5"/>
                   </svg>
-                  <p class="app-number"><strong>72</strong><span>/ 100</span></p>
+                  <p class="app-number"><strong id="app-dial-number">72</strong><span>/ 100</span></p>
                 </div>
                 <span class="app-label" data-i18n="score.title"></span>
                 <strong class="app-verdict" data-i18n="score.band.good"></strong>
@@ -205,6 +202,16 @@
             <span class="app-home"></span>
             <span class="phone-glass"></span>
           </div>
+        </div>
+
+        <!-- small white cards floating around the phone -->
+        <div class="about-float is-1">
+          <span class="about-float-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z"/></svg></span>
+          <span class="about-float-words"><small data-i18n="score.risk"></small><strong data-i18n="level.low"></strong></span>
+        </div>
+        <div class="about-float is-2">
+          <span class="about-float-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 17l6-6 4 4 8-8M15 7h6v6"/></svg></span>
+          <span class="about-float-words"><small data-i18n="score.sector"></small><strong data-i18n="sector.favourable"></strong></span>
         </div>
       </div>
     </section>
@@ -315,10 +322,10 @@
             </div>
 
             <div class="market-main">
-              <div class="market-figure"><b dir="ltr">112,003</b><span data-i18n="landing.mk.est"></span></div>
+              <div class="market-figure"><b dir="ltr" data-count="112003">112,003</b><span data-i18n="landing.mk.est"></span></div>
               <!-- the change is shown in a plain color: more or fewer competitors is not good or bad by itself -->
               <span class="market-change"><b dir="ltr">−0.8%</b><span data-i18n="landing.mk.vs"></span></span>
-              <div class="market-figure is-small"><b dir="ltr">650,987</b><span data-i18n="market.employees"></span></div>
+              <div class="market-figure is-small"><b dir="ltr" data-count="650987">650,987</b><span data-i18n="market.employees"></span></div>
             </div>
 
             <div class="market-body">
@@ -444,93 +451,58 @@
       <p class="lead" data-i18n="landing.exSub"></p>
     </section>
 
-    <!-- Three explorers in one place. Pick one on the side and its preview shows beside it.
-         They also change by themselves every few seconds (index.js). -->
-    <section class="container x-explore" id="explorers" data-reveal>
-      <div class="x-item is-active" data-x="0">
+    <!-- One row for each: the words on one side, the preview on the other, swapping sides each row. -->
+    <section class="container x-explore" id="explorers">
+      <div class="x-item" data-reveal>
         <div class="x-tab">
-          <button type="button" class="x-head" aria-expanded="true">
+          <h3 class="x-head">
             <span class="x-number">01</span>
             <span class="headline x-title" data-i18n="landing.x1t"></span>
-          </button>
-          <!-- shown only while this explorer is selected -->
+          </h3>
           <div class="x-more"><div>
             <p class="lead" data-i18n="landing.x1b"></p>
             <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x1cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div></div>
-          <!-- fills while this explorer is on show, then the next one opens -->
-          <span class="x-timer" aria-hidden="true"></span>
         </div>
         <div class="x-panel">
-      <div class="card mock" aria-hidden="true">
-        <div class="mock-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><span data-i18n="landing.searchStartups"></span></div>
+      <div class="card mock" id="startup-demo">
+        <div class="mock-search"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="startup-search" type="search" data-i18n-placeholder="landing.searchStartups" data-i18n-aria-label="landing.searchStartups"></div>
         <div class="chips">
-          <span class="pill is-active" data-i18n="landing.chips1.0.label"></span>
-          <span class="pill" data-i18n="landing.chips1.1.label"></span>
-          <span class="pill" data-i18n="landing.chips1.2.label"></span>
-          <span class="pill" data-i18n="landing.chips1.3.label"></span>
+          <button type="button" class="pill is-active" data-filter="all" data-i18n="landing.chips1.0.label"></button>
+          <button type="button" class="pill" data-filter="technology" data-i18n="landing.chips1.1.label"></button>
+          <button type="button" class="pill" data-filter="riyadh" data-i18n="landing.chips1.2.label"></button>
+          <button type="button" class="pill" data-filter="logistics" data-i18n="landing.chips1.3.label"></button>
         </div>
+        <p class="mock-count" id="startup-count" aria-live="polite"></p>
         <div class="mock-tiles">
-          <div class="tile mock-tile">
+          <a class="tile mock-tile" href="pages/auth/login/login.html" data-name="lean" data-sector="finance" data-city="riyadh">
             <span class="mock-brand"><span class="similar-logo is-1">L<img src="assets/images/logos/lean.png" alt="" onerror="this.remove()"></span><strong class="mock-title" data-i18n="landing.tiles.0.name"></strong></span>
             <div class="chips"><span class="chip chip-navy" data-i18n="landing.tiles.0.tag"></span><span class="chip" data-i18n="landing.tiles.0.city"></span></div>
-          </div>
-          <div class="tile mock-tile">
+          </a>
+          <a class="tile mock-tile" href="pages/auth/login/login.html" data-name="foodics" data-sector="food" data-city="riyadh">
             <span class="mock-brand"><span class="similar-logo is-2">F<img src="assets/images/logos/foodics.png" alt="" onerror="this.remove()"></span><strong class="mock-title" data-i18n="landing.tiles.1.name"></strong></span>
             <div class="chips"><span class="chip chip-teal" data-i18n="landing.tiles.1.tag"></span><span class="chip" data-i18n="landing.tiles.1.city"></span></div>
-          </div>
-          <div class="tile mock-tile">
+          </a>
+          <a class="tile mock-tile" href="pages/auth/login/login.html" data-name="salla" data-sector="technology" data-city="makkah">
             <span class="mock-brand"><span class="similar-logo is-3">S<img src="assets/images/logos/salla.png" alt="" onerror="this.remove()"></span><strong class="mock-title" data-i18n="landing.tiles.2.name"></strong></span>
             <div class="chips"><span class="chip chip-navy" data-i18n="landing.tiles.2.tag"></span><span class="chip" data-i18n="landing.tiles.2.city"></span></div>
-          </div>
-          <div class="tile mock-tile">
+          </a>
+          <a class="tile mock-tile" href="pages/auth/login/login.html" data-name="mrsool" data-sector="logistics" data-city="riyadh">
             <span class="mock-brand"><span class="similar-logo is-4">M<img src="assets/images/logos/mrsool.png" alt="" onerror="this.remove()"></span><strong class="mock-title" data-i18n="landing.tiles.3.name"></strong></span>
             <div class="chips"><span class="chip chip-teal" data-i18n="landing.tiles.3.tag"></span><span class="chip" data-i18n="landing.tiles.3.city"></span></div>
-          </div>
+          </a>
+          <p class="mock-empty" id="startup-empty" data-i18n="landing.noStartups" hidden></p>
         </div>
       </div>
         </div>
       </div>
 
-      <div class="x-item" data-x="1">
+      <div class="x-item" data-reveal>
         <div class="x-tab">
-          <button type="button" class="x-head" aria-expanded="false">
+          <h3 class="x-head">
             <span class="x-number">02</span>
-            <span class="headline x-title" data-i18n="landing.x2t"></span>
-          </button>
-          <!-- shown only while this explorer is selected -->
-          <div class="x-more"><div>
-            <p class="lead" data-i18n="landing.x2b"></p>
-            <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x2cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
-          </div></div>
-          <!-- fills while this explorer is on show, then the next one opens -->
-          <span class="x-timer" aria-hidden="true"></span>
-        </div>
-        <div class="x-panel">
-      <div class="programs" aria-hidden="true">
-        <div class="card program-card" style="--i: 0">
-          <span class="similar-logo program-logo is-1">G<img src="assets/images/logos/garage.png" alt="" onerror="this.remove()"></span>
-          <div class="program-text"><strong class="mock-title" data-i18n="landing.programs.0.name"></strong><div class="chips"><span class="chip chip-teal" data-i18n="landing.programs.0.type"></span><span class="chip" data-i18n="landing.programs.0.stage"></span></div></div>
-        </div>
-        <div class="card program-card" style="--i: 1">
-          <span class="similar-logo program-logo is-2">E<img src="assets/images/logos/e3.png" alt="" onerror="this.remove()"></span>
-          <div class="program-text"><strong class="mock-title" data-i18n="landing.programs.1.name"></strong><div class="chips"><span class="chip chip-teal" data-i18n="landing.programs.1.type"></span><span class="chip" data-i18n="landing.programs.1.stage"></span></div></div>
-        </div>
-        <div class="card program-card" style="--i: 2">
-          <span class="similar-logo program-logo is-3">T<img src="assets/images/logos/taqadam.png" alt="" onerror="this.remove()"></span>
-          <div class="program-text"><strong class="mock-title" data-i18n="landing.programs.2.name"></strong><div class="chips"><span class="chip chip-teal" data-i18n="landing.programs.2.type"></span><span class="chip" data-i18n="landing.programs.2.stage"></span></div></div>
-        </div>
-      </div>
-        </div>
-      </div>
-
-      <div class="x-item" data-x="2">
-        <div class="x-tab">
-          <button type="button" class="x-head" aria-expanded="false">
-            <span class="x-number">03</span>
             <span class="headline x-title" data-i18n="landing.x3t"></span>
-          </button>
-          <!-- shown only while this explorer is selected -->
+          </h3>
           <div class="x-more"><div>
             <p class="lead" data-i18n="landing.x3b"></p>
             <ul class="ticks ticks-column">
@@ -540,8 +512,6 @@
             </ul>
             <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x3cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div></div>
-          <!-- fills while this explorer is on show, then the next one opens -->
-          <span class="x-timer" aria-hidden="true"></span>
         </div>
         <div class="x-panel">
       <div class="req-demo" aria-hidden="true">
@@ -571,75 +541,63 @@
       </div>
         </div>
       </div>
-    </section>
-
-    <!-- ================= TRUSTED SOURCES ================= -->
-    <section class="container" id="sources">
-      <div class="section-head" data-reveal>
-        <p class="eyebrow" data-i18n="landing.srcKicker"></p>
-        <h2 class="headline headline-lg" data-i18n="landing.srcTitle"></h2>
-        <p class="lead" data-i18n="landing.srcSub"></p>
-      </div>
-      <div class="sources-grid">
-        <div class="source" data-reveal style="--i: 0">
-          <img class="source-logo" src="assets/images/logos/mc.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.0.name"></strong><span class="text-3" data-i18n="landing.sources.0.use"></span></div>
+      <div class="x-item" data-reveal>
+        <div class="x-tab">
+          <h3 class="x-head">
+            <span class="x-number">03</span>
+            <span class="headline x-title" data-i18n="landing.x2t"></span>
+          </h3>
+          <div class="x-more"><div>
+            <p class="lead" data-i18n="landing.x2b"></p>
+            <a class="link link-arrow" href="pages/auth/login/login.html"><span data-i18n="landing.x2cta"></span><svg class="flip-rtl" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div></div>
         </div>
-        <div class="source" data-reveal style="--i: 1">
-          <img class="source-logo" src="assets/images/logos/monshaat.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.1.name"></strong><span class="text-3" data-i18n="landing.sources.1.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 2">
-          <img class="source-logo" src="assets/images/logos/zatca.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.2.name"></strong><span class="text-3" data-i18n="landing.sources.2.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 3">
-          <img class="source-logo" src="assets/images/logos/balady.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.3.name"></strong><span class="text-3" data-i18n="landing.sources.3.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 4">
-          <img class="source-logo" src="assets/images/logos/hrsd.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.4.name"></strong><span class="text-3" data-i18n="landing.sources.4.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 0">
-          <img class="source-logo" src="assets/images/logos/qiwa.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.12.name"></strong><span class="text-3" data-i18n="landing.sources.12.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 1">
-          <img class="source-logo" src="assets/images/logos/gosi.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.5.name"></strong><span class="text-3" data-i18n="landing.sources.5.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 2">
-          <img class="source-logo" src="assets/images/logos/sbc.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.14.name"></strong><span class="text-3" data-i18n="landing.sources.14.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 3">
-          <img class="source-logo" src="assets/images/logos/fsc.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.15.name"></strong><span class="text-3" data-i18n="landing.sources.15.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 4">
-          <img class="source-logo" src="assets/images/logos/mim.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.13.name"></strong><span class="text-3" data-i18n="landing.sources.13.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 0">
-          <img class="source-logo" src="assets/images/logos/sfda.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.7.name"></strong><span class="text-3" data-i18n="landing.sources.7.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 1">
-          <img class="source-logo" src="assets/images/logos/saso.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.8.name"></strong><span class="text-3" data-i18n="landing.sources.8.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 2">
-          <img class="source-logo" src="assets/images/logos/sdaia.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.6.name"></strong><span class="text-3" data-i18n="landing.sources.6.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 3">
-          <img class="source-logo" src="assets/images/logos/saip.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.9.name"></strong><span class="text-3" data-i18n="landing.sources.9.use"></span></div>
-        </div>
-        <div class="source" data-reveal style="--i: 4">
-          <img class="source-logo" src="assets/images/logos/spl.png" alt="" height="36">
-          <div><strong data-i18n="landing.sources.11.name"></strong><span class="text-3" data-i18n="landing.sources.11.use"></span></div>
+        <div class="x-panel">
+          <div class="net-cards">
+<a class="net-card is-1" href="pages/auth/login/login.html">
+          <span class="net-logo"><img src="assets/images/logos/garage.png" alt=""></span>
+          <span class="net-words">
+            <strong data-i18n="landing.stages.p10"></strong>
+            <span class="chips"><span class="chip chip-teal" data-i18n="landing.stages.incubator"></span><span class="chip" data-i18n="landing.stages.s1"></span></span>
+          </span>
+        </a>
+        <a class="net-card is-2" href="pages/auth/login/login.html">
+          <span class="net-logo"><img src="assets/images/logos/e3.png" alt=""></span>
+          <span class="net-words">
+            <strong data-i18n="landing.stages.p20"></strong>
+            <span class="chips"><span class="chip chip-teal" data-i18n="landing.stages.accelerator"></span><span class="chip" data-i18n="landing.stages.s2"></span></span>
+          </span>
+        </a>
+        <a class="net-card is-3" href="pages/auth/login/login.html">
+          <span class="net-logo">H<img src="https://pgodmkrtwthjfstxqhfa.supabase.co/storage/v1/object/public/program-logos/40d3bc7e-fc1b-4afd-8913-5556935b3677/1791911071073.webp" alt="" loading="lazy" onerror="this.remove()"></span>
+          <span class="net-words">
+            <strong data-i18n="landing.stages.p01"></strong>
+            <span class="chips"><span class="chip chip-teal" data-i18n="landing.stages.incubator"></span><span class="chip" data-i18n="landing.stages.s0"></span></span>
+          </span>
+        </a>
+        <a class="net-card is-4" href="pages/auth/login/login.html">
+          <span class="net-logo">G<img src="https://pgodmkrtwthjfstxqhfa.supabase.co/storage/v1/object/public/program-logos/b62393b2-fb0d-4e6c-bf44-5e6facf24079/1791910367113.webp" alt="" loading="lazy" onerror="this.remove()"></span>
+          <span class="net-words">
+            <strong data-i18n="landing.stages.p30"></strong>
+            <span class="chips"><span class="chip chip-teal" data-i18n="landing.stages.accelerator"></span><span class="chip" data-i18n="landing.stages.s3"></span></span>
+          </span>
+        </a>
+        <a class="net-card is-5" href="pages/auth/login/login.html">
+          <span class="net-logo">A<img src="https://pgodmkrtwthjfstxqhfa.supabase.co/storage/v1/object/public/program-logos/db16541d-9457-4038-aaaa-19398a413ff5/1791902134135.webp" alt="" loading="lazy" onerror="this.remove()"></span>
+          <span class="net-words">
+            <strong data-i18n="landing.stages.p11"></strong>
+            <span class="chips"><span class="chip chip-teal" data-i18n="landing.stages.accelerator"></span><span class="chip" data-i18n="landing.stages.s1"></span></span>
+          </span>
+        </a>
+        <a class="net-card is-6" href="pages/auth/login/login.html">
+          <span class="net-logo">F<img src="https://pgodmkrtwthjfstxqhfa.supabase.co/storage/v1/object/public/program-logos/a130aab6-9619-4e6b-8472-f0b9556db5ab/1791910250924.webp" alt="" loading="lazy" onerror="this.remove()"></span>
+          <span class="net-words">
+            <strong data-i18n="landing.stages.p21"></strong>
+            <span class="chips"><span class="chip chip-teal" data-i18n="landing.stages.accelerator"></span><span class="chip" data-i18n="landing.stages.s2"></span></span>
+          </span>
+        </a>
+          </div>
+          <div class="net-dots" aria-hidden="true"><i class="is-active"></i><i></i><i></i><i></i><i></i><i></i></div>
         </div>
       </div>
     </section>

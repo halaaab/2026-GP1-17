@@ -3,9 +3,11 @@
 .env.*
 !.env.example
 
-# Survival model raw data: stays on your machine (license + size)
-datasets/survival-model/raw/*
-!datasets/survival-model/raw/.gitkeep
+# Survival model data: stays in Google Drive, never in Git
+ml/data/
+ml/**/*.csv
+ml/**/*.xlsx
+ml/**/*.parquet
 
 # Private partner data: never uploaded
 datasets/**/zid*
