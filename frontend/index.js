@@ -73,18 +73,16 @@ if (reduceMotion) {
 }
 
 /* ---------- The phone in the About section ----------
-   The assessment inside the phone is built 360px wide. Here we measure the photo
-   and tell the CSS how much to shrink it (--fit) so it fills the photo's screen exactly.
-   The screen is 35.9% of the photo's width. */
+   The assessment inside the phone is built 360px wide. Here we measure the screen
+   and tell the CSS how much to shrink it (--fit) so it fills the screen exactly. */
 
-const hand = document.querySelector('.hand');
+const phoneScreen = document.querySelector('.phone-screen');
 
 function fitPhone() {
-  const screenWidth = hand.offsetWidth * 0.359;
-  hand.style.setProperty('--fit', screenWidth / 360);
+  phoneScreen.style.setProperty('--fit', phoneScreen.offsetWidth / 360);
 }
 fitPhone();
-new ResizeObserver(fitPhone).observe(hand);
+new ResizeObserver(fitPhone).observe(phoneScreen);
 
 /* ---------- 2. Reveal on scroll ---------- */
 
@@ -97,6 +95,10 @@ const revealObserver = new IntersectionObserver((entries) => {
       if (entry.target.id === 'gauge') {
         animateGauge();
       }
+      if (entry.target.classList.contains('about-stage')) {
+        animatePhoneDial();
+      }
+      entry.target.querySelectorAll('[data-count]').forEach(countUp);
     }
   });
 }, { threshold: 0.2 });
@@ -145,6 +147,63 @@ function animateGauge() {
   requestAnimationFrame(frame);
 }
 
+/* The small score dial inside the phone in the About section counts up the same way. */
+
+const PHONE_DIAL_LENGTH = 282.7;   // length of the half circle in the SVG
+
+function drawPhoneDial(score) {
+  const share = score / 100;
+  const angle = Math.PI * share;
+  const knob = document.querySelector('#app-dial-knob');
+
+  document.querySelector('#app-dial-arc').setAttribute('stroke-dashoffset', PHONE_DIAL_LENGTH * (1 - share));
+  knob.setAttribute('cx', 110 - 90 * Math.cos(angle));
+  knob.setAttribute('cy', 110 - 90 * Math.sin(angle));
+  document.querySelector('#app-dial-number').textContent = Math.round(score);
+}
+
+function animatePhoneDial() {
+  if (reduceMotion) return;
+
+  const duration = 1500;
+  const startTime = performance.now();
+
+  function frame(now) {
+    const progress = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - progress, 3);   // fast at first, then slows down
+    drawPhoneDial(GAUGE_SCORE * eased);
+
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  drawPhoneDial(0);
+  requestAnimationFrame(frame);
+}
+
+/* Any number with data-count="..." counts up from zero when its box comes into view. */
+
+function countUp(element) {
+  if (reduceMotion) return;
+
+  const target = Number(element.dataset.count);
+  const duration = 1400;
+  const startTime = performance.now();
+
+  function frame(now) {
+    const progress = Math.min(1, (now - startTime) / duration);
+    const eased = 1 - Math.pow(1 - progress, 3);   // fast at first, then slows down
+    element.textContent = Math.round(target * eased).toLocaleString('en-US');
+
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    }
+  }
+
+  requestAnimationFrame(frame);
+}
+
 /* ---------- 5. Typing prompt ---------- */
 
 const typed = document.querySelector('#typed');
@@ -177,8 +236,10 @@ async function typeLoop() {
       await wait(42);
     }
 
-    // "send" it
+    // the send button pulses once, then "sends" it
+    sendButton.classList.add('is-ready');
     await wait(900);
+    sendButton.classList.remove('is-ready');
     sendButton.classList.add('is-sending');
     await wait(450);
     sendButton.classList.remove('is-sending');
@@ -199,32 +260,85 @@ async function typeLoop() {
 // Start typing once the words are loaded, and again whenever the language changes
 document.addEventListener('darb:language', typeLoop);
 
-/* ---------- 6. Explorers ---------- */
+/* ---------- The previews follow the mouse ----------
+   Each card turns a few degrees towards the mouse, which gives it real depth.
+   Only on computers with a mouse, and not for people who turn off animations. */
 
-const explore = document.querySelector('.x-explore');
-const explorers = [...document.querySelectorAll('.x-item')];
-
-function showExplorer(index) {
-  explorers.forEach((item, itemIndex) => {
-    const isActive = itemIndex === index;
-    item.classList.toggle('is-active', isActive);
-    item.querySelector('.x-head').setAttribute('aria-expanded', isActive);
+if (!reduceMotion && window.matchMedia('(hover: hover) and (min-width: 1001px)').matches) {
+  document.querySelectorAll('.x-panel').forEach((panel) => {
+    panel.addEventListener('pointermove', (event) => {
+      const box = panel.getBoundingClientRect();
+      const across = (event.clientX - box.left) / box.width - 0.5;   // from -0.5 to 0.5
+      const down = (event.clientY - box.top) / box.height - 0.5;
+      panel.classList.add('is-following');
+      panel.style.setProperty('--mouse-x', `${across * 8}deg`);
+      panel.style.setProperty('--mouse-y', `${down * -8}deg`);
+    });
+    panel.addEventListener('pointerleave', () => {
+      panel.classList.remove('is-following');
+      panel.style.setProperty('--mouse-x', '0deg');
+      panel.style.setProperty('--mouse-y', '0deg');
+    });
   });
 }
 
-explorers.forEach((item, index) => {
-  // Choosing one by hand stops the automatic switching
-  item.querySelector('.x-head').addEventListener('click', () => {
-    explore.classList.remove('is-auto');
-    showExplorer(index);
+/* ---------- Dots under the swipeable program cards ----------
+   The dot of the card nearest the start of the row lights up as you swipe. */
+
+const netRow = document.querySelector('.net-cards');
+const netCards = [...netRow.querySelectorAll('.net-card')];
+const netDots = [...document.querySelectorAll('.net-dots i')];
+
+netRow.addEventListener('scroll', () => {
+  const step = netCards[1].offsetLeft - netCards[0].offsetLeft;
+  const nearest = Math.round(Math.abs(netRow.scrollLeft / step));
+  netDots.forEach((dot, index) => dot.classList.toggle('is-active', index === nearest));
+}, { passive: true });
+
+/* ---------- The startups preview in the Explore section ----------
+   The chips and the search box really filter the four tiles. */
+
+const startupDemo = document.querySelector('#startup-demo');
+const startupSearch = document.querySelector('#startup-search');
+const startupPills = [...startupDemo.querySelectorAll('.pill')];
+const startupTiles = [...startupDemo.querySelectorAll('.mock-tile')];
+let startupFilter = 'all';
+
+function filterStartups() {
+  const words = startupSearch.value.trim().toLowerCase();
+  let showing = 0;
+
+  startupTiles.forEach((tile) => {
+    const fitsChip = fitsFilter(tile, startupFilter);
+    // the name is checked in English too, so "Lean" also works on the Arabic page
+    const fitsSearch = `${tile.dataset.name} ${tile.textContent}`.toLowerCase().includes(words);
+    const fits = fitsChip && fitsSearch;
+
+    tile.classList.toggle('is-back', fits && tile.classList.contains('is-hidden'));
+    tile.classList.toggle('is-hidden', !fits);
+    if (fits) showing++;
   });
 
-  // When the timer bar is full, open the next explorer
-  item.querySelector('.x-timer').addEventListener('animationend', () => {
-    showExplorer((index + 1) % explorers.length);
-  });
+  document.querySelector('#startup-empty').hidden = showing > 0;
+  document.querySelector('#startup-count').textContent = t('landing.showingStartups')
+    .replace('{n}', showing)
+    .replace('{total}', startupTiles.length);
+}
+
+function fitsFilter(tile, filter) {
+  return filter === 'all' || filter === tile.dataset.sector || filter === tile.dataset.city;
+}
+
+function chooseStartupFilter(filter) {
+  startupFilter = filter;
+  startupPills.forEach((pill) => pill.classList.toggle('is-active', pill.dataset.filter === filter));
+  filterStartups();
+}
+
+startupPills.forEach((pill) => {
+  pill.dataset.tally = startupTiles.filter((tile) => fitsFilter(tile, pill.dataset.filter)).length;
+  pill.addEventListener('click', () => chooseStartupFilter(pill.dataset.filter));
 });
+startupSearch.addEventListener('input', filterStartups);
+document.addEventListener('darb:language', filterStartups);
 
-if (!reduceMotion) {
-  explore.classList.add('is-auto');
-}
