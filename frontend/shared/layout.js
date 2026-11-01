@@ -314,9 +314,6 @@ function buildAppLayout(layout) {
         ${languageSwitch()}
       </header>
 
-      <footer class="app-footer">
-        <p class="disclaimer" data-i18n="footer.disclaimer"></p>
-      </footer>
     </div>`;
 
   // Put the page's <main> between the header and the footer
@@ -364,7 +361,6 @@ const PUBLIC_LINKS = [
   { label: 'nav.about',          section: 'about' },
   { label: 'nav.features',       section: 'features' },
   { label: 'nav.exploreSection', section: 'explore' },
-  { label: 'nav.sources',        section: 'sources' },
 ];
 
 function publicLinks() {
@@ -387,8 +383,8 @@ function buildPublicLayout() {
         ${languageSwitch()}
         <a class="btn btn-ghost btn-sm public-auth" href="${ROOT}${PAGES.login}" data-i18n="auth.login"></a>
         <a class="btn btn-primary btn-sm public-auth" href="${ROOT}${PAGES.signUp}" data-i18n="auth.signUp"></a>
-        <button type="button" class="btn-icon public-menu-button" data-public-menu data-i18n-aria-label="nav.toggleMenu">
-          ${icon('menu')}
+        <button type="button" class="btn-icon public-menu-button" data-public-menu data-i18n-aria-label="nav.toggleMenu" aria-expanded="false">
+          <span class="menu-lines" aria-hidden="true"><i></i><i></i><i></i></span>
         </button>
       </div>
     </div>
@@ -432,19 +428,29 @@ function buildPublicLayout() {
 
       <div class="public-footer-bottom">
         <span data-i18n="footer.copyright"></span>
-        <span data-i18n="footer.disclaimer"></span>
       </div>
     </div>`;
 
   main.before(header);
   main.after(footer);
 
+  // The phone menu opens with its button, and closes with a link, a tap outside it, or Esc
+  const menuButton = header.querySelector('[data-public-menu]');
+
+  function setMenuOpen(isOpen) {
+    document.body.classList.toggle('public-menu-open', isOpen);
+    menuButton.setAttribute('aria-expanded', isOpen);
+  }
+
   document.addEventListener('click', (event) => {
     if (event.target.closest('[data-public-menu]')) {
-      document.body.classList.toggle('public-menu-open');
-    } else if (event.target.closest('.public-menu a')) {
-      document.body.classList.remove('public-menu-open');
+      setMenuOpen(!document.body.classList.contains('public-menu-open'));
+    } else if (event.target.closest('.public-menu a') || !event.target.closest('.public-menu')) {
+      setMenuOpen(false);
     }
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') setMenuOpen(false);
   });
 }
 
