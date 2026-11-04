@@ -1533,26 +1533,58 @@ body.sidebar-collapsed .header-toggle {
 .public-menu {
   display: none;
 }
+/* It floats over the page under the top bar, so the page does not jump when it opens. */
 .public-menu {
-  max-width: 1220px;
-  margin: 8px auto 0;
-  padding: 8px 16px 16px;
+  position: absolute;
+  top: 100%;
+  inset-inline: 12px;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
   border-radius: 22px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 24px 60px rgba(15, 36, 56, 0.2);
 }
 .public-menu-links {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 15px;
-  font-weight: 600;
+  gap: 2px;
+  font-size: 16px;
+  font-weight: 700;
 }
 .public-menu-links > a:not(.btn) {
-  padding: 10px 4px;
-  border-bottom: 1px solid var(--divider);
+  padding: 13px 14px;
+  border-radius: 14px;
+  transition: background var(--dur);
+}
+.public-menu-links > a:not(.btn):active,
+.public-menu-links > a:not(.btn):hover {
+  background: var(--bg-hover);
 }
 .public-menu-links .btn {
-  margin-top: 8px;
+  margin-top: 6px;
 }
+/* The button's three lines turn into an X while the menu is open. */
+.menu-lines {
+  position: relative;
+  display: block;
+  width: 20px;
+  height: 14px;
+}
+.menu-lines i {
+  position: absolute;
+  inset-inline: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: currentColor;
+  transition: top var(--dur) var(--ease), rotate var(--dur) var(--ease), opacity var(--dur);
+}
+.menu-lines i:nth-child(1) { top: 0; }
+.menu-lines i:nth-child(2) { top: 6px; }
+.menu-lines i:nth-child(3) { top: 12px; }
+body.public-menu-open .menu-lines i:nth-child(1) { top: 6px; rotate: 45deg; }
+body.public-menu-open .menu-lines i:nth-child(2) { opacity: 0; }
+body.public-menu-open .menu-lines i:nth-child(3) { top: 6px; rotate: -45deg; }
 
 .public-footer {
   background: var(--bg-subtle);
@@ -2267,9 +2299,59 @@ html[dir="rtl"] .auth-title {
   .public-header {
     padding: 10px 12px 0;
   }
+  /* The footer on a phone, short and centered: the logo and one sentence, the links
+     in one row, then the email and icons. The two small headings are not needed here. */
+  .public-footer-inner {
+    padding: 36px 20px 22px;
+  }
   .public-footer-top {
     grid-template-columns: minmax(0, 1fr);
-    gap: 28px;
+    gap: 20px;
+    justify-items: center;
+    padding-bottom: 24px;
+    text-align: center;
+  }
+  .public-footer-about {
+    align-items: center;
+    gap: 10px;
+    max-width: 320px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    text-wrap: balance;
+  }
+  .public-footer-column {
+    align-items: center;
+  }
+  .public-footer-column strong {
+    display: none;
+  }
+  nav.public-footer-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px 26px;
+    font-size: 14.5px;
+    font-weight: 700;
+  }
+  .public-footer-column:last-child {
+    gap: 14px;
+  }
+  .public-footer-accounts {
+    order: -1;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 0;
+  }
+  .public-footer-email {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-2);
+  }
+  .public-footer-bottom {
+    justify-content: center;
+    padding-top: 16px;
+    font-size: 12px;
+    text-align: center;
   }
 }
 
