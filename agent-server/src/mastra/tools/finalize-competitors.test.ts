@@ -1,0 +1,151 @@
+// Tests for finalize_competitors. The database is replaced by a fake, so no keys are needed.
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { StartupCandidate } from '../contracts';
+
+// A higher threshold than the real placeholder (0), so filtering can be tested.
+vi.mock('../config/models', () => ({ SIMILARITY_THRESHOLD: 0.3, MAX_COMPETITORS: 3 }));
+
+// Fake Supabase: records every call in order.
+const calls: string[] = [];
+const insertedRows: unknown[] = [];
+vi.mock('../lib/supabase', () => ({
+  getSupabase: () => ({
+    from: (table: string) => ({
+      delete: () => ({
+        eq: async (column: string, value: string) => {
+          calls.push(`delete ${table} where ${column}=${value}`);
+          return { error: null };
+        },
+      }),
+      insert: async (rows: unknown[]) => {
+        calls.push(`insert ${table} ${rows.length}`);
+        insertedRows.push(...rows);
+        return { error: null };
+      },
+    }),
+  }),
+}));
+
+const { selectCompetitors, finalizeCompetitorsTool, normalizeName } = await import('./finalize-competitors');
+
+const ASSESSMENT = '3f2b6c1e-8a4d-4e2b-9c1a-5d6e7f8a9b0c';
+
+function candidate(id: string, similarity: number, extra: Partial<StartupCandidate> = {}): StartupCandidate {
+  return {
+    startup_id: id,
+    name: `Startup ${id}`,
+    name_ar: null,
+    description: 'A startup',
+    sector: null,
+    region: null,
+    stage: null,
+    website: null,
+    similarity,
+    source: 'dataset',
+    ...extra,
+  };
+}
+
+const run = (candidates: StartupCandidate[]) =>
+  finalizeCompetitorsTool.execute!({ assessment_id: ASSESSMENT, candidates }, {} as never) as Promise<any>;
+
+beforeEach(() => {
+  calls.length = 0;
+  insertedRows.length = 0;
+});
+
+describe('ISS', () => {
+  it('averages 3 competitors', () => {
+    const { iss } = selectCompetitors([candidate('A', 0.9), candidate('B', 0.8), candidate('C', 0.7)]);
+    expect(iss).toBe(80);
+  });
+
+  it('averages only 2 competitors when 2 are found', async () => {
+    const out = await run([candidate('A', 0.9), candidate('B', 0.6)]);
+    expect(out.iss).toBe(75);
+    expect(out.competitors_found).toBe(2);
+    expect(out.status).toBe('ok');
+  });
+
+  it('uses the single score when 1 is found, rounded to 1 decimal', async () => {
+    const out = await run([candidate('A', 0.83456)]);
+    expect(out.iss).toBe(83.5);
+    expect(out.competitors_found).toBe(1);
+  });
+
+  it('is null with status no_results when none are found', async () => {
+    const out = await run([]);
+    expect(out.iss).toBeNull();
+    expect(out.status).toBe('no_results');
+    expect(out.competitors).toEqual([]);
+  });
+});
+
+describe('filtering, duplicates and ranking', () => {
+  it('drops candidates below the threshold', () => {
+    const { competitors } = selectCompetitors([candidate('A', 0.9), candidate('B', 0.29), candidate('C', 0.3)]);
+    expect(competitors.map((c) => c.startup_id)).toEqual(['A', 'C']);
+  });
+
+  it('removes duplicates by startup_id, keeping the higher score', () => {
+    const { competitors } = selectCompetitors([candidate('A', 0.6), candidate('A', 0.9)]);
+    expect(competitors).toHaveLength(1);
+    expect(competitors[0].similarity).toBe(0.9);
+  });
+
+  it('removes a web duplicate by website domain', () => {
+    const { competitors } = selectCompetitors([
+      candidate('ST_1', 0.8, { website: 'https://www.jahez.net' }),
+      candidate('web-1', 0.7, { source: 'web', name: 'Other name', website: 'jahez.net/about' }),
+    ]);
+    expect(competitors.map((c) => c.startup_id)).toEqual(['ST_1']);
+  });
+
+  it('removes a web duplicate whose Arabic name is spelled differently', () => {
+    const { competitors } = selectCompetitors([
+      candidate('ST_1', 0.8, { name: 'Ajer', name_ar: 'أَجِّر للعقارات' }),
+      candidate('web-1', 0.85, { source: 'web', name: 'اجر للعقارات' }),
+    ]);
+    expect(competitors).toHaveLength(1);
+    expect(competitors[0].startup_id).toBe('web-1'); // the higher score wins
+  });
+
+  it('keeps the dataset version on a tie', () => {
+    const { competitors } = selectCompetitors([
+      candidate('web-1', 0.8, { source: 'web', name: 'Startup ST_1' }),
+      candidate('ST_1', 0.8),
+    ]);
+    expect(competitors).toHaveLength(1);
+    expect(competitors[0].source).toBe('dataset');
+  });
+
+  it('normalizes Arabic names', () => {
+    expect(normalizeName('  مَدْرَسَةٌ   إلكترونية ')).toBe(normalizeName('مدرسه الكترونية'));
+  });
+
+  it('ranks by score and keeps only the top 3', () => {
+    const { competitors } = selectCompetitors([
+      candidate('A', 0.5),
+      candidate('B', 0.95),
+      candidate('C', 0.7),
+      candidate('D', 0.8),
+    ]);
+    expect(competitors.map((c) => [c.startup_id, c.rank])).toEqual([
+      ['B', 1],
+      ['D', 2],
+      ['C', 3],
+    ]);
+  });
+});
+
+describe('saving', () => {
+  it('deletes old rows before inserting, and saves only dataset competitors', async () => {
+    const out = await run([candidate('A', 0.9), candidate('web-1', 0.8, { source: 'web', name: 'Web Co' })]);
+    expect(calls).toEqual([
+      `delete similar_startup_results where assessment_id=${ASSESSMENT}`,
+      'insert similar_startup_results 1',
+    ]);
+    expect(insertedRows).toEqual([{ assessment_id: ASSESSMENT, startup_id: 'A', similarity_score: 0.9, rank: 1 }]);
+    expect(out.competitors).toHaveLength(2); // the web competitor is still returned
+  });
+});
