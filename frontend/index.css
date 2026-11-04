@@ -16,7 +16,6 @@
      9. Roadmap path
     10. Report
     11. Explorers
-    12. Trusted sources
     13. About: phone and cards
     14. Call to action
     15. Tablet and phone
@@ -279,6 +278,25 @@ html[dir="rtl"] .hero-title {
 /* index.js adds "is-sending" for a moment after each phrase is typed */
 .composer-send.is-sending {
   transform: translateY(-4px) scale(1.1);
+}
+/* index.js adds "is-ready" when a phrase is fully typed: one soft pulse */
+.composer-send.is-ready {
+  animation: send-pulse 0.9s ease-out;
+}
+@keyframes send-pulse {
+  from { box-shadow: 0 0 0 0 rgba(31, 142, 151, 0.5); }
+  to   { box-shadow: 0 0 0 12px rgba(31, 142, 151, 0); }
+}
+
+/* the arrow on the main button slides forward on hover */
+.hero-actions .btn-primary svg {
+  transition: translate var(--dur) var(--ease);
+}
+.hero-actions .btn-primary:hover svg {
+  translate: 4px 0;
+}
+html[dir="rtl"] .hero-actions .btn-primary:hover svg {
+  translate: -4px 0;
 }
 
 /* list with small check marks */
@@ -553,7 +571,7 @@ html[dir="rtl"] .link-arrow:hover svg {
 }
 .feat:hover {
   translate: 0 -6px;
-  border-color: var(--border-strong);
+  border-color: var(--teal);
   box-shadow: var(--shadow-panel);
 }
 .feat-wide { grid-column: span 2; }
@@ -579,12 +597,28 @@ html[dir="rtl"] .link-arrow:hover svg {
 }
 /* The two colors of a picture are always neighbours (teal with blue, purple with blue,
    gold with peach), so they blend instead of clashing. */
-.feat-chat    { --c1: rgba(31, 142, 151, 0.22);  --c2: rgba(92, 143, 214, 0.18); }   /* teal and blue */
-.feat-score   { --c1: rgba(169, 215, 196, 0.60); --c2: rgba(31, 142, 151, 0.16); }   /* mint and teal */
-.feat-similar { --c1: rgba(146, 117, 223, 0.22); --c2: rgba(92, 143, 214, 0.18); }   /* purple and blue */
-.feat-market  { --c1: rgba(232, 184, 71, 0.26);  --c2: rgba(237, 147, 123, 0.16); }  /* gold and peach */
-.feat-road    { --c1: rgba(92, 143, 214, 0.20);  --c2: rgba(31, 142, 151, 0.18); }   /* blue and teal */
-.feat-report  { --c1: rgba(237, 147, 123, 0.22); --c2: rgba(232, 184, 71, 0.16); }   /* peach and gold */
+.feat-chat    { --c1: rgba(31, 142, 151, 0.10);  --c2: rgba(92, 143, 214, 0.08); }   /* teal and blue */
+.feat-score   { --c1: rgba(169, 215, 196, 0.26); --c2: rgba(31, 142, 151, 0.07); }   /* mint and teal */
+.feat-similar { --c1: rgba(146, 117, 223, 0.10); --c2: rgba(92, 143, 214, 0.08); }   /* purple and blue */
+.feat-market  { --c1: rgba(92, 143, 214, 0.10);  --c2: rgba(31, 142, 151, 0.07); }   /* blue and teal */
+.feat-road    { --c1: rgba(92, 143, 214, 0.09);  --c2: rgba(31, 142, 151, 0.08); }   /* blue and teal */
+.feat-report  { --c1: rgba(146, 117, 223, 0.09); --c2: rgba(31, 142, 151, 0.07); }   /* purple and teal */
+
+/* The report's four ticks pop in one by one when the box comes into view. */
+.report-inside > span {
+  opacity: 0;
+  scale: 0.8;
+  transition: opacity 0.3s, scale 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.is-visible .report-inside > span {
+  opacity: 1;
+  scale: 1;
+}
+.report-inside > .is-1 { transition-delay: 0.3s; }
+.report-inside > .is-2 { transition-delay: 0.5s; }
+.report-inside > .is-3 { transition-delay: 0.7s; }
+.report-inside > .is-4 { transition-delay: 0.9s; }
+
 .feat-text {
   display: flex;
   flex-direction: column;
@@ -1349,143 +1383,113 @@ html[dir="rtl"] .road-fill {
    selected one shows on the other. index.js moves "is-active" between them. */
 
 .x-explore {
-  display: grid;
-  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-  grid-template-rows: auto auto auto 1fr;
-  column-gap: 56px;
-  row-gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 104px;
   margin-top: -56px;   /* sits closer to its title above */
 }
-/* "contents" lets each item's tab and preview take their own place in the grid */
+/* One explorer per row: the words on one side, the preview on the other.
+   Every second row swaps sides, so the page reads as a zigzag. */
 .x-item {
-  display: contents;
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  align-items: center;
+  gap: 64px;
+  --tilt: -5deg;
 }
-
-.x-tab {
-  position: relative;
-  grid-column: 1;
-  padding: 18px 20px;
-  border: 1px solid transparent;
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  transition: background var(--dur), border-color var(--dur), box-shadow var(--dur);
+html[dir="rtl"] .x-item {
+  --tilt: 5deg;
 }
-.x-item.is-active .x-tab {
-  border-color: var(--border);
-  background: var(--bg);
-  box-shadow: var(--shadow-float);
+.x-item:nth-child(even) {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  --tilt: 5deg;
+}
+html[dir="rtl"] .x-item:nth-child(even) {
+  --tilt: -5deg;
+}
+.x-item:nth-child(even) .x-panel {
+  order: -1;
 }
 .x-head {
   display: flex;
-  align-items: baseline;
-  gap: 14px;
-  width: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  text-align: start;
-  cursor: pointer;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0;
 }
 .x-number {
-  font-size: 14px;
+  font-size: 44px;
   font-weight: 800;
-  color: var(--text-3);
-  transition: color var(--dur);
+  line-height: 1;
+  background: linear-gradient(90deg, var(--teal), var(--navy));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 .x-title {
-  font-size: clamp(20px, 2.4vw, 26px);
-  color: var(--text-3);
-  transition: color var(--dur);
-}
-.x-head:hover .x-title,
-.x-item.is-active .x-title {
   color: var(--text);
-}
-.x-item.is-active .x-number {
-  color: var(--teal);
-}
-
-/* the description opens smoothly: the row grows from 0 to its natural height */
-.x-more {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.5s var(--ease);
 }
 .x-more > div {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 14px;
-  min-height: 0;
-  overflow: hidden;
+  gap: 16px;
+  margin-top: 14px;
 }
 .x-more .lead {
-  padding-top: 12px;
-  font-size: 15.5px;
+  font-size: 16px;
 }
-.x-item.is-active .x-more {
-  grid-template-rows: 1fr;
+/* The preview leans back a little in space, and straightens when you reach for it. */
+.x-panel > :first-child {
+  position: relative;
+  transform-style: preserve-3d;
+  /* index.js sets --mouse-x and --mouse-y, so the card follows the mouse a little */
+  transform:
+    perspective(1400px)
+    rotateY(calc(var(--tilt) + var(--mouse-x, 0deg)))
+    rotateX(var(--mouse-y, 0deg));
+  transition: transform 0.5s var(--ease);
 }
-
-/* thin bar along the bottom of the selected tab: when it is full, the next one opens */
-.x-timer {
-  position: absolute;
-  inset-block-end: 0;
-  inset-inline: 0;
-  height: 3px;
-  background: linear-gradient(90deg, var(--teal), var(--navy));
-  transform: scaleX(0);
-  transform-origin: left;
+.x-panel.is-following > :first-child {
+  transition: transform 0.12s linear;
 }
-html[dir="rtl"] .x-timer {
-  transform-origin: right;
+.x-panel:focus-within > :first-child {
+  transform: perspective(1400px);
 }
-.x-explore.is-auto .x-item.is-active .x-timer {
-  animation: x-timer 7s linear forwards;
+/* Depth: a second card sits behind the preview, and the pieces inside stand above it. */
+.x-panel .mock,
+.x-panel .req-list {
+  --behind: 18px;
+  box-shadow:
+    var(--behind) 18px 0 -1px var(--teal-tint),
+    var(--behind) 18px 0 0 var(--border),
+    0 24px 50px rgba(27, 68, 103, 0.14);
 }
-.x-explore.is-auto:hover .x-timer {
-  animation-play-state: paused;
+html[dir="rtl"] .x-panel .mock,
+html[dir="rtl"] .x-panel .req-list {
+  --behind: -18px;
 }
-@keyframes x-timer {
-  to { transform: scaleX(1); }
+.mock-search,
+#startup-demo .chips,
+.mock-count {
+  transform: translateZ(14px);
 }
-
-/* all three previews share the same spot; only the selected one is visible */
-.x-panel {
-  grid-column: 2;
-  grid-row: 1 / -1;
-  align-self: center;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(18px) scale(0.98);
-  transition:
-    opacity 0.5s var(--ease),
-    transform 0.5s var(--ease),
-    visibility 0.5s;
-}
-.x-item.is-active .x-panel {
-  opacity: 1;
-  visibility: visible;
-  transform: none;
-}
-/* the pieces inside the selected preview arrive one after another */
+/* the pieces inside a preview arrive one after another */
 .x-panel .mock-tile,
-.x-panel .program-card,
 .x-panel .req-row {
   opacity: 0;
   transform: translateY(10px);
   transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
 }
-.x-item.is-active .x-panel .mock-tile,
-.x-item.is-active .x-panel .program-card,
-.x-item.is-active .x-panel .req-row {
+.is-visible .x-panel .mock-tile,
+.is-visible .x-panel .req-row {
   opacity: 1;
   transform: none;
 }
-.x-item.is-active .x-panel :is(.mock-tile, .program-card, .req-row):nth-child(1) { transition-delay: 0.15s; }
-.x-item.is-active .x-panel :is(.mock-tile, .program-card, .req-row):nth-child(2) { transition-delay: 0.25s; }
-.x-item.is-active .x-panel :is(.mock-tile, .program-card, .req-row):nth-child(3) { transition-delay: 0.35s; }
-.x-item.is-active .x-panel :is(.mock-tile, .program-card, .req-row):nth-child(4) { transition-delay: 0.45s; }
+.is-visible .x-panel :is(.mock-tile, .req-row):nth-child(1) { transition-delay: 0.15s; }
+.is-visible .x-panel :is(.mock-tile, .req-row):nth-child(2) { transition-delay: 0.25s; }
+.is-visible .x-panel :is(.mock-tile, .req-row):nth-child(3) { transition-delay: 0.35s; }
+.is-visible .x-panel :is(.mock-tile, .req-row):nth-child(4) { transition-delay: 0.45s; }
 
 .mock {
   display: flex;
@@ -1518,50 +1522,119 @@ html[dir="rtl"] .x-timer {
 .mock-tile {
   gap: 12px;
 }
+/* The startups preview really works: the chips and the search filter these tiles.
+   The fixed height keeps the box still when fewer tiles are showing. */
+#startup-demo .mock-tiles {
+  align-content: start;
+  min-height: 228px;
+}
+.mock-tile.is-hidden {
+  display: none;
+}
+/* Each tile is a white card that stands above the preview, and rises under the mouse. */
+.x-panel a.mock-tile {
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #FFFFFF;
+  box-shadow: 0 10px 24px rgba(27, 68, 103, 0.1);
+  color: inherit;
+  translate: 0 0 30px;
+  transition: opacity 0.45s var(--ease), transform 0.45s var(--ease), translate 0.25s var(--ease), box-shadow 0.25s, border-color 0.25s;
+}
+.x-panel a.mock-tile:hover {
+  border-color: var(--teal);
+  box-shadow: 0 18px 36px rgba(27, 68, 103, 0.18);
+  translate: 0 -4px 60px;
+}
+/* The logo on its own plate, the same size for all, with the name under it.
+   [class] is needed to beat the older logo rule. */
+.mock-brand {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.mock-brand .similar-logo[class]:has(img) {
+  width: 100%;
+  height: 58px;
+  border-radius: 10px;
+  background: var(--bg-subtle);
+}
+.mock-brand .similar-logo img {
+  inset: 11px 32px;
+  width: calc(100% - 64px);
+  height: calc(100% - 22px);
+  background: none;
+  mix-blend-mode: multiply;   /* a logo with a white background melts into the plate */
+}
+/* how many startups each chip would show, in a small number beside its name */
+#startup-demo .pill::after {
+  content: attr(data-tally);
+  font-size: 11px;
+  opacity: 0.6;
+}
+.mock-count {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-3);
+}
+.mock-tile.is-back {
+  animation: tile-back 0.35s var(--ease);
+}
+@keyframes tile-back {
+  from { opacity: 0; scale: 0.96; }
+}
+.mock-search input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: none;
+  font: inherit;
+  color: var(--text);
+}
+.mock-search input::placeholder {
+  color: var(--text-3);
+}
+.mock-search:focus-within {
+  border-color: var(--teal);
+}
+.mock-empty {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 24px 0;
+  font-size: 13.5px;
+  text-align: center;
+  color: var(--text-3);
+}
 /* a startup's logo beside its name */
 .mock-brand {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.program-logo {
-  width: 44px;
-  height: 44px;
-  border-radius: 13px;
+/* Every logo in the previews sits in the same white square, so they line up
+   whatever their shape. The real explorer pages do the same. */
+.req-logo {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #FFFFFF;
+  box-shadow: var(--shadow-card);
 }
 /* the authority's logo at the start of a requirement row */
 .req-logo {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
-  width: 56px;
-  height: 36px;
 }
 .req-logo img {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-
-.programs {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-.program-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  box-shadow: var(--shadow-float);
-}
-.program-card:nth-child(2) { margin-inline-start: 40px; }
-.program-card:nth-child(3) { margin-inline-start: 16px; }
-.program-text {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
 }
 
 .req-demo {
@@ -1582,6 +1655,12 @@ html[dir="rtl"] .x-timer {
   padding-block: 12px;
   border-bottom: 1px solid var(--divider);
 }
+.req-list {
+  transition: border-color 0.25s;
+}
+.req-list:hover {
+  border-color: var(--teal);
+}
 .req-row:last-child {
   border-bottom: none;
 }
@@ -1596,6 +1675,7 @@ html[dir="rtl"] .x-timer {
   font-size: 12px;
 }
 .req-note {
+  margin-top: 24px;   /* clears the second card behind the list */
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1604,51 +1684,95 @@ html[dir="rtl"] .x-timer {
   color: var(--link-text);
 }
 
-/* ---------- 12. Trusted sources ---------- */
-
-.sources-grid {
+/* ---------- Incubators and accelerators: floating cards ----------
+   Six program cards in two columns, the second column set lower. They pop in one by
+   one when the row comes into view, then keep floating gently. */
+.net-cards {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 10px;
-  margin-block: 36px 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding-bottom: 32px;
 }
-.source {
+.net-card {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--bg);
+  border-radius: 18px;
+  background: #FFFFFF;
+  box-shadow: 0 14px 34px rgba(27, 68, 103, 0.12);
+  color: inherit;
+  opacity: 0;
+  transition: transform 0.25s var(--ease), box-shadow 0.25s, border-color 0.25s;
 }
-.source:hover {
+.net-card:nth-child(even) {
+  position: relative;
+  top: 32px;
+}
+.is-visible .net-card {
+  animation:
+    net-pop 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) var(--delay) both,
+    float-gently 6s ease-in-out calc(var(--delay) + 0.55s) infinite;
+}
+@keyframes net-pop {
+  from { opacity: 0; scale: 0.7; }
+  to   { opacity: 1; scale: 1; }
+}
+.net-card:hover {
+  z-index: 2;
   border-color: var(--teal);
+  transform: scale(1.04);
+  box-shadow: 0 22px 48px rgba(27, 68, 103, 0.2);
 }
-.source div {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.4;
-}
-.source .text-3 {
-  font-size: 11.5px;
-}
-.source-abbr {
+.net-card.is-1 { --delay: 0.1s; }
+.net-card.is-2 { --delay: 0.2s; }
+.net-card.is-3 { --delay: 0.3s; }
+.net-card.is-4 { --delay: 0.4s; }
+.net-card.is-5 { --delay: 0.5s; }
+.net-card.is-6 { --delay: 0.6s; }
+.net-logo {
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 44px;
-  height: 36px;
-  border-radius: 9px;
-  background: var(--navy-tint);
-  color: var(--navy);
-  font-size: 10px;
+  width: 48px;
+  height: 48px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-subtle);
+  font-size: 18px;
   font-weight: 800;
+  color: var(--teal-text);
+}
+/* the logo covers the first letter, which only shows if the logo cannot load */
+.net-logo {
+  position: relative;
+  overflow: hidden;
+}
+.net-logo img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  background: #FFFFFF;
+  object-fit: contain;
+}
+.net-words {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.net-words strong {
+  font-size: 13.5px;
+  line-height: 1.35;
+  color: var(--text);
 }
 
-/* ---------- 13. About: the words on one side, a real phone photo on the other ----------
+/* ---------- 13. About: the words on one side, a floating phone on the other ----------
    The words come first, so in Arabic they are on the right and the phone on the left. */
 
 .about {
@@ -1714,64 +1838,134 @@ html[dir="rtl"] .x-timer {
   color: var(--text);
 }
 
+/* a very pale panel with the whole phone in the middle of it */
 .about-stage {
   position: relative;
   display: flex;
+  align-items: center;
   justify-content: center;
-}
-/* soft color behind the hand */
-.about-rings {
-  position: absolute;
-  inset: 4% 8%;
-  border-radius: 50%;
-  background:
-    radial-gradient(closest-side, rgba(92, 143, 214, 0.20), transparent 72%),
-    radial-gradient(closest-side at 35% 62%, rgba(31, 142, 151, 0.20), transparent 72%);
+  min-height: 560px;
+  overflow: hidden;
+  border-radius: 28px;
+  background: linear-gradient(160deg, #F0F8F9, #F3F5FB);
 }
 
-/* The phone is a real photo. Its blank screen starts 33.1% from the left and 8.9% from
-   the top of the picture, and is 35.9% wide and 77.5% tall; .phone-screen sits exactly there.
-   "multiply" makes the photo's white background see-through, so the soft color shows behind the hand. */
-.hand {
-  position: relative;
-  width: min(560px, 100%);
-  aspect-ratio: 1;
+/* three soft circles behind the phone */
+.about-orbits i {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--size);
+  height: var(--size);
+  margin: calc(var(--size) / -2);
+  border: 1px solid rgba(31, 142, 151, 0.12);
+  border-radius: 50%;
 }
-.hand-photo {
-  display: block;
-  width: 100%;
-  height: 100%;
-  mix-blend-mode: multiply;
-  /* the wrist fades out at the bottom instead of ending in a straight cut */
-  -webkit-mask-image: linear-gradient(#000 80%, transparent 99%);
-  mask-image: linear-gradient(#000 80%, transparent 99%);
+.about-orbits i:nth-child(1) { --size: 360px; background: rgba(255, 255, 255, 0.6); }
+.about-orbits i:nth-child(2) { --size: 520px; }
+.about-orbits i:nth-child(3) { --size: 680px; }
+
+/* The phone itself: a white frame with a soft shadow. It rises into place first. */
+.device {
+  position: relative;
+  width: 240px;
+  aspect-ratio: 9 / 19;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 38px;
+  background: #FFFFFF;
+  box-shadow: 0 24px 60px rgba(27, 68, 103, 0.16);
+  translate: 0 50px;
+  transition: translate 0.9s var(--ease);
+}
+.is-visible .device {
+  translate: 0 0;
+}
+@keyframes float-gently {
+  50% { translate: 0 -8px; }
 }
 .phone-screen {
-  position: absolute;
-  top: 8.75%;
-  left: 32.95%;             /* left, not "inline-start": the photo is the same in Arabic */
-  width: 35.9%;
-  height: 77.5%;
+  position: relative;
+  height: 100%;
   overflow: hidden;
-  border-radius: 9% / 4.1%;   /* the same round corners as the phone's glass, at any size */
+  border-radius: 30px;
   background: var(--bg);
 }
-/* The notch at the top of the phone, drawn again over the white screen
-   (the screen covers the one in the photo). */
+
+/* the small white cards: one on each side, resting on the edge of the phone.
+   They pop in after the phone has risen, then keep floating gently. */
+.about-float {
+  position: absolute;
+  top: calc(50% - 150px);   /* a little above the middle of the phone */
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 116px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: #FFFFFF;
+  box-shadow: 0 12px 30px rgba(27, 68, 103, 0.12);
+  opacity: 0;
+  scale: 0.7;
+  transition: opacity 0.35s 0.8s, scale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.8s;
+  animation: float-gently 6s ease-in-out infinite;
+}
+.is-visible .about-float {
+  opacity: 1;
+  scale: 1;
+}
+.about-float-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--teal-tint);
+  color: var(--teal-text);
+}
+.about-float.is-2 .about-float-icon {
+  background: var(--purple-surface);
+  color: var(--purple-text);
+}
+.about-float-words {
+  display: flex;
+  flex-direction: column;
+}
+.about-float small {
+  font-size: 11.5px;
+  color: var(--text-2);
+}
+.about-float strong {
+  font-size: 14px;
+  color: var(--text);
+}
+/* measured from the middle of the panel, so each card overlaps the phone's edge by 30px */
+.about-float.is-1 { inset-inline-start: calc(50% - 206px); }
+.about-float.is-2 { inset-inline-end: calc(50% - 206px); transition-delay: 1.05s; animation-delay: -3s; }
+/* no room beside the phone in a narrower two-column layout */
+@media (max-width: 1180px) {
+  .about-float {
+    display: none;
+  }
+}
+
+/* The small pill at the top of the phone. */
 .phone-screen::after {
   content: '';
   position: absolute;
-  top: 0;
-  left: 24.6%;
-  width: 56%;
-  height: 4.2%;
-  border-radius: 0 0 22% 22% / 0 0 70% 70%;
-  background: #0A0A0C;
+  top: 8px;
+  left: 34%;
+  width: 32%;
+  height: 16px;
+  border-radius: var(--r-pill);
+  background: var(--bg-muted);
   z-index: 2;
 }
 
 /* The assessment page inside the phone. It is built 360px wide, like on a real phone,
-   then shrunk to the width of the photo's screen. index.js measures the photo and sets
+   then shrunk to the width of the phone's screen. index.js measures the screen and sets
    --fit (for example 0.55), so it always fits, whatever the size of the window. */
 .phone-app {
   position: absolute;
@@ -1780,7 +1974,8 @@ html[dir="rtl"] .x-timer {
   display: flex;
   flex-direction: column;
   width: 360px;
-  padding: 0 18px;
+  height: calc(100% / var(--fit, 0.55));   /* exactly as tall as the screen, before it is shrunk */
+  padding: 0 18px 34px;
   background: linear-gradient(180deg, #F3F7FA 0, var(--bg) 260px);
   transform: scale(var(--fit, 0.55));
   transform-origin: 0 0;
@@ -1951,9 +2146,11 @@ html[dir="ltr"] .app-tabs {
 }
 /* the blue box with the dial, the same as on the assessment page */
 .app-hero {
+  flex: 1;   /* takes up any spare height, so nothing is left empty under the bars */
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   margin-top: 18px;
   padding: 24px 18px 56px;
   border-radius: var(--r-lg);
@@ -2079,6 +2276,18 @@ html[dir="ltr"] .app-tabs {
   height: 100%;
   border-radius: inherit;
   background: var(--good);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.9s var(--ease) 1.3s;
+}
+html[dir="rtl"] .app-move b {
+  transform-origin: right;
+}
+.app-move + .app-move b {
+  transition-delay: 1.5s;
+}
+.is-visible .app-move b {
+  transform: none;
 }
 .app-move em {
   font-style: normal;
@@ -2157,7 +2366,7 @@ html[dir="rtl"] .landing .hero-lead {
 html[dir="rtl"] .landing :is(.eyebrow, .chip, .tag, .pill) {
   letter-spacing: 0;
 }
-html[dir="rtl"] .landing :is(.bubble, .road-card, .source div, .about-words) {
+html[dir="rtl"] .landing :is(.bubble, .road-card, .about-words) {
   line-height: 1.8;
 }
 html[dir="rtl"] .landing .composer-text {
@@ -2228,17 +2437,6 @@ html[dir="rtl"] .landing .composer-text {
 }
 .section-head > .lead {
   max-width: 650px;
-}
-.landing .source {
-  min-height: 88px;
-  padding: 16px;
-  background: var(--bg-subtle);
-  border-color: transparent;
-  transition: background var(--dur), border-color var(--dur);
-}
-.landing .source:hover {
-  background: var(--bg);
-  border-color: var(--border-strong);
 }
 .landing .cta {
   background: radial-gradient(ellipse at top right, var(--navy), transparent 70%), var(--navy-deep);
@@ -2345,48 +2543,25 @@ html[dir="rtl"] .landing .hero-title {
       linear-gradient(0deg, var(--bg) 1%, transparent 12%);
   }
 
-  /* explorers: each one becomes a card with its preview under it, all open */
+  /* explorers: the words, then the preview under them, with no lean */
   .x-explore {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
+    gap: 56px;
     margin-top: -32px;
   }
-  .x-item {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  .x-item,
+  .x-item:nth-child(even) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
   }
-  .x-tab,
-  .x-item.is-active .x-tab {
-    padding: 0;
-    border: none;
-    background: none;
-    box-shadow: none;
-    overflow: visible;
+  .x-item:nth-child(even) .x-panel {
+    order: 0;
   }
-  .x-more {
-    grid-template-rows: 1fr;
-  }
-  .x-title {
-    color: var(--text);
-  }
-  .x-number {
-    color: var(--teal);
-  }
-  .x-timer {
-    display: none;
-  }
-  .x-head {
-    cursor: default;
-  }
-  .x-panel,
-  .x-panel .mock-tile,
-  .x-panel .program-card,
-  .x-panel .req-row {
-    opacity: 1;
-    visibility: visible;
+  .x-panel > :first-child {
     transform: none;
+  }
+  .x-panel .mock,
+  .x-panel .req-list {
+    box-shadow: var(--shadow-card);
   }
 
   /* everything that was side by side becomes one column */
@@ -2406,9 +2581,6 @@ html[dir="rtl"] .landing .hero-title {
     order: 0;
   }
 
-  .sources-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 
   /* About: the words first, then the phone under them */
   .about {
@@ -2456,8 +2628,15 @@ html[dir="rtl"] .landing .hero-title {
 }
 
 @media (max-width: 640px) {
-  .hand {
-    width: min(360px, 100%);
+  .about-stage {
+    min-height: 490px;
+  }
+  .device {
+    width: 208px;
+  }
+  /* no room beside the phone on a small screen */
+  .about-float {
+    display: none;
   }
   .hero-text {
     gap: 20px;
@@ -2520,9 +2699,6 @@ html[dir="rtl"] .landing .hero-title {
     margin-inline-start: 0;
   }
 
-  .sources-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .cta {
     padding: 48px 18px;
   }
@@ -2530,15 +2706,11 @@ html[dir="rtl"] .landing .hero-title {
     width: 100%;
   }
 
-  .program-card:nth-child(n) {
-    margin-inline-start: 0;
-  }
 }
 
 @media (max-width: 400px) {
-  .sources-grid,
-  .mock-tiles {
-    grid-template-columns: minmax(0, 1fr);
+  #startup-demo .mock-tiles {
+    min-height: 0;
   }
 }
 
@@ -2558,73 +2730,105 @@ html[dir="rtl"] .landing .hero-title {
   .hero-haze {
     display: none;
   }
-  .x-timer {
-    display: none;
+  .mock-tile.is-back {
+    animation: none;
+  }
+  .net-card {
+    opacity: 1;
+  }
+  .is-visible .net-card {
+    animation: none;
+  }
+  .x-panel .mock-tile,
+  .x-panel .req-row {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .x-panel > :first-child {
+    transform: none;
+  }
+  .about-float,
+  .report-inside > span {
+    opacity: 1;
+    scale: 1;
+    transition: none;
+    animation: none;
+  }
+  .device {
+    translate: 0 0;
+    transition: none;
+  }
+  .app-move b {
+    transform: none;
+    transition: none;
   }
 
 }
 
-/* ---------- Logos in the trusted sources grid ----------
-   A wall of tiles, five across. Each tile: the authority's logo centered in a box
-   of the same height (so wide and tall logos line up), then its name and what
-   Darb uses it for. */
-.landing .sources-grid {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
-  max-width: 900px;       /* a compact block in the middle of the page */
-  margin-inline: auto;
-}
-.landing .source {
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  min-height: 0;
-  padding: 16px 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: var(--bg);
-  text-align: center;
-  transition: border-color var(--dur), box-shadow var(--dur), transform var(--dur) var(--ease);
-}
-.landing .source:hover {
-  border-color: var(--border-strong);
-  background: var(--bg);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-2px);
-}
-/* the box every logo sits in */
-.source-logo {
-  width: 78%;   /* a little air on both sides of the widest logos */
-  height: 36px;
-  object-fit: contain;
-  object-position: center;
-}
-.landing .source div {
-  align-items: center;
-  gap: 1px;
-  font-size: 12.5px;
-  line-height: 1.4;
-}
-.landing .source .text-3 {
-  font-size: 11px;
-}
-@media (max-width: 1000px) {
-  .landing .sources-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
 @media (max-width: 640px) {
-  .landing .sources-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 10px;
-  }
-  .landing .source {
-    padding: 14px 8px 12px;
-  }
-  .source-logo {
-    height: 32px;
-  }
   .marquee-logo {
     height: 32px;
+  }
+}
+
+/* Dots under the swipeable program cards. They only show on a phone. */
+.net-dots {
+  display: none;
+}
+
+/* Phone layout of the program cards. It stays last, so it wins over the tablet rules above. */
+@media (max-width: 640px) {
+  /* A row of cards you swipe through. The next card peeks in at the edge,
+     and the dots below show how many there are and where you are. */
+  .net-cards {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 84%;
+    gap: 12px;
+    margin-inline: -24px;
+    padding: 8px 24px 28px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 24px;
+    scrollbar-width: none;
+  }
+  .net-cards::-webkit-scrollbar {
+    display: none;
+  }
+  .net-card {
+    scroll-snap-align: start;
+  }
+  .net-card:nth-child(even) {
+    top: 0;
+  }
+  .net-dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+  }
+  .net-dots i {
+    width: 7px;
+    height: 7px;
+    border-radius: var(--r-pill);
+    background: var(--border-strong);
+    transition: width 0.25s var(--ease), background 0.25s;
+  }
+  .net-dots i.is-active {
+    width: 22px;
+    background: var(--teal);
+  }
+  /* the startup tiles stay two by two */
+  .x-panel a.mock-tile {
+    padding: 10px;
+  }
+  .mock-brand .similar-logo[class]:has(img) {
+    height: 48px;
+  }
+  .mock-brand .similar-logo img {
+    inset: 8px 14px;
+    width: calc(100% - 28px);
+    height: calc(100% - 16px);
   }
 }
