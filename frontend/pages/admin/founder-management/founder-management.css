@@ -148,3 +148,190 @@
     min-width: 0;
   }
 }
+
+/* ---------- Founders tab: filters by type, and the sign-up answers in the side panel ---------- */
+
+.founder-field-filters {
+  display: contents;
+}
+
+/* The founder's sign-up answers, as an ID card */
+.founder-id {
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  border-radius: var(--r-md);
+  /* the brand gradient, a little deeper so small white text stays easy to read */
+  background: linear-gradient(rgba(27, 68, 103, 0.35), rgba(27, 68, 103, 0.35)), var(--gradient-brand);
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.founder-id[hidden] {
+  display: none;
+}
+.founder-id-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 12px;
+}
+.founder-id-title {
+  font-size: 18px;
+  font-weight: 800;
+}
+.founder-id-subtitle {
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 13px;
+}
+.founder-id-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-block-start: 1px solid rgba(255, 255, 255, 0.28);
+}
+.founder-id-label {
+  display: block;
+  margin-bottom: 2px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 11.5px;
+}
+.founder-id-value {
+  display: block;
+  font-size: 13px;
+  font-weight: 700;
+}
+.founder-id .is-empty {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 400;
+}
+.founder-about-empty {
+  margin: 0;
+  padding: 12px;
+  border-radius: var(--r-md);
+  background: var(--bg-subtle);
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+/* ---------- Insights tab ----------
+   Cards, numbers, bars and colors come from the overview page's stylesheet.
+   These are only the pieces the overview does not have. */
+
+.insight-takeaways {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.insight-takeaway {
+  border-block-start: 3px solid var(--bar);
+}
+.insight-headline {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.insight-detail {
+  font-size: 12.5px;
+}
+
+/* One answer: its name and count, with a bar underneath */
+.insight-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.insight-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 8px;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  text-align: start;
+  cursor: pointer;
+  transition: background var(--dur-fast);
+}
+.insight-bar:hover:not(:disabled) {
+  background: var(--bg-tile);
+}
+.insight-bar:disabled {
+  cursor: default;
+}
+.insight-bar-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.insight-bar-name {
+  overflow-wrap: anywhere;
+}
+.insight-bar-count {
+  font-weight: 700;
+  white-space: nowrap;
+}
+.insight-track {
+  display: block;
+  flex: none;
+  width: 100%;
+  max-width: none;
+}
+
+/* Choosing a type, and that type's questions */
+.insight-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.insight-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bar);
+}
+.insight-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 28px;
+}
+.insight-field {
+  min-width: 0;
+}
+.insight-field-title {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.insight-words {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+.insight-words li {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--bg-tile);
+}
+
+@media (max-width: 760px) {
+  .insight-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
