@@ -11,6 +11,13 @@ const insertedRows: unknown[] = [];
 vi.mock('../lib/supabase', () => ({
   getSupabase: () => ({
     from: (table: string) => ({
+      // The startups table knows every id except the invented one.
+      select: () => ({
+        in: async (_column: string, ids: string[]) => ({
+          data: ids.filter((id) => id !== 'INVENTED').map((startup_id) => ({ startup_id })),
+          error: null,
+        }),
+      }),
       delete: () => ({
         eq: async (column: string, value: string) => {
           calls.push(`delete ${table} where ${column}=${value}`);
@@ -22,6 +29,12 @@ vi.mock('../lib/supabase', () => ({
         insertedRows.push(...rows);
         return { error: null };
       },
+      update: (values: { iss: number | null }) => ({
+        eq: async (column: string, value: string) => {
+          calls.push(`update ${table} iss=${values.iss} where ${column}=${value}`);
+          return { error: null };
+        },
+      }),
     }),
   }),
 }));
@@ -93,6 +106,17 @@ describe('filtering, duplicates and ranking', () => {
     expect(competitors[0].similarity).toBe(0.9);
   });
 
+  it('treats dataset rows with the same website as one company, but not a shared host', () => {
+    const { competitors } = selectCompetitors([
+      candidate('ST_368', 0.73, { website: 'https://misraj.sa/' }),
+      candidate('ST_369', 0.72, { website: 'https://misraj.sa/' }),
+      candidate('ST_366', 0.71, { website: 'misraj.sa' }),
+      candidate('ST_1', 0.6, { website: 'https://linktr.ee/one' }),
+      candidate('ST_2', 0.5, { website: 'https://linktr.ee/two' }),
+    ]);
+    expect(competitors.map((c) => c.startup_id)).toEqual(['ST_368', 'ST_1', 'ST_2']);
+  });
+
   it('removes a web duplicate by website domain', () => {
     const { competitors } = selectCompetitors([
       candidate('ST_1', 0.8, { website: 'https://www.jahez.net' }),
@@ -144,8 +168,55 @@ describe('saving', () => {
     expect(calls).toEqual([
       `delete similar_startup_results where assessment_id=${ASSESSMENT}`,
       'insert similar_startup_results 1',
+      `update assessments iss=85 where assessment_id=${ASSESSMENT}`,
     ]);
     expect(insertedRows).toEqual([{ assessment_id: ASSESSMENT, startup_id: 'A', similarity_score: 0.9, rank: 1 }]);
     expect(out.competitors).toHaveLength(2); // the web competitor is still returned
+  });
+});
+
+describe('code guard', () => {
+  // A fake request context like the one an analysis shares, with what similarity_search really returned.
+  function analysisContext(found: StartupCandidate[]) {
+    const values = new Map<string, unknown>([['darb_search_results', new Map(found.map((c) => [c.startup_id, c]))]]);
+    return { requestContext: { get: (k: string) => values.get(k), set: (k: string, v: unknown) => values.set(k, v) }, values };
+  }
+
+  it('drops a startup the search never returned, and keeps the search\'s own score and name', async () => {
+    const ctx = analysisContext([candidate('A', 0.62, { name: 'Real Name' })]);
+    const out: any = await finalizeCompetitorsTool.execute!(
+      { assessment_id: ASSESSMENT, startup_ids: ['A', 'INVENTED'], candidates: [candidate('A', 0.99, { name: 'Renamed' })] },
+      ctx as never,
+    );
+    expect(out.competitors).toHaveLength(1);
+    expect(out.competitors[0]).toMatchObject({ startup_id: 'A', similarity: 0.62, name: 'Real Name' });
+    expect(out.iss).toBe(62);
+    expect(ctx.values.get('darb_finalize_output')).toEqual(out); // left for delegate_competitor_analysis
+  });
+
+  it('uses the assessment from the analysis, not the id the model typed', async () => {
+    const ctx = analysisContext([candidate('A', 0.5)]);
+    const real = '9b0c3f2b-6c1e-4a4d-8e2b-5d6e7f8a9b0c';
+    ctx.values.set('assessmentId', real);
+    const out: any = await finalizeCompetitorsTool.execute!({ assessment_id: ASSESSMENT, startup_ids: ['A'] }, ctx as never);
+    expect(out.assessment_id).toBe(real);
+    expect(calls[0]).toBe(`delete similar_startup_results where assessment_id=${real}`);
+  });
+
+  it('run by hand, drops a dataset startup that is not in public.startups', async () => {
+    const out = await run([candidate('A', 0.9), candidate('INVENTED', 0.95)]);
+    expect(out.competitors.map((c: any) => c.startup_id)).toEqual(['A']);
+  });
+
+  it('returns a preview and saves nothing when an agent calls it without an assessment', async () => {
+    const ctx = analysisContext([candidate('A', 0.62)]);
+    const out: any = await finalizeCompetitorsTool.execute!(
+      { assessment_id: ASSESSMENT, startup_ids: ['A'] },
+      { ...ctx, agent: { agentId: 'competitor-agent' } } as never,
+    );
+    expect(calls).toEqual([]); // the id the model typed is never used to save
+    expect(out.status).toBe('ok');
+    expect(out.iss).toBe(62);
+    expect(out.message).toMatch(/Preview only/);
   });
 });

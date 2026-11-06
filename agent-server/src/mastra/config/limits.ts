@@ -9,9 +9,15 @@ export const MAX_TOOL_STEPS = 12;
 export const DEFAULT_SIMILARITY_K = 10;
 export const MAX_SIMILARITY_K = 50;
 
-// web_search: queries per call, and results Tavily returns for each query.
+// web_search: calls per analysis, queries per call, and results Tavily returns for each query.
+export const MAX_WEB_SEARCH_CALLS = 2;
 export const MAX_WEB_QUERIES = 3;
 export const MAX_RESULTS_PER_QUERY = 5;
+
+// extract_and_verify_profile: pages opened per analysis, companies taken from one page, and page text kept.
+export const MAX_PAGES_PER_ANALYSIS = 4;
+export const MAX_PROFILES_PER_PAGE = 5;
+export const MAX_PAGE_CHARS = 15_000;
 
 // embed-startups script: how many startups are sent to OpenAI in one request.
 export const EMBED_BATCH_SIZE = 100;
