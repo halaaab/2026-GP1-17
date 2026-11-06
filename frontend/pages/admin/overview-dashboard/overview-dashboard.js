@@ -18,6 +18,7 @@ import { getAccount } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import { scoreBand, whenText } from '../../../shared/assessments.js';
 import { completeness } from '../../founder/incubators-accelerators/programs.js';
+import { TYPE_COLORS } from '../founder-management/founder-fields.js';
 import '../../../shared/guard.js';
 
 const ROOT = new URL('../../../', import.meta.url).href;
@@ -255,13 +256,17 @@ function change(current, previous, inPoints = false) {
   return { text: `${difference > 0 ? '+' : ''}${difference}%`, kind: difference > 0 ? 'up' : difference < 0 ? 'down' : 'flat' };
 }
 
+// Each KPI has its own pastel and icon; its sparkline follows the same color
+const KPI_LOOKS = [['users', 1], ['file', 2], ['checkCircle', 3], ['trendUp', 4]];
+
 function kpiCard({ label: name, value, delta, spark, foot, link }, index) {
+  const [iconName, color] = KPI_LOOKS[index % KPI_LOOKS.length];
   const chip = { up: 'chip-good', down: 'chip-risk', flat: '' }[delta.kind];
   const arrow = delta.kind === 'flat' ? '' : `<span class="ov-arrow ${delta.kind === 'down' ? 'is-down' : ''}">${icon('arrowUp')}</span>`;
   return `
-    <article class="card ov-kpi fade-up" style="--i: ${index}">
+    <article class="card ov-kpi fade-up" style="--i: ${index}; --bar: var(--pastel-${color}-text); --bar-tint: var(--pastel-${color}-tint);">
       <div class="ov-kpi-top">
-        <span class="stat-label">${name}</span>
+        <span class="ov-kpi-title"><span class="ov-kpi-icon">${icon(iconName)}</span><span class="stat-label">${name}</span></span>
         <span class="chip ${chip}" title="${safe(fill('overview.vsPrevious', { days }))}">${arrow}<span dir="ltr">${delta.text}</span></span>
       </div>
       <span class="stat-value">${value}</span>
@@ -530,9 +535,13 @@ function showPeople() {
     const assessed = founders.filter((user) => scoresOf.has(user.user_id)).length;
     const scores = founders.flatMap((user) => scoresOf.get(user.user_id) || []);
     const average = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    // a founder type keeps its pastel here, the same as its chip on the Founders page
+    const color = peopleGroup === 'type' ? TYPE_COLORS[value] : null;
     return `
-      <tr>
-        <td class="ov-audience-name">${safe(groupName(peopleGroup, value))}</td>
+      <tr ${color ? `style="--bar: var(--pastel-${color}-text); --bar-tint: var(--pastel-${color}-tint);"` : ''}>
+        <td class="ov-audience-name">${peopleGroup === 'type' && value
+          ? `<a class="chip chip-pastel-${color}" href="${ROOT}${PAGES.founders}?tab=insights&type=${safe(value)}">${safe(groupName(peopleGroup, value))}</a>`
+          : safe(groupName(peopleGroup, value))}</td>
         <td><strong>${number(founders.length)}</strong> <span class="text-3">${percent(founders.length, total)}%</span></td>
         <td>${progress(ideas, founders.length)}</td>
         <td>${progress(assessed, founders.length)}</td>
