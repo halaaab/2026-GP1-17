@@ -1,0 +1,43 @@
+test_id,kind,language,query_text,expected_startup,note
+R01,related,en,AI system for chicken farms to cut costs and track production,PoultrySync,poultry AI
+R02,related,ar,تقنية تقلل هدر الطعام وتراقب سلسلة التبريد للمطاعم والمصانع,Uvera,food waste and cold chain
+R03,related,en,sensors that monitor floods and stormwater drains in cities,Sadeem,smart city water
+R04,related,ar,شركة تركب روبوتات وأتمتة للمصانع في السعودية,Swarm robotics,industrial robots
+R05,related,en,we build satellites and sell earth observation data,SARSAT,space
+R06,related,ar,خدمة طباعة ثلاثية الأبعاد لقطع صناعية للشركات,Namthaja,3D printing
+R07,related,en,turning food and farm waste into compost for desert soil,Edama,waste to compost
+R08,related,ar,منصة لشراء مواد البناء وطلب عروض أسعار من الموردين,BuildHop,construction supply
+R09,related,en,B2B app where small shops order wholesale goods from distributors,Sary,wholesale B2B
+R10,related,ar,تطبيق تقارن فيه أسعار قطع غيار السيارات من المحلات,Speero,car spare parts
+R11,related,en,roadside help when your car breaks down like towing and battery,Morni,roadside assistance
+R12,related,ar,نظام ذكي لإدارة مناديب التوصيل للميل الأخير,Supermile,last mile
+R13,related,en,bring famous foreign restaurant brands to cloud kitchens in Riyadh,Kitchout,cloud kitchens
+R14,related,ar,تطبيق ترفع فيه ملف وتطبعه ويوصلونه لك,Printo Go,printing on demand
+R15,related,en,cybersecurity company that watches the dark web for leaked company data,Hathr,cybersecurity
+R16,related,ar,منصة تساعد الشركات تدير الاشتراكات الشهرية وتقلل إلغاء العملاء,Techrar,subscriptions SaaS
+R17,related,en,online payment gateway so stores can accept mada and Apple Pay,HyperPay,payments
+R18,related,ar,مكتب محاسبة يسوي مسك الدفاتر والرواتب والإقرارات الضريبية,PiFlow,accounting
+R19,related,en,interior design for offices and shops,makan.design,interior design
+R20,related,ar,منصة إعلانات تربط التجار والناشرين وتشتري المساحات الإعلانية,Quantum,adtech
+R21,related,en,rent a car by the day or month and they deliver it to your door,Go Steer,car rental
+R22,related,ar,تطبيق غسيل ملابس يستلم ويغسل ويرجع لك الملابس,Wilow,laundry
+R23,related,en,cybersecurity training labs for university students to get jobs,HackSpace,cyber training
+R24,related,ar,تطبيق صحي لإنقاص الوزن ومتابعة السكري مع مختص عن بعد,Hanna Health,digital health
+R25,related,en,instalments for school fees for parents,Jeel,BNPL tuition
+R26,related,ar,استشارات لإعادة زراعة الشعاب المرجانية للمنتجعات الساحلية,Ocean Revive,coral reefs
+R27,related,en,app to book maintenance workers like plumbers and AC repair,Iajeer,home maintenance
+R28,related,ar,منصة توظيف تعرض الرواتب الحقيقية وتتواصل مباشرة مع المرشحين,Uptal,recruitment
+U01,unrelated,en,a factory making steel pipes for oil pipelines,,heavy industry
+U02,unrelated,ar,مزرعة إبل وحليب نوق في الأحساء,,livestock
+U03,unrelated,en,traditional barber shop in Riyadh,,personal service
+U04,unrelated,ar,ورشة إصلاح قوارب الصيد في جازان,,boat repair
+U05,unrelated,en,a mosque cleaning service,,cleaning
+U06,unrelated,ar,محل خياطة فساتين أعراس,,tailoring
+U07,unrelated,en,date palm pruning and pollination service for farms,,agriculture service
+U08,unrelated,ar,فرن تنور شعبي يبيع خبز وفطاير,,bakery
+U09,unrelated,en,a small oud and perfume shop in the old market,,retail shop
+U10,unrelated,ar,خدمة تنظيف خزانات المياه للبيوت,,cleaning
+U11,unrelated,en,carpentry workshop making wooden doors,,carpentry
+U12,unrelated,ar,منحل لإنتاج العسل الطبيعي,,beekeeping
+U13,unrelated,en,brick factory for construction companies,,building materials
+U14,unrelated,ar,محل بيع أعلاف ومستلزمات الماشية,,livestock retail

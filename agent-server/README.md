@@ -51,15 +51,42 @@ To stop the server, press `Ctrl + C` in the terminal.
 
 ```
 Conversational Agent
- ├── delegate-competitor-analysis → Competitor Agent
- │                                   ├── web-search
- │                                   ├── similarity-search
- │                                   ├── extract-and-verify-profile
- │                                   └── build-comparison-matrix
- └── predict-survival → ML service
+ ├── delegate_competitor_analysis → Competitor Agent
+ │                                   ├── similarity_search
+ │                                   └── finalize_competitors (top 3, ISS, saves the result)
+ │                                   (the result also carries the comparison matrix, built in code)
+ ├── get_competitor_details   (follow-up questions, from the database)
+ └── run_what_if              (creates a changed version, analyses it, returns the exact before → after)
 ```
 
-The two tools of the Conversational Agent are connected. The Competitor Agent's four tools are not built yet, and `predict-survival` returns `model_not_connected` until the ML service is ready.
+The website starts each conversation with `userId` and `assessmentId` in the request context.
+`web_search`, `extract-and-verify-profile` and `predict-survival` are not connected yet.
+
+How numbers stay true: similarity_search records every startup it really returns. finalize_competitors accepts only those,
+with the search's own name, description and score, and delegate_competitor_analysis returns only finalize_competitors' result,
+never the Competitor Agent's own text.
+
+## Login and security
+
+Every API request is checked before any agent runs (`src/mastra/server/auth.ts`):
+
+- The website sends the founder's Supabase access token: `Authorization: Bearer <token>`.
+- The server checks it with Supabase and that the account is active, then uses the user id **from the token**.
+  An id the caller types is ignored, so a founder can never reach another founder's data.
+- `AUTH_MODE=dev` lets Mastra Studio work without signing in, for testing. Live, use `AUTH_MODE=required`.
+
+Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra` schema, so it survives restarts on the host.
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm test` | Runs the automated tests with fake databases and fake AI (no keys, no cost, a few seconds). |
+| `npm run test:coverage` | The same tests, plus how much of the code they cover. |
+| `npm run test:live -- <username>` | A real chat with the real agents, OpenAI, Tavily and Supabase, checked against the database (16 checks, about 2 minutes, a few cents). Deletes its test data at the end. Run it before a demo. |
+| `npm run classify:startups` | Gives each startup its ISIC4 section and division (only startups without one). Add `-- --dry-run --limit 20` to preview without saving. |
+| `npm run embed:startups` | Embeds every startup that has no embedding yet. Safe to run again. |
+| `npm run test:assessment -- <username>` | Creates a test idea and assessment for that founder, and prints the request context to paste into Studio. |
 
 ## Where everything goes
 
@@ -70,6 +97,9 @@ The two tools of the Conversational Agent are connected. The Competitor Agent's 
 | Tavily search | `src/mastra/tools/web-search.ts` |
 | Approved websites | `src/mastra/config/approved-domains.ts` |
 | Which AI model each agent uses | `src/mastra/config/models.ts` |
+| Usage limits (steps, results, daily analyses) | `src/mastra/config/limits.ts` |
+| The ISIC4 sections (sector) founders choose from | `src/mastra/config/sectors.ts` |
+| The 85 ISIC4 divisions (sub-sector), from GASTAT's SSIC file | `src/mastra/config/isic-divisions.ts` |
 | The Supabase connection | `src/mastra/lib/supabase.ts` |
 | Registering a new agent | `src/mastra/index.ts` |
 | Calling the model from the agents | `src/mastra/tools/predict-survival.ts` |
@@ -87,7 +117,7 @@ To add a tool:
 
 To remove a tool, delete its file and its line in the agent's `tools` list.
 
-The Conversational Agent only knows its two tools. You can change the Competitor Agent's tools without touching it, as long as `delegate-competitor-analysis` keeps the same output.
+You can change the Competitor Agent's tools without touching it, as long as `delegate-competitor-analysis` keeps the same output.
 
 ## Arabic and English
 
