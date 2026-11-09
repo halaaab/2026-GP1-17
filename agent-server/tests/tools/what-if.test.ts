@@ -1,6 +1,6 @@
 // Tests for run_what_if and the comparison. The database and the analysis are replaced by fakes.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { OwnedAssessment } from '../lib/assessments';
+import type { OwnedAssessment } from '../../src/mastra/lib/assessments';
 
 const USER = 'user-1';
 const ORIGINAL = '11111111-1111-4111-8111-111111111111';
@@ -10,8 +10,6 @@ const base: Omit<OwnedAssessment, 'assessment_id' | 'inputs' | 'iss'> = {
   idea_id: 'idea-1',
   thread_id: 'thread-1',
   language: 'en',
-  parent_assessment_id: null,
-  scenario_label: null,
   analysed_at: null,
   fis_score: null,
 };
@@ -28,7 +26,7 @@ function reset() {
   };
 }
 
-vi.mock('../lib/assessments', async (importOriginal) => ({
+vi.mock('../../src/mastra/lib/assessments', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   loadOwnedAssessment: async (id: string, userId: string) => (userId === USER ? (owned[id] ?? null) : null),
 }));
@@ -45,14 +43,14 @@ const savedCompetitors: Record<string, unknown[]> = {
     { startup_id: 'C', rank: 2, similarity_score: 0.65, startups: { startup_name: 'Gamma', startup_name_ar: 'جاما' } },
   ],
 };
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => ({
     from: () => {
       let assessmentId = '';
       const query = {
         insert: (row: Record<string, unknown>) => {
           inserted.push(row);
-          owned[WHAT_IF] = { ...base, assessment_id: WHAT_IF, iss: 72.5, inputs: row.scenario_inputs as OwnedAssessment['inputs'] };
+          owned[WHAT_IF] = { ...base, assessment_id: WHAT_IF, iss: 72.5, inputs: row.confirmed_inputs as OwnedAssessment['inputs'] };
           return { select: () => ({ single: async () => ({ data: { assessment_id: WHAT_IF }, error: null }) }) };
         },
         select: () => query,
@@ -70,7 +68,7 @@ vi.mock('../lib/supabase', () => ({
 // The analysis itself is tested elsewhere; here it only reports what it was asked to analyse.
 const analysed: unknown[] = [];
 let analysisStatus = 'ok';
-vi.mock('./delegate-competitor-analysis', async (importOriginal) => ({
+vi.mock('../../src/mastra/tools/delegate-competitor-analysis', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   runCompetitorAnalysis: async (input: { assessment_id: string }) => {
     analysed.push(input);
@@ -78,12 +76,12 @@ vi.mock('./delegate-competitor-analysis', async (importOriginal) => ({
   },
 }));
 
-const { runWhatIfTool } = await import('./run-what-if');
-const { diffInputs } = await import('../lib/what-if');
+const { runWhatIfTool } = await import('../../src/mastra/tools/run-what-if');
+const { diffInputs } = await import('../../src/mastra/lib/what-if');
 
 const asFounder = (userId = USER) => ({ agent: { resourceId: userId } }) as never;
 const run = (changes: Record<string, unknown>, userId = USER) =>
-  runWhatIfTool.execute!({ parent_assessment_id: ORIGINAL, scenario_label: 'Jeddah', changes, language: 'en' } as never, asFounder(userId)) as Promise<any>;
+  runWhatIfTool.execute!({ base_assessment_id: ORIGINAL, changes, language: 'en' } as never, asFounder(userId)) as Promise<any>;
 
 beforeEach(() => {
   reset();
@@ -97,8 +95,8 @@ describe('run_what_if', () => {
     const out = await run({ region: 'Jeddah' });
     expect(out.status).toBe('ok');
     expect(inserted[0]).toMatchObject({
-      parent_assessment_id: ORIGINAL,
-      scenario_inputs: { idea_text: 'Home-cooked food delivery app', sector: 'I', sub_sector: '56', region: 'Jeddah' },
+      idea_id: expect.any(String),
+      confirmed_inputs: { idea_text: 'Home-cooked food delivery app', sector: 'I', sub_sector: '56', region: 'Jeddah' },
     });
     expect(analysed[0]).toMatchObject({ assessment_id: WHAT_IF, region: 'Jeddah', sector: 'I', sub_sector: '56' });
     expect(out.comparison.inputs_changed).toEqual([{ field: 'region', before: 'Riyadh', after: 'Jeddah' }]);
@@ -112,7 +110,7 @@ describe('run_what_if', () => {
   it('ignores empty values the model sends for inputs that stay the same', async () => {
     const out = await run({ region: 'Jeddah', sector: null, sub_sector: null, idea_text: null });
     expect(out.status).toBe('ok');
-    expect(inserted[0]).toMatchObject({ scenario_inputs: { sector: 'I', sub_sector: '56', region: 'Jeddah' } });
+    expect(inserted[0]).toMatchObject({ confirmed_inputs: { sector: 'I', sub_sector: '56', region: 'Jeddah' } });
   });
 
   it('refuses a change that changes nothing', async () => {

@@ -25,8 +25,7 @@ export const runWhatIfTool = createTool({
   description:
     'Use this only after the founder confirms a what-if scenario. It creates the changed version beside the earlier one, analyses it, and returns exactly what changed.',
   inputSchema: z.object({
-    parent_assessment_id: z.uuid().describe('The version the founder wants to change: the current one, or an earlier one they chose.'),
-    scenario_label: z.string().min(1).max(80).describe('A short name for the change, in the founder\'s language, e.g. "Jeddah instead of Riyadh".'),
+    base_assessment_id: z.uuid().describe('The version the founder wants to change: the current one, or an earlier one they chose.'),
     changes: Changes.describe('Only the inputs that change. Everything else is copied from the parent.'),
     language: z.enum(['ar', 'en']),
   }),
@@ -37,7 +36,7 @@ export const runWhatIfTool = createTool({
     comparison: Comparison.nullable(),
     message: z.string(),
   }),
-  execute: async ({ parent_assessment_id, scenario_label, changes, language }, context) => {
+  execute: async ({ base_assessment_id, changes, language }, context) => {
     type Status = 'no_change' | 'not_found' | 'invalid' | 'error';
     const stop = (status: Status, message: string) => ({ status, assessment_id: null, analysis: null, comparison: null, message });
 
@@ -50,7 +49,7 @@ export const runWhatIfTool = createTool({
       const userId = getUserId(context);
       if (!userId) return stop('error', 'No signed-in founder for this conversation.');
 
-      const parent = await loadOwnedAssessment(parent_assessment_id, userId);
+      const parent = await loadOwnedAssessment(base_assessment_id, userId);
       if (!parent) return stop('not_found', 'That assessment does not exist for this founder.');
 
       // 1. The changed version: the parent's inputs plus the changes. The model may send empty (null) values
@@ -68,7 +67,7 @@ export const runWhatIfTool = createTool({
       const problem = checkClassification(sector, sub_sector);
       if (problem) return stop('invalid', problem);
 
-      const assessmentId = await createScenario(parent, scenario_label, inputs);
+      const assessmentId = await createScenario(parent, inputs);
 
       // 2. The analysis of the new version.
       const analysis = await runCompetitorAnalysis({ assessment_id: assessmentId, idea_text, sector, sub_sector, region, language }, context);

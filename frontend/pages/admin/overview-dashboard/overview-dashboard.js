@@ -37,7 +37,7 @@ const PAGES = {
 // founder types → their words in translations (from the sign-up page)
 const TYPE_WORDS = {
   student: 'signup.student', entrepreneur: 'signup.entrepreneur', business_owner: 'signup.owner',
-  investor: 'signup.investor', other: 'signup.other',
+  investor: 'signup.investor', none: 'founders.justFounder',
 };
 
 let data = null;       // everything loaded from the database
@@ -113,7 +113,7 @@ async function readAll(table, columns) {
 
 async function load() {
   const results = await Promise.all([
-    readAll('users', 'user_id, full_name, user_type, region, status, locale, created_at'),
+    readAll('founder_profiles', 'user_id, full_name, user_type, region, status, locale, created_at'),
     readAll('startup_ideas', 'idea_id, user_id, idea_name, sector, created_at'),
     readAll('assessments', 'assessment_id, idea_id, status, fis_score, risk_level, started_at, completed_at, roadmap_generated_at'),
     readAll('startups', 'startup_id, sector, startup_description'),
@@ -129,7 +129,9 @@ async function load() {
     return null;
   }
 
-  const [users, ideas, assessments, startups, programs, requirements, market] = results.map((result) => result.rows);
+  const [founders, ideas, assessments, startups, programs, requirements, market] = results.map((result) => result.rows);
+  // no type = just a founder (migration 0022)
+  const users = founders.map((user) => ({ ...user, user_type: user.user_type || 'none' }));
   document.querySelector('#load-error').hidden = !results.some((result) => result.failed);
 
   // quick look-ups: idea → founder, founder → name

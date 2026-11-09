@@ -1,5 +1,6 @@
 // Supervisor agent: the only agent that talks to the founder. It collects and confirms the idea,
-// hands the analysis to the Competitor Agent, answers follow-up questions and runs what-if scenarios.
+// hands the analysis to the Competitor Agent, gets the survival prediction from the ML model,
+// answers follow-up questions and runs what-if scenarios.
 import { Agent } from '@mastra/core/agent';
 import { Memory } from '@mastra/memory';
 import { MAX_ANALYSES_PER_DAY } from '../config/limits';
@@ -9,6 +10,7 @@ import { ISIC_DIVISION_LIST } from '../config/isic-divisions';
 import { ISIC_SECTION_LIST, NATIONWIDE } from '../config/sectors';
 import { delegateCompetitorAnalysisTool } from '../tools/delegate-competitor-analysis';
 import { getCompetitorDetailsTool } from '../tools/get-competitor-details';
+import { predictSurvivalTool } from '../tools/predict-survival';
 import { runWhatIfTool } from '../tools/run-what-if';
 
 // threadId is the conversation id and resourceId is the user id; both are passed in on each call.
@@ -63,6 +65,12 @@ Running the analysis: after the founder confirms, call delegate_competitor_analy
 - error: say the analysis failed, and offer to retry.
 A competitor whose source is "web" was found on an approved website and verified there: give its source_url as the link it came from. Never add competitors of your own, and never change a name, a percentage or the ISS.
 
+Survival prediction: after you present the competitor analysis, call predict_survival once with the confirmed sector, sub-sector and region, and add its result:
+- ok: give survival_probability as a percentage (× 100, whole number) and say in one sentence that it is Darb's estimate from Saudi business records of how likely a business like this is to survive, not a guarantee.
+- model_not_connected: say the survival prediction is not available yet.
+- error: say the survival prediction could not be calculated right now.
+Never estimate a survival chance yourself.
+
 Follow-up questions about a competitor: when the founder asks for more details about one of the competitors you showed, or why it is relevant, call get_competitor_details with its startup_id first, and answer only from what it returns. For a web competitor, get_competitor_details has nothing, so answer only from the description the analysis returned and point to its source_url. A field that is null means Darb does not have that information, so say so instead of guessing. To explain why a competitor is relevant, compare the founder's confirmed idea with the competitor's stored description, products and target market, and give its similarity percentage. Never add funding, revenue, customer numbers, founders or any other fact the tool did not return, even if you think you know it.
 
 Corrections and what-if scenarios are different. A correction ("I meant Jeddah") fixes the current idea: update it and confirm again as usual. A what-if ("what if I targeted Jeddah?") keeps the current version and tries a changed one beside it. If you are not sure which the founder means, ask.
@@ -76,7 +84,7 @@ Staying on track: if the founder asks about something unrelated, answer briefly 
 export const conversationalAgent = new Agent({
   id: 'conversational-agent',
   name: 'Conversational Agent',
-  description: 'Talks to the founder, confirms the idea, runs the competitor analysis and what-if scenarios.',
+  description: 'Talks to the founder, confirms the idea, runs the competitor analysis, the survival prediction and what-if scenarios.',
   // The website starts each conversation with its assessment_id in the request context ("assessmentId").
   instructions: ({ requestContext }) => {
     const assessmentId = requestContext?.get('assessmentId');
@@ -92,6 +100,7 @@ export const conversationalAgent = new Agent({
   tools: {
     delegate_competitor_analysis: delegateCompetitorAnalysisTool,
     get_competitor_details: getCompetitorDetailsTool,
+    predict_survival: predictSurvivalTool,
     run_what_if: runWhatIfTool,
   },
 });

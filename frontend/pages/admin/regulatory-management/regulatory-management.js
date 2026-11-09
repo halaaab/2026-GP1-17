@@ -6,7 +6,6 @@ import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
-import { getCurrentUser } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
   loadRequirements, field, label, stagesOf, allStages, dateText, fillFilter, authorityColors, fitsIsic, divisionsOf, logoUrl, initials,
@@ -33,8 +32,8 @@ const deleteConfirm = document.querySelector('#delete-confirm');
 const TEXT_COLUMNS = [
   'name_en', 'name_ar', 'authority', 'authority_ar', 'authority_logo', 'category', 'category_ar', 'business_stage',
   'mandatory', 'regulatory_status', 'applies_when', 'applies_when_ar',
-  'what_darb_should_surface', 'what_darb_should_surface_ar', 'fees_thresholds', 'fees_thresholds_ar',
-  'official_source_url', 'service_url', 'last_verified', 'founder_trigger_fields', 'notes',
+  'what_darb_surface', 'what_darb_surface_ar', 'fees_thresholds', 'fees_thresholds_ar',
+  'official_source_url', 'service_url', 'last_verified',
 ];
 
 /* The ID of a new requirement. Admins never see or type it: it is the database's key.
@@ -265,9 +264,9 @@ form.addEventListener('submit', async (event) => {
   if (editingId) {
     result = await supabase.from('regulatory_requirements').update(values).eq('requirement_id', id).select().single();
   } else {
-    const user = await getCurrentUser();
+    // the database remembers which admin added it (requirement_maintenance, migration 0024)
     result = await supabase.from('regulatory_requirements')
-      .insert({ ...values, requirement_id: id, created_by_admin_id: user?.id ?? null })
+      .insert({ ...values, requirement_id: id })
       .select().single();
   }
   saveButton.classList.remove('is-loading');

@@ -50,15 +50,15 @@ afterEach(() => {
 });
 
 // Fake embeddings: the idea is [1, 0]; certificates point the same way, a marketplace partly.
-vi.mock('../lib/embeddings', () => ({
+vi.mock('../../src/mastra/lib/embeddings', () => ({
   embedTexts: async (texts: string[]) =>
     texts.map((t) => (t.startsWith('Art authentication') ? [1, 0] : t.includes('certificates') ? [0.8, 0.6] : t.includes('marketplace') ? [0.5, 0.866] : [0, 1])),
   toPgVector: (e: number[]) => JSON.stringify(e),
 }));
 
-const { webSearchTool } = await import('./web-search');
-const { extractAndVerifyProfileTool } = await import('./extract-and-verify-profile');
-const { finalizeCompetitorsTool } = await import('./finalize-competitors');
+const { webSearchTool } = await import('../../src/mastra/tools/web-search');
+const { extractAndVerifyProfileTool } = await import('../../src/mastra/tools/extract-and-verify-profile');
+const { finalizeCompetitorsTool } = await import('../../src/mastra/tools/finalize-competitors');
 
 function analysisContext() {
   const values = new Map<string, unknown>([
@@ -105,9 +105,9 @@ describe('web flow', () => {
 
   it('uses only the snippet for a "snippet only" site, without opening the page', async () => {
     const ctx = analysisContext();
-    const { recordWebResults } = await import('../lib/web-registry');
+    const { recordWebResults } = await import('../../src/mastra/lib/web-registry');
     recordWebResults(ctx, [
-      { title: 't', url: 'https://www.crunchbase.com/organization/rawi', snippet: 'Rawi Art. Rawi Art issues digital certificates of authenticity for artworks sold by Saudi galleries.', domain: 'crunchbase.com', status: 'needs_checking', label: 'single', method: 'snippet', query: 'q' },
+      { title: 't', url: 'https://www.crunchbase.com/organization/rawi', snippet: 'Rawi Art. Rawi Art issues digital certificates of authenticity for artworks sold by Saudi galleries.', domain: 'crunchbase.com', method: 'snippet', query: 'q' },
     ]);
     const before = extractCalls.length;
     const page: any = await extractAndVerifyProfileTool.execute!({ url: 'https://www.crunchbase.com/organization/rawi' }, ctx as never);

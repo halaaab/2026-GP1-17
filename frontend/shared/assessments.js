@@ -145,6 +145,12 @@ async function loadSimilar(assessment) {
   }));
 }
 
+// part as a percent of whole, with two decimals (0.049% shows as 0.05%); null when either is missing
+function shareOf(part, whole) {
+  if (part === null || part === undefined || !whole) return null;
+  return Math.round((part / whole) * 10000) / 100;
+}
+
 async function loadMarket(assessment) {
   const code = MAIN_ACTIVITY[assessment.sector];
   if (!code) return null;
@@ -161,22 +167,23 @@ async function loadMarket(assessment) {
   }
 
   // the newest year that has numbers
-  const row = data.find((item) => item.enterprises_total !== null);
+  const row = data.find((item) => item.total_enterprises !== null);
   if (!row) return null;
 
   return {
     activity: { en: row.economic_activity_name_en, ar: row.economic_activity_name_ar || row.economic_activity_name_en },
     year: row.year,
     sourceUrl: row.source_url || '',
-    enterprises: row.enterprises_total,
+    enterprises: row.total_enterprises,
     newEnterprises: row.new_enterprises_total,
     employees: row.employees_total,
     growth: row.enterprises_growth_pct,   // percent, compared with the year before
+    // each size's share of all enterprises, in percent (migration 0026 stores the counts only)
     sizes: [
-      { label: 'size.micro',  value: row.share_micro_pct },
-      { label: 'size.small',  value: row.share_small_pct },
-      { label: 'size.medium', value: row.share_medium_pct },
-      { label: 'size.large',  value: row.share_large_pct },
+      { label: 'size.micro',  value: shareOf(row.micro, row.total_enterprises) },
+      { label: 'size.small',  value: shareOf(row.small, row.total_enterprises) },
+      { label: 'size.medium', value: shareOf(row.medium, row.total_enterprises) },
+      { label: 'size.large',  value: shareOf(row.large, row.total_enterprises) },
     ].filter((size) => size.value !== null),
   };
 }
@@ -212,7 +219,7 @@ async function loadRoadmap(assessment) {
       title: { en: row.name_en, ar: row.name_ar || row.name_en },
       authority: row.authority || '',   // in English: also used to find the authority's logo
       authorityName: { en: row.authority || '', ar: row.authority_ar || row.authority || '' },
-      // "what_darb_should_surface" is written as instructions for the agent, so until the
+      // "what_darb_surface" is written as instructions for the agent, so until the
       // agent rewrites it for the founder, the plain "applies when" sentence is shown
       guidance: { en: row.applies_when || '', ar: row.applies_when_ar || row.applies_when || '' },
       type: row.mandatory === 'Required' ? 'mandatory' : 'conditional',

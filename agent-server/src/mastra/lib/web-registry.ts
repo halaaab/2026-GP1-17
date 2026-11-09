@@ -5,8 +5,6 @@ export type WebResult = {
   url: string;
   snippet: string;
   domain: string;
-  status: 'official' | 'needs_checking';
-  label: 'multiple' | 'single';
   method: 'extract' | 'snippet';
   query: string;
 };

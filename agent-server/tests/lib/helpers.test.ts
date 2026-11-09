@@ -1,10 +1,10 @@
 // Tests for the small shared helpers: embedded text, translation, embeddings, the owner check, and config data.
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ISIC_DIVISIONS } from '../config/isic-divisions';
-import { ISIC_SECTION_LETTERS } from '../config/sectors';
-import { APPROVED_DOMAINS } from '../config/approved-domains';
-import { activityLine, startupEmbedText, toEnglish } from './startup-text';
-import { embedTexts, toPgVector } from './embeddings';
+import { ISIC_DIVISIONS } from '../../src/mastra/config/isic-divisions';
+import { ISIC_SECTION_LETTERS } from '../../src/mastra/config/sectors';
+import { APPROVED_DOMAINS } from '../../src/mastra/config/approved-domains';
+import { activityLine, startupEmbedText, toEnglish } from '../../src/mastra/lib/startup-text';
+import { embedTexts, toPgVector } from '../../src/mastra/lib/embeddings';
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
@@ -57,7 +57,7 @@ describe('embeddings', () => {
 
 describe('who the founder is', () => {
   it('prefers the id set by the server, then the memory resource id', async () => {
-    const { getUserId } = await import('./assessments');
+    const { getUserId } = await import('../../src/mastra/lib/assessments');
     const withBoth = { requestContext: { get: () => 'from-login' }, agent: { resourceId: 'from-memory' } };
     expect(getUserId(withBoth)).toBe('from-login');
     expect(getUserId({ agent: { resourceId: 'from-memory' } })).toBe('from-memory');
@@ -76,8 +76,8 @@ describe('config data', () => {
   });
 
   it('has every site from the sheet once, with known values', () => {
-    expect(APPROVED_DOMAINS).toHaveLength(62);
-    expect(new Set(APPROVED_DOMAINS.map((d) => d.domain)).size).toBe(62);
+    expect(APPROVED_DOMAINS).toHaveLength(57);
+    expect(new Set(APPROVED_DOMAINS.map((d) => d.domain)).size).toBe(57);
     for (const d of APPROVED_DOMAINS) {
       expect(d.domain).toMatch(/^[a-z0-9.-]+\.[a-z]{2,}$/);
       for (const s of d.sections) expect(ISIC_SECTION_LETTERS).toContain(s);

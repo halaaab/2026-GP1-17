@@ -1,13 +1,13 @@
 // Tests for delegate_competitor_analysis: the checks before an analysis, the daily limit,
 // and that only finalize_competitors' result comes back. The database and the agent are fakes.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { OwnedAssessment } from '../lib/assessments';
+import type { OwnedAssessment } from '../../src/mastra/lib/assessments';
 
 const USER = 'user-1';
 const ASSESSMENT = '11111111-1111-4111-8111-111111111111';
 
 let owned: OwnedAssessment | null;
-vi.mock('../lib/assessments', async (importOriginal) => ({
+vi.mock('../../src/mastra/lib/assessments', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   loadOwnedAssessment: async (_id: string, userId: string) => (userId === USER ? owned : null),
 }));
@@ -15,15 +15,15 @@ vi.mock('../lib/assessments', async (importOriginal) => ({
 // Fake Supabase: today's analysis count, and the saved confirmed inputs.
 let analysesToday = 0;
 const savedInputs: unknown[] = [];
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => ({
     from: () => {
       const query = {
         select: () => query,
         eq: () => query,
         gte: async () => ({ count: analysesToday, error: null }),
-        update: (values: { scenario_inputs: unknown }) => {
-          savedInputs.push(values.scenario_inputs);
+        update: (values: { confirmed_inputs: unknown }) => {
+          savedInputs.push(values.confirmed_inputs);
           return { eq: async () => ({ error: null }) };
         },
       };
@@ -32,12 +32,12 @@ vi.mock('../lib/supabase', () => ({
   }),
 }));
 
-vi.mock('../lib/comparison-matrix', async (importOriginal) => ({
+vi.mock('../../src/mastra/lib/comparison-matrix', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   buildComparisonMatrix: async () => ({ columns: [{ key: 'founder', name: 'Your idea', name_ar: 'فكرتك' }], rows: [] }),
 }));
 
-const { runCompetitorAnalysis, checkClassification, startOfSaudiDay } = await import('./delegate-competitor-analysis');
+const { runCompetitorAnalysis, checkClassification, startOfSaudiDay } = await import('../../src/mastra/tools/delegate-competitor-analysis');
 
 const finalizeResult = {
   status: 'ok',
@@ -70,8 +70,6 @@ beforeEach(() => {
     idea_id: 'idea-1',
     thread_id: null,
     language: 'en',
-    parent_assessment_id: null,
-    scenario_label: null,
     iss: null,
     analysed_at: null,
     fis_score: null,

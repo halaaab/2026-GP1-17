@@ -1,7 +1,7 @@
 // Tests for the server's login check. Supabase is replaced by a fake that knows two tokens.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => ({
     auth: {
       getUser: async (token: string) =>
@@ -26,7 +26,7 @@ vi.mock('../lib/supabase', () => ({
   }),
 }));
 
-const { authMiddleware } = await import('./auth');
+const { authMiddleware } = await import('../../src/mastra/server/auth');
 
 // A fake request: its headers, the request context, and what the server answered.
 function fakeRequest(authorization?: string, typedUserId?: string) {

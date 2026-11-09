@@ -1,6 +1,6 @@
 // Tests for the confirmation rule.
 import { describe, expect, it } from 'vitest';
-import { analysisWasConfirmed, whatIfWasConfirmed } from './confirmation';
+import { analysisWasConfirmed, whatIfWasConfirmed } from '../../src/mastra/lib/confirmation';
 
 const msg = (role: string, text: string) => ({ role, content: { parts: [{ type: 'text', text }] } });
 const toolOnly = { role: 'assistant', content: { parts: [{ type: 'tool-invocation' }] } };

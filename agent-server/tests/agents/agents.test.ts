@@ -3,13 +3,13 @@ import { describe, expect, it } from 'vitest';
 
 process.env.DATABASE_URL ??= 'postgresql://user:pass@localhost:5432/test'; // never connected to in these tests
 
-const { competitorAgent } = await import('./competitor-agent');
-const { conversationalAgent } = await import('./conversational-agent');
-const { MAX_TOOL_STEPS } = await import('../config/limits');
+const { competitorAgent } = await import('../../src/mastra/agents/competitor-agent');
+const { conversationalAgent } = await import('../../src/mastra/agents/conversational-agent');
+const { MAX_TOOL_STEPS } = await import('../../src/mastra/config/limits');
 const { RequestContext } = await import('@mastra/core/request-context');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
-const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|analysis|details|if|profile)\b/g;
+const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|analysis|details|if|profile|survival)\b/g;
 const RESULT_FIELDS = new Set(['needs_web_search']); // named in the instructions, but fields of a tool result
 const toolNames = (text: string) => new Set((text.match(TOOL_NAME) ?? []).filter((n) => !RESULT_FIELDS.has(n)));
 
@@ -39,6 +39,11 @@ describe('Conversational Agent', () => {
     const named = toolNames(await instructionsOf(conversationalAgent));
     expect(named.size).toBeGreaterThan(0);
     for (const name of named) expect(tools).toContain(name);
+  });
+
+  it('is connected to the survival prediction', async () => {
+    expect(Object.keys(await conversationalAgent.listTools())).toContain('predict_survival');
+    expect(await instructionsOf(conversationalAgent)).toContain('predict_survival');
   });
 
   it('is told the current assessment only when the server gave one', async () => {

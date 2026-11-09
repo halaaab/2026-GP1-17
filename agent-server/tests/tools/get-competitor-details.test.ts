@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 let fakeRow: unknown = null;
 const filters: string[] = [];
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => {
     const query = {
       select: () => query,
@@ -17,7 +17,7 @@ vi.mock('../lib/supabase', () => ({
   },
 }));
 
-const { getCompetitorDetailsTool } = await import('./get-competitor-details');
+const { getCompetitorDetailsTool } = await import('../../src/mastra/tools/get-competitor-details');
 const ASSESSMENT = '3f2b6c1e-8a4d-4e2b-9c1a-5d6e7f8a9b0c';
 const run = (startup_id: string) =>
   getCompetitorDetailsTool.execute!({ assessment_id: ASSESSMENT, startup_id }, {} as never) as Promise<any>;

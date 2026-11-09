@@ -9,7 +9,6 @@ import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
-import { getCurrentUser } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 import {
@@ -560,9 +559,9 @@ saveButton.addEventListener('click', async () => {
   if (selectedId) {
     result = await supabase.from('support_organisations').update(values).eq('support_org_id', selectedId).select().single();
   } else {
-    const user = await getCurrentUser();
+    // the database remembers which admin added it (organization_maintenance, migration 0024)
     result = await supabase.from('support_organisations')
-      .insert({ ...values, support_org_id: programId, created_by_admin_id: user.id }).select().single();
+      .insert({ ...values, support_org_id: programId }).select().single();
   }
   saveButton.classList.remove('is-loading');
 

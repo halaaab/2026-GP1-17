@@ -12,8 +12,6 @@ const WebResultSchema = z.object({
   url: z.string(),
   snippet: z.string(),
   domain: z.string(),
-  status: z.enum(['official', 'needs_checking']),
-  label: z.enum(['multiple', 'single']),
   method: z.enum(['extract', 'snippet']),
   query: z.string(),
 });
@@ -44,8 +42,6 @@ export function keepApproved(raw: { title: string; url: string; content: string 
       url: r.url,
       snippet: (r.content ?? '').slice(0, 1200),
       domain: site.domain,
-      status: site.status,
-      label: site.label,
       method: site.method as 'extract' | 'snippet',
       query,
     });

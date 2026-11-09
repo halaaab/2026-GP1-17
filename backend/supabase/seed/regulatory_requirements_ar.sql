@@ -65,7 +65,7 @@ end;
 -- ---------- One row at a time: applies when, what Darb tells the founder, fees ----------
 update public.regulatory_requirements as r set
   applies_when_ar = v.applies_when_ar,
-  what_darb_should_surface_ar = v.surface_ar,
+  what_darb_surface_ar = v.surface_ar,
   fees_thresholds_ar = v.fees_ar
 from (values
 

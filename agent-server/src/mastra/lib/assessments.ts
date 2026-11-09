@@ -20,8 +20,6 @@ export type OwnedAssessment = {
   idea_id: string;
   thread_id: string | null;
   language: 'ar' | 'en';
-  parent_assessment_id: string | null;
-  scenario_label: string | null;
   iss: number | null;
   analysed_at: string | null;
   fis_score: number | null;
@@ -42,7 +40,7 @@ export async function loadOwnedAssessment(assessmentId: string, userId: string):
   const { data, error } = await getSupabase()
     .from('assessments')
     .select(
-      'assessment_id, idea_id, thread_id, language, parent_assessment_id, scenario_label, scenario_inputs, iss, analysed_at, fis_score, startup_ideas!inner (user_id, idea_description, sector, region)',
+      'assessment_id, idea_id, thread_id, language, confirmed_inputs, iss, analysed_at, fis_score, startup_ideas!inner (user_id, idea_description, sector, region)',
     )
     .eq('assessment_id', assessmentId)
     .maybeSingle();
@@ -58,7 +56,7 @@ export async function loadOwnedAssessment(assessmentId: string, userId: string):
   if (idea.user_id !== userId) return null;
 
   // An original assessment has no saved scenario inputs yet, so its inputs are the idea's own fields.
-  const saved = ScenarioInputs.safeParse(data.scenario_inputs);
+  const saved = ScenarioInputs.safeParse(data.confirmed_inputs);
   const inputs: ScenarioInputs = saved.success
     ? saved.data
     : { idea_text: idea.idea_description, sector: idea.sector, region: idea.region };
@@ -68,8 +66,6 @@ export async function loadOwnedAssessment(assessmentId: string, userId: string):
     idea_id: data.idea_id,
     thread_id: data.thread_id,
     language: data.language,
-    parent_assessment_id: data.parent_assessment_id,
-    scenario_label: data.scenario_label,
     iss: data.iss === null ? null : Number(data.iss),
     analysed_at: data.analysed_at ? new Date(data.analysed_at).toISOString() : null,
     fis_score: data.fis_score,

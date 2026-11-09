@@ -1,8 +1,8 @@
 // Tests for the comparison matrix. The startups table is replaced by a fake.
 import { describe, expect, it, vi } from 'vitest';
-import type { Competitor } from '../contracts';
+import type { Competitor } from '../../src/mastra/contracts';
 
-vi.mock('./supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => ({
     from: () => ({
       select: () => ({
@@ -18,7 +18,7 @@ vi.mock('./supabase', () => ({
   }),
 }));
 
-const { buildComparisonMatrix, ComparisonMatrix } = await import('./comparison-matrix');
+const { buildComparisonMatrix, ComparisonMatrix } = await import('../../src/mastra/lib/comparison-matrix');
 
 const competitor = (id: string, name: string, similarity: number): Competitor => ({
   startup_id: id,
