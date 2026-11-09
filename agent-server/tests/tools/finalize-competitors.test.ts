@@ -1,14 +1,14 @@
 // Tests for finalize_competitors. The database is replaced by a fake, so no keys are needed.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { StartupCandidate } from '../contracts';
+import type { StartupCandidate } from '../../src/mastra/contracts';
 
 // A higher threshold than the real placeholder (0), so filtering can be tested.
-vi.mock('../config/models', () => ({ SIMILARITY_THRESHOLD: 0.3, MAX_COMPETITORS: 3 }));
+vi.mock('../../src/mastra/config/models', () => ({ SIMILARITY_THRESHOLD: 0.3, MAX_COMPETITORS: 3 }));
 
 // Fake Supabase: records every call in order.
 const calls: string[] = [];
 const insertedRows: unknown[] = [];
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => ({
     from: (table: string) => ({
       // The startups table knows every id except the invented one.
@@ -39,7 +39,7 @@ vi.mock('../lib/supabase', () => ({
   }),
 }));
 
-const { selectCompetitors, finalizeCompetitorsTool, normalizeName } = await import('./finalize-competitors');
+const { selectCompetitors, finalizeCompetitorsTool, normalizeName } = await import('../../src/mastra/tools/finalize-competitors');
 
 const ASSESSMENT = '3f2b6c1e-8a4d-4e2b-9c1a-5d6e7f8a9b0c';
 
@@ -163,15 +163,34 @@ describe('filtering, duplicates and ranking', () => {
 });
 
 describe('saving', () => {
-  it('deletes old rows before inserting, and saves only dataset competitors', async () => {
-    const out = await run([candidate('A', 0.9), candidate('web-1', 0.8, { source: 'web', name: 'Web Co' })]);
+  it('deletes old rows before inserting, and saves dataset and web competitors', async () => {
+    const web = candidate('web-1', 0.8, {
+      source: 'web',
+      name: 'Web Co',
+      website: 'https://webco.sa',
+      source_url: 'https://webco.sa/about',
+    });
+    const out = await run([candidate('A', 0.9), web]);
     expect(calls).toEqual([
       `delete similar_startup_results where assessment_id=${ASSESSMENT}`,
-      'insert similar_startup_results 1',
+      'insert similar_startup_results 2',
       `update assessments iss=85 where assessment_id=${ASSESSMENT}`,
     ]);
-    expect(insertedRows).toEqual([{ assessment_id: ASSESSMENT, startup_id: 'A', similarity_score: 0.9, rank: 1 }]);
-    expect(out.competitors).toHaveLength(2); // the web competitor is still returned
+    expect(insertedRows).toEqual([
+      { assessment_id: ASSESSMENT, source_type: 'database', startup_id: 'A', similarity_score: 0.9, rank: 1 },
+      {
+        assessment_id: ASSESSMENT,
+        source_type: 'web',
+        startup_id: null, // a web competitor has no row in public.startups (0..1)
+        competitor_name: 'Web Co',
+        description: 'A startup',
+        website: 'https://webco.sa',
+        source_url: 'https://webco.sa/about',
+        similarity_score: 0.8,
+        rank: 2,
+      },
+    ]);
+    expect(out.competitors).toHaveLength(2);
   });
 });
 

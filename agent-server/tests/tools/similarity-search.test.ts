@@ -1,10 +1,10 @@
 // Tests for similarity_search. OpenAI and Supabase are replaced by fakes.
 import { describe, expect, it, vi } from 'vitest';
-import { SIMILARITY_THRESHOLD } from '../config/models';
-import { StartupCandidate } from '../contracts';
+import { SIMILARITY_THRESHOLD } from '../../src/mastra/config/models';
+import { StartupCandidate } from '../../src/mastra/contracts';
 
 const embeddedTexts: string[] = [];
-vi.mock('../lib/embeddings', () => ({
+vi.mock('../../src/mastra/lib/embeddings', () => ({
   embedTexts: async (texts: string[]) => {
     embeddedTexts.push(...texts);
     return texts.map(() => [0.1, 0.2, 0.3]);
@@ -13,7 +13,7 @@ vi.mock('../lib/embeddings', () => ({
 }));
 
 const rpcCalls: { fn: string; args: Record<string, unknown> }[] = [];
-vi.mock('../lib/supabase', () => ({
+vi.mock('../../src/mastra/lib/supabase', () => ({
   getSupabase: () => ({
     rpc: async (fn: string, args: Record<string, unknown>) => {
       rpcCalls.push({ fn, args });
@@ -28,7 +28,7 @@ vi.mock('../lib/supabase', () => ({
   }),
 }));
 
-const { similaritySearchTool } = await import('./similarity-search');
+const { similaritySearchTool } = await import('../../src/mastra/tools/similarity-search');
 
 describe('similarity_search', () => {
   it('returns candidates that match the shared StartupCandidate shape', async () => {

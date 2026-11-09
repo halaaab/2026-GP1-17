@@ -1,21 +1,43 @@
-// Tool: calls the Python ML service to get the survival prediction and SHAP explanation for a venture.
+// Tool: asks the Python ML service for the survival prediction of a confirmed idea.
+// Until the ML team deploys the service and ML_SERVICE_URL is set in .env, it answers model_not_connected,
+// so the agent says the score is not available instead of guessing one.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
+import { API_TIMEOUT_MS } from '../config/limits';
+
+// What the ML service must send back from POST {ML_SERVICE_URL}/predict.
+const ServiceReply = z.object({ survival_probability: z.number().min(0).max(1) });
 
 export const predictSurvivalTool = createTool({
-  id: 'predict-survival',
-  description: 'Gets the survival prediction for a confirmed startup idea. Use it only after the founder confirms the summary.',
-  // Draft input: the ML team confirms these fields once the model's features are final.
+  id: 'predict_survival',
+  description:
+    'Gets the survival prediction for the founder\'s confirmed idea from Darb\'s ML model. Use it only after the founder confirms the idea.',
+  // Draft input: the ML team adds fields here once the model's features are final.
   inputSchema: z.object({
-    economicActivity: z.string().describe('The economic activity of the startup.'),
-    city: z.string().describe('The city where the startup will operate.'),
-    capitalSar: z.number().optional().describe('The starting capital in Saudi riyals.'),
-    sellsOnline: z.boolean().optional().describe('Whether the startup sells online.'),
+    sector: z.string().length(1).describe('The ISIC4 section letter the founder confirmed, e.g. "K".'),
+    sub_sector: z.string().regex(/^\d{2}$/).describe('The ISIC4 division (2 digits) the founder confirmed, e.g. "64".'),
+    region: z.string().min(1).describe('The confirmed region in Saudi Arabia, or nationwide.'),
   }),
   outputSchema: z.object({
-    status: z.enum(['ok', 'model_not_connected']),
-    survivalProbability: z.number().nullable(),
+    status: z.enum(['ok', 'model_not_connected', 'error']),
+    survival_probability: z.number().nullable(),
   }),
-  // The ML team replaces this with a call to the FastAPI service.
-  execute: async () => ({ status: 'model_not_connected' as const, survivalProbability: null }),
+  execute: async (input) => {
+    const baseUrl = process.env.ML_SERVICE_URL;
+    if (!baseUrl) return { status: 'model_not_connected' as const, survival_probability: null };
+    try {
+      const response = await fetch(`${baseUrl.replace(/\/$/, '')}/predict`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(input),
+        signal: AbortSignal.timeout(API_TIMEOUT_MS),
+      });
+      if (!response.ok) return { status: 'error' as const, survival_probability: null };
+      const reply = ServiceReply.safeParse(await response.json());
+      if (!reply.success) return { status: 'error' as const, survival_probability: null };
+      return { status: 'ok' as const, survival_probability: reply.data.survival_probability };
+    } catch {
+      return { status: 'error' as const, survival_probability: null };
+    }
+  },
 });

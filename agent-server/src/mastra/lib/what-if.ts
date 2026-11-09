@@ -6,8 +6,8 @@ import { getSupabase } from './supabase';
 
 // --- Creating a version ---------------------------------------------------------
 
-// Saves a new assessment of the same idea, with the parent's inputs plus the changes. The parent is never touched.
-export async function createScenario(parent: OwnedAssessment, label: string, inputs: ScenarioInputs): Promise<string> {
+// Saves a new assessment of the same idea, with the base version's inputs plus the changes. The base version is never touched.
+export async function createScenario(parent: OwnedAssessment, inputs: ScenarioInputs): Promise<string> {
   const { data, error } = await getSupabase()
     .from('assessments')
     .insert({
@@ -15,9 +15,7 @@ export async function createScenario(parent: OwnedAssessment, label: string, inp
       thread_id: parent.thread_id,
       language: parent.language,
       status: 'in_progress',
-      parent_assessment_id: parent.assessment_id,
-      scenario_label: label,
-      scenario_inputs: inputs,
+      confirmed_inputs: inputs,
     })
     .select('assessment_id')
     .single();
@@ -59,17 +57,19 @@ type SavedCompetitor = { startup_id: string; rank: number; similarity: number; n
 async function loadCompetitors(assessmentId: string): Promise<SavedCompetitor[]> {
   const { data, error } = await getSupabase()
     .from('similar_startup_results')
-    .select('startup_id, rank, similarity_score, startups (startup_name, startup_name_ar)')
+    .select('startup_id, competitor_name, website, source_url, rank, similarity_score, startups (startup_name, startup_name_ar)')
     .eq('assessment_id', assessmentId)
     .order('rank');
   if (error) throw error;
   return (data ?? []).map((row) => {
     const s = row.startups as unknown as { startup_name: string; startup_name_ar: string | null } | null;
+    // A web competitor has no startup_id (migration 0024): it is told apart by its page and name.
+    const id = row.startup_id ?? `web:${row.website ?? row.source_url}:${String(row.competitor_name).toLowerCase()}`;
     return {
-      startup_id: row.startup_id,
+      startup_id: id,
       rank: row.rank,
       similarity: Math.round(Number(row.similarity_score) * 1000) / 10,
-      name: s?.startup_name ?? row.startup_id,
+      name: s?.startup_name ?? row.competitor_name ?? id,
       name_ar: s?.startup_name_ar ?? null,
     };
   });

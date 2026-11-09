@@ -240,16 +240,9 @@ function typeDetails() {
     </div>`;
 
   let content;
-  if (selectedType === 'other') {
-    // their own words, without names
-    const words = members.map((founder) => founder.status_description).filter(Boolean);
-    content = `
-      <div class="insight-field">
-        <h4 class="insight-field-title">${t('insights.ownWords')}</h4>
-        ${words.length
-          ? `<ul class="insight-words">${words.map((text) => `<li>${safe(text)}</li>`).join('')}</ul>`
-          : `<p class="text-3">${t('insights.noAnswers')}</p>`}
-      </div>`;
+  if (selectedType === 'none') {
+    // just founders have no type questions
+    content = `<p class="text-3">${t('insights.noAnswers')}</p>`;
   } else {
     content = TYPE_FIELDS[selectedType].map((field) => `
       <div class="insight-field">

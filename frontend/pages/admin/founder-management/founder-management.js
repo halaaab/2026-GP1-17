@@ -175,7 +175,6 @@ function showAbout(founder) {
     t(field.title),
     groupOf(field, founder) === '' ? '' : answerText(field, founder),
   ]);
-  if (founder.user_type === 'other') answers.push([t('founders.ownWords'), founder.status_description || '']);
   const region = [t('overview.byRegion'), regionText(founder)];
 
   // nothing answered yet: one sentence instead of an empty card
@@ -287,7 +286,7 @@ form.addEventListener('submit', async (event) => {
     target_user_id: founder.user_id,
     new_full_name: changes.full_name,
     new_username: changes.username,
-    new_user_type: changes.user_type,
+    new_user_type: changes.user_type === 'none' ? null : changes.user_type,   // none = just a founder
     new_locale: changes.locale,
     new_status: changes.status,
   });
@@ -517,7 +516,8 @@ if (error) {
   console.error('admin_list_founders:', error.message);
   showErrorPage(500);   // the list could not be loaded: the 500 page offers "Try again"
 } else {
-  founders = data;
+  // no type = just a founder (migration 0022)
+  founders = data.map((founder) => ({ ...founder, user_type: founder.user_type || 'none' }));
 }
 loading = false;
 showRows();

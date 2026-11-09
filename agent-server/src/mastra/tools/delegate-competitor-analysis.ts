@@ -71,7 +71,7 @@ export async function runCompetitorAnalysis(input: DelegateCompetitorInput, cont
 
     // Save the confirmed inputs on the assessment, so what-if comparisons use what the founder actually confirmed.
     const confirmed = { ...assessment.inputs, idea_text: input.idea_text, sector, sub_sector: input.sub_sector, region: input.region };
-    const saved = await getSupabase().from('assessments').update({ scenario_inputs: confirmed }).eq('assessment_id', assessment.assessment_id);
+    const saved = await getSupabase().from('assessments').update({ confirmed_inputs: confirmed }).eq('assessment_id', assessment.assessment_id);
     if (saved.error) throw saved.error;
 
     // A fresh context for this analysis only: it carries the trusted ids, and collects the search record and the result.

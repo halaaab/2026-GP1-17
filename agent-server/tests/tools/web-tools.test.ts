@@ -1,11 +1,11 @@
 // Tests for the web tools' guards. Tavily, OpenAI and the database are never called.
 import { afterEach, describe, expect, it } from 'vitest';
-import { approvedDomainOf, domainsForSection } from '../config/approved-domains';
-import { recordSearchResults } from '../lib/search-registry';
-import { recordWebResults } from '../lib/web-registry';
-import { extractAndVerifyProfileTool, quoteIsAboutCompany, quoteIsOnPage } from './extract-and-verify-profile';
-import { finalizeCompetitorsTool } from './finalize-competitors';
-import { keepApproved } from './web-search';
+import { approvedDomainOf, domainsForSection } from '../../src/mastra/config/approved-domains';
+import { recordSearchResults } from '../../src/mastra/lib/search-registry';
+import { recordWebResults } from '../../src/mastra/lib/web-registry';
+import { extractAndVerifyProfileTool, quoteIsAboutCompany, quoteIsOnPage } from '../../src/mastra/tools/extract-and-verify-profile';
+import { finalizeCompetitorsTool } from '../../src/mastra/tools/finalize-competitors';
+import { keepApproved } from '../../src/mastra/tools/web-search';
 
 function analysisContext() {
   const values = new Map<string, unknown>();
@@ -53,13 +53,13 @@ describe('web_search filtering', () => {
       new Set(),
     );
     expect(kept.map((r) => r.title)).toEqual(['A']);
-    expect(kept[0]).toMatchObject({ domain: 'wamda.com', status: 'needs_checking', query: 'BNPL school fees' });
+    expect(kept[0]).toMatchObject({ domain: 'wamda.com', query: 'BNPL school fees' });
   });
 });
 
 describe('web_search limit', () => {
   it('refuses a third web search in the same analysis, without calling Tavily', async () => {
-    const { webSearchTool } = await import('./web-search');
+    const { webSearchTool } = await import('../../src/mastra/tools/web-search');
     const ctx = analysisContext();
     ctx.values.set('darb_web_search_calls', 2);
     const out: any = await webSearchTool.execute!({ queries: ['anything'] }, ctx as never);
@@ -99,7 +99,7 @@ describe('extract_and_verify_profile guards', () => {
   it('opens at most the allowed number of pages per analysis', async () => {
     const ctx = analysisContext();
     recordWebResults(ctx, [
-      { title: 't', url: 'https://wamda.com/a', snippet: 's', domain: 'wamda.com', status: 'needs_checking', label: 'single', method: 'snippet', query: 'q' },
+      { title: 't', url: 'https://wamda.com/a', snippet: 's', domain: 'wamda.com', method: 'snippet', query: 'q' },
     ]);
     ctx.values.set('darb_pages_opened', 4);
     const out: any = await extractAndVerifyProfileTool.execute!({ url: 'https://wamda.com/a' }, ctx as never);

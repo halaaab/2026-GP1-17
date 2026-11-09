@@ -161,15 +161,28 @@ async function finalize(
   }
 
   // Step 5: save. Old rows go first, so a retry never leaves duplicates.
-  // Web competitors are returned but not saved yet: the table only accepts startups in public.startups.
+  // A dataset competitor points to its row in public.startups. A web competitor has no such row,
+  // so it keeps its own name, description, website and the page it was verified on (migration 0024).
   try {
     const supabase = getSupabase();
     const removed = await supabase.from('similar_startup_results').delete().eq('assessment_id', assessment_id);
     if (removed.error) throw removed.error;
 
-    const rows = competitors
-      .filter((c) => c.source === 'dataset')
-      .map((c) => ({ assessment_id, startup_id: c.startup_id, similarity_score: c.similarity, rank: c.rank }));
+    const rows = competitors.map((c) =>
+      c.source === 'dataset'
+        ? { assessment_id, source_type: 'database', startup_id: c.startup_id, similarity_score: c.similarity, rank: c.rank }
+        : {
+            assessment_id,
+            source_type: 'web',
+            startup_id: null,
+            competitor_name: c.name,
+            description: c.description,
+            website: c.website,
+            source_url: c.source_url ?? c.website,
+            similarity_score: c.similarity,
+            rank: c.rank,
+          },
+    );
     if (rows.length > 0) {
       const inserted = await supabase.from('similar_startup_results').insert(rows);
       if (inserted.error) throw inserted.error;

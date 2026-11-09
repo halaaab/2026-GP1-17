@@ -86,15 +86,56 @@ export function passwordProblem(password) {
   return `${t('error.passwordMissing')} ${missing.join(comma)}.`;
 }
 
+/* ---------- Founder types (migration 0022) ----------
+   A founder is one of four types, or none of them ("just a founder").
+   Each type has its own table with only that type's answers.
+   Answers every founder gives (country, region...) stay in the users table. */
+
+export const FOUNDER_TABLES = {
+  student: 'students',
+  entrepreneur: 'entrepreneurs',
+  business_owner: 'business_owners',
+  investor: 'investors',
+};
+
+const COMMON_COLUMNS = ['country_code', 'region', 'phone'];
+
+/* Splits the sign-up answers into the users part and the type's own part */
+function splitDetails(details) {
+  const common = {};
+  const own = {};
+  Object.entries(details || {}).forEach(([column, value]) => {
+    if (COMMON_COLUMNS.includes(column)) common[column] = value;
+    else own[column] = value;
+  });
+  return { common, own };
+}
+
+/* Saves the answers of a founder whose rows already exist */
+async function saveDetails(userId, userType, details) {
+  const { common, own } = splitDetails(details);
+  const table = FOUNDER_TABLES[userType];
+
+  if (Object.keys(common).length > 0) {
+    const { error } = await supabase.from('users').update(common).eq('user_id', userId);
+    if (error) return error;
+  }
+  if (table && Object.keys(own).length > 0) {
+    const { error } = await supabase.from(table).update(own).eq('user_id', userId);
+    if (error) return error;
+  }
+  return null;
+}
+
 /* ---------- Sign up ---------- */
 
 /* Creates a founder account.
-   userType is one of: 'student', 'entrepreneur', 'business_owner', 'investor'.
-   details holds the extra answers for that type, named like the columns of the
-   users table, for example { education_level: 'bachelor', field_of_study: 'IT' }.
+   userType is one of: 'student', 'entrepreneur', 'business_owner', 'investor', or 'none'.
+   details holds the extra answers, named like the database columns,
+   for example { region: 'riyadh', education_level: 'bachelor', field_of_study: 'IT' }.
 
-   The database creates the row in the users table by itself (see the migration),
-   but only with the name, username and type. The details wait inside the account
+   The database creates the row in users, and the row in the type's table,
+   by itself (see migration 0022), but empty. The details wait inside the account
    ("pending_profile") and are saved to the row the first time the person signs in,
    because nobody can edit a row before they are signed in.
    Returns needsEmailConfirmation: true when the person must click the link in their inbox first. */
@@ -142,14 +183,25 @@ export async function completeProfile({ fullName, username, userType, details })
     return { ok: false, error: 'error.generic' };
   }
 
+  const { common, own } = splitDetails(details);
+
   const { error } = await supabase.from('users').insert({
     user_id: user.id,
     full_name: fullName,
     username: username,
-    user_type: userType,
     locale: document.documentElement.lang === 'en' ? 'en' : 'ar',
-    ...details,
+    ...common,
   });
+
+  // then the row in the type's own table ("none" has no table)
+  const table = FOUNDER_TABLES[userType];
+  if (!error && table) {
+    const typeRow = await supabase.from(table).insert({ user_id: user.id, ...own });
+    if (typeRow.error) {
+      console.error('Could not save the type answers:', typeRow.error.code, typeRow.error.message);
+      return { ok: false, error: 'error.generic' };
+    }
+  }
 
   if (error) {
     // Shown in the browser console (Developer Tools) so the real cause is easy to find
@@ -341,7 +393,8 @@ export async function getAccount() {
     return { role: 'admin', profile: admin.data };   // profile is empty until the code step is passed
   }
 
-  const founder = await supabase.from('users').select('*').eq('user_id', user.id).maybeSingle();
+  // founder_profiles = the users row plus the type and its answers (migration 0022)
+  const founder = await supabase.from('founder_profiles').select('*').eq('user_id', user.id).maybeSingle();
   if (founder.data) {
     return { role: 'founder', profile: founder.data };
   }
@@ -387,7 +440,7 @@ async function savePendingProfile() {
   const details = user?.user_metadata?.pending_profile;
   if (!details) return;
 
-  const { error } = await supabase.from('users').update(details).eq('user_id', user.id);
+  const error = await saveDetails(user.id, user.user_metadata.user_type, details);
   if (!error) {
     await supabase.auth.updateUser({ data: { pending_profile: null } });
   }

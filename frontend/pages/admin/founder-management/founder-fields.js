@@ -28,7 +28,7 @@ export const TYPE_FIELDS = {
   investor: [
     { column: 'investor_type', title: 'signup.investorType', prefix: 'signup.itype.', other: 'signup.itype.other' },
   ],
-  other: [],
+  none: [],   // just a founder: no type, so no type questions (migration 0022)
 };
 
 export const TYPES = Object.keys(TYPE_FIELDS);
@@ -39,11 +39,11 @@ export const TYPE_LABELS = {
   entrepreneur: 'signup.entrepreneur',
   business_owner: 'signup.owner',
   investor: 'signup.investor',
-  other: 'signup.other',
+  none: 'founders.justFounder',
 };
 
 // one pastel color per user type (chip-pastel-N in shared.css); no mint (6), it sits next to the green "Active"
-export const TYPE_COLORS = { student: 1, entrepreneur: 2, business_owner: 3, investor: 4, other: 5 };
+export const TYPE_COLORS = { student: 1, entrepreneur: 2, business_owner: 3, investor: 4, none: 5 };
 
 function isOnList(field, value) {
   if (field.kind === 'yesNo') return true;

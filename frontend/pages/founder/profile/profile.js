@@ -23,7 +23,6 @@ const TYPE_LABELS = {
   entrepreneur: 'signup.entrepreneur',
   business_owner: 'signup.owner',
   investor: 'signup.investor',
-  other: 'signup.other',
 };
 
 // Darb serves founders located in Saudi Arabia (story 39), so the country is fixed
@@ -74,7 +73,8 @@ function showReadOnly() {
     : t('profile.emailHint');
   document.querySelector('#avatar').textContent = initials(profile.full_name);
   document.querySelector('#member-since').textContent = dateText(profile.created_at);
-  document.querySelector('#user-type').textContent = TYPE_LABELS[profile.user_type] ? t(TYPE_LABELS[profile.user_type]) : '—';
+  // no type = just a founder (migration 0022)
+  document.querySelector('#user-type').textContent = t(TYPE_LABELS[profile.user_type] || 'founders.justFounder');
 }
 
 // The number of assessments: the security rules return only the founder's own
@@ -127,7 +127,7 @@ form.addEventListener('submit', async (event) => {
     return;
   }
 
-  profile = data;
+  profile = { ...profile, ...data };   // keep the type, which lives outside the users table
   fields.phone.value = (profile.phone || '').replace(/^\+966/, '');
   setSidebarUser(profile.full_name, '');
 

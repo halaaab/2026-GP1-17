@@ -24,6 +24,41 @@ const CompetitorDetails = z.object({
   profile_url: z.string().nullable(),
 });
 
+// The saved facts of a web competitor of this assessment (migration 0024). Its id ends with ":<name in lowercase>".
+async function webCompetitorDetails(assessment_id: string, startup_id: string) {
+  const { data, error } = await getSupabase()
+    .from('similar_startup_results')
+    .select('rank, similarity_score, competitor_name, description, website, source_url')
+    .eq('assessment_id', assessment_id)
+    .eq('source_type', 'web');
+  if (error) throw error;
+
+  const row = (data ?? []).find((r) => startup_id.endsWith(`:${String(r.competitor_name).toLowerCase()}`));
+  if (!row) return { status: 'not_in_results' as const, details: null };
+
+  return {
+    status: 'ok' as const,
+    details: {
+      startup_id,
+      rank: row.rank,
+      similarity_percent: Math.round(Number(row.similarity_score) * 1000) / 10,
+      name: row.competitor_name,
+      name_ar: null,
+      description: row.description ?? null,
+      description_ar: null,
+      sector: null,
+      target_market: null,
+      products_services: null,
+      stage: null,
+      region: null,
+      country: null,
+      tags: null,
+      website: row.website ?? null,
+      profile_url: row.source_url ?? null,
+    },
+  };
+}
+
 export const getCompetitorDetailsTool = createTool({
   id: 'get_competitor_details',
   description:
@@ -38,6 +73,9 @@ export const getCompetitorDetailsTool = createTool({
   }),
   execute: async ({ assessment_id, startup_id }) => {
     try {
+      // A web competitor (id "web:<site>:<name>") has no row in public.startups: its own saved facts are used.
+      if (startup_id.startsWith('web:')) return await webCompetitorDetails(assessment_id, startup_id);
+
       // Read through the saved results, so only a competitor from this assessment can be described.
       const { data, error } = await getSupabase()
         .from('similar_startup_results')
