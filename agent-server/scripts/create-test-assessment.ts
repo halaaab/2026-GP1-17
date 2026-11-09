@@ -10,13 +10,13 @@ async function main() {
   if (!username) throw new Error('Give the username of the test founder, e.g. npm run test:assessment -- darb_test');
 
   const supabase = getSupabase();
-  const { data: user, error: userError } = await supabase.from('users').select('user_id').eq('username', username).maybeSingle();
+  const { data: user, error: userError } = await supabase.from('founders').select('user_id').eq('username', username).maybeSingle();
   if (userError) throw userError;
   if (!user) throw new Error(`No user with the username "${username}".`);
 
   const { data: idea, error: ideaError } = await supabase
     .from('startup_ideas')
-    .insert({ user_id: user.user_id, idea_name: 'Test idea (agent testing)' })
+    .insert({ founder_id: user.user_id, idea_name: 'Test idea (agent testing)' })
     .select('idea_id')
     .single();
   if (ideaError) throw ideaError;

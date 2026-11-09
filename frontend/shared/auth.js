@@ -117,7 +117,7 @@ async function saveDetails(userId, userType, details) {
   const table = FOUNDER_TABLES[userType];
 
   if (Object.keys(common).length > 0) {
-    const { error } = await supabase.from('users').update(common).eq('user_id', userId);
+    const { error } = await supabase.from('founders').update(common).eq('user_id', userId);
     if (error) return error;
   }
   if (table && Object.keys(own).length > 0) {
@@ -185,7 +185,7 @@ export async function completeProfile({ fullName, username, userType, details })
 
   const { common, own } = splitDetails(details);
 
-  const { error } = await supabase.from('users').insert({
+  const { error } = await supabase.from('founders').insert({
     user_id: user.id,
     full_name: fullName,
     username: username,
@@ -386,7 +386,7 @@ export async function getAccount() {
   // second step (the code from the authenticator app) is passed, so we first ask a small database function
   // that answers yes or no at any time. Before that migration, the function does not
   // exist and we simply read the table as before.
-  const admin = await supabase.from('admins').select('*').eq('admin_id', user.id).maybeSingle();
+  const admin = await supabase.from('admins').select('*').eq('user_id', user.id).maybeSingle();
   const asked = await supabase.rpc('is_admin_account');
 
   if (admin.data || asked.data === true) {

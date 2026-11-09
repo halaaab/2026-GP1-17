@@ -156,7 +156,7 @@ detailsForm.addEventListener('submit', async (event) => {
   }
 
   const changes = { full_name: fullName.value.trim(), username: wanted, phone: phoneToSave() };
-  const { data, error } = await supabase.from('admins').update(changes).eq('admin_id', user.id).select().single();
+  const { data, error } = await supabase.from('admins').update(changes).eq('user_id', user.id).select().single();
   saveButton.classList.remove('is-loading');
 
   if (error) {
@@ -241,7 +241,7 @@ profile = account.profile;
 
 if (user && profile) {
   const [admins, counts] = await Promise.all([
-    supabase.from('admins').select('admin_id', { count: 'exact', head: true }),
+    supabase.from('admins').select('user_id', { count: 'exact', head: true }),
     countWork(),
   ]);
   teamSize = admins.error ? null : admins.count;

@@ -9,7 +9,7 @@ import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
   loadRequirements, field, label, stagesOf, allStages, dateText, fillFilter, authorityColors, fitsIsic, divisionsOf, logoUrl, initials,
-  MANDATORY, STATUSES, ISIC_SECTIONS, ISIC_DIVISIONS, isicOf, isicText,
+  MANDATORY, STATUSES, ISIC_SECTIONS, ISIC_DIVISIONS, isicOf, isicText, saveIsic,
 } from '../../../shared/regulatory.js';
 import '../../../shared/guard.js';
 
@@ -238,18 +238,19 @@ form.addEventListener('submit', async (event) => {
   });
   // "Every sector" on its own when it is ticked, otherwise the ticked ISIC4 sections
   const isic = [...document.querySelectorAll('[name="isic"]:checked')].map((box) => box.value);
-  values.isic_sections = isic.includes('ALL') ? ['ALL'] : isic;
+  // (saved in their own tables after the requirement, see saveIsic)
+  const sections = isic.includes('ALL') ? ['ALL'] : isic;
   // the ISIC4 divisions decide whose roadmap it is in; "Every sector" means every division
-  const divisions = input('divisions').value.split(/[\s,،;]+/).filter(Boolean).map((code) => code.padStart(2, '0'));
-  values.isic_divisions = values.isic_sections.includes('ALL') ? ['ALL'] : [...new Set(divisions)];
+  const typed = input('divisions').value.split(/[\s,،;]+/).filter(Boolean).map((code) => code.padStart(2, '0'));
+  const divisions = sections.includes('ALL') ? ['ALL'] : [...new Set(typed)];
 
   // check the answers here first, so the admin sees each problem next to its field
   clearErrors();
   const problems = [];
   if (!values.name_en) problems.push(['name_en', 'regAdmin.nameRequired']);
-  if (!values.isic_sections.length) problems.push(['isic', 'regAdmin.isicRequired']);
-  if (!values.isic_sections.includes('ALL')
-    && (!values.isic_divisions.length || values.isic_divisions.some((code) => !ISIC_DIVISIONS.includes(code)))) {
+  if (!sections.length) problems.push(['isic', 'regAdmin.isicRequired']);
+  if (!sections.includes('ALL')
+    && (!divisions.length || divisions.some((code) => !ISIC_DIVISIONS.includes(code)))) {
     problems.push(['divisions', 'regAdmin.divisionsError']);
   }
   if (!isWebAddress(values.official_source_url)) problems.push(['official_source_url', 'regAdmin.urlError']);
@@ -257,7 +258,7 @@ form.addEventListener('submit', async (event) => {
   problems.forEach(([column, key]) => showFieldError(column, key));
   if (problems.length) return;
 
-  const id = editingId || nextId(values.isic_sections);
+  const id = editingId || nextId(sections);
 
   saveButton.classList.add('is-loading');
   let result;
@@ -269,13 +270,17 @@ form.addEventListener('submit', async (event) => {
       .insert({ ...values, requirement_id: id })
       .select().single();
   }
+  // then its ISIC4 sections and divisions, in their own tables
+  const isicError = result.error ? null : await saveIsic(id, sections, divisions);
   saveButton.classList.remove('is-loading');
 
-  if (result.error) {
-    console.error('regulatory_requirements:', result.error.message);
+  if (result.error || isicError) {
+    console.error('regulatory_requirements:', (result.error || isicError).message);
     showToast(t('founders.actionError'), 'risk');
     return;
   }
+  result.data.isic_sections = sections;
+  result.data.isic_divisions = divisions;
 
   if (editingId) {
     Object.assign(findRequirement(id), result.data);

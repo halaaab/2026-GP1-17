@@ -25,7 +25,7 @@ export async function userIdFromToken(token: string): Promise<string | null> {
   if (error || !data.user) return null;
 
   // A deactivated account is refused even with a valid token.
-  const { data: profile, error: profileError } = await supabase.from('users').select('status').eq('user_id', data.user.id).maybeSingle();
+  const { data: profile, error: profileError } = await supabase.from('founders').select('status').eq('user_id', data.user.id).maybeSingle();
   if (profileError || !profile || profile.status !== 'active') return null;
   return data.user.id;
 }

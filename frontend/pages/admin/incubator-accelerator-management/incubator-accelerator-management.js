@@ -557,10 +557,10 @@ saveButton.addEventListener('click', async () => {
 
   let result;
   if (selectedId) {
-    result = await supabase.from('support_organisations').update(values).eq('support_org_id', selectedId).select().single();
+    result = await supabase.from('support_organizations').update(values).eq('support_org_id', selectedId).select().single();
   } else {
     // the database remembers which admin added it (organization_maintenance, migration 0024)
-    result = await supabase.from('support_organisations')
+    result = await supabase.from('support_organizations')
       .insert({ ...values, support_org_id: programId }).select().single();
   }
   saveButton.classList.remove('is-loading');
@@ -593,7 +593,7 @@ saveButton.addEventListener('click', async () => {
 
 deleteConfirm.addEventListener('click', async () => {
   deleteConfirm.classList.add('is-loading');
-  const { error } = await supabase.from('support_organisations').delete().eq('support_org_id', deleteId);
+  const { error } = await supabase.from('support_organizations').delete().eq('support_org_id', deleteId);
   deleteConfirm.classList.remove('is-loading');
   deleteModal.close();
 

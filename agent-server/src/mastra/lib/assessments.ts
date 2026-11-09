@@ -40,7 +40,7 @@ export async function loadOwnedAssessment(assessmentId: string, userId: string):
   const { data, error } = await getSupabase()
     .from('assessments')
     .select(
-      'assessment_id, idea_id, thread_id, language, confirmed_inputs, iss, analysed_at, fis_score, startup_ideas!inner (user_id, idea_description, sector, region)',
+      'assessment_id, idea_id, thread_id, language, confirmed_inputs, iss, analysed_at, fis_score, startup_ideas!inner (founder_id, idea_description, sector, region)',
     )
     .eq('assessment_id', assessmentId)
     .maybeSingle();
@@ -48,12 +48,12 @@ export async function loadOwnedAssessment(assessmentId: string, userId: string):
   if (!data) return null;
 
   const idea = data.startup_ideas as unknown as {
-    user_id: string;
+    founder_id: string;
     idea_description: string | null;
     sector: string | null;
     region: string | null;
   };
-  if (idea.user_id !== userId) return null;
+  if (idea.founder_id !== userId) return null;
 
   // An original assessment has no saved scenario inputs yet, so its inputs are the idea's own fields.
   const saved = ScenarioInputs.safeParse(data.confirmed_inputs);

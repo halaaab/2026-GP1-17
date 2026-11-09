@@ -21,9 +21,9 @@ async function main() {
   const supabase = getSupabase();
 
   // 1. A fresh test idea and assessment.
-  const { data: user } = await supabase.from('users').select('user_id').eq('username', username).maybeSingle();
+  const { data: user } = await supabase.from('founders').select('user_id').eq('username', username).maybeSingle();
   if (!user) throw new Error(`No user with the username "${username}".`);
-  const { data: idea, error: ideaError } = await supabase.from('startup_ideas').insert({ user_id: user.user_id, idea_name: 'Test idea (live test)' }).select('idea_id').single();
+  const { data: idea, error: ideaError } = await supabase.from('startup_ideas').insert({ founder_id: user.user_id, idea_name: 'Test idea (live test)' }).select('idea_id').single();
   if (ideaError) throw ideaError;
   const { data: assessment, error: assessmentError } = await supabase.from('assessments').insert({ idea_id: idea.idea_id, language: 'en', status: 'in_progress' }).select('assessment_id').single();
   if (assessmentError) throw assessmentError;

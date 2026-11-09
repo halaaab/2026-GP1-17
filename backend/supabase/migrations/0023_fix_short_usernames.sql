@@ -1,6 +1,7 @@
 -- =========================================================
 -- 0023 — Fix usernames cut to 3 letters
--- Run once in Supabase: SQL Editor → paste → Run, after 0022.
+-- NOT APPLIED: it was not run before 0029 renamed users to founders.
+-- Its sign-up fix is in 0029, and its username repair is 0030. Do not run this file.
 --
 -- The bug (since 0004_unique_usernames): sign-up cleaned the username with
 --   rpad(name, 3, '_')

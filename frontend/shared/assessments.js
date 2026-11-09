@@ -34,7 +34,7 @@
 
 import { getLanguage, t } from './language.js';
 import { supabase } from './supabase.js';
-import { IDEA_DIVISIONS, divisionsOf, fitsDivisions } from './regulatory.js';
+import { IDEA_DIVISIONS, REQUIREMENT_COLUMNS, withIsic, divisionsOf, fitsDivisions } from './regulatory.js';
 
 const ROOT = new URL('..', import.meta.url).href;
 const CHAT_PAGE = `${ROOT}pages/founder/chatbot/chatbot.html`;
@@ -189,11 +189,12 @@ async function loadMarket(assessment) {
 }
 
 async function loadRoadmap(assessment) {
-  const { data, error } = await supabase.from('regulatory_requirements').select('*');
+  const { data: rows, error } = await supabase.from('regulatory_requirements').select(REQUIREMENT_COLUMNS);
   if (error) {
     report('load the regulatory requirements', error);
     return [];
   }
+  const data = rows.map(withIsic);
 
   // the idea's ISIC4 divisions (the same ones as its market indicators); a requirement is
   // for this idea when its own divisions include one of them, or when it is for every business
@@ -362,7 +363,7 @@ export async function saveAssessment(assessment) {
     const { data } = await supabase.auth.getSession();
     const userId = data.session ? data.session.user.id : null;
 
-    ({ error } = await supabase.from('startup_ideas').insert({ idea_id: assessment.ideaId, user_id: userId, ...ideaColumns }));
+    ({ error } = await supabase.from('startup_ideas').insert({ idea_id: assessment.ideaId, founder_id: userId, ...ideaColumns }));
     if (!error) {
       ({ error } = await supabase.from('assessments').insert({ assessment_id: assessment.id, idea_id: assessment.ideaId, ...assessmentColumns }));
     }

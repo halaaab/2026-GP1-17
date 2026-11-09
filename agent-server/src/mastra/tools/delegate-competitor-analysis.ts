@@ -25,8 +25,8 @@ export function startOfSaudiDay(now = new Date()): string {
 async function analysesToday(userId: string): Promise<number> {
   const { count, error } = await getSupabase()
     .from('assessments')
-    .select('assessment_id, startup_ideas!inner (user_id)', { count: 'exact', head: true })
-    .eq('startup_ideas.user_id', userId)
+    .select('assessment_id, startup_ideas!inner (founder_id)', { count: 'exact', head: true })
+    .eq('startup_ideas.founder_id', userId)
     .gte('analysed_at', startOfSaudiDay());
   if (error) throw error;
   return count ?? 0;
