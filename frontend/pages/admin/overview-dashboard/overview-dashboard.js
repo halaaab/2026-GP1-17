@@ -114,10 +114,10 @@ async function readAll(table, columns) {
 async function load() {
   const results = await Promise.all([
     readAll('founder_profiles', 'user_id, full_name, user_type, region, status, locale, created_at'),
-    readAll('startup_ideas', 'idea_id, user_id, idea_name, sector, created_at'),
+    readAll('startup_ideas', 'idea_id, founder_id, idea_name, sector, created_at'),
     readAll('assessments', 'assessment_id, idea_id, status, fis_score, risk_level, started_at, completed_at, roadmap_generated_at'),
     readAll('startups', 'startup_id, sector, startup_description'),
-    readAll('support_organisations', '*'),
+    readAll('support_organizations', '*'),
     readAll('regulatory_requirements', 'requirement_id, last_verified'),
     readAll('market_indicators', 'record_id, year'),
   ]);
@@ -301,7 +301,7 @@ function showKpis() {
 
   const average = (items) => (items.length ? Math.round(items.reduce((sum, item) => sum + item.fis_score, 0) / items.length) : null);
   const activeFounders = data.users.filter((user) => user.status === 'active').length;
-  const ideaAuthors = new Set(newIdeas.map((idea) => idea.user_id)).size;
+  const ideaAuthors = new Set(newIdeas.map((idea) => idea.founder_id)).size;
   const ideasPerFounder = ideaAuthors ? (newIdeas.length / ideaAuthors).toFixed(1) : '0';
 
   const cards = [
@@ -509,12 +509,12 @@ function showPeople() {
   }
 
   // what each founder has done: an idea, a finished assessment, their scores
-  const withIdea = new Set(data.ideas.map((idea) => idea.user_id));
+  const withIdea = new Set(data.ideas.map((idea) => idea.founder_id));
   const scoresOf = new Map();
   data.assessments
     .filter((item) => item.fis_score !== null && item.completed_at)
     .forEach((item) => {
-      const founder = data.ideaById.get(item.idea_id)?.user_id;
+      const founder = data.ideaById.get(item.idea_id)?.founder_id;
       if (founder) scoresOf.set(founder, [...(scoresOf.get(founder) || []), item.fis_score]);
     });
 
@@ -647,14 +647,14 @@ function showFeed() {
       text: fill('overview.eJoined', { name: `<strong>${safe(user.full_name)}</strong>` }),
     })),
     ...data.ideas.map((idea) => ({
-      at: idea.created_at, who: nameOf(idea.user_id), kind: 'idea',
-      text: fill('overview.eIdea', { name: `<strong>${safe(nameOf(idea.user_id))}</strong>`, idea: safe(idea.idea_name) }),
+      at: idea.created_at, who: nameOf(idea.founder_id), kind: 'idea',
+      text: fill('overview.eIdea', { name: `<strong>${safe(nameOf(idea.founder_id))}</strong>`, idea: safe(idea.idea_name) }),
     })),
     ...data.assessments.filter((item) => item.completed_at && item.fis_score !== null).map((item) => {
       const idea = data.ideaById.get(item.idea_id);
       return {
-        at: item.completed_at, who: nameOf(idea?.user_id), kind: 'score', score: item.fis_score,
-        text: fill('overview.eScore', { name: `<strong>${safe(nameOf(idea?.user_id))}</strong>`, idea: safe(idea?.idea_name || '') }),
+        at: item.completed_at, who: nameOf(idea?.founder_id), kind: 'score', score: item.fis_score,
+        text: fill('overview.eScore', { name: `<strong>${safe(nameOf(idea?.founder_id))}</strong>`, idea: safe(idea?.idea_name || '') }),
       };
     }),
   ]
