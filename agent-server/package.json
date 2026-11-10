@@ -9,12 +9,10 @@
     "build": "mastra build",
     "start": "mastra start",
     "test": "vitest run",
-    "embed:startups": "tsx scripts/embed-startups.ts",
     "test:assessment": "tsx scripts/create-test-assessment.ts",
     "classify:startups": "tsx scripts/classify-startups-isic.ts",
     "test:live": "tsx scripts/test-live.ts",
-    "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.exclude=src/**/*.test.ts --coverage.reporter=text-summary",
-    "eval:similarity": "tsx scripts/evaluate-similarity.ts"
+    "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.exclude=src/**/*.test.ts --coverage.reporter=text-summary"
   },
   "keywords": [],
   "author": "",
