@@ -237,6 +237,12 @@ body[data-page="chatbot"] .app-header {
   margin: 0;
   font-size: 15px;
   line-height: 1.7;
+  white-space: pre-wrap;        /* keeps the line breaks of the agent's reply */
+  overflow-wrap: anywhere;      /* long links wrap instead of widening the page */
+}
+/* shown when Darb could not answer (the agent server is off, or the login expired) */
+.msg-body p.agent-failed {
+  color: var(--text-3);
 }
 
 .replies,

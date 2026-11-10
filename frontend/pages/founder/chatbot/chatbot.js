@@ -1,43 +1,28 @@
 /* The conversation with Darb.
 
-   How it works today (frontend only):
-     1. The founder describes an idea.
-     2. Darb asks the QUESTIONS below, one at a time, and skips what it can already
-        tell from the description (for example the city).
-     3. Darb shows its steps, then the result with a card that opens the assessment panel.
-   The answers and results go through shared/assessments.js. When the agents are
-   connected, askNext() and runAnalysis() are the two places that will call them. */
+   How it works:
+     1. The founder describes an idea. The page saves it as a new assessment (Supabase).
+     2. Each founder message goes to the agent server's Conversational Agent
+        (shared/agent.js). It decides what to do: for an idea, it asks the
+        Competitor Agent for the competitor analysis, then answers the founder.
+     3. Darb's reply appears here as it arrives, and both messages are saved.
+   The agent remembers the conversation itself, so the page sends only the new message.
+
+   Assessments made before the agents were connected may have a (sample) score:
+   for those the result card and the assessment panel are still shown. */
 
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { getAccount } from '../../../shared/auth.js';
 import {
   say, label, scoreBand, whenText, chatLink, loadResult,
-  getAssessments, getAssessment, saveAssessment, saveMessage, newAssessment, sampleResult,
-  showSidebarHistory, AGENT_STEPS, assessmentsFailed,
+  getAssessments, getAssessment, saveAssessment, saveMessage, newAssessment,
+  showSidebarHistory, assessmentsFailed,
 } from '../../../shared/assessments.js';
+import { askDarb } from '../../../shared/agent.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import { showToast } from '../../../shared/ui.js';
 import { openPanel, closePanel, roadmapList } from './panel.js';
-
-/* What Darb needs before it can run the analysis */
-const QUESTIONS = [
-  { field: 'sector', ask: 'chat.askSector', options: ['ai', 'food', 'fashion', 'furniture'] },
-  { field: 'city',   ask: 'chat.askCity',   options: ['riyadh', 'jeddah', 'dammam'] },
-  { field: 'model',  ask: 'chat.askModel',  options: ['commission', 'subscription', 'sales'] },
-  { field: 'hiring', ask: 'chat.askHiring', options: ['yes', 'no', 'unsure'] },
-];
-
-/* Words in the description that already answer a question */
-const HINTS = {
-  city: {
-    riyadh: ['riyadh', 'الرياض'],
-    jeddah: ['jeddah', 'جدة', 'جده'],
-    dammam: ['dammam', 'الدمام'],
-  },
-};
-
-const STEP_TIME = 850;   // milliseconds each agent step takes on screen
 
 const chat = document.querySelector('#chat');
 const thread = document.querySelector('#thread');
@@ -46,9 +31,8 @@ const input = document.querySelector('#composer-input');
 const contextBox = document.querySelector('#composer-context');
 
 let current = null;           // the assessment of this conversation (empty on the home state)
-let waitingFor = null;        // the question Darb is waiting an answer for
 let askingAbout = null;       // the startup the next question is about
-let busy = false;             // true while Darb is "working"
+let busy = false;             // true while Darb is answering
 
 let account = { role: 'none' };   // who is signed in; filled when the page opens (see the end of this file)
 
@@ -103,53 +87,39 @@ function addAgent(text = '') {
   return body;
 }
 
-/* Three dots while Darb "thinks", then the message */
-async function agentSays(text) {
+/* Darb's reply from the agent server, shown as it arrives.
+   Three dots first, then the text grows piece by piece. Returns the full reply,
+   or an error message in the founder's language when Darb could not answer. */
+async function agentAnswers(text) {
   const body = addAgent();
   body.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
-  await wait(650);
-  body.innerHTML = '';
   const paragraph = document.createElement('p');
-  paragraph.textContent = text;
-  body.append(paragraph);
-  scrollToEnd();
-  return body;
-}
+  paragraph.className = 'agent-text';
 
-/* A question with quick answers. chosen = the answer already given (for saved conversations) */
-function addQuestion(question, chosen = '') {
-  const body = addAgent(t(question.ask));
-  const replies = document.createElement('div');
-  replies.className = 'replies';
-  replies.innerHTML = question.options
-    .map((option) => `<button type="button" class="pill ${option === chosen ? 'is-active' : ''}" data-answer="${option}" ${chosen ? 'disabled' : ''}>${label(option)}</button>`)
-    .join('');
-  body.append(replies);
-  scrollToEnd();
-}
+  // the agent's own conversation id for this assessment. The founder cannot write
+  // the thread_id column, so until the server saves one, the assessment id is used:
+  // it never changes, so the agent finds the same conversation next time.
+  const threadId = current.threadId || current.id;
 
-/* The agent's steps. live = play them one by one; otherwise show them finished and folded. */
-async function addTrace(live) {
-  const body = addAgent();
-  body.innerHTML = `
-    <details class="trace" ${live ? 'open' : ''}>
-      <summary><span class="trace-title">${t(live ? 'chat.working' : 'chat.worked').replace('{n}', AGENT_STEPS.length)}</span>${icon('chevron')}</summary>
-      <ol class="trace-steps">
-        ${AGENT_STEPS.map((step) => `<li class="${live ? '' : 'is-done'}"><span class="trace-dot">${icon('check')}</span>${t(step)}</li>`).join('')}
-      </ol>
-    </details>`;
-
-  if (!live) return;
-
-  const trace = body.querySelector('.trace');
-  for (const step of trace.querySelectorAll('li')) {
-    step.classList.add('is-running');
-    scrollToEnd();
-    await wait(STEP_TIME);
-    step.classList.replace('is-running', 'is-done');
+  try {
+    return await askDarb({
+      text,
+      assessmentId: current.id,
+      threadId,
+      onText: (soFar) => {
+        if (!paragraph.isConnected) body.replaceChildren(paragraph);   // the dots make room for the text
+        paragraph.textContent = soFar;   // as text, never as HTML
+        scrollToEnd();
+      },
+    });
+  } catch (error) {
+    console.error('Chat: Darb could not answer:', error.message);
+    const message = t(error.kind === 'signin' ? 'chat.agentSignIn' : 'chat.agentOffline');
+    paragraph.textContent = message;
+    paragraph.classList.add('agent-failed');
+    body.replaceChildren(paragraph);
+    return null;
   }
-  trace.querySelector('.trace-title').textContent = t('chat.worked').replace('{n}', AGENT_STEPS.length);
-  trace.open = false;
 }
 
 /* The result: a short summary and the card that opens the assessment */
@@ -211,16 +181,6 @@ function findStartup(id) {
   return current.result.similar.find((item) => item.id === id) || null;
 }
 
-/* The text of one follow-up answer from Darb */
-function replyText(message) {
-  const startup = findStartup(message.about);
-  if (startup) {
-    const facts = [startup.name, startup.region, startup.stage].filter(Boolean);
-    return `${t('chat.startupReply')} ${facts.join(' · ')}. ${startup.about}`;
-  }
-  return t('chat.sampleReply');
-}
-
 /* ---------- The home state ---------- */
 
 function showGreeting() {
@@ -263,8 +223,7 @@ async function showHome() {
 /* ---------- The conversation ---------- */
 
 function setPlaceholder() {
-  let key = 'chat.placeholder';
-  if (current) key = waitingFor ? 'chat.placeholderAnswer' : 'chat.placeholderFollow';
+  const key = current ? 'chat.placeholderFollow' : 'chat.placeholder';
   input.dataset.i18nPlaceholder = key;
   input.placeholder = t(key);
 }
@@ -283,109 +242,48 @@ function showHeaderButton() {
     : '';
 }
 
-/* Asks the next question that has no answer yet. With all answers in, runs the analysis. */
-async function askNext() {
-  waitingFor = QUESTIONS.find((question) => !current[question.field]) || null;
-  setPlaceholder();
+/* Sends one founder message to Darb, shows the reply and saves both.
+   about = the startup the question is about (from "Ask about it" in the panel) */
+async function talk(text, about = null) {
+  addUser(text, about);
 
-  if (waitingFor) {
-    addQuestion(waitingFor);
-    await saveMessage(current, 'agent', { text: t(waitingFor.ask) });
-  } else {
-    await runAnalysis();
+  // the agent only sees the words, so say which startup the question is about
+  const forAgent = about ? `(${t('chat.askingAbout')} ${about.name}) ${text}` : text;
+
+  busy = true;
+  const reply = await agentAnswers(forAgent);
+  busy = false;
+
+  // Both messages are saved only when Darb answered. A failed answer is shown but
+  // not saved, so the founder can send the message again without it appearing twice.
+  if (reply) {
+    await saveMessage(current, 'user', { text, about: about ? about.id : '' });
+    await saveMessage(current, 'agent', { text: reply });
   }
+  await save();   // updates the time, so the conversation moves to the top of History
+  if (current.score) addFollowUps();
+  input.focus();
 }
 
-/* The first message: the idea */
+/* The first message: the idea. The assessment must be saved first: the agent
+   needs it in the database to run the competitor analysis. */
 async function startConversation(idea) {
   current = newAssessment(idea);
-
-  // does the description already answer a question?
-  const words = idea.toLowerCase();
-  for (const [field, answers] of Object.entries(HINTS)) {
-    for (const [answer, hints] of Object.entries(answers)) {
-      if (hints.some((hint) => words.includes(hint))) {
-        current[field] = answer;
-        current.noted.push(field);
-      }
-    }
-  }
-
   showChat();
-  addUser(idea);
+  setPlaceholder();
+
   await save();
-  await saveMessage(current, 'user', { text: idea });
   history.replaceState(null, '', chatLink(current.id));
   showSidebarHistory();
 
-  busy = true;
-  await agentSays(introText());
-  await saveMessage(current, 'agent', { text: introText() });
-  busy = false;
-  await askNext();
+  await talk(idea);
 }
 
-/* "Got it…" plus what was understood from the description */
-function introText() {
-  const noted = current.noted.map((field) => `${t(`chat.field.${field}`)}: ${label(current[field])}`).join(' · ');
-  return noted ? `${t('chat.gotIdea')} ${t('chat.noted')} ${noted}.` : t('chat.gotIdea');
-}
-
-/* The founder answered the question Darb was waiting for */
-async function answerQuestion(answer) {
-  const question = waitingFor;
-  waitingFor = null;
-
-  // lock the quick answers of that question and mark the chosen one
-  thread.querySelectorAll('.replies .pill:not([disabled])').forEach((pill) => {
-    pill.disabled = true;
-    pill.classList.toggle('is-active', pill.dataset.answer === answer);
-  });
-
-  addUser(label(answer));
-  current[question.field] = answer;
-  await save();
-  await saveMessage(current, 'user', { text: label(answer) });
-  await askNext();
-}
-
-/* All answers are in: show the steps, then the result.
-   Later, this is where the page waits for the agents instead of sampleResult(). */
-async function runAnalysis() {
-  busy = true;
-  await agentSays(t('chat.confirm'));
-  await addTrace(true);
-
-  Object.assign(current, sampleResult());
-  await loadResult(current);   // the similar startups, market numbers and roadmap from the database
-  await save();
-  busy = false;
-
-  addResult();
-  await saveMessage(current, 'agent', { text: t('chat.result').replace('{score}', current.score) });
-  addFollowUps();
-  showHeaderButton();
-  setPlaceholder();
-  showSidebarHistory();
-}
-
-/* A free question after the result */
+/* A message after the first one */
 async function followUp(text) {
   const about = askingAbout;
   setAskingAbout(null);
-
-  addUser(text, about);
-  const reply = { from: 'agent', about: about ? about.id : '' };
-  current.extra.push({ from: 'user', text, about: about ? about.id : '' }, reply);
-
-  busy = true;
-  await agentSays(replyText(reply));
-  busy = false;
-
-  await save();
-  await saveMessage(current, 'user', { text, followUp: true, about: reply.about });
-  await saveMessage(current, 'agent', { text: replyText(reply), followUp: true, about: reply.about });
-  addFollowUps();
+  await talk(text, about);
 }
 
 /* "Build my establishment roadmap" */
@@ -413,44 +311,23 @@ async function showSaved() {
   thread.innerHTML = '';
   showChat();
 
-  addUser(say(current.idea));
-  addAgent(introText());
-
-  for (const question of QUESTIONS) {
-    const answer = current[question.field];
-    if (answer && !current.noted.includes(question.field)) {
-      addQuestion(question, answer);
-      addUser(label(answer));
-    }
-  }
-
-  if (!current.score) {
-    await askNext();   // not finished: continue where the founder stopped
-    return;
-  }
-
-  if (!current.result) await loadResult(current);
-
-  addAgent(t('chat.confirm'));
-  await addTrace(false);
-  addResult();
-
-  if (current.roadmapShown) {
-    addUser(t('chat.followRoadmap'));
-    addRoadmap();
-  }
-
-  for (const message of current.extra) {
+  for (const message of current.history) {
     if (message.from === 'user') {
-      addUser(message.text, findStartup(message.about));
+      addUser(say(message.text));
     } else {
-      addAgent(replyText(message));
+      addAgent(say(message.text));
     }
   }
 
-  waitingFor = null;
+  // older assessments with a score: the result card that opens the assessment panel
+  if (current.score) {
+    if (!current.result) await loadResult(current);
+    addResult();
+    if (current.roadmapShown) addRoadmap();
+    addFollowUps();
+  }
+
   setPlaceholder();
-  addFollowUps();
 }
 
 /* ---------- The box the founder writes in ---------- */
@@ -487,8 +364,6 @@ composer.addEventListener('submit', async (event) => {
 
   if (!current) {
     await startConversation(text);
-  } else if (waitingFor) {
-    await answerQuestion(text);
   } else {
     await followUp(text);
   }
@@ -503,12 +378,6 @@ document.addEventListener('click', (event) => {
     input.value = example.textContent;
     resizeInput();
     input.focus();
-  }
-
-  // a quick answer to Darb's question
-  const answer = event.target.closest('[data-answer]');
-  if (answer && waitingFor && !busy) {
-    answerQuestion(answer.dataset.answer);
   }
 
   // anything that opens the assessment panel on a tab
