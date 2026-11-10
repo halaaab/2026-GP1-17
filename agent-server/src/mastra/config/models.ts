@@ -20,3 +20,6 @@ export const SIMILARITY_THRESHOLD = 0.35;
 export const WEB_SEARCH_THRESHOLD = 0.5;
 
 export const MAX_COMPETITORS = 3;
+
+// The structured idea profile (lib/idea-profile.ts): OpenAI's smaller model, temperature 0 (design §16).
+export const PROFILE_MODEL = 'gpt-4o-mini';
