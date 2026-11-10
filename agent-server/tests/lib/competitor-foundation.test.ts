@@ -171,3 +171,36 @@ describe('delegation: after the Competitor Agent runs', () => {
     expect(onCompetitorDelegationComplete(completeContext('never-started', undefined))).toBeUndefined();
   });
 });
+
+describe('delegation: decided in code from what the founder wrote', () => {
+  function withFounderMessages(prompt: string, founder: string[]) {
+    const ctx = startContext(prompt);
+    (ctx as unknown as { messages: unknown[] }).messages = founder.map((content) => ({ role: 'user', content }));
+    return ctx;
+  }
+
+  it('uses the language of the founder’s last message, not the model’s choice', async () => {
+    const ctx = withFounderMessages(JSON.stringify({ ...written, language: 'ar', idea_text: 'Healthy lunch boxes for offices' }), [
+      'Healthy lunch boxes for offices in Dammam',
+    ]);
+    await onCompetitorDelegationStart(ctx);
+    expect((ctx.requestContext.get(HANDOFF_KEY) as { language: string }).language).toBe('en');
+  });
+
+  it('drops known facts the founder never said', async () => {
+    const handoff = { ...written, language: 'en', idea_text: 'Healthy lunch boxes for offices in Dammam', known_facts: { customer: 'offices in Dammam', problem: 'Busy workers skip meals' } };
+    const ctx = withFounderMessages(JSON.stringify(handoff), ['Healthy lunch boxes for offices in Dammam']);
+    await onCompetitorDelegationStart(ctx);
+    expect((ctx.requestContext.get(HANDOFF_KEY) as { known_facts: unknown }).known_facts).toEqual({ customer: 'offices in Dammam' });
+  });
+
+  it('fills the reply rules shared with the supervisor’s run', async () => {
+    const ctx = withFounderMessages(JSON.stringify(written), ['تطبيق يربط المطاعم بالمزارع المحلية']);
+    const rules = { sentences: [] as string[], language: null as string | null };
+    ctx.requestContext.set('darbReplyRules', rules);
+    await onCompetitorDelegationStart(ctx);
+    const handoff = Handoff.parse(ctx.requestContext.get(HANDOFF_KEY));
+    onCompetitorDelegationComplete(completeContext(ctx.toolCallId, pendingResult(handoff, { durationMs: 1, traceId: null })));
+    expect(rules).toEqual({ sentences: [NOTE_TEXT.capability_pending.ar], language: 'ar', codeWritesReply: true });
+  });
+});

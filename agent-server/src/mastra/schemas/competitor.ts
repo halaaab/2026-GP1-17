@@ -286,3 +286,45 @@ export const Result = z
     if (new Set(r.notes).size !== r.notes.length) issue('a note code appears twice', ['notes']);
   });
 export type Result = z.infer<typeof Result>;
+
+// ---------------------------------------------------------------------------
+// f) Run log: one line per Competitor Agent run (design §11 usage, §12 tracing, §18 shared log format)
+// Ids, codes and timings only: never the founder's idea text (idea privacy, design §5).
+// ---------------------------------------------------------------------------
+
+export const CAPABILITIES = ['understand', 'discover', 'identify', 'validate', 'judge', 'analyze', 'guardrails'] as const;
+export const Capability = z.enum(CAPABILITIES);
+export type Capability = z.infer<typeof Capability>;
+
+export const RunLogStep = z
+  .object({
+    capability: Capability,
+    outcome: z.enum(['ok', 'skipped', 'failed']),
+    duration_ms: z.number().int().min(0),
+    detail: z.string().optional(), // a short code or count, never founder text
+  })
+  .strict();
+export type RunLogStep = z.infer<typeof RunLogStep>;
+
+export const RunLog = z
+  .object({
+    event: z.literal('competitor_run'),
+    trace_id: z.string().min(1).nullable(),
+    assessment_id: z.uuid(),
+    idea_id: z.uuid(),
+    mode: HandoffMode,
+    language: Language,
+    started_at: z.iso.datetime({ offset: true }),
+    duration_ms: z.number().int().min(0),
+    status: ResultStatus,
+    result_valid: z.boolean(), // false when the run's own result failed the check and the fallback was used
+    competitors_shown: z.number().int().min(0).max(3),
+    iss: z.number().int().min(0).max(100).nullable(),
+    notes: z.array(NoteCode),
+    dropped_known_facts: z.array(z.enum(['problem', 'customer', 'offering', 'market'])), // guesses removed by code
+    tavily_calls: z.number().int().min(0).max(MAX_TAVILY_CALLS),
+    judge_calls: z.number().int().min(0),
+    steps: z.array(RunLogStep),
+  })
+  .strict();
+export type RunLog = z.infer<typeof RunLog>;

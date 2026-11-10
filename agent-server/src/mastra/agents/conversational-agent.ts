@@ -7,6 +7,7 @@ import { Memory } from '@mastra/memory';
 import { competitorAgent } from './competitor-agent';
 import { CHAT_MODEL } from '../config/models';
 import { competitorDelegation } from '../lib/competitor-delegation';
+import { replyGuard } from '../lib/reply-guard';
 import { darbStore } from '../lib/storage';
 import { predictSurvivalTool } from '../tools/predict-survival';
 
@@ -86,5 +87,10 @@ export const conversationalAgent = new Agent({
   agents: { competitorAgent },
   // The keys are the tool names the model sees, matching the instructions.
   tools: { predict_survival: predictSurvivalTool },
-  defaultOptions: { delegation: competitorDelegation },
+  // Room for a delegation, a working-memory update and the reply.
+  defaultOptions: { delegation: competitorDelegation, maxSteps: 8 },
+  // The founder's language and the exact note sentences, decided in code (lib/reply-guard.ts).
+  // It is an input processor too, so each founder message starts with an empty set of reply rules.
+  inputProcessors: [replyGuard],
+  outputProcessors: [replyGuard],
 });
