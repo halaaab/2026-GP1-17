@@ -3,17 +3,22 @@
 //
 //   onDelegationStart     before the Competitor Agent runs: checks the handoff the supervisor wrote against the
 //                         Handoff schema, and adds assessment_id and idea_id from the server, never from the model.
+//                         Code also sets the founder's language from their message, and drops known_facts the
+//                         founder never said (design §4: stated facts only).
 //   messageFilter         the Competitor Agent sees only the handoff, not the founder's chat (design §2).
 //   onDelegationComplete  after it runs: takes the Result from finalize_result, checks it with the Result schema
 //                         (or builds a valid fallback), and adds the notes as sentences in the founder's language.
-//                         The supervisor sees only this, never the Competitor Agent's own text.
+//                         The supervisor sees only this, never the Competitor Agent's own text. It also tells the
+//                         reply guard (lib/reply-guard.ts) what the founder must see, and writes one run log line.
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
-import { Handoff, Result } from '../schemas/competitor';
+import { Handoff, Result, RunLog } from '../schemas/competitor';
 import { HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
 import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
 import { noteSentences } from './competitor-notes';
+import { detectLanguage, keepStatedFacts } from './founder-text';
+import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
 export const COMPETITOR_AGENT_ID = 'competitor-agent';
 
@@ -26,8 +31,10 @@ export const SupervisorHandoff = Handoff.omit({ assessment_id: true, idea_id: tr
 // What the supervisor sees after a delegation.
 export type DelegationReply = { result: Result; note_sentences: string[] };
 
+type Running = { handoff: Handoff; startedAt: number; droppedFacts: string[]; replyRules?: ReplyRules };
+
 // Handoffs of the delegations still running, by tool call id (both hooks receive it).
-const running = new Map<string, { handoff: Handoff; startedAt: number }>();
+const running = new Map<string, Running>();
 
 // The JSON object inside the supervisor's message (it may wrap it in a code block).
 export function jsonInside(text: string): unknown {
@@ -39,6 +46,21 @@ export function jsonInside(text: string): unknown {
   } catch {
     return undefined;
   }
+}
+
+// The text of the founder's messages the supervisor saw, oldest first.
+type ModelMessageLike = { role: string; content: unknown };
+export function founderMessages(messages: readonly ModelMessageLike[] | undefined): string[] {
+  return (messages ?? [])
+    .filter((m) => m.role === 'user')
+    .map((m) =>
+      typeof m.content === 'string'
+        ? m.content
+        : Array.isArray(m.content)
+          ? m.content.map((p: { type?: string; text?: string }) => (p.type === 'text' ? (p.text ?? '') : '')).join(' ')
+          : '',
+    )
+    .filter((t) => t.trim());
 }
 
 const reject = (reason: string): DelegationStartResult => ({ proceed: false, rejectionReason: reason });
@@ -62,9 +84,22 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   const assessment = await loadOwnedAssessment(assessmentId, userId);
   if (!assessment) return reject('That assessment does not exist for this founder.');
 
-  const handoff = Handoff.parse({ ...written.data, assessment_id: assessment.assessment_id, idea_id: assessment.idea_id });
+  // Decided in code from what the founder wrote, not taken from the model.
+  const said = founderMessages(ctx.messages as ModelMessageLike[]);
+  const language = detectLanguage(said.at(-1) ?? '') ?? written.data.language;
+  const facts = said.length ? keepStatedFacts(written.data.known_facts, said.join('\n')) : { kept: written.data.known_facts, dropped: [] };
+
+  const handoff = Handoff.parse({
+    ...written.data,
+    language,
+    known_facts: facts.kept,
+    assessment_id: assessment.assessment_id,
+    idea_id: assessment.idea_id,
+  });
   const startedAt = Date.now();
-  running.set(ctx.toolCallId, { handoff, startedAt });
+  // The reply rules box of this run (set by the reply guard). The request context copy shares it with the parent run.
+  const replyRules = ctx.requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined;
+  running.set(ctx.toolCallId, { handoff, startedAt, droppedFacts: facts.dropped, replyRules });
   ctx.requestContext.set(HANDOFF_KEY, handoff);
   ctx.requestContext.set(STARTED_AT_KEY, startedAt);
 
@@ -73,6 +108,30 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     modifiedPrompt: `Handoff:\n${JSON.stringify(handoff)}`,
     modifiedMaxSteps: COMPETITOR_MAX_STEPS,
   };
+}
+
+// One log line per run, in the shared format (schemas/competitor.ts RunLog). Ids and codes only, never idea text.
+export function runLog(started: Running, result: Result, resultValid: boolean): RunLog {
+  const { handoff } = started;
+  return RunLog.parse({
+    event: 'competitor_run',
+    trace_id: result.usage.trace_id,
+    assessment_id: handoff.assessment_id,
+    idea_id: handoff.idea_id,
+    mode: handoff.mode,
+    language: handoff.language,
+    started_at: new Date(started.startedAt).toISOString(),
+    duration_ms: Math.max(0, Date.now() - started.startedAt),
+    status: result.status,
+    result_valid: resultValid,
+    competitors_shown: result.competitors.length,
+    iss: result.iss,
+    notes: result.notes,
+    dropped_known_facts: started.droppedFacts,
+    tavily_calls: result.usage.tavily_calls,
+    judge_calls: 0,
+    steps: [{ capability: 'guardrails', outcome: resultValid ? 'ok' : 'failed', duration_ms: result.usage.duration_ms }],
+  });
 }
 
 export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): { resultText: string } | void {
@@ -87,7 +146,16 @@ export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): 
     ? checked.data
     : fallbackResult(started.handoff, { durationMs: Date.now() - started.startedAt, traceId: null });
 
-  const reply: DelegationReply = { result, note_sentences: noteSentences(result.notes, started.handoff.language) };
+  const sentences = noteSentences(result.notes, started.handoff.language);
+  if (started.replyRules) {
+    started.replyRules.sentences = sentences;
+    started.replyRules.language = started.handoff.language;
+    // Nothing to present and no question to ask: the founder sees exactly the note sentences, written by code.
+    started.replyRules.codeWritesReply = result.competitors.length === 0 && result.status !== 'needs_clarification' && sentences.length > 0;
+  }
+  console.info(JSON.stringify(runLog(started, result, checked.success)));
+
+  const reply: DelegationReply = { result, note_sentences: sentences };
   return { resultText: JSON.stringify(reply) };
 }
 

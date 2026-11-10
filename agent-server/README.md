@@ -68,6 +68,13 @@ How facts stay true (`src/mastra/lib/competitor-delegation.ts`, Mastra's delegat
 - After it runs, only finalize_result's output is used, checked against the Result schema (or replaced by a valid
   fallback). Notes are codes; `src/mastra/lib/competitor-notes.ts` turns them into Arabic or English sentences.
 
+Decided in code, never by a model:
+- The founder's language, from their own message (`lib/founder-text.ts`).
+- Stated facts only: a known fact the founder never said is dropped before the Competitor Agent sees it (`lib/founder-text.ts`).
+- When an analysis has no competitors to show, the founder sees exactly the note sentences: the reply guard
+  (`lib/reply-guard.ts`, a Mastra input and output processor) writes them into the stream and drops the model's own words.
+- One log line per run in the shared format (`RunLog` in `schemas/competitor.ts`): ids, codes and timings, never the idea text.
+
 `src/mastra/lib/idea-profile.ts` turns an idea or a startup description into the structured profile that is embedded.
 
 The earlier design's tools (cosine similarity search, ISIC confirmation, what-if) were removed; they are in the git history before this change.
@@ -89,7 +96,7 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 |---|---|
 | `npm test` | Runs the automated tests with fake databases and fake AI (no keys, no cost, a few seconds). |
 | `npm run test:coverage` | The same tests, plus how much of the code they cover. |
-| `npm run test:live -- <username>` | A real chat with the real agents, OpenAI and Supabase, in English and Arabic (6 checks, under a minute, a fraction of a cent). Deletes its test data at the end. Run it before a demo. |
+| `npm run test:live -- <username>` | A real chat with the real agents, OpenAI and Supabase: English, Arabic, and streamed like the website (12 checks, about 2 minutes, a fraction of a cent). Deletes its test data at the end. Run it before a demo. |
 | `npm run classify:startups` | Gives each startup its ISIC4 section and division (only startups without one). Add `-- --dry-run --limit 20` to preview without saving. |
 | `npm run test:assessment -- <username>` | Creates a test idea and assessment for that founder, and prints the request context to paste into Studio. |
 
