@@ -592,6 +592,8 @@
   "history.report": "Open the report",
   "history.empty": "No ideas match your search.",
   "chat.notSaved": "This conversation could not be saved. You can continue, but it will not appear in History.",
+  "chat.agentOffline": "Darb could not reach its assistant right now. Please try again in a moment.",
+  "chat.agentSignIn": "Please sign in again so Darb can answer.",
   "history.none": "You have no ideas yet. Start your first assessment.",
   "assess.back": "Back to conversation",
   "score.outOf": "out of 100",
