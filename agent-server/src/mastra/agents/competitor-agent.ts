@@ -13,7 +13,9 @@ export const competitorAgent = new Agent({
   id: COMPETITOR_AGENT_ID,
   name: 'Competitor Agent',
   // The supervisor reads this to know when and how to delegate.
-  description: `Finds the real competitors of a founder's startup idea in Saudi Arabia and returns a checked result. Send it exactly one JSON object, nothing else, with these fields:
+  description: `Finds the real competitors of a founder's startup idea in Saudi Arabia and returns a checked result. Call it with exactly one argument, "prompt", whose value is one JSON object written as text, for example
+prompt: "{\"mode\":\"new\",\"language\":\"en\",\"idea_text\":\"...\"}"
+Never pass mode, language or the other fields as separate arguments. The JSON object has these fields:
 - mode (required): "new" for a new idea, "what_if" for a changed version, "rerun" for the same idea again
 - language (required): "ar" or "en", the founder's language
 - idea_text (required): the full idea in the founder's own words, combined from all their messages
