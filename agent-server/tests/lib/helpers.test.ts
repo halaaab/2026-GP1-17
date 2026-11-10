@@ -1,41 +1,13 @@
-// Tests for the small shared helpers: embedded text, translation, embeddings, the owner check, and config data.
+// Tests for the small shared helpers: embeddings, the owner check, and config data.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ISIC_DIVISIONS } from '../../src/mastra/config/isic-divisions';
 import { ISIC_SECTION_LETTERS } from '../../src/mastra/config/sectors';
 import { APPROVED_DOMAINS } from '../../src/mastra/config/approved-domains';
-import { activityLine, startupEmbedText, toEnglish } from '../../src/mastra/lib/startup-text';
 import { embedTexts, toPgVector } from '../../src/mastra/lib/embeddings';
 
 const realFetch = globalThis.fetch;
 afterEach(() => {
   globalThis.fetch = realFetch;
-});
-
-describe('embedded text', () => {
-  it('is English, with no names, and the target market when known', () => {
-    const text = startupEmbedText({ startup_description: ' Buy now, pay later for tuition. ', target_market: 'B2C', isic_section: 'K', isic_division: '64' });
-    expect(text).toBe(
-      'Buy now, pay later for tuition. | Target market: B2C | Activity: Financial and insurance activities; Financial service activities, except insurance and pension funding',
-    );
-  });
-
-  it('leaves out a division that is not in the section', () => {
-    expect(activityLine('P', '64')).toBe('Activity: Education');
-    expect(activityLine('Z', '64')).toBeNull();
-  });
-});
-
-describe('translation to English', () => {
-  it('leaves English as it is, without calling OpenAI', async () => {
-    globalThis.fetch = vi.fn() as never;
-    expect(await toEnglish('BNPL for school fees')).toBe('BNPL for school fees');
-    expect(globalThis.fetch).not.toHaveBeenCalled();
-  });
-
-  it('translates Arabic', async () => {
-    globalThis.fetch = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: ' Tutoring platform for students ' } }] }))) as never;
-    expect(await toEnglish('منصة دروس خصوصية للطلاب')).toBe('Tutoring platform for students');
-  });
 });
 
 describe('embeddings', () => {

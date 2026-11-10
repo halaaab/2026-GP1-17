@@ -70,8 +70,7 @@ How facts stay true (`src/mastra/lib/competitor-delegation.ts`, Mastra's delegat
 
 `src/mastra/lib/idea-profile.ts` turns an idea or a startup description into the structured profile that is embedded.
 
-The tools of the earlier design (similarity_search, web_search, extract_and_verify_profile, finalize_competitors,
-delegate_competitor_analysis, get_competitor_details, run_what_if) are still in `src/mastra/tools` but not connected.
+The earlier design's tools (cosine similarity search, ISIC confirmation, what-if) were removed; they are in the git history before this change.
 
 ## Login and security
 
@@ -92,7 +91,6 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 | `npm run test:coverage` | The same tests, plus how much of the code they cover. |
 | `npm run test:live -- <username>` | A real chat with the real agents, OpenAI and Supabase, in English and Arabic (6 checks, under a minute, a fraction of a cent). Deletes its test data at the end. Run it before a demo. |
 | `npm run classify:startups` | Gives each startup its ISIC4 section and division (only startups without one). Add `-- --dry-run --limit 20` to preview without saving. |
-| `npm run embed:startups` | Embeds every startup that has no embedding yet. Safe to run again. |
 | `npm run test:assessment -- <username>` | Creates a test idea and assessment for that founder, and prints the request context to paste into Studio. |
 
 ## Where everything goes
@@ -105,7 +103,7 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 | Approved websites | `src/mastra/config/approved-domains.ts` |
 | Which AI model each agent uses | `src/mastra/config/models.ts` |
 | Usage limits (steps, results, daily analyses) | `src/mastra/config/limits.ts` |
-| The ISIC4 sections (sector) founders choose from | `src/mastra/config/sectors.ts` |
+| The ISIC4 sections (sector) | `src/mastra/config/sectors.ts` |
 | The 85 ISIC4 divisions (sub-sector), from GASTAT's SSIC file | `src/mastra/config/isic-divisions.ts` |
 | The Supabase connection | `src/mastra/lib/supabase.ts` |
 | Registering a new agent | `src/mastra/index.ts` |
