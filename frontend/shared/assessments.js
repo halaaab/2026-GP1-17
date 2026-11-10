@@ -4,9 +4,8 @@
    The founder's ideas, answers and messages are saved in Supabase
    (tables startup_ideas, assessments and messages, migration 0005).
    The similar startups, market numbers and roadmap come from the real datasets
-   in the database (migration 0006). The SCORE is still a sample until the
-   prediction model is connected. When the agents arrive, only this file
-   changes; the chat and history pages stay as they are.
+   in the database (migration 0006). The conversation itself is answered by the
+   agent server (see shared/agent.js); this file only reads and saves it.
 
      import { getAssessments, getAssessment, saveAssessment } from '../../../shared/assessments.js';
      const list = await getAssessments();        // newest first
@@ -24,6 +23,8 @@
        factors: [14, 12, -3, -1],     // what moved the score up or down from 50
        roadmapShown: false,           // did the founder ask for the roadmap in the chat?
        extra:   [{ from: 'user', text: '...' }, { from: 'agent' }],   // follow-up messages after the result
+       history: [{ from: 'user', text: '...' }, { from: 'agent', text: '...' }],   // every message, oldest first
+       threadId: 'the agent's conversation id (column thread_id), empty until the server saves one',
        messages: 9,                   // how many messages the conversation has
        updated: '2026-10-05T10:00:00.000Z',
      }
@@ -83,13 +84,11 @@ export function whenText(date) {
   return new Date(date).toLocaleDateString(getLanguage() === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'short' });
 }
 
-/* ---------- The score (SAMPLE until the prediction model is connected) ---------- */
+/* ---------- The score (filled once the prediction model is connected) ---------- */
 
 /* What moves the score. The numbers for one assessment are in its "factors" list, in this order. */
 export const SCORE_FACTORS = ['score.factor.demand', 'score.factor.difference', 'score.factor.competition', 'score.factor.sectorRisk'];
 
-/* The steps the agent shows while it works */
-export const AGENT_STEPS = ['agent.step.understand', 'agent.step.similar', 'agent.step.market', 'agent.step.score', 'agent.step.explain'];
 
 /* ---------- Similar startups, market and roadmap (REAL data from the database) ----------
    The rows are real (tables startups, market_indicators and regulatory_requirements,
@@ -273,6 +272,8 @@ function fromRows(idea, assessment, messages) {
       text: message.content.text || '',
       about: message.content.about || '',
     })),
+    history: messages.map((message) => ({ from: message.sender_role, text: message.content.text || '' })),
+    threadId: assessment.thread_id || '',
     messages: messages.length,
     updated: idea.updated_at || idea.created_at,
   };
@@ -324,6 +325,7 @@ export function newAssessment(idea) {
     sector: '', city: '', model: '', hiring: '',
     noted: [],
     score: null, factors: [], roadmapShown: false, extra: [],
+    history: [], threadId: '',
     messages: 0,
     updated: new Date().toISOString(),
   };
@@ -388,6 +390,7 @@ export async function saveAssessment(assessment) {
               { followUp: true, about: 'the startup id it refers to' } */
 export async function saveMessage(assessment, from, content) {
   assessment.messages += 1;
+  assessment.history.push({ from, text: content.text || '' });   // so the page can draw it again
   if (!assessment.isSaved) return;
 
   const { error } = await supabase.from('messages').insert({
@@ -397,11 +400,6 @@ export async function saveMessage(assessment, from, content) {
     content,
   });
   if (error) report('save a message', error);
-}
-
-/* The sample result the "agent" gives today. The real one comes from the prediction model. */
-export function sampleResult() {
-  return { score: 72, factors: [14, 12, -3, -1] };
 }
 
 /* ---------- The list of past assessments in the sidebar ---------- */
