@@ -1,14 +1,18 @@
-// Live end-to-end test: a real chat with the real agents, OpenAI, Tavily and Supabase, checked against the database.
+// Live end-to-end test: a real chat with the real agents, OpenAI and Supabase.
 // Run with: npm run test:live -- <username of a test founder>
-// It creates a test idea, chats through the whole flow, prints PASS or FAIL for each check, then deletes its test data.
-// It costs a few cents of OpenAI and Tavily credit, and takes about two minutes.
+// It creates a test idea, describes it once in English and once in Arabic, prints PASS or FAIL for each check,
+// then deletes its test data. It costs a fraction of a cent of OpenAI credit and takes under a minute.
+//
+// Foundation checks (Competitor Agent, final design): describing an idea makes the Conversational Agent delegate
+// to the Competitor Agent, no form comes first, and the founder sees the capability_pending note in their language.
 import { RequestContext } from '@mastra/core/request-context';
+import { NOTE_TEXT } from '../src/mastra/lib/competitor-notes';
 import { getSupabase } from '../src/mastra/lib/supabase';
 
 process.loadEnvFile('.env');
 const { mastra } = await import('../src/mastra/index');
 
-type Step = { toolCalls?: { payload?: { toolName: string; args: unknown } }[]; toolResults?: { payload?: { toolName: string; result: unknown } }[] };
+type Step = { toolCalls?: { payload?: { toolName: string } }[] };
 const results: { check: string; ok: boolean; detail: string }[] = [];
 const check = (name: string, ok: boolean, detail = '') => {
   results.push({ check: name, ok, detail });
@@ -27,77 +31,37 @@ async function main() {
   if (ideaError) throw ideaError;
   const { data: assessment, error: assessmentError } = await supabase.from('assessments').insert({ idea_id: idea.idea_id, language: 'en', status: 'in_progress' }).select('assessment_id').single();
   if (assessmentError) throw assessmentError;
-  const assessmentId = assessment.assessment_id as string;
-  console.log(`Test assessment ${assessmentId}\n`);
+  console.log(`Test assessment ${assessment.assessment_id}\n`);
 
   const agent = mastra.getAgent('conversationalAgent');
-  const thread = `live-test-${Date.now()}`;
-  async function say(message: string) {
+  async function say(thread: string, message: string) {
     const requestContext = new RequestContext();
     requestContext.set('userId', user!.user_id);
-    requestContext.set('assessmentId', assessmentId);
+    requestContext.set('assessmentId', assessment!.assessment_id);
     const reply = await agent.generate(message, { requestContext, memory: { thread, resource: user!.user_id } });
-    const steps = (reply.steps ?? []) as Step[];
-    const calls = steps.flatMap((s) => s.toolCalls ?? []).map((c) => c.payload?.toolName ?? '');
-    const toolResults = Object.fromEntries(steps.flatMap((s) => s.toolResults ?? []).map((r) => [r.payload?.toolName ?? '', r.payload?.result]));
-    console.log(`> ${message}\n< ${reply.text.slice(0, 300).replace(/\n/g, ' ')}${reply.text.length > 300 ? '…' : ''}\n  tools: ${calls.join(', ') || 'none'}\n`);
-    return { text: reply.text, calls, toolResults };
+    const calls = ((reply.steps ?? []) as Step[]).flatMap((s) => s.toolCalls ?? []).map((c) => c.payload?.toolName ?? '');
+    const hookErrors = (requestContext.get('__mastra_delegationHookErrors') as unknown[] | undefined) ?? [];
+    console.log(`> ${message}\n< ${reply.text.replace(/\n/g, ' ')}\n  tools: ${calls.join(', ') || 'none'}\n`);
+    return { text: reply.text, calls, hookErrors };
   }
 
   try {
-    // 2. The idea, with everything given at once.
-    const first = await say(
-      'I want to build an app that lets Saudi parents pay private school fees in monthly instalments, buy now pay later. Sector K Financial and insurance activities, sub-sector 64, in Riyadh.',
+    // 2. English: an idea in one message.
+    const en = await say(
+      `live-test-en-${Date.now()}`,
+      'I want to build an app that lets restaurants in Riyadh order fresh vegetables directly from local farms.',
     );
-    check('no analysis before confirmation', !first.calls.includes('delegate_competitor_analysis'));
+    check('English: delegated to the Competitor Agent', en.calls.some((c) => /competitor/i.test(c)), en.calls.join(', '));
+    check('English: the delegation checks raised no error', en.hookErrors.length === 0, JSON.stringify(en.hookErrors));
+    check('English: the founder sees the capability_pending note', en.text.includes(NOTE_TEXT.capability_pending.en));
 
-    // 3. Confirmation runs the analysis.
-    const second = await say('Yes, that is correct. Please run the analysis.');
-    const analysis = second.toolResults.delegate_competitor_analysis as
-      | { status: string; competitors: { startup_id: string; name: string; similarity: number; source: string }[]; iss: number | null; comparison_matrix?: unknown }
-      | undefined;
-    check('analysis ran after confirmation', !!analysis, analysis?.status);
-    check('analysis found competitors', analysis?.status === 'ok' && analysis.competitors.length > 0, analysis?.competitors.map((c) => c.name).join(', '));
-    check('at most 3 competitors', (analysis?.competitors.length ?? 0) <= 3);
-    check('comparison matrix included', !!analysis?.comparison_matrix);
-
-    // 4. What the founder saw matches what was saved.
-    const { data: saved } = await supabase.from('similar_startup_results').select('startup_id, similarity_score, rank').eq('assessment_id', assessmentId).order('rank');
-    const datasetShown = (analysis?.competitors ?? []).filter((c) => c.source === 'dataset');
-    check(
-      'saved competitors match the ones shown',
-      JSON.stringify((saved ?? []).map((r) => r.startup_id)) === JSON.stringify(datasetShown.map((c) => c.startup_id)),
-      `${saved?.length ?? 0} saved`,
-    );
-    const { data: savedAssessment } = await supabase.from('assessments').select('iss, analysed_at, scenario_inputs').eq('assessment_id', assessmentId).single();
-    check('saved ISS matches the one shown', Number(savedAssessment?.iss) === analysis?.iss, `${savedAssessment?.iss} vs ${analysis?.iss}`);
-    check('analysis time saved (daily limit)', !!savedAssessment?.analysed_at);
-    check('confirmed sector and sub-sector saved', savedAssessment?.scenario_inputs?.sector === 'K' && savedAssessment?.scenario_inputs?.sub_sector === '64');
-    const ids = datasetShown.map((c) => c.startup_id);
-    const { data: real } = ids.length ? await supabase.from('startups').select('startup_id').in('startup_id', ids) : { data: [] };
-    check('every dataset competitor exists in Darb\'s data', (real?.length ?? 0) === ids.length);
-
-    // 5. A follow-up question is answered from the database, without guessing funding.
-    const name = analysis?.competitors.find((c) => c.source === 'dataset')?.name;
-    if (name) {
-      const third = await say(`Why is ${name} relevant? And how much funding have they raised?`);
-      check('follow-up read the stored record', third.calls.includes('get_competitor_details'));
-      check('no funding figure invented', !/(SAR|\$|USD|million|مليون)\s?\d|\d[\d,.]*\s?(SAR|USD|million|مليون)/i.test(third.text), third.text.slice(0, 80));
-    }
-
-    // 6. A what-if asks first, then creates a new version and compares.
-    const fourth = await say('What if it was for university tuition instead of school fees?');
-    check('what-if asks for confirmation first', !fourth.calls.includes('run_what_if'));
-    const fifth = await say('Yes, confirmed. Run it.');
-    const whatIf = fifth.toolResults.run_what_if as { status: string; assessment_id: string | null; comparison: { iss: { before: number | null; after: number | null } } | null } | undefined;
-    check('what-if ran', whatIf?.status === 'ok', whatIf?.status);
-    if (whatIf?.assessment_id) {
-      const { data: child } = await supabase.from('assessments').select('parent_assessment_id, iss').eq('assessment_id', whatIf.assessment_id).single();
-      check('what-if saved as a new version of the original', child?.parent_assessment_id === assessmentId);
-      check('comparison uses the saved scores', whatIf.comparison?.iss.before === analysis?.iss && whatIf.comparison?.iss.after === Number(child?.iss));
-    }
+    // 3. Arabic: the same kind of idea, in a new conversation.
+    const ar = await say(`live-test-ar-${Date.now()}`, 'فكرتي تطبيق يساعد المطاعم في الرياض تطلب خضار طازجة من المزارع المحلية مباشرة.');
+    check('Arabic: delegated to the Competitor Agent', ar.calls.some((c) => /competitor/i.test(c)), ar.calls.join(', '));
+    check('Arabic: the delegation checks raised no error', ar.hookErrors.length === 0, JSON.stringify(ar.hookErrors));
+    check('Arabic: the founder sees the capability_pending note in Arabic', ar.text.includes(NOTE_TEXT.capability_pending.ar));
   } finally {
-    // 7. Clean up: deleting the test idea deletes its assessments and saved results with it.
+    // 4. Clean up: deleting the test idea deletes its assessment with it.
     await supabase.from('startup_ideas').delete().eq('idea_id', idea.idea_id);
     console.log('\nTest data deleted.');
   }
@@ -108,6 +72,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error('Live test could not run:', error.message ?? error);
+  console.error(error);
   process.exit(1);
 });

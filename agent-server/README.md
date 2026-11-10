@@ -44,27 +44,34 @@ To stop the server, press `Ctrl + C` in the terminal.
 | Agent | Job |
 |---|---|
 | Conversational Agent | The supervisor and the only agent that talks to the founder. It runs the assessment and delegates to the other two. |
-| Competitor Agent | Finds similar startups and computes the Idea Similarity Score. |
+| Competitor Agent | A child agent of the Conversational Agent. Finds a founder's real competitors and returns a checked result (being rebuilt from the final design; for now it returns the note `capability_pending`). |
 | Founder Roadmap Agent | Builds the ordered roadmap of regulatory and practical steps. |
 
 ## How the agents connect
 
+The design is in `Darb_Competitor_Agent_Design` (Version 4). The Competitor Agent is a child agent of the Conversational Agent
+(Mastra supervisor pattern: `agents: { competitorAgent }`). It never talks to the founder.
+
 ```
-Conversational Agent
- ├── delegate_competitor_analysis → Competitor Agent
- │                                   ├── similarity_search
- │                                   └── finalize_competitors (top 3, ISS, saves the result)
- │                                   (the result also carries the comparison matrix, built in code)
- ├── get_competitor_details   (follow-up questions, from the database)
- └── run_what_if              (creates a changed version, analyses it, returns the exact before → after)
+Conversational Agent  (talks to the founder)
+ ├── competitor-agent  → Competitor Agent   (child agent)
+ │                        └── finalize_result (builds the Result in code)
+ └── predict_survival
 ```
 
-The website starts each conversation with `userId` and `assessmentId` in the request context.
-`web_search`, `extract-and-verify-profile` and `predict-survival` are not connected yet.
+The shapes they exchange are in `src/mastra/schemas/competitor.ts`: Handoff, IdeaProfile, Candidate, JudgeOutput and Result.
 
-How numbers stay true: similarity_search records every startup it really returns. finalize_competitors accepts only those,
-with the search's own name, description and score, and delegate_competitor_analysis returns only finalize_competitors' result,
-never the Competitor Agent's own text.
+How facts stay true (`src/mastra/lib/competitor-delegation.ts`, Mastra's delegation hooks):
+- Before the Competitor Agent runs, the handoff the supervisor wrote is checked against the Handoff schema,
+  and the server adds `assessment_id` and `idea_id`. The model never chooses them.
+- The Competitor Agent sees only the handoff, not the founder's chat.
+- After it runs, only finalize_result's output is used, checked against the Result schema (or replaced by a valid
+  fallback). Notes are codes; `src/mastra/lib/competitor-notes.ts` turns them into Arabic or English sentences.
+
+`src/mastra/lib/idea-profile.ts` turns an idea or a startup description into the structured profile that is embedded.
+
+The tools of the earlier design (similarity_search, web_search, extract_and_verify_profile, finalize_competitors,
+delegate_competitor_analysis, get_competitor_details, run_what_if) are still in `src/mastra/tools` but not connected.
 
 ## Login and security
 
@@ -83,7 +90,7 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 |---|---|
 | `npm test` | Runs the automated tests with fake databases and fake AI (no keys, no cost, a few seconds). |
 | `npm run test:coverage` | The same tests, plus how much of the code they cover. |
-| `npm run test:live -- <username>` | A real chat with the real agents, OpenAI, Tavily and Supabase, checked against the database (16 checks, about 2 minutes, a few cents). Deletes its test data at the end. Run it before a demo. |
+| `npm run test:live -- <username>` | A real chat with the real agents, OpenAI and Supabase, in English and Arabic (6 checks, under a minute, a fraction of a cent). Deletes its test data at the end. Run it before a demo. |
 | `npm run classify:startups` | Gives each startup its ISIC4 section and division (only startups without one). Add `-- --dry-run --limit 20` to preview without saving. |
 | `npm run embed:startups` | Embeds every startup that has no embedding yet. Safe to run again. |
 | `npm run test:assessment -- <username>` | Creates a test idea and assessment for that founder, and prints the request context to paste into Studio. |

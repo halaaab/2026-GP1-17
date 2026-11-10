@@ -5,12 +5,12 @@ process.env.DATABASE_URL ??= 'postgresql://user:pass@localhost:5432/test'; // ne
 
 const { competitorAgent } = await import('../../src/mastra/agents/competitor-agent');
 const { conversationalAgent } = await import('../../src/mastra/agents/conversational-agent');
-const { MAX_TOOL_STEPS } = await import('../../src/mastra/config/limits');
+const { COMPETITOR_MAX_STEPS, competitorDelegation } = await import('../../src/mastra/lib/competitor-delegation');
 const { RequestContext } = await import('@mastra/core/request-context');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
-const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|analysis|details|if|profile|survival)\b/g;
-const RESULT_FIELDS = new Set(['needs_web_search']); // named in the instructions, but fields of a tool result
+const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|analysis|details|if|profile|survival|result)\b/g;
+const RESULT_FIELDS = new Set(['needs_web_search', 'named_competitors', 'idea_profile']); // named in the instructions, but fields, not tools
 const toolNames = (text: string) => new Set((text.match(TOOL_NAME) ?? []).filter((n) => !RESULT_FIELDS.has(n)));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,13 +23,13 @@ describe('Competitor Agent', () => {
   it('has every tool its instructions name', async () => {
     const tools = Object.keys(await competitorAgent.listTools());
     const named = toolNames(await instructionsOf(competitorAgent));
-    expect([...named].sort()).toEqual(['extract_and_verify_profile', 'finalize_competitors', 'similarity_search', 'web_search']);
+    expect([...named].sort()).toEqual(['finalize_result']);
     for (const name of named) expect(tools).toContain(name);
   });
 
   it('stops after the step limit', async () => {
     const options = await competitorAgent.getDefaultOptions();
-    expect(options.maxSteps).toBe(MAX_TOOL_STEPS);
+    expect(options.maxSteps).toBe(COMPETITOR_MAX_STEPS);
   });
 });
 
@@ -41,21 +41,28 @@ describe('Conversational Agent', () => {
     for (const name of named) expect(tools).toContain(name);
   });
 
+  it('has the Competitor Agent as its child agent, with the delegation checks', async () => {
+    const agents = await conversationalAgent.listAgents();
+    expect(Object.values(agents).map((a) => a.id)).toContain('competitor-agent');
+    const options = await conversationalAgent.getDefaultOptions();
+    expect(options.delegation).toBe(competitorDelegation);
+  });
+
   it('is connected to the survival prediction', async () => {
     expect(Object.keys(await conversationalAgent.listTools())).toContain('predict_survival');
     expect(await instructionsOf(conversationalAgent)).toContain('predict_survival');
   });
 
-  it('is told the current assessment only when the server gave one', async () => {
+  it('can delegate only when the server started an assessment', async () => {
     const withAssessment = new RequestContext();
     withAssessment.set('assessmentId', '11111111-1111-4111-8111-111111111111');
-    expect(await instructionsOf(conversationalAgent, withAssessment)).toContain('11111111-1111-4111-8111-111111111111');
+    expect(await instructionsOf(conversationalAgent, withAssessment)).toContain('An assessment has been started');
     expect(await instructionsOf(conversationalAgent)).toContain('No assessment has been started');
   });
 
-  it('lists all 85 ISIC4 divisions for the founder to choose from', async () => {
+  it('never asks the founder to fill in a form before delegating (design §4)', async () => {
     const text = await instructionsOf(conversationalAgent);
-    expect(text).toContain('85 (in section P): Education');
-    expect(text).toContain('64 (in section K)');
+    expect(text).toContain('Only check that the message is an idea');
+    expect(text).not.toContain('ISIC4 divisions (code');
   });
 });

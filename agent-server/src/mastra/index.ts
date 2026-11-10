@@ -11,13 +11,8 @@ import { competitorAgent } from './agents/competitor-agent';
 import { conversationalAgent } from './agents/conversational-agent';
 import { darbStore } from './lib/storage';
 import { authMiddleware } from './server/auth';
-import { delegateCompetitorAnalysisTool } from './tools/delegate-competitor-analysis';
-import { finalizeCompetitorsTool } from './tools/finalize-competitors';
-import { getCompetitorDetailsTool } from './tools/get-competitor-details';
-import { similaritySearchTool } from './tools/similarity-search';
-import { webSearchTool } from './tools/web-search';
-import { extractAndVerifyProfileTool } from './tools/extract-and-verify-profile';
-import { runWhatIfTool } from './tools/run-what-if';
+import { finalizeResultTool } from './tools/finalize-result';
+import { predictSurvivalTool } from './tools/predict-survival';
 
 export const mastra = new Mastra({
   bundler: {
@@ -25,14 +20,11 @@ export const mastra = new Mastra({
   },
   agents: { conversationalAgent, competitorAgent },
   // Listed here too, so each tool can be run by hand in Studio's Tools tab.
+  // The tools of the earlier design (similarity_search, web_search, ...) are kept in src/mastra/tools but no
+  // longer connected: the Competitor Agent is being rebuilt from the final design.
   tools: {
-    similaritySearchTool,
-    webSearchTool,
-    extractAndVerifyProfileTool,
-    finalizeCompetitorsTool,
-    delegateCompetitorAnalysisTool,
-    getCompetitorDetailsTool,
-    runWhatIfTool,
+    finalizeResultTool,
+    predictSurvivalTool,
   },
   // Mastra's own data lives in Postgres (the "mastra" schema), so it survives restarts on the host.
   // During development, traces go to a local file instead, to keep test runs out of the database.
