@@ -395,6 +395,7 @@ describe('the summary and opportunity sentences (written in code)', async () => 
       `Possible difference (Co 2): It covers one gym chain, not many. Next step: ${OPPORTUNITY_TEXT.possible_difference.next.en}`,
     ]);
     for (const text of Object.values(OPPORTUNITY_TEXT)) expect(text.next.ar).toMatch(/[؀-ۿ]/);
+    expect(OPPORTUNITY_TEXT.possible_customer_difference.next.en).toBe('Interview your target customers.');
   });
 
   it('passes them to the supervisor with the result', async () => {

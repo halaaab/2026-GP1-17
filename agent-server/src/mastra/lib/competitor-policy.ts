@@ -71,14 +71,20 @@ export function quoteInEvidence(quote: string | undefined, evidence: string): bo
   return Boolean(quote && squash(quote).length >= 8 && squash(evidence).includes(squash(quote)));
 }
 
-// Competitive opportunities: four fixed rules on the judge's answers (explainer §6).
+// Competitive opportunities: four fixed rules on ONE competitor's answers (explainer §6), checked from top to
+// bottom; the first that matches wins, so a customer difference wins over an offering difference.
 //   customer different                      → proven difference
-//   offering (or customer) partly/different → possible difference, in the judge's words
+//   customer partly the same                → possible difference about the customer (interview customers)
+//   offering partly the same or different   → possible difference about the offering (validate it), in the judge's words
 //   problem, customer and offering the same → no clear difference
 //   anything else (mostly unknown)          → not enough evidence yet
-export function opportunityFor(answers: Record<'problem' | 'customer' | 'offering', Answer>): OpportunityKind {
+// Conflicting evidence counts as unknown here: contradictory evidence never produces a difference.
+export function opportunityFor(judged: Record<'problem' | 'customer' | 'offering', Answer>): OpportunityKind {
+  const known = (a: Answer): Answer => (a === 'conflicting' ? 'unknown' : a);
+  const answers = { problem: known(judged.problem), customer: known(judged.customer), offering: known(judged.offering) };
   if (answers.customer === 'different') return 'proven_difference';
-  if (['different', 'partly'].includes(answers.offering) || answers.customer === 'partly') return 'possible_difference';
+  if (answers.customer === 'partly') return 'possible_customer_difference';
+  if (['different', 'partly'].includes(answers.offering)) return 'possible_difference';
   if (answers.problem === 'same' && answers.customer === 'same' && answers.offering === 'same') return 'no_clear_difference';
   return 'not_enough_evidence';
 }

@@ -149,13 +149,24 @@ describe('competitive opportunities (four fixed rules)', () => {
   it('finds a proven difference when the customer is different', () => {
     expect(o('same', 'different', 'same')).toBe('proven_difference');
   });
-  it('finds a possible difference when the offering (or the customer) differs in part', () => {
+  it('finds a possible difference about the customer when the customer is only partly the same', () => {
+    expect(o('same', 'partly', 'same')).toBe('possible_customer_difference');
+  });
+  it('finds a possible difference about the offering when the offering differs in part or fully', () => {
     expect(o('same', 'same', 'partly')).toBe('possible_difference');
     expect(o('same', 'same', 'different')).toBe('possible_difference');
-    expect(o('same', 'partly', 'same')).toBe('possible_difference');
   });
   it('says honestly when there is no clear difference', () => {
     expect(o('same', 'same', 'same')).toBe('no_clear_difference');
+  });
+  it('takes the first matching rule from the top, so a customer difference wins', () => {
+    expect(o('same', 'different', 'partly')).toBe('proven_difference');
+    expect(o('same', 'partly', 'partly')).toBe('possible_customer_difference'); // the customer rule comes first
+  });
+  it('treats conflicting evidence as unknown, never as a difference', () => {
+    expect(o('same', 'conflicting', 'same')).toBe('not_enough_evidence');
+    expect(o('same', 'same', 'conflicting')).toBe('not_enough_evidence');
+    expect(o('same', 'conflicting', 'partly')).toBe('possible_difference'); // the difference comes from the offering
   });
   it('says there is not enough evidence when most answers are unknown', () => {
     expect(o('same', 'unknown', 'unknown')).toBe('not_enough_evidence');
