@@ -2,15 +2,20 @@
 // The delegation hook starts a fresh one for every run (lib/competitor-delegation.ts), so nothing leaks between runs,
 // and finalize_result builds the Result from it in code. The model only ever sees short summaries, never this state.
 //
-//   Understand  sets profile
-//   Discover / Identify / Validate (Member 1) add candidates, count tavilyCalls and raise notes
+//   Understand  sets profile, ideaEmbedding, and clarification when the idea is too vague to search
+//   Discover / Identify / Validate (Member 1) add candidates, count tavilyCalls, raise notes and log a "discover" step
 //   Judge       adds judged answers and counts judgeCalls
 import type { Candidate, IdeaProfile, JudgeOutput, NoteCode, RunLogStep } from '../schemas/competitor';
+import type { Clarification } from './understand';
 
 export const RUN_STATE_KEY = 'competitorRunState';
 
 export type RunState = {
   profile: IdeaProfile | null;
+  // The embedding of the structured profile (also saved in startup_ideas.embedding), for the corpus search.
+  ideaEmbedding: number[] | null;
+  // Set when the idea lacks the problem or the offering: finalize_result then asks this one question.
+  clarification: Clarification | null;
   candidates: Map<string, Candidate>; // by candidate_key
   judged: Map<string, JudgeOutput>; // by candidate_key
   judgeCalls: number;
@@ -20,7 +25,17 @@ export type RunState = {
 };
 
 export function newRunState(): RunState {
-  return { profile: null, candidates: new Map(), judged: new Map(), judgeCalls: 0, tavilyCalls: 0, notes: new Set(), steps: [] };
+  return {
+    profile: null,
+    ideaEmbedding: null,
+    clarification: null,
+    candidates: new Map(),
+    judged: new Map(),
+    judgeCalls: 0,
+    tavilyCalls: 0,
+    notes: new Set(),
+    steps: [],
+  };
 }
 
 type RequestContextLike = { get: (key: string) => unknown; set: (key: string, value: unknown) => void };

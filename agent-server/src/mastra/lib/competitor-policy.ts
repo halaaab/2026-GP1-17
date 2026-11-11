@@ -7,6 +7,7 @@
 //   computeIss      the Idea Similarity Score from the top 3, the closest counting most
 //   marketLevel     open / competitive / crowded from the number of valid direct competitors
 //   buildResult     the Result the supervisor receives, with the notes as codes
+//   clarificationResult  the Result that asks the founder one question instead
 import { ANSWER_POINTS, ANSWER_WEIGHTS, ISS_RANK_WEIGHTS, LIKELY_FACTOR, MARKET_LEVEL_MIN, MAX_SHOWN } from '../config/scoring';
 import {
   Result,
@@ -19,6 +20,7 @@ import {
   type NoteCode,
   type ResultCompetitor,
 } from '../schemas/competitor';
+import type { Clarification } from './understand';
 
 export type IssBasis = 'full' | 'problem_offering_only';
 export type FinalLabel = 'direct' | 'indirect' | 'not_competitor';
@@ -226,6 +228,21 @@ export type BuildInput = {
   runNotes: readonly NoteCode[];
   usage: Result['usage'];
 };
+
+// The idea is too vague to search: one question, no competitors and no scores (design §4).
+export function clarificationResult(profile: IdeaProfile, clarification: Clarification, usage: Result['usage']): Result {
+  return Result.parse({
+    status: 'needs_clarification',
+    clarification,
+    idea_profile: profile,
+    competitors: [],
+    iss: null,
+    iss_basis: null,
+    market_level: null,
+    notes: [],
+    usage,
+  });
+}
 
 // The checked Result: up to 3 competitors, the ISS and its basis, the market level and the notes.
 export function buildResult({ handoff, profile, judged, runNotes, usage }: BuildInput): Result {

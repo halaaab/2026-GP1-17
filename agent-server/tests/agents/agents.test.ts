@@ -9,7 +9,7 @@ const { COMPETITOR_MAX_STEPS, competitorDelegation } = await import('../../src/m
 const { RequestContext } = await import('@mastra/core/request-context');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
-const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|analysis|details|if|profile|survival|result)\b/g;
+const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|candidates|analysis|details|if|idea|profile|survival|result)\b/g;
 const RESULT_FIELDS = new Set(['needs_web_search', 'named_competitors', 'idea_profile']); // named in the instructions, but fields, not tools
 const toolNames = (text: string) => new Set((text.match(TOOL_NAME) ?? []).filter((n) => !RESULT_FIELDS.has(n)));
 
@@ -23,7 +23,7 @@ describe('Competitor Agent', () => {
   it('has every tool its instructions name', async () => {
     const tools = Object.keys(await competitorAgent.listTools());
     const named = toolNames(await instructionsOf(competitorAgent));
-    expect([...named].sort()).toEqual(['finalize_result']);
+    expect([...named].sort()).toEqual(['finalize_result', 'understand_idea']);
     for (const name of named) expect(tools).toContain(name);
   });
 

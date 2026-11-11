@@ -5,6 +5,7 @@
 //
 // Foundation checks (Competitor Agent, final design): describing an idea makes the Conversational Agent delegate
 // to the Competitor Agent, no form comes first, and the founder sees the capability_pending note in their language.
+// Understand check: a vague idea makes the Competitor Agent ask the founder one question instead.
 import { RequestContext } from '@mastra/core/request-context';
 import { NOTE_TEXT } from '../src/mastra/lib/competitor-notes';
 import { replyProblems } from '../src/mastra/lib/reply-guard';
@@ -78,6 +79,11 @@ async function main() {
 
     // 4. Streamed, as the website receives it: a rewrite must never show the founder two replies.
     checkReply('Streamed', await stream(`live-test-stream-${Date.now()}`, 'Healthy lunch boxes delivered to offices in Dammam every day.'), 'en');
+
+    // 5. A vague idea: the Competitor Agent asks one question instead of searching (design §4, PBI 34).
+    const vague = await say(`live-test-vague-${Date.now()}`, 'I want to start a business in the food sector.');
+    check('Vague idea: delegated to the Competitor Agent', vague.calls.some((c) => /competitor/i.test(c)), vague.calls.join(', '));
+    check('Vague idea: asks one question, shows no note', /[?؟]/.test(vague.text) && !vague.text.includes(NOTE_TEXT.capability_pending.en), vague.text);
   } finally {
     // 4. Clean up: deleting the test idea deletes its assessment with it.
     await supabase.from('startup_ideas').delete().eq('idea_id', idea.idea_id);
