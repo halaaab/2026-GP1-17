@@ -48,6 +48,11 @@ describe('Conversational Agent', () => {
     expect(options.delegation).toBe(competitorDelegation);
   });
 
+  it('decides at temperature 0, so the same message gets the same decision', async () => {
+    const options = await conversationalAgent.getDefaultOptions();
+    expect(options.modelSettings).toMatchObject({ temperature: 0 });
+  });
+
   it('is connected to the survival prediction', async () => {
     expect(Object.keys(await conversationalAgent.listTools())).toContain('predict_survival');
     expect(await instructionsOf(conversationalAgent)).toContain('predict_survival');
