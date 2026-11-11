@@ -1,7 +1,8 @@
 // The guardrails (design §9, §10): everything that decides what the founder sees is done here, in code.
 //
 //   applyPolicy     the policy rules on one judge answer: citation check, Direct / Indirect / not a competitor,
-//                   and the competitor's similarity score from the answers (the judge never writes numbers)
+//                   the competitor's similarity score from the answers (the judge never writes numbers),
+//                   and its competitive opportunity (explainer §6)
 //   rankCompetitors the policy gate: only valid companies with evidence, one per company, never the founder's own
 //                   startup or a reference; Confirmed before Likely, then the strongest overlap
 //   computeIss      the Idea Similarity Score from the top 3, the closest counting most
@@ -18,6 +19,7 @@ import {
   type JudgeAnswer,
   type JudgeOutput,
   type NoteCode,
+  type OpportunityKind,
   type ResultCompetitor,
 } from '../schemas/competitor';
 import type { Clarification } from './understand';
@@ -35,6 +37,8 @@ export type PolicyOutcome = {
   offering: JudgeAnswer;
   similarity_score: number;
   reason: string;
+  opportunity: OpportunityKind;
+  difference: string | null; // the judge's sentence, or null for "none"
 };
 
 // The ISS uses the customer only when the founder's customer is known (design §10, "Customer unknown").
@@ -60,6 +64,25 @@ export function citesCandidate(url: string | undefined, candidate: Candidate): b
   return candidate.sources.some((s) => s.url === url) || own.includes(host);
 }
 
+// The quote check: the quoted sentence must really be in this candidate's evidence (spaces and letter case aside),
+// so a "same" can never rest on a sentence the judge made up.
+export function quoteInEvidence(quote: string | undefined, evidence: string): boolean {
+  const squash = (text: string) => text.toLowerCase().replace(/\s+/g, ' ').trim();
+  return Boolean(quote && squash(quote).length >= 8 && squash(evidence).includes(squash(quote)));
+}
+
+// Competitive opportunities: four fixed rules on the judge's answers (explainer §6).
+//   customer different                      → proven difference
+//   offering (or customer) partly/different → possible difference, in the judge's words
+//   problem, customer and offering the same → no clear difference
+//   anything else (mostly unknown)          → not enough evidence yet
+export function opportunityFor(answers: Record<'problem' | 'customer' | 'offering', Answer>): OpportunityKind {
+  if (answers.customer === 'different') return 'proven_difference';
+  if (['different', 'partly'].includes(answers.offering) || answers.customer === 'partly') return 'possible_difference';
+  if (answers.problem === 'same' && answers.customer === 'same' && answers.offering === 'same') return 'no_clear_difference';
+  return 'not_enough_evidence';
+}
+
 // A competitor's similarity score, 0–100: same = full points, partly = half, the rest none (design §10).
 export function similarityScore(answers: Record<'problem' | 'customer' | 'offering', Answer>, basis: IssBasis): number {
   const parts = basis === 'full' ? (['problem', 'customer', 'offering'] as const) : (['problem', 'offering'] as const);
@@ -70,9 +93,11 @@ export function similarityScore(answers: Record<'problem' | 'customer' | 'offeri
 
 // The policy rules on one judge answer (design §9).
 export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: IdeaProfile): PolicyOutcome {
-  // A "same" answer without a supporting source from this candidate becomes "unknown".
+  // A "same" answer needs a source from this candidate and a quote that is really in its evidence; otherwise "unknown".
   const checked = (a: JudgeAnswer): JudgeAnswer =>
-    a.answer === 'same' && !citesCandidate(a.source_url, candidate) ? { answer: 'unknown', note: a.note } : a;
+    a.answer === 'same' && !(citesCandidate(a.source_url, candidate) && quoteInEvidence(a.quote, candidate.evidence_text))
+      ? { answer: 'unknown', note: a.note }
+      : a;
   const problem = checked(judge.problem);
   const customer = checked(judge.customer);
   const offering = checked(judge.offering);
@@ -87,6 +112,8 @@ export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: I
     offering,
     similarity_score: label === 'not_competitor' ? 0 : similarityScore(answers, issBasis(profile)),
     reason: judge.reason.trim(),
+    opportunity: opportunityFor(answers),
+    difference: judge.difference && !/^none\.?$/i.test(judge.difference.trim()) ? judge.difference.trim() : null,
   });
 
   // Articles, lists and directory pages are never results.
@@ -217,6 +244,8 @@ function toCompetitor(j: Judged, rank: number): ResultCompetitor {
     comparison: { problem: cell(j.policy.problem), customer: cell(j.policy.customer), offering: cell(j.policy.offering) },
     sources: c.sources,
     similarity_score: j.policy.similarity_score,
+    opportunity: j.policy.opportunity,
+    difference: j.policy.difference,
   };
 }
 

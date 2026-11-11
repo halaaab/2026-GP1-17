@@ -42,6 +42,8 @@ export function resultRows(assessmentId: string, competitors: readonly ResultCom
     comparison: c.comparison,
     sources: c.sources,
     similarity_score: c.similarity_score,
+    opportunity: c.opportunity ?? null, // migration 0034
+    differences: c.difference ?? null, // the existing column (0024): the judge's difference sentence
   }));
 }
 
@@ -87,7 +89,7 @@ export async function loadStoredResult(assessmentId: string): Promise<StoredResu
   if (assessment.error) throw assessment.error;
   const rows = await supabase
     .from('similar_startup_results')
-    .select('rank, competitor_name, website, description, city_region, source_type, startup_id, label, evidence_status, reason, comparison, sources, similarity_score')
+    .select('rank, competitor_name, website, description, city_region, source_type, startup_id, label, evidence_status, reason, comparison, sources, similarity_score, opportunity, differences')
     .eq('assessment_id', assessmentId)
     .order('rank');
   if (rows.error) throw rows.error;
@@ -111,6 +113,8 @@ export async function loadStoredResult(assessmentId: string): Promise<StoredResu
       comparison: r.comparison,
       sources: r.sources ?? [],
       similarity_score: r.similarity_score,
+      opportunity: r.opportunity ?? undefined,
+      difference: r.differences ?? null,
     })),
   };
 }

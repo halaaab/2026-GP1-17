@@ -18,5 +18,9 @@ export const LIKELY_FACTOR = 0.9;
 // Market level (Definition 4): the number of valid direct competitors, one per company. Below COMPETITIVE it is "open".
 export const MARKET_LEVEL_MIN = { competitive: 3, crowded: 6 } as const;
 
+// The words shown next to the ISS (explainer §9: "Higher similarity"). The website uses the same cut-offs
+// (frontend/pages/founder/chatbot/panel.js, ISS_BANDS): change both together.
+export const ISS_BANDS = { higher: 70, moderate: 40 } as const;
+
 // Most competitors shown to the founder (design §10).
 export const MAX_SHOWN = 3;

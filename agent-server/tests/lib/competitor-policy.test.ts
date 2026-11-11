@@ -4,6 +4,8 @@ import { describe, expect, it } from 'vitest';
 import {
   applyPolicy,
   buildResult,
+  opportunityFor,
+  quoteInEvidence,
   citesCandidate,
   computeIss,
   hostOf,
@@ -38,7 +40,7 @@ function candidate(key: string, extra: Partial<Candidate> = {}, status: 'confirm
     name_aliases: [],
     website: `https://www.${key}.sa`,
     domain: `${key}.sa`,
-    evidence_text: 'Page text',
+    evidence_text: 'We supply fresh vegetables to restaurants in Riyadh every morning.',
     description: `${key} supplies restaurants with fresh produce.`,
     city_region: 'Riyadh',
     sources: [{ url: `https://www.${key}.sa/about`, source_type: 'official_site', accessed_at: NOW }],
@@ -47,7 +49,8 @@ function candidate(key: string, extra: Partial<Candidate> = {}, status: 'confirm
   };
 }
 
-const same = (key: string) => ({ answer: 'same' as const, note: 'Same.', source_url: `https://www.${key}.sa/about` });
+const QUOTE = 'fresh vegetables to restaurants in Riyadh';
+const same = (key: string) => ({ answer: 'same' as const, note: 'Same.', source_url: `https://www.${key}.sa/about`, quote: QUOTE });
 const ans = (answer: 'partly' | 'different' | 'unknown' | 'conflicting') => ({ answer, note: answer });
 
 function judge(key: string, extra: Partial<JudgeOutput> = {}): JudgeOutput {
@@ -88,10 +91,19 @@ describe('the policy rules on one judge answer', () => {
   });
 
   it('turns a "same" without a source from this candidate into "unknown"', () => {
-    const p = judged('a', { customer: { answer: 'same', note: 'x', source_url: 'https://other-site.com/page' }, offering: { answer: 'same', note: 'x' } }).policy;
+    const p = judged('a', { customer: { answer: 'same', note: 'x', source_url: 'https://other-site.com/page', quote: QUOTE }, offering: { answer: 'same', note: 'x', quote: QUOTE } }).policy;
     expect(p.customer.answer).toBe('unknown');
     expect(p.offering.answer).toBe('unknown');
     expect(p.label).toBe('indirect'); // Direct needs the same customer
+  });
+
+  it('turns a "same" whose quote is missing or not in the evidence into "unknown"', () => {
+    const noQuote = judged('a', { problem: { answer: 'same', note: 'x', source_url: 'https://www.a.sa/about' } }).policy;
+    expect(noQuote.problem.answer).toBe('unknown');
+    const madeUp = judged('a', { customer: { ...same('a'), quote: 'We only serve restaurants in Jeddah' } }).policy;
+    expect(madeUp.customer.answer).toBe('unknown');
+    expect(quoteInEvidence('  FRESH vegetables   to restaurants ', 'We supply fresh vegetables to restaurants.')).toBe(true);
+    expect(quoteInEvidence('short', 'short text')).toBe(false); // too short to prove anything
   });
 
   it('accepts a source on the candidate’s own site, with or without www', () => {
@@ -127,6 +139,34 @@ describe('the policy rules on one judge answer', () => {
 
   it('never upgrades Indirect to Direct', () => {
     expect(judged('a', { label: 'indirect' }).policy.label).toBe('indirect');
+  });
+});
+
+describe('competitive opportunities (four fixed rules)', () => {
+  const o = (problem: string, customer: string, offering: string) =>
+    opportunityFor({ problem, customer, offering } as Parameters<typeof opportunityFor>[0]);
+
+  it('finds a proven difference when the customer is different', () => {
+    expect(o('same', 'different', 'same')).toBe('proven_difference');
+  });
+  it('finds a possible difference when the offering (or the customer) differs in part', () => {
+    expect(o('same', 'same', 'partly')).toBe('possible_difference');
+    expect(o('same', 'same', 'different')).toBe('possible_difference');
+    expect(o('same', 'partly', 'same')).toBe('possible_difference');
+  });
+  it('says honestly when there is no clear difference', () => {
+    expect(o('same', 'same', 'same')).toBe('no_clear_difference');
+  });
+  it('says there is not enough evidence when most answers are unknown', () => {
+    expect(o('same', 'unknown', 'unknown')).toBe('not_enough_evidence');
+    expect(o('partly', 'same', 'unknown')).toBe('not_enough_evidence');
+  });
+  it('keeps the judge’s difference sentence, and drops "none"', () => {
+    expect(judged('a', { offering: ans('partly'), difference: 'It covers one chain, not many.' }).policy).toMatchObject({
+      opportunity: 'possible_difference',
+      difference: 'It covers one chain, not many.',
+    });
+    expect(judged('a', { difference: 'None.' }).policy).toMatchObject({ opportunity: 'no_clear_difference', difference: null });
   });
 });
 
@@ -221,7 +261,7 @@ describe('the Result', () => {
     expect(Result.safeParse(result).success).toBe(true);
     expect(result.competitors.map((c) => c.rank)).toEqual([1, 2, 3]);
     expect(result).toMatchObject({ status: 'complete', iss: 100, iss_basis: 'full', market_level: 'competitive', notes: [] });
-    expect(result.competitors[0]).toMatchObject({ label: 'direct', evidence_status: 'confirmed', description: 'a supplies restaurants with fresh produce.' });
+    expect(result.competitors[0]).toMatchObject({ label: 'direct', evidence_status: 'confirmed', description: 'a supplies restaurants with fresh produce.', opportunity: 'no_clear_difference' });
   });
 
   it('says none were found, with no ISS and no market level', () => {
