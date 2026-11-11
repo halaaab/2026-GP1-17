@@ -10,7 +10,7 @@ const { RequestContext } = await import('@mastra/core/request-context');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
 const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|candidates|analysis|details|if|idea|profile|survival|result)\b/g;
-const RESULT_FIELDS = new Set(['needs_web_search', 'named_competitors', 'idea_profile']); // named in the instructions, but fields, not tools
+const RESULT_FIELDS = new Set(['needs_web_search', 'named_competitors', 'idea_profile', 'what_if']); // named in the instructions, but fields or modes, not tools
 const toolNames = (text: string) => new Set((text.match(TOOL_NAME) ?? []).filter((n) => !RESULT_FIELDS.has(n)));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

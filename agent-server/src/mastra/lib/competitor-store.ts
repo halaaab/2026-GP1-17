@@ -131,13 +131,16 @@ async function analysesSince(userId: string, since: string): Promise<number> {
 }
 
 // The limit note when this founder may not start another analysis, else null. Re-running an assessment already
-// analysed today is free. If the count cannot be read, the analysis is allowed (the dashboards' spending caps remain).
-export async function analysisLimit(userId: string, assessmentId: string, now = new Date()): Promise<NoteCode | null> {
+// analysed today is free; a what-if is always a new analysis (assessmentId null). If the count cannot be read,
+// the analysis is allowed (the dashboards' spending caps remain).
+export async function analysisLimit(userId: string, assessmentId: string | null, now = new Date()): Promise<NoteCode | null> {
   try {
-    const { data, error } = await getSupabase().from('assessments').select('analysed_at').eq('assessment_id', assessmentId).maybeSingle();
-    if (error) throw error;
     const today = startOfSaudiDay(now);
-    if (data?.analysed_at && new Date(data.analysed_at) >= new Date(today)) return null;
+    if (assessmentId) {
+      const { data, error } = await getSupabase().from('assessments').select('analysed_at').eq('assessment_id', assessmentId).maybeSingle();
+      if (error) throw error;
+      if (data?.analysed_at && new Date(data.analysed_at) >= new Date(today)) return null;
+    }
     if ((await analysesSince(userId, today)) >= MAX_ANALYSES_PER_DAY) return 'daily_limit_reached';
     if ((await analysesSince(userId, startOfSaudiMonth(now))) >= MAX_ANALYSES_PER_MONTH) return 'monthly_limit_reached';
     return null;

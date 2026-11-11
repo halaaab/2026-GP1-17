@@ -16,6 +16,9 @@ import {
 } from '../../../shared/assessments.js';
 
 const TABS = ['score', 'similar', 'market', 'roadmap', 'report'];
+// A what-if is only a competitor analysis of a changed idea: it has no survival score, market or roadmap of its own.
+const WHAT_IF_TABS = ['similar', 'report'];
+const tabsOf = (shown) => (shown.whatIf ? WHAT_IF_TABS : TABS);
 
 // the Darb logo, for the top of the report
 const LOGO = new URL('../../../assets/images/%20Darb-logo-horizontal.png', import.meta.url).href;
@@ -40,7 +43,7 @@ function safe(text) {
 
 export function openPanel(assessmentToShow, tab = 'score') {
   assessment = assessmentToShow;
-  currentTab = TABS.includes(tab) ? tab : 'score';
+  currentTab = tabsOf(assessment).includes(tab) ? tab : tabsOf(assessment)[0];
 
   drawPanel();
   panel.classList.add('is-open');
@@ -73,9 +76,10 @@ function drawPanel() {
 
     <h2 class="assess-title">${safe(say(assessment.title))}</h2>
     <p class="assess-sub">${facts}</p>
+    ${assessment.whatIf ? `<p class="assess-sub"><span class="chip chip-teal">${safe(t('whatIf.label').replace('{change}', assessment.whatIf))}</span></p>` : ''}
 
     <nav class="assess-nav" role="tablist">
-      ${TABS.map((tab) => `
+      ${tabsOf(assessment).map((tab) => `
         <button type="button" role="tab" class="assess-tab ${tab === currentTab ? 'is-active' : ''}" data-tab="${tab}">${t(`tab.${tab}`)}</button>`).join('')}
     </nav>
 
@@ -691,10 +695,12 @@ function reportTab() {
         <p class="text-2">${facts}</p>
       </div>
 
-      ${reportSection(1, 'score', t('score.title'), scoreTab())}
+      ${assessment.whatIf
+        ? reportSection(1, 'similar', t('comp.title'), competitorAnalysis(false))
+        : `${reportSection(1, 'score', t('score.title'), scoreTab())}
       ${reportSection(2, 'market', t('market.title'), marketPart)}
       ${reportSection(3, 'similar', t('comp.title'), competitorAnalysis(false))}
-      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapFull())}
+      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapFull())}`}
     </div>`;
 }
 

@@ -15,6 +15,8 @@
 //   limits         a founder who used their daily or monthly analyses gets the limit note; nothing is searched (§12)
 //   clarification  the founder sees the Competitor Agent's question word for word, and when the supervisor forgets
 //                  to send their answer on the next call, the hook adds it from the question it remembers (§4)
+//   what-if        runs only after the founder answered Darb's confirmation question; it becomes a new assessment
+//                  linked to this one, and the founder gets an exact before → after comparison (lib/what-if.ts)
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
 import { Handoff, Result, RunLog } from '../schemas/competitor';
@@ -22,7 +24,8 @@ import { HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
 import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
-import { analysisLimit } from './competitor-store';
+import { analysisLimit, loadStoredResult, type StoredResult } from './competitor-store';
+import { askedBeforeLatestReply, compareResults, comparisonSentences, createWhatIf, removeWhatIf } from './what-if';
 import { noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
 import { detectLanguage, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
@@ -36,9 +39,23 @@ export const COMPETITOR_MAX_STEPS = 4;
 export const SupervisorHandoff = Handoff.omit({ assessment_id: true, idea_id: true });
 
 // What the supervisor sees after a delegation.
-export type DelegationReply = { result: Result; note_sentences: string[]; summary_sentences: string[]; opportunity_sentences: string[] };
+export type DelegationReply = {
+  result: Result;
+  note_sentences: string[];
+  summary_sentences: string[];
+  opportunity_sentences: string[];
+  comparison_sentences?: string[]; // a what-if only: before → after, written in code
+};
 
-type Running = { handoff: Handoff; startedAt: number; droppedFacts: string[]; replyRules?: ReplyRules; state: RunState };
+type Running = {
+  handoff: Handoff;
+  startedAt: number;
+  droppedFacts: string[];
+  replyRules?: ReplyRules;
+  state: RunState;
+  conversationAssessmentId: string; // the assessment of the chat; a what-if's own assessment is handoff.assessment_id
+  whatIf?: { original: StoredResult | null; created: boolean };
+};
 
 // Handoffs of the delegations still running, by tool call id (both hooks receive it).
 const running = new Map<string, Running>();
@@ -120,21 +137,55 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   const asked = pendingQuestions.get(assessment.assessment_id);
   const clarification = written.data.clarification ?? (asked && said.length ? { question: asked, answer: said.at(-1)! } : undefined);
 
+  // A what-if needs its short name, and runs only after the founder answered Darb's confirmation question.
+  const isWhatIf = written.data.mode === 'what_if';
+  if (isWhatIf && !written.data.scenario_label) {
+    return reject('A what-if needs scenario_label: a short name for the change in the founder\'s language, such as "Jeddah instead of Riyadh".');
+  }
+  if (isWhatIf && !askedBeforeLatestReply(ctx.messages as ModelMessageLike[])) {
+    return reject(
+      'Confirm the what-if first: restate the changed idea to the founder in one short question (for example "Same idea, but in Jeddah instead of Riyadh. Shall I run it?") and wait for their answer. If they agree, delegate again.',
+    );
+  }
+
+  const state = newRunState();
+  state.limitNote = await analysisLimit(userId, isWhatIf ? null : assessment.assessment_id);
+
+  // The what-if's own assessment, linked to this one (not created when the founder has no analyses left).
+  let runAssessmentId = assessment.assessment_id;
+  let whatIf: Running['whatIf'];
+  if (isWhatIf && !state.limitNote) {
+    try {
+      const original = await loadStoredResult(assessment.assessment_id);
+      runAssessmentId = await createWhatIf(assessment, written.data.scenario_label!, written.data.idea_text);
+      whatIf = { original, created: true };
+    } catch (error) {
+      console.error('Starting the what-if failed:', error);
+      return reject('The what-if could not be started right now. Tell the founder and offer to try again.');
+    }
+  }
+
   const handoff = Handoff.parse({
     ...written.data,
     ...(clarification ? { clarification } : {}),
     language,
     known_facts: facts.kept,
-    assessment_id: assessment.assessment_id,
+    assessment_id: runAssessmentId,
     idea_id: assessment.idea_id,
   });
   const startedAt = Date.now();
   // The reply rules box of this run (set by the reply guard). The request context copy shares it with the parent run.
   const replyRules = ctx.requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined;
-  // A fresh run state for every run, so nothing gathered by an earlier run leaks into this one (lib/competitor-run.ts).
-  const state = newRunState();
-  state.limitNote = await analysisLimit(userId, assessment.assessment_id);
-  running.set(ctx.toolCallId, { handoff, startedAt, droppedFacts: facts.dropped, replyRules, state });
+  // A fresh run state for every run (made above), so nothing gathered by an earlier run leaks into this one.
+  running.set(ctx.toolCallId, {
+    handoff,
+    startedAt,
+    droppedFacts: facts.dropped,
+    replyRules,
+    state,
+    conversationAssessmentId: assessment.assessment_id,
+    whatIf,
+  });
   ctx.requestContext.set(HANDOFF_KEY, handoff);
   ctx.requestContext.set(RUN_STATE_KEY, state);
   ctx.requestContext.set(STARTED_AT_KEY, startedAt);
@@ -190,8 +241,18 @@ export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): 
 
   const sentences = noteSentences(result.notes, started.handoff.language);
   const question = result.status === 'needs_clarification' ? result.clarification?.question : undefined;
-  if (question) pendingQuestions.set(started.handoff.assessment_id, question);
-  else pendingQuestions.delete(started.handoff.assessment_id);
+  if (question) pendingQuestions.set(started.conversationAssessmentId, question);
+  else pendingQuestions.delete(started.conversationAssessmentId);
+
+  // A what-if whose result was not saved (a question, a limit or a failed run) is removed, so History never
+  // shows an empty what-if. When it was saved, the founder gets the exact comparison with the original.
+  const saved = started.state.steps.some((s) => s.capability === 'guardrails' && s.outcome === 'ok' && /\bsaved\b/.test(s.detail ?? ''));
+  let comparison: string[] | undefined;
+  if (started.whatIf?.created && !saved) {
+    removeWhatIf(started.handoff.assessment_id).catch((error) => console.error('Removing an unsaved what-if failed:', error));
+  } else if (started.whatIf?.created) {
+    comparison = comparisonSentences(compareResults(started.whatIf.original, result), started.handoff.language);
+  }
 
   if (started.replyRules) {
     started.replyRules.language = started.handoff.language;
@@ -213,6 +274,7 @@ export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): 
     note_sentences: sentences,
     summary_sentences: summarySentences(result, language),
     opportunity_sentences: opportunitySentences(result, language),
+    ...(comparison ? { comparison_sentences: comparison } : {}),
   };
   return { resultText: JSON.stringify(reply) };
 }

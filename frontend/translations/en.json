@@ -1342,5 +1342,6 @@
   "comp.opp.not_enough_evidence.next": "Gather more evidence about this competitor.",
   "comp.opp.possible_customer_difference": "Possible difference",
   "comp.opp.possible_customer_difference.text": "You focus on a narrower group of customers than this competitor.",
-  "comp.opp.possible_customer_difference.next": "Interview your target customers."
+  "comp.opp.possible_customer_difference.next": "Interview your target customers.",
+  "whatIf.label": "What if: {change}"
 }

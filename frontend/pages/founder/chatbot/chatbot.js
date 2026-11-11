@@ -440,7 +440,9 @@ if (address.get('id')) {
 
   if (current) {
     await showSaved();
-    if (address.get('tab') && current.score) {
+    // a what-if has no survival score, only its competitor analysis, so it opens on that
+    if (address.get('tab') && (current.score || current.analysedAt)) {
+      if (!current.result) await loadResult(current);
       openPanel(current, address.get('tab'));
     }
   } else {
