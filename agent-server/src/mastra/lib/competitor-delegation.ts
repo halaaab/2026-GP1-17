@@ -16,6 +16,7 @@ import { Handoff, Result, RunLog } from '../schemas/competitor';
 import { HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
 import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
+import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
 import { noteSentences } from './competitor-notes';
 import { detectLanguage, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
@@ -31,7 +32,7 @@ export const SupervisorHandoff = Handoff.omit({ assessment_id: true, idea_id: tr
 // What the supervisor sees after a delegation.
 export type DelegationReply = { result: Result; note_sentences: string[] };
 
-type Running = { handoff: Handoff; startedAt: number; droppedFacts: string[]; replyRules?: ReplyRules };
+type Running = { handoff: Handoff; startedAt: number; droppedFacts: string[]; replyRules?: ReplyRules; state: RunState };
 
 // Handoffs of the delegations still running, by tool call id (both hooks receive it).
 const running = new Map<string, Running>();
@@ -99,8 +100,11 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   const startedAt = Date.now();
   // The reply rules box of this run (set by the reply guard). The request context copy shares it with the parent run.
   const replyRules = ctx.requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined;
-  running.set(ctx.toolCallId, { handoff, startedAt, droppedFacts: facts.dropped, replyRules });
+  // A fresh run state for every run, so nothing gathered by an earlier run leaks into this one (lib/competitor-run.ts).
+  const state = newRunState();
+  running.set(ctx.toolCallId, { handoff, startedAt, droppedFacts: facts.dropped, replyRules, state });
   ctx.requestContext.set(HANDOFF_KEY, handoff);
+  ctx.requestContext.set(RUN_STATE_KEY, state);
   ctx.requestContext.set(STARTED_AT_KEY, startedAt);
 
   return {
@@ -129,8 +133,12 @@ export function runLog(started: Running, result: Result, resultValid: boolean): 
     notes: result.notes,
     dropped_known_facts: started.droppedFacts,
     tavily_calls: result.usage.tavily_calls,
-    judge_calls: 0,
-    steps: [{ capability: 'guardrails', outcome: resultValid ? 'ok' : 'failed', duration_ms: result.usage.duration_ms }],
+    judge_calls: started.state.judgeCalls,
+    // The steps the capabilities recorded; a run that recorded none (or whose result failed the check) logs the guardrails step.
+    steps:
+      started.state.steps.length && resultValid
+        ? started.state.steps
+        : [...started.state.steps, { capability: 'guardrails', outcome: resultValid ? 'ok' : 'failed', duration_ms: result.usage.duration_ms }],
   });
 }
 

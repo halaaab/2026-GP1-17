@@ -2,18 +2,21 @@
 // Only this tool's output reaches the Conversational Agent (lib/competitor-delegation.ts), never the agent's own text,
 // so no competitor, label, score or status can be invented or changed by a model on the way back.
 //
-// Foundation: no capability is built yet, so it always returns the "capability_pending" result.
-// Later it will apply the guardrails (validity checks, policy gate, ranking; design §9, §10) to what the agent found.
+// It applies the guardrails (validity checks, policy gate, ranking, ISS, market level; design §9, §10,
+// lib/competitor-policy.ts) to what the run gathered (lib/competitor-run.ts). Until a Discover step has run
+// (not built yet), it returns the "capability_pending" result.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { fallbackResult, pendingResult } from '../lib/competitor-result';
-import { Handoff, Result } from '../schemas/competitor';
+import { applyPolicy, buildResult, type Judged } from '../lib/competitor-policy';
+import { fallbackResult, pendingResult, profileFromKnownFacts } from '../lib/competitor-result';
+import { getRunState, logStep } from '../lib/competitor-run';
+import { Handoff, MAX_TAVILY_CALLS, Result } from '../schemas/competitor';
 
 // Set by the delegation hook before the Competitor Agent starts (lib/competitor-delegation.ts).
 export const HANDOFF_KEY = 'competitorHandoff';
 export const STARTED_AT_KEY = 'competitorStartedAt';
 
-type RequestContextLike = { get: (key: string) => unknown };
+type RequestContextLike = { get: (key: string) => unknown; set: (key: string, value: unknown) => void };
 type ToolContextLike = {
   requestContext?: RequestContextLike;
   tracingContext?: { currentSpan?: { traceId?: string } };
@@ -32,6 +35,37 @@ export const finalizeResultTool = createTool({
     // The handoff was already checked by the delegation hook; it is checked again here, in case the tool is run another way.
     const handoff = Handoff.safeParse(ctx?.requestContext?.get(HANDOFF_KEY));
     if (!handoff.success) return fallbackResult(null, run);
-    return pendingResult(handoff.data, run);
+
+    const state = getRunState(ctx?.requestContext);
+    // No search has run (Discover is not built yet): saying "no competitors found" would not be true.
+    if (!state.steps.some((s) => s.capability === 'discover')) return pendingResult(handoff.data, run);
+
+    const finalizeStarted = Date.now();
+    const profile = state.profile ?? profileFromKnownFacts(handoff.data);
+    const judged: Judged[] = [...state.judged.values()]
+      .filter((j) => state.candidates.has(j.candidate_key))
+      .map((j) => {
+        const candidate = state.candidates.get(j.candidate_key)!;
+        return { candidate, policy: applyPolicy(j, candidate, profile) };
+      });
+
+    try {
+      const result = buildResult({
+        handoff: handoff.data,
+        profile,
+        judged,
+        runNotes: [...state.notes],
+        usage: {
+          tavily_calls: Math.min(state.tavilyCalls, MAX_TAVILY_CALLS),
+          duration_ms: Math.max(0, Math.round(Date.now() - startedAt)),
+          trace_id: run.traceId,
+        },
+      });
+      logStep(state, { capability: 'guardrails', outcome: 'ok', duration_ms: Date.now() - finalizeStarted, detail: `shown=${result.competitors.length}` });
+      return result;
+    } catch {
+      logStep(state, { capability: 'guardrails', outcome: 'failed', duration_ms: Date.now() - finalizeStarted });
+      return fallbackResult(handoff.data, run);
+    }
   },
 });

@@ -12,6 +12,7 @@ import { conversationalAgent } from './agents/conversational-agent';
 import { darbStore } from './lib/storage';
 import { authMiddleware } from './server/auth';
 import { finalizeResultTool } from './tools/finalize-result';
+import { judgeCandidatesTool } from './tools/judge-candidates';
 import { predictSurvivalTool } from './tools/predict-survival';
 
 export const mastra = new Mastra({
@@ -24,6 +25,7 @@ export const mastra = new Mastra({
   // longer connected: the Competitor Agent is being rebuilt from the final design.
   tools: {
     finalizeResultTool,
+    judgeCandidatesTool,
     predictSurvivalTool,
   },
   // Mastra's own data lives in Postgres (the "mastra" schema), so it survives restarts on the host.
