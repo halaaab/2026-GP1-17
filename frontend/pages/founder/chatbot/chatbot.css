@@ -837,7 +837,7 @@ body.assess-open #header-actions {
 .moves.is-up   .move strong { color: var(--good-text); }
 .moves.is-down .move strong { color: var(--risk-text); }
 
-/* ----- Similar startups: two boxes in a row ----- */
+/* ----- Competitor analysis: the cards reuse the startup boxes ----- */
 
 .startups {
   display: grid;
@@ -892,6 +892,118 @@ body.assess-open #header-actions {
 .startup-actions svg {
   width: 13px;
   height: 13px;
+}
+
+/* up to three competitors side by side; the box, chips and table are the shared ones */
+.competitors {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-bottom: 16px;
+}
+.competitor-rank {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-3);
+}
+.competitor-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.competitor-reason {
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.competitor-source {
+  font-size: 12px;
+  color: var(--text-3);
+  overflow-wrap: anywhere;
+}
+
+/* The ISS: the number on one side, what it means on the other */
+.iss {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+.iss-number {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.iss-number strong {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+}
+.iss-number span {
+  color: var(--text-3);
+  font-weight: 700;
+}
+.iss.is-crowded     .iss-number strong { color: var(--risk-text); }
+.iss.is-competitive .iss-number strong { color: var(--warn-text); }
+.iss.is-open        .iss-number strong { color: var(--good-text); }
+.iss-words h3 {
+  margin: 2px 0 4px;
+  font-size: 17px;
+}
+.iss-level,
+.comp-notes li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.iss-level {
+  margin-bottom: 6px;
+}
+.iss-level svg,
+.comp-notes svg {
+  flex-shrink: 0;
+  width: 15px;
+  height: 15px;
+  margin-top: 2px;
+}
+.comp-notes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+/* The comparison matrix: each answer as a chip, its short note under it */
+.comp-matrix .table th[scope="row"] {
+  padding-top: 14px;
+  vertical-align: top;
+}
+.comp-matrix td {
+  vertical-align: top;
+}
+.comp-matrix td small {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+.comp-matrix-note {
+  margin-top: 12px;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .iss {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }
 
 /* ----- Market ----- */

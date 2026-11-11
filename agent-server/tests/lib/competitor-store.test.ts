@@ -138,7 +138,7 @@ describe('saving a result', () => {
     expect(rows[0]).toMatchObject({ assessment_id: ASSESSMENT, rank: 1, source_type: 'web', startup_id: null, competitor_name: 'Co 1', source_url: 'https://co1.sa/about', label: 'direct' });
     expect(rows[1]).toMatchObject({ source_type: 'corpus', startup_id: 's2' });
     expect(rows[0]).not.toHaveProperty('evidence_text');
-    expect(calls[2].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open' });
+    expect(calls[2].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open', competitor_notes: ['fewer_than_three'] });
     expect((calls[2].values as { analysed_at: string }).analysed_at).toBeTruthy();
   });
 
