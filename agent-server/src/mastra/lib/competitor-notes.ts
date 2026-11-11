@@ -43,6 +43,18 @@ export const NOTE_TEXT: Record<NoteCode, Record<Language, string>> = {
     en: 'The competitor analysis did not finish this time. You can try again.',
     ar: 'لم يكتمل تحليل المنافسين هذه المرة. يمكنك المحاولة مرة أخرى.',
   },
+  daily_limit_reached: {
+    en: 'You have used today’s competitor analyses. You can run a new one tomorrow.',
+    ar: 'استخدمت كل تحليلات المنافسين المتاحة لك اليوم. يمكنك إجراء تحليل جديد غدًا.',
+  },
+  monthly_limit_reached: {
+    en: 'You have used this month’s competitor analyses. You can run a new one next month.',
+    ar: 'استخدمت كل تحليلات المنافسين المتاحة لك هذا الشهر. يمكنك إجراء تحليل جديد الشهر القادم.',
+  },
+  time_limit_reached: {
+    en: 'The search took longer than allowed, so only the competitors checked in time are shown.',
+    ar: 'استغرق البحث وقتًا أطول من المسموح، لذلك نعرض فقط المنافسين الذين تم فحصهم في الوقت المحدد.',
+  },
 };
 
 // The sentences for a result's notes, in order.

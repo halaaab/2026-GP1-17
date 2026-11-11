@@ -218,6 +218,9 @@ export const NOTE_CODES = [
   'web_changed', // the web changed since the stored result (design §12)
   'temporarily_unavailable', // OpenAI or Tavily spending limit reached (design §12)
   'analysis_incomplete', // the run did not return a valid result; code returned this instead
+  'daily_limit_reached', // the founder used today's analyses (design §12); nothing was searched
+  'monthly_limit_reached', // the founder used this month's analyses (design §12); nothing was searched
+  'time_limit_reached', // the run hit its overall time limit: only what was checked in time is shown (design §12)
 ] as const;
 export const NoteCode = z.enum(NOTE_CODES);
 export type NoteCode = z.infer<typeof NoteCode>;

@@ -34,7 +34,7 @@ export const understandIdeaTool = createTool({
   inputSchema: z.object({}),
   outputSchema: z.object({
     ready: z.boolean(),
-    error: z.enum(['no_handoff', 'profile_failed']).optional(),
+    error: z.enum(['no_handoff', 'profile_failed', 'limit_reached']).optional(),
     missing_field: z.enum(['problem', 'offering']).optional(),
     origins: z.object({ problem: Origin, customer: Origin, offering: Origin, market: Origin }).optional(),
     isic_section: z.string().nullable().optional(),
@@ -47,6 +47,8 @@ export const understandIdeaTool = createTool({
     if (!handoff.success) return { ready: false, error: 'no_handoff' as const };
     const state = getRunState(requestContext);
     const started = Date.now();
+    // The founder has used their analyses: nothing is read or paid for.
+    if (state.limitNote) return { ready: false, error: 'limit_reached' as const };
 
     let profile;
     try {

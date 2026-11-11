@@ -11,3 +11,11 @@ export const API_TIMEOUT_MS = 20_000;
 // and at most this many at the same time, so a run stays within OpenAI's rate limits.
 export const JUDGE_MAX_CALLS = 20;
 export const JUDGE_PARALLEL_CALLS = 5;
+
+// Competitor analyses per founder (design §12). A new idea and a what-if each count; follow-up questions and
+// re-running an assessment already analysed today do not. Counted from assessments.analysed_at (Saudi time).
+export const MAX_ANALYSES_PER_DAY = 5;
+export const MAX_ANALYSES_PER_MONTH = 30;
+
+// The overall time limit of one Competitor Agent run: after it, no new judge calls start (design §12).
+export const RUN_TIME_LIMIT_MS = 120_000;

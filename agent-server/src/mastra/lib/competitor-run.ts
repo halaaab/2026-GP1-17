@@ -16,6 +16,8 @@ export type RunState = {
   ideaEmbedding: number[] | null;
   // Set when the idea lacks the problem or the offering: finalize_result then asks this one question.
   clarification: Clarification | null;
+  // Set by the delegation hook when the founder has used their analyses: nothing is searched (design §12).
+  limitNote: NoteCode | null;
   candidates: Map<string, Candidate>; // by candidate_key
   judged: Map<string, JudgeOutput>; // by candidate_key
   judgeCalls: number;
@@ -29,6 +31,7 @@ export function newRunState(): RunState {
     profile: null,
     ideaEmbedding: null,
     clarification: null,
+    limitNote: null,
     candidates: new Map(),
     judged: new Map(),
     judgeCalls: 0,

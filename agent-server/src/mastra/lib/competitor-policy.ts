@@ -229,6 +229,11 @@ export type BuildInput = {
   usage: Result['usage'];
 };
 
+// The founder has used their analyses: nothing was searched, and the note says when they can run another.
+export function limitResult(profile: IdeaProfile, note: NoteCode, usage: Result['usage']): Result {
+  return Result.parse({ status: 'complete', idea_profile: profile, competitors: [], iss: null, iss_basis: null, market_level: null, notes: [note], usage });
+}
+
 // The idea is too vague to search: one question, no competitors and no scores (design §4).
 export function clarificationResult(profile: IdeaProfile, clarification: Clarification, usage: Result['usage']): Result {
   return Result.parse({
@@ -259,7 +264,7 @@ export function buildResult({ handoff, profile, judged, runNotes, usage }: Build
   notes.push(...runNotes);
 
   // Partial when a part of the run failed (design §12); the result is still shown.
-  const failed = runNotes.some((n) => n === 'web_search_failed' || n === 'judge_call_failed' || n === 'temporarily_unavailable');
+  const failed = runNotes.some((n) => (['web_search_failed', 'judge_call_failed', 'temporarily_unavailable', 'time_limit_reached'] as NoteCode[]).includes(n));
 
   return Result.parse({
     status: failed ? 'partial' : 'complete',
