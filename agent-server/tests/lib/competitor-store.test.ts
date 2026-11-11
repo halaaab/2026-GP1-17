@@ -59,7 +59,7 @@ vi.mock('../../src/mastra/lib/assessments', async (importOriginal) => ({
 }));
 
 const store = await import('../../src/mastra/lib/competitor-store');
-const { onCompetitorDelegationStart, onCompetitorDelegationComplete, pendingQuestions, COMPETITOR_AGENT_ID } = await import(
+const { onCompetitorDelegationStart, onCompetitorDelegationComplete, pendingQuestions, withoutEmptyFields, COMPETITOR_AGENT_ID } = await import(
   '../../src/mastra/lib/competitor-delegation'
 );
 const { RUN_STATE_KEY, newRunState } = await import('../../src/mastra/lib/competitor-run');
@@ -219,6 +219,25 @@ const clarifying = (question: string) =>
     notes: [],
     usage: { tavily_calls: 0, duration_ms: 1, trace_id: null },
   });
+
+describe('delegation: empty fields', () => {
+  it('drops the optional fields the supervisor left empty, instead of rejecting the handoff', async () => {
+    const { ctx } = start({ ...written, known_facts: { problem: '' }, founder_startup: {}, named_competitors: {}, references: [] });
+    const decision = await onCompetitorDelegationStart(ctx);
+    expect(decision?.proceed).toBe(true);
+    const handoff = ctx.requestContext.get(HANDOFF_KEY) as Record<string, unknown>;
+    for (const key of ['known_facts', 'founder_startup', 'named_competitors', 'references']) expect(handoff[key]).toBeUndefined();
+  });
+
+  it('keeps filled fields as written, so a wrong one is still rejected', async () => {
+    expect(withoutEmptyFields({ references: ['Talabat'], founder_startup: { name: 'X', website: '' } })).toEqual({
+      references: ['Talabat'],
+      founder_startup: { name: 'X' },
+    });
+    const { ctx } = start({ ...written, references: { name: 'Talabat' } });
+    expect((await onCompetitorDelegationStart(ctx))?.proceed).toBe(false);
+  });
+});
 
 describe('delegation: limits', () => {
   it('marks the run when the founder has no analyses left, and tells the agent to finish', async () => {
