@@ -176,9 +176,9 @@ function addFollowUps() {
   scrollToEnd();
 }
 
-/* One of the similar startups of this assessment, by its id */
+/* One of the competitors of this assessment, by its id */
 function findStartup(id) {
-  return current.result.similar.find((item) => item.id === id) || null;
+  return current.result.competitors.find((item) => item.id === id) || null;
 }
 
 /* ---------- The home state ---------- */

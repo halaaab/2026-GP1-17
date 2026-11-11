@@ -1,7 +1,7 @@
 // The Competitor Agent's results in Supabase (design §11, migration 0032), written and read only by code:
 //
 //   saveResult        replaces the assessment's competitors (similar_startup_results) and saves its ISS, basis,
-//                     market level and analysed_at. Only Darb's own outputs are saved, never page text (design §5).
+//                     market level, notes and analysed_at. Only Darb's own outputs are saved, never page text (design §5).
 //   loadStoredResult  what was saved, for follow-up questions (PBI 36) and the result screen
 //   analysisLimit     the founder's daily and monthly analysis limits (design §12), counted from analysed_at
 import { MAX_ANALYSES_PER_DAY, MAX_ANALYSES_PER_MONTH } from '../config/limits';
@@ -56,7 +56,13 @@ export async function saveResult(assessmentId: string, result: Result): Promise<
   }
   const updated = await supabase
     .from('assessments')
-    .update({ iss: result.iss, iss_basis: result.iss_basis, market_level: result.market_level, analysed_at: new Date().toISOString() })
+    .update({
+      iss: result.iss,
+      iss_basis: result.iss_basis,
+      market_level: result.market_level,
+      competitor_notes: result.notes, // shown on the result screen, History and the report (migration 0033)
+      analysed_at: new Date().toISOString(),
+    })
     .eq('assessment_id', assessmentId);
   if (updated.error) throw updated.error;
 }
