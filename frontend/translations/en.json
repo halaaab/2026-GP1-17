@@ -1339,5 +1339,8 @@
   "comp.opp.no_clear_difference.next": "Test one specific differentiator.",
   "comp.opp.not_enough_evidence": "Not enough evidence yet",
   "comp.opp.not_enough_evidence.text": "Our sources do not say enough about this competitor to compare.",
-  "comp.opp.not_enough_evidence.next": "Gather more evidence about this competitor."
+  "comp.opp.not_enough_evidence.next": "Gather more evidence about this competitor.",
+  "comp.opp.possible_customer_difference": "Possible difference",
+  "comp.opp.possible_customer_difference.text": "Your customer overlaps only in part with this competitor’s.",
+  "comp.opp.possible_customer_difference.next": "Interview your target customers."
 }

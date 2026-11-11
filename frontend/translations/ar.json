@@ -1336,5 +1336,8 @@
   "comp.opp.no_clear_difference.next": "اختبر ميزة واحدة محددة تميّزك.",
   "comp.opp.not_enough_evidence": "لا توجد أدلة كافية بعد",
   "comp.opp.not_enough_evidence.text": "لا تكفي المعلومات في مصادرنا عن هذا المنافس للمقارنة.",
-  "comp.opp.not_enough_evidence.next": "اجمع أدلة أكثر عن هذا المنافس."
+  "comp.opp.not_enough_evidence.next": "اجمع أدلة أكثر عن هذا المنافس.",
+  "comp.opp.possible_customer_difference": "اختلاف محتمل",
+  "comp.opp.possible_customer_difference.text": "عميلك يتقاطع جزئيًا فقط مع عملاء هذا المنافس.",
+  "comp.opp.possible_customer_difference.next": "قابل عملاءك المستهدفين."
 }

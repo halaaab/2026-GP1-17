@@ -233,7 +233,7 @@ export const ComparisonCell = z.object({ answer: Answer, note: z.string() }).str
 
 // Competitive opportunities (explainer §6): four fixed rules in code turn the judge's answers into one of these,
 // each with a fixed next step. Darb never says "where you will win".
-export const OPPORTUNITY_KINDS = ['proven_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'] as const;
+export const OPPORTUNITY_KINDS = ['proven_difference', 'possible_customer_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'] as const;
 export const OpportunityKind = z.enum(OPPORTUNITY_KINDS);
 export type OpportunityKind = z.infer<typeof OpportunityKind>;
 
