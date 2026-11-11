@@ -6,3 +6,8 @@
 
 // Longest wait for any OpenAI or Tavily call before the tool gives up and reports an error.
 export const API_TIMEOUT_MS = 20_000;
+
+// The Competitor Agent's judge (design §9, §12): at most this many judge calls in one run (about 20 candidates per idea),
+// and at most this many at the same time, so a run stays within OpenAI's rate limits.
+export const JUDGE_MAX_CALLS = 20;
+export const JUDGE_PARALLEL_CALLS = 5;

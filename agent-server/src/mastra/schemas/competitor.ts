@@ -155,6 +155,10 @@ export const Candidate = z
     domain: z.string().min(1).nullable(),
     // Page text or corpus profile shown to the judge. Used live only, never stored (Tavily terms, design §5).
     evidence_text: z.string(),
+    // Shown on the competitor card (design §11, §15). A short description in Darb's own words (never copied page
+    // text, Tavily terms) and the city or region. A candidate with no description is never shown.
+    description: z.string().min(1).nullable().optional(),
+    city_region: z.string().min(1).nullable().optional(),
     sources: z.array(Source),
     // Missing until the validation step has run.
     validation: Validation.optional(),
