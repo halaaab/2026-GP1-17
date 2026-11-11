@@ -120,7 +120,7 @@ async function loadCompetitors(assessment) {
   if (!assessment.isSaved) return [];
   const { data, error } = await supabase
     .from('similar_startup_results')
-    .select('result_id, rank, competitor_name, website, source_url, description, city_region, label, evidence_status, reason, comparison, sources, similarity_score')
+    .select('result_id, rank, competitor_name, website, source_url, description, city_region, label, evidence_status, reason, comparison, sources, similarity_score, opportunity, differences')
     .eq('assessment_id', assessment.id)
     .order('rank');
 
@@ -128,7 +128,9 @@ async function loadCompetitors(assessment) {
     report('load the competitors', error);
     return [];
   }
-  return data.map((row) => ({
+  return data.map((row) => {
+    const first = (row.sources && row.sources[0]) || {};
+    return {
     id: row.result_id || String(row.rank),
     rank: row.rank,
     name: row.competitor_name,
@@ -138,10 +140,15 @@ async function loadCompetitors(assessment) {
     evidence: row.evidence_status,          // confirmed / likely
     reason: row.reason || '',
     comparison: row.comparison || {},       // { problem, customer, offering }: { answer, note }
-    source: (row.sources && row.sources[0] && row.sources[0].url) || row.source_url || '',
+    source: first.url || row.source_url || '',
+    sourceType: first.source_type || '',   // official_site, app_store, ecosystem, news, government
+    checkedAt: first.accessed_at || '',    // when Darb checked it
     website: row.website || '',
     score: row.similarity_score,
-  }));
+    opportunity: row.opportunity || '',     // proven / possible / no clear difference, or not enough evidence
+    difference: row.differences || '',      // the judge's one sentence, for a possible difference
+    };
+  });
 }
 
 // part as a percent of whole, with two decimals (0.049% shows as 0.05%); null when either is missing

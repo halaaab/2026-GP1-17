@@ -19,7 +19,7 @@ For each, answer exactly one of:
   "different"   the evidence clearly shows it is different
   "unknown"     the evidence does not say, or the idea's part is unknown
   "conflicting" the evidence contradicts itself
-Give a short note (one plain sentence) and, for "same" or "partly", the source_url of the page in the evidence that supports it; otherwise null. Use only URLs listed in the candidate's sources.
+Give a short note (one plain sentence). For "same" or "partly", also give the source_url of the page in the evidence that supports it and quote: the exact sentence copied word for word from the evidence; otherwise null for both. Use only URLs listed in the candidate's sources. A "same" without a quote is treated as "unknown".
 
 Then propose a label:
 - "direct": same problem AND same customer.
@@ -27,6 +27,7 @@ Then propose a label:
 - "not_competitor": a different problem, or only the same sector or topic.
 is_company: false when the candidate is an article, a news story, a list, a ranking or a directory page rather than one business.
 reason: one sentence for the founder explaining the label, naming the specific overlap or difference. No marketing language.
+difference: one sentence on how the founder's idea differs from this candidate, based only on the evidence, or "none" when the evidence shows no difference. Never say the founder will win, and never write a missing fact as "they don't have it": write "not found in our sources".
 
 Rules:
 - Use only the evidence given. Never use outside knowledge about the candidate, and never guess. When unsure, answer "unknown".
@@ -39,17 +40,18 @@ Rules:
 const answer = {
   type: 'object',
   additionalProperties: false,
-  required: ['answer', 'note', 'source_url'],
+  required: ['answer', 'note', 'source_url', 'quote'],
   properties: {
     answer: { type: 'string', enum: ['same', 'partly', 'different', 'unknown', 'conflicting'] },
     note: { type: 'string' },
     source_url: { type: ['string', 'null'] },
+    quote: { type: ['string', 'null'] },
   },
 };
 const JUDGE_JSON_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['is_company', 'problem', 'customer', 'offering', 'label', 'reason'],
+  required: ['is_company', 'problem', 'customer', 'offering', 'label', 'reason', 'difference'],
   properties: {
     is_company: { type: 'boolean' },
     problem: answer,
@@ -57,6 +59,7 @@ const JUDGE_JSON_SCHEMA = {
     offering: answer,
     label: { type: 'string', enum: ['direct', 'indirect', 'not_competitor'] },
     reason: { type: 'string' },
+    difference: { type: 'string' },
   },
 };
 
@@ -88,7 +91,7 @@ export function judgeMessage(profile: IdeaProfile, candidate: Candidate, referen
     candidate.evidence_text.slice(0, MAX_EVIDENCE_CHARS),
     '>>>',
     '',
-    `Write the notes and the reason in ${LANGUAGE_NAME[language]}.`,
+    `Write the notes, the reason and the difference in ${LANGUAGE_NAME[language]}. Copy quotes exactly as they appear, in their own language.`,
   ];
   return lines.join('\n');
 }
@@ -126,12 +129,14 @@ export async function judgeCandidate(
   return JudgeOutput.parse({ ...cleanAnswers(raw), candidate_key: candidate.candidate_key });
 }
 
-// A missing or malformed source_url is left out (the policy then treats an unsupported "same" as "unknown").
+// A missing or malformed source_url or quote is left out (the policy then treats an unsupported "same" as "unknown").
 function cleanAnswers(raw: Record<string, unknown>): Record<string, unknown> {
   const fix = (value: unknown) => {
-    const { answer: a, note, source_url: url } = (value ?? {}) as { answer?: string; note?: string; source_url?: string | null };
+    const { answer: a, note, source_url: url, quote } = (value ?? {}) as { answer?: string; note?: string; source_url?: string | null; quote?: string | null };
     const validUrl = typeof url === 'string' && URL.canParse(url) && /^https?:/i.test(url);
-    return { answer: a, note: typeof note === 'string' ? note.trim() : '', ...(validUrl ? { source_url: url } : {}) };
+    const quoted = typeof quote === 'string' ? quote.trim() : '';
+    return { answer: a, note: typeof note === 'string' ? note.trim() : '', ...(validUrl ? { source_url: url } : {}), ...(quoted ? { quote: quoted } : {}) };
   };
-  return { ...raw, problem: fix(raw.problem), customer: fix(raw.customer), offering: fix(raw.offering) };
+  const difference = typeof raw.difference === 'string' ? raw.difference.trim() : '';
+  return { ...raw, problem: fix(raw.problem), customer: fix(raw.customer), offering: fix(raw.offering), difference: difference || undefined };
 }

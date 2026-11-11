@@ -109,6 +109,8 @@ const competitor = (rank: number, source_type: 'web' | 'corpus' = 'web') => ({
   },
   sources: [{ url: `https://co${rank}.sa/about`, source_type: 'official_site' as const, accessed_at: NOW }],
   similarity_score: 90,
+  opportunity: 'no_clear_difference' as const,
+  difference: null,
 });
 const result = (competitors = [competitor(1), competitor(2, 'corpus')]): ResultT =>
   Result.parse({
@@ -138,6 +140,7 @@ describe('saving a result', () => {
     expect(rows[0]).toMatchObject({ assessment_id: ASSESSMENT, rank: 1, source_type: 'web', startup_id: null, competitor_name: 'Co 1', source_url: 'https://co1.sa/about', label: 'direct' });
     expect(rows[1]).toMatchObject({ source_type: 'corpus', startup_id: 's2' });
     expect(rows[0]).not.toHaveProperty('evidence_text');
+    expect(rows[0]).toMatchObject({ opportunity: 'no_clear_difference', differences: null });
     expect(calls[2].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open', competitor_notes: ['fewer_than_three'] });
     expect((calls[2].values as { analysed_at: string }).analysed_at).toBeTruthy();
   });
@@ -366,5 +369,39 @@ describe('get_competitor_result (follow-ups)', () => {
     expect((await ask({})).status).toBe('no_assessment');
     db.fail = true;
     expect((await ask({ assessmentId: ASSESSMENT, userId: USER })).status).toBe('error');
+  });
+});
+
+describe('the summary and opportunity sentences (written in code)', async () => {
+  const { summarySentences, opportunitySentences, OPPORTUNITY_TEXT, issBand } = await import('../../src/mastra/lib/competitor-notes');
+
+  it('says the ISS with its words and the market, in the founder’s language', () => {
+    expect(summarySentences({ iss: 78, market_level: 'competitive' }, 'en')).toEqual([
+      'Idea Similarity Score: 78 out of 100 (higher similarity).',
+      'Market: Competitive. Several direct competitors were found in our sources.',
+    ]);
+    expect(summarySentences({ iss: 50, market_level: 'open' }, 'ar')[0]).toContain('تشابه متوسط');
+    expect(summarySentences({ iss: null, market_level: null }, 'en')).toEqual([]);
+    expect([issBand(70), issBand(69), issBand(39)]).toEqual(['higher', 'moderate', 'lower']);
+  });
+
+  it('gives each competitor its opportunity and next step, using the judge’s sentence for a possible difference', () => {
+    const competitors = [
+      { ...competitor(1), opportunity: 'no_clear_difference' as const, difference: null },
+      { ...competitor(2), opportunity: 'possible_difference' as const, difference: 'It covers one gym chain, not many.' },
+    ];
+    expect(opportunitySentences({ competitors }, 'en')).toEqual([
+      `No clear difference (Co 1): ${OPPORTUNITY_TEXT.no_clear_difference.text!.en} Next step: ${OPPORTUNITY_TEXT.no_clear_difference.next.en}`,
+      `Possible difference (Co 2): It covers one gym chain, not many. Next step: ${OPPORTUNITY_TEXT.possible_difference.next.en}`,
+    ]);
+    for (const text of Object.values(OPPORTUNITY_TEXT)) expect(text.next.ar).toMatch(/[؀-ۿ]/);
+  });
+
+  it('passes them to the supervisor with the result', async () => {
+    const { ctx } = start(written);
+    await onCompetitorDelegationStart(ctx);
+    const reply = JSON.parse(onCompetitorDelegationComplete(complete(ctx.toolCallId, result()))!.resultText);
+    expect(reply.summary_sentences[0]).toContain('Idea Similarity Score: 90');
+    expect(reply.opportunity_sentences).toHaveLength(2);
   });
 });

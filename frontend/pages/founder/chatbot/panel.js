@@ -287,20 +287,56 @@ function initial(name) {
   return `<span class="initial is-${tint}">${safe(name.trim().charAt(0).toUpperCase())}</span>`;
 }
 
-/* The Idea Similarity Score with the market level (Definition 4): Open, Competitive or Crowded,
-   from the number of valid direct competitors. A lower bound: Open never means none exist. */
+/* The words next to the ISS ("Higher similarity"). The agent server uses the same cut-offs for the chat
+   (agent-server/src/mastra/config/scoring.ts, ISS_BANDS): change both together. */
+const ISS_BANDS = { higher: 70, moderate: 40 };
+const issBand = (iss) => (iss >= ISS_BANDS.higher ? 'higher' : iss >= ISS_BANDS.moderate ? 'moderate' : 'lower');
+
+/* The market level (Definition 4): Open, Competitive or Crowded, from the number of valid direct
+   competitors. A lower bound: Open never means none exist. */
 const MARKET_LEVELS = ['open', 'competitive', 'crowded'];
 
+/* The Idea Similarity Score: the number, its words, and the market level under it */
 function issBox() {
+  const band = issBand(assessment.iss);
   const level = MARKET_LEVELS.includes(assessment.marketLevel) ? assessment.marketLevel : '';
   return `
-    <div class="box iss ${level ? `is-${level}` : ''}">
+    <div class="box iss is-${band}">
       <p class="iss-number" dir="ltr"><strong>${assessment.iss}</strong><span>/ 100</span></p>
       <div class="iss-words">
         <p class="fis-label">${t('comp.iss')}</p>
-        ${level ? `<h3>${t(`comp.market.${level}`)}</h3><p class="iss-level">${icon('info')} ${t(`comp.market.${level}.why`)}</p>` : ''}
+        <h3>${t(`comp.iss.${band}`)}</h3>
         <p class="text-2">${t('comp.iss.why')}</p>
+        ${level ? `<p class="iss-level">${icon('info')} <span><strong>${t(`comp.market.${level}`)}:</strong> ${t(`comp.market.${level}.why`)}</span></p>` : ''}
       </div>
+    </div>`;
+}
+
+/* "Source: App Store listing · checked 11 Nov 2026" */
+function sourceLine(competitor) {
+  const parts = [];
+  if (competitor.sourceType) parts.push(t(`comp.source.${competitor.sourceType}`));
+  if (competitor.checkedAt) parts.push(`${t('comp.checked')} ${new Date(competitor.checkedAt).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+  return parts.length ? `<p class="competitor-checked">${t('comp.source')}: ${parts.join(' · ')}</p>` : '';
+}
+
+/* Competitive opportunities (explainer §6): for each competitor, the rule that matched, what it means
+   (the judge's own sentence for a possible difference) and the fixed next step. Never "where you will win". */
+const OPPORTUNITY_CHIP = { proven_difference: 'chip-good', possible_difference: 'chip-teal', no_clear_difference: 'chip-warn', not_enough_evidence: '' };
+
+function opportunities(competitors) {
+  const rows = competitors.filter((c) => OPPORTUNITY_CHIP[c.opportunity] !== undefined);
+  if (rows.length === 0) return '';
+  return `
+    <div class="box comp-opportunities">
+      <h3 class="box-title">${icon('sprout')} ${t('comp.opp')}</h3>
+      ${rows.map((c) => `
+        <div class="opportunity">
+          <p><span class="chip ${OPPORTUNITY_CHIP[c.opportunity]}">${t(`comp.opp.${c.opportunity}`)}</span> <strong><bdi>${safe(c.name)}</bdi></strong></p>
+          <p dir="auto">${c.opportunity === 'possible_difference' && c.difference ? safe(c.difference) : t(`comp.opp.${c.opportunity}.text`)}</p>
+          <p class="text-2"><strong>${t('comp.opp.next')}:</strong> ${t(`comp.opp.${c.opportunity}.next`)}</p>
+        </div>`).join('')}
+      <p class="text-3 comp-matrix-note">${t('comp.opp.note')}</p>
     </div>`;
 }
 
@@ -324,10 +360,11 @@ function competitorCard(competitor, withActions = true) {
       </div>
       <div class="competitor-chips">
         <span class="chip ${competitor.label === 'direct' ? 'chip-risk' : 'chip-warn'}">${t(`comp.label.${competitor.label}`)}</span>
-        ${competitor.evidence === 'likely' ? `<span class="chip chip-navy">${t('comp.limited')}</span>` : ''}
+        ${competitor.evidence === 'likely' ? `<span class="chip chip-navy">${t('comp.limited')}</span>` : `<span class="chip chip-good">${t('comp.confirmed')}</span>`}
       </div>
       <p class="startup-about" dir="auto">${safe(shorten(competitor.about, 200))}</p>
       ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : ''}
+      ${sourceLine(competitor)}
       ${withActions ? `
         <div class="startup-actions">
           <button type="button" class="btn btn-secondary btn-sm" data-ask="${safe(competitor.id)}">${t('similar.ask')}</button>
@@ -373,7 +410,8 @@ function competitorAnalysis(withActions = true) {
     ${assessment.iss === null ? '' : issBox()}
     ${notesList()}
     <div class="startups competitors">${competitors.map((c) => competitorCard(c, withActions)).join('')}</div>
-    ${comparisonMatrix(competitors)}`;
+    ${comparisonMatrix(competitors)}
+    ${opportunities(competitors)}`;
 }
 
 function similarTab() {

@@ -23,7 +23,7 @@ import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
 import { analysisLimit } from './competitor-store';
-import { noteSentences } from './competitor-notes';
+import { noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
 import { detectLanguage, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
@@ -36,7 +36,7 @@ export const COMPETITOR_MAX_STEPS = 4;
 export const SupervisorHandoff = Handoff.omit({ assessment_id: true, idea_id: true });
 
 // What the supervisor sees after a delegation.
-export type DelegationReply = { result: Result; note_sentences: string[] };
+export type DelegationReply = { result: Result; note_sentences: string[]; summary_sentences: string[]; opportunity_sentences: string[] };
 
 type Running = { handoff: Handoff; startedAt: number; droppedFacts: string[]; replyRules?: ReplyRules; state: RunState };
 
@@ -207,7 +207,13 @@ export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): 
   }
   console.info(JSON.stringify(runLog(started, result, checked.success)));
 
-  const reply: DelegationReply = { result, note_sentences: sentences };
+  const language = started.handoff.language;
+  const reply: DelegationReply = {
+    result,
+    note_sentences: sentences,
+    summary_sentences: summarySentences(result, language),
+    opportunity_sentences: opportunitySentences(result, language),
+  };
   return { resultText: JSON.stringify(reply) };
 }
 

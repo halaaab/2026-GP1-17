@@ -5,7 +5,7 @@ import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { getUserId, loadOwnedAssessment } from '../lib/assessments';
 import { loadStoredResult } from '../lib/competitor-store';
-import { Answer, Source } from '../schemas/competitor';
+import { Answer, OpportunityKind, Source } from '../schemas/competitor';
 
 const Cell = z.object({ answer: Answer, note: z.string() });
 
@@ -23,6 +23,8 @@ const StoredCompetitor = z.object({
   comparison: z.object({ problem: Cell, customer: Cell, offering: Cell }).nullable(),
   sources: z.array(Source),
   similarity_score: z.number().int(),
+  opportunity: OpportunityKind.optional(),
+  difference: z.string().nullable().optional(),
 });
 
 export const getCompetitorResultTool = createTool({

@@ -916,6 +916,10 @@ body.assess-open #header-actions {
   font-size: 13px;
   line-height: 1.6;
 }
+.competitor-checked {
+  font-size: 12px;
+  color: var(--text-3);
+}
 .competitor-source {
   font-size: 12px;
   color: var(--text-3);
@@ -944,9 +948,9 @@ body.assess-open #header-actions {
   color: var(--text-3);
   font-weight: 700;
 }
-.iss.is-crowded     .iss-number strong { color: var(--risk-text); }
-.iss.is-competitive .iss-number strong { color: var(--warn-text); }
-.iss.is-open        .iss-number strong { color: var(--good-text); }
+.iss.is-higher   .iss-number strong { color: var(--risk-text); }
+.iss.is-moderate .iss-number strong { color: var(--warn-text); }
+.iss.is-lower    .iss-number strong { color: var(--good-text); }
 .iss-words h3 {
   margin: 2px 0 4px;
   font-size: 17px;
@@ -960,7 +964,7 @@ body.assess-open #header-actions {
   color: var(--text-2);
 }
 .iss-level {
-  margin-bottom: 6px;
+  margin-top: 8px;
 }
 .iss-level svg,
 .comp-notes svg {
@@ -992,6 +996,23 @@ body.assess-open #header-actions {
   font-size: 12px;
   line-height: 1.5;
   color: var(--text-2);
+}
+/* Competitive opportunities: one row per competitor */
+.comp-opportunities {
+  margin-top: 16px;
+}
+.opportunity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 0;
+  border-top: 1px solid var(--divider);
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.opportunity:first-of-type {
+  border-top: none;
+  padding-top: 0;
 }
 .comp-matrix-note {
   margin-top: 12px;

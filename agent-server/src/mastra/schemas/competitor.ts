@@ -179,6 +179,8 @@ export const JudgeAnswer = z
     answer: Answer,
     note: z.string(),
     source_url: z.url().optional(),
+    // The exact sentence from the evidence that supports the answer (explainer §4). Code checks it is really there.
+    quote: z.string().trim().min(1).optional(),
   })
   .strict();
 export type JudgeAnswer = z.infer<typeof JudgeAnswer>;
@@ -195,6 +197,8 @@ export const JudgeOutput = z
     offering: JudgeAnswer,
     label: JudgeLabel, // only a proposal: code applies the policy rules
     reason: z.string().trim().min(1), // one founder-facing sentence
+    // One sentence on how the idea differs from this candidate, or "none" (competitive opportunities, explainer §6).
+    difference: z.string().trim().min(1).optional(),
   })
   .strict();
 export type JudgeOutput = z.infer<typeof JudgeOutput>;
@@ -227,6 +231,12 @@ export type NoteCode = z.infer<typeof NoteCode>;
 
 export const ComparisonCell = z.object({ answer: Answer, note: z.string() }).strict();
 
+// Competitive opportunities (explainer §6): four fixed rules in code turn the judge's answers into one of these,
+// each with a fixed next step. Darb never says "where you will win".
+export const OPPORTUNITY_KINDS = ['proven_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'] as const;
+export const OpportunityKind = z.enum(OPPORTUNITY_KINDS);
+export type OpportunityKind = z.infer<typeof OpportunityKind>;
+
 export const ResultCompetitor = z
   .object({
     rank: z.number().int().min(1).max(3),
@@ -242,6 +252,8 @@ export const ResultCompetitor = z
     comparison: z.object({ problem: ComparisonCell, customer: ComparisonCell, offering: ComparisonCell }).strict(),
     sources: z.array(Source).min(1), // every competitor has a working source link
     similarity_score: z.number().int().min(0).max(100),
+    opportunity: OpportunityKind.optional(),
+    difference: z.string().min(1).nullable().optional(), // the judge's one sentence, for a possible difference
   })
   .strict()
   .refine((c) => c.source_type !== 'corpus' || c.startup_id !== undefined, {
