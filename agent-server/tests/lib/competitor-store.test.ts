@@ -406,3 +406,13 @@ describe('the summary and opportunity sentences (written in code)', async () => 
     expect(reply.opportunity_sentences).toHaveLength(2);
   });
 });
+
+describe('the customer-partly rule (explainer §6, rule 2)', async () => {
+  const { opportunitySentences, OPPORTUNITY_TEXT } = await import('../../src/mastra/lib/competitor-notes');
+  it('uses its fixed message, not the judge’s sentence, and the next step "Interview your target customers"', () => {
+    const competitors = [{ ...competitor(1), opportunity: 'possible_customer_difference' as const, difference: 'Some judge sentence.' }];
+    expect(opportunitySentences({ competitors }, 'en')).toEqual([
+      `Possible difference (Co 1): ${OPPORTUNITY_TEXT.possible_customer_difference.text!.en} Next step: Interview your target customers.`,
+    ]);
+  });
+});

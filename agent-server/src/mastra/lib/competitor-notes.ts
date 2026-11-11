@@ -82,7 +82,7 @@ export const OPPORTUNITY_TEXT: Record<OpportunityKind, { title: Record<Language,
   },
   possible_customer_difference: {
     title: { en: 'Possible difference', ar: 'اختلاف محتمل' },
-    text: { en: 'Your customer overlaps only in part with this competitor’s.', ar: 'عميلك يتقاطع جزئيًا فقط مع عملاء هذا المنافس.' },
+    text: { en: 'You focus on a narrower group of customers than this competitor.', ar: 'تركّز على فئة أضيق من العملاء مقارنة بهذا المنافس.' },
     next: { en: 'Interview your target customers.', ar: 'قابل عملاءك المستهدفين.' },
   },
   possible_difference: {
@@ -129,8 +129,8 @@ export function opportunitySentences(result: Pick<Result, 'competitors'>, langua
     .filter((c) => c.opportunity)
     .map((c) => {
       const text = OPPORTUNITY_TEXT[c.opportunity!];
-      const possible = c.opportunity === 'possible_difference' || c.opportunity === 'possible_customer_difference';
-      const meaning = possible && c.difference ? c.difference : text.text![language];
+      // only the offering rule uses the judge's own sentence; the others have a fixed message (explainer §6)
+      const meaning = c.opportunity === 'possible_difference' && c.difference ? c.difference : text.text![language];
       return `${text.title[language]} (${c.name}): ${meaning} ${NEXT_STEP[language]}: ${text.next[language]}`;
     });
 }

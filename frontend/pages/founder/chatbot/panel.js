@@ -323,7 +323,6 @@ function sourceLine(competitor) {
 /* Competitive opportunities (explainer §6): for each competitor, the rule that matched, what it means
    (the judge's own sentence for a possible difference) and the fixed next step. Never "where you will win". */
 const OPPORTUNITY_CHIP = { proven_difference: 'chip-good', possible_customer_difference: 'chip-teal', possible_difference: 'chip-teal', no_clear_difference: 'chip-warn', not_enough_evidence: '' };
-const POSSIBLE = ['possible_difference', 'possible_customer_difference'];
 
 function opportunities(competitors) {
   const rows = competitors.filter((c) => OPPORTUNITY_CHIP[c.opportunity] !== undefined);
@@ -334,7 +333,7 @@ function opportunities(competitors) {
       ${rows.map((c) => `
         <div class="opportunity">
           <p><span class="chip ${OPPORTUNITY_CHIP[c.opportunity]}">${t(`comp.opp.${c.opportunity}`)}</span> <strong><bdi>${safe(c.name)}</bdi></strong></p>
-          <p dir="auto">${POSSIBLE.includes(c.opportunity) && c.difference ? safe(c.difference) : t(`comp.opp.${c.opportunity}.text`)}</p>
+          <p dir="auto">${c.opportunity === 'possible_difference' && c.difference ? safe(c.difference) : t(`comp.opp.${c.opportunity}.text`)}</p>
           <p class="text-2"><strong>${t('comp.opp.next')}:</strong> ${t(`comp.opp.${c.opportunity}.next`)}</p>
         </div>`).join('')}
       <p class="text-3 comp-matrix-note">${t('comp.opp.note')}</p>
