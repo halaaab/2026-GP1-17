@@ -7,7 +7,7 @@
 // (not built yet), it returns the "capability_pending" result.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { applyPolicy, buildResult, type Judged } from '../lib/competitor-policy';
+import { applyPolicy, buildResult, clarificationResult, type Judged } from '../lib/competitor-policy';
 import { fallbackResult, pendingResult, profileFromKnownFacts } from '../lib/competitor-result';
 import { getRunState, logStep } from '../lib/competitor-run';
 import { Handoff, MAX_TAVILY_CALLS, Result } from '../schemas/competitor';
@@ -37,6 +37,17 @@ export const finalizeResultTool = createTool({
     if (!handoff.success) return fallbackResult(null, run);
 
     const state = getRunState(ctx?.requestContext);
+    const usage = () => ({
+      tavily_calls: Math.min(state.tavilyCalls, MAX_TAVILY_CALLS),
+      duration_ms: Math.max(0, Math.round(Date.now() - startedAt)),
+      trace_id: run.traceId,
+    });
+
+    // The idea could not be read (OpenAI failed): the analysis did not finish, and the founder can retry.
+    if (state.steps.some((s) => s.capability === 'understand' && s.outcome === 'failed')) return fallbackResult(handoff.data, run);
+    // The idea lacks the problem or the offering: ask the one question Understand chose (design §4, PBI 34).
+    if (state.clarification && state.profile) return clarificationResult(state.profile, state.clarification, usage());
+
     // No search has run (Discover is not built yet): saying "no competitors found" would not be true.
     if (!state.steps.some((s) => s.capability === 'discover')) return pendingResult(handoff.data, run);
 
@@ -55,11 +66,7 @@ export const finalizeResultTool = createTool({
         profile,
         judged,
         runNotes: [...state.notes],
-        usage: {
-          tavily_calls: Math.min(state.tavilyCalls, MAX_TAVILY_CALLS),
-          duration_ms: Math.max(0, Math.round(Date.now() - startedAt)),
-          trace_id: run.traceId,
-        },
+        usage: usage(),
       });
       logStep(state, { capability: 'guardrails', outcome: 'ok', duration_ms: Date.now() - finalizeStarted, detail: `shown=${result.competitors.length}` });
       return result;

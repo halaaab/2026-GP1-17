@@ -23,7 +23,7 @@ import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
 export const COMPETITOR_AGENT_ID = 'competitor-agent';
 
-// Most steps the Competitor Agent may take in one run. The foundation needs 2 (finalize_result, then a short reply).
+// Most steps the Competitor Agent may take in one run. Now it needs 3 (understand_idea, finalize_result, a short reply).
 export const COMPETITOR_MAX_STEPS = 4;
 
 // What the supervisor writes. The ids are left out: the server adds them.
