@@ -59,6 +59,21 @@ export function jsonInside(text: string): unknown {
   }
 }
 
+// Optional fields the supervisor left empty ({}, [], "" or null) mean "not stated", so they are dropped before the
+// check, instead of rejecting the handoff and costing the supervisor another call. Filled fields are checked as written.
+export function withoutEmptyFields(value: unknown): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const isEmpty = (v: unknown) =>
+    v === null || v === '' || (Array.isArray(v) && v.length === 0) || (typeof v === 'object' && v !== null && !Array.isArray(v) && Object.keys(v).length === 0);
+  const kept: Record<string, unknown> = {};
+  for (const [key, v] of Object.entries(value)) {
+    // inside an object field (known_facts, founder_startup), empty parts are dropped too
+    const inner = v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.entries(v).filter(([, x]) => !isEmpty(x))) : v;
+    if (!isEmpty(inner)) kept[key] = inner;
+  }
+  return kept;
+}
+
 // The text of the founder's messages the supervisor saw, oldest first.
 type ModelMessageLike = { role: string; content: unknown };
 export function founderMessages(messages: readonly ModelMessageLike[] | undefined): string[] {
@@ -85,7 +100,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     return reject('No assessment has been started for this conversation, so the analysis cannot run.');
   }
 
-  const written = SupervisorHandoff.safeParse(jsonInside(ctx.prompt));
+  const written = SupervisorHandoff.safeParse(withoutEmptyFields(jsonInside(ctx.prompt)));
   if (!written.success) {
     return reject(
       `The handoff is not valid. Send one JSON object with mode, language, idea_text and only the optional fields that apply.\n${z.prettifyError(written.error)}`,

@@ -52,7 +52,10 @@ export const finalizeResultTool = createTool({
     if (state.clarification && state.profile) return clarificationResult(state.profile, state.clarification, usage());
 
     // No search has run (Discover is not built yet): saying "no competitors found" would not be true.
-    if (!state.steps.some((s) => s.capability === 'discover')) return pendingResult(handoff.data, run);
+    if (!state.steps.some((s) => s.capability === 'discover')) {
+      const pending = pendingResult(handoff.data, run);
+      return state.profile ? { ...pending, idea_profile: state.profile } : pending;
+    }
 
     const finalizeStarted = Date.now();
     const profile = state.profile ?? profileFromKnownFacts(handoff.data);
