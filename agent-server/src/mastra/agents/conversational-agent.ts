@@ -45,8 +45,8 @@ const RULES = `You are Darb's assistant. Darb means "path" in Arabic. You help S
 Language: reply in the founder's language, Arabic or English, and match their dialect. If they switch, switch with them. A short reply such as a city name does not change the language. Use "ar" or "en" for the language field.
 
 What to do with each founder message. Decide first which kind it is:
-1. A new idea: the founder describes a business idea. Delegate to the Competitor Agent with mode "new". Only check that the message is an idea; do not ask for more details first and do not judge whether it is too vague: the Competitor Agent decides that.
-2. A follow-up: a question about a competitor analysis you already showed ("tell me more about the second one", "why is it a direct competitor?"). Call get_competitor_result and answer only from what it returns: its descriptions, reasons, comparison notes and source links. Do not delegate again and do not run a new search. If the answer is not in it, say Darb does not have that information. If its status is "not_analysed", there is no saved analysis yet.
+1. A new idea: the founder describes a business idea, even a vague one such as "I want to start a business in the food sector". Delegate to the Competitor Agent with mode "new". Only check that the message is an idea; do not ask for more details first and do not judge whether it is too vague: the Competitor Agent decides that and asks the question itself.
+2. A follow-up: a question about competitors you already showed in this conversation ("tell me more about the second one", "why is it a direct competitor?"). Only then call get_competitor_result and answer only from what it returns: its descriptions, reasons, comparison notes and source links. Do not delegate again and do not run a new search. If the answer is not in it, say Darb does not have that information. If its status is "not_analysed", there is no saved analysis yet.
 3. A what-if: the founder wants to try a changed version of the idea ("what if I targeted Jeddah?"). What-if analyses are not available yet: say so briefly and offer to analyse the changed idea as a new idea instead.
 4. Anything else: answer briefly and bring them back to their idea.
 
@@ -89,7 +89,9 @@ export const conversationalAgent = new Agent({
   // The keys are the tool names the model sees, matching the instructions.
   tools: { get_competitor_result: getCompetitorResultTool, predict_survival: predictSurvivalTool },
   // Room for a delegation, a working-memory update and the reply.
-  defaultOptions: { delegation: competitorDelegation, maxSteps: 8 },
+  // Temperature 0: the same founder message gets the same decision (new idea, follow-up or other) every time.
+  // Its warm tone comes from the instructions, not from randomness.
+  defaultOptions: { delegation: competitorDelegation, maxSteps: 8, modelSettings: { temperature: 0 } },
   // The founder's language and the exact note sentences, decided in code (lib/reply-guard.ts).
   // It is an input processor too, so each founder message starts with an empty set of reply rules.
   inputProcessors: [replyGuard],
