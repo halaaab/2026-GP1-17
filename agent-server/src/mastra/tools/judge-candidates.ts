@@ -3,13 +3,13 @@
 // what to do next (search more, validate, or finish) without being able to change an answer.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { JUDGE_MAX_CALLS, JUDGE_PARALLEL_CALLS } from '../config/limits';
+import { JUDGE_MAX_CALLS, JUDGE_PARALLEL_CALLS, RUN_TIME_LIMIT_MS } from '../config/limits';
 import { applyPolicy } from '../lib/competitor-policy';
 import { profileFromKnownFacts } from '../lib/competitor-result';
 import { getRunState, logStep } from '../lib/competitor-run';
 import { judgeCandidate } from '../lib/judge';
 import { Handoff, JudgeLabel } from '../schemas/competitor';
-import { HANDOFF_KEY } from './finalize-result';
+import { HANDOFF_KEY, STARTED_AT_KEY } from './finalize-result';
 
 type RequestContextLike = { get: (key: string) => unknown; set: (key: string, value: unknown) => void };
 
@@ -48,7 +48,15 @@ export const judgeCandidatesTool = createTool({
     const toJudge = waiting.slice(0, room);
     let failed = 0;
 
+    // The run's overall time limit (design §12): no new judge calls start after it.
+    const runStarted = Number(requestContext?.get(STARTED_AT_KEY)) || started;
+    let outOfTime = 0;
     for (let i = 0; i < toJudge.length; i += JUDGE_PARALLEL_CALLS) {
+      if (Date.now() - runStarted > RUN_TIME_LIMIT_MS) {
+        outOfTime = toJudge.length - i;
+        state.notes.add('time_limit_reached');
+        break;
+      }
       const batch = toJudge.slice(i, i + JUDGE_PARALLEL_CALLS);
       state.judgeCalls += batch.length;
       const answers = await Promise.allSettled(
@@ -72,13 +80,13 @@ export const judgeCandidatesTool = createTool({
       capability: 'judge',
       outcome: toJudge.length === 0 ? 'skipped' : failed === toJudge.length ? 'failed' : 'ok',
       duration_ms: Date.now() - started,
-      detail: `judged=${judged.length} failed=${failed} over_limit=${waiting.length - toJudge.length}`,
+      detail: `judged=${judged.length} failed=${failed} over_limit=${waiting.length - toJudge.length} out_of_time=${outOfTime}`,
     });
 
     return {
       judged,
       failed,
-      skipped_over_limit: waiting.length - toJudge.length,
+      skipped_over_limit: waiting.length - toJudge.length + outOfTime,
       judge_calls_left: Math.max(0, JUDGE_MAX_CALLS - state.judgeCalls),
     };
   },

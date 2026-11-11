@@ -7,9 +7,10 @@
 // (not built yet), it returns the "capability_pending" result.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { applyPolicy, buildResult, clarificationResult, type Judged } from '../lib/competitor-policy';
+import { applyPolicy, buildResult, clarificationResult, limitResult, type Judged } from '../lib/competitor-policy';
 import { fallbackResult, pendingResult, profileFromKnownFacts } from '../lib/competitor-result';
 import { getRunState, logStep } from '../lib/competitor-run';
+import { saveResult } from '../lib/competitor-store';
 import { Handoff, MAX_TAVILY_CALLS, Result } from '../schemas/competitor';
 
 // Set by the delegation hook before the Competitor Agent starts (lib/competitor-delegation.ts).
@@ -43,6 +44,8 @@ export const finalizeResultTool = createTool({
       trace_id: run.traceId,
     });
 
+    // The founder has used their analyses: nothing was searched.
+    if (state.limitNote) return limitResult(state.profile ?? profileFromKnownFacts(handoff.data), state.limitNote, usage());
     // The idea could not be read (OpenAI failed): the analysis did not finish, and the founder can retry.
     if (state.steps.some((s) => s.capability === 'understand' && s.outcome === 'failed')) return fallbackResult(handoff.data, run);
     // The idea lacks the problem or the offering: ask the one question Understand chose (design §4, PBI 34).
@@ -68,7 +71,16 @@ export const finalizeResultTool = createTool({
         runNotes: [...state.notes],
         usage: usage(),
       });
-      logStep(state, { capability: 'guardrails', outcome: 'ok', duration_ms: Date.now() - finalizeStarted, detail: `shown=${result.competitors.length}` });
+      // Saved for follow-up questions, the result screen, History and the report (design §11). A failed save is
+      // logged, and the founder still sees the result.
+      let saved = 'saved';
+      try {
+        await saveResult(handoff.data.assessment_id, result);
+      } catch (error) {
+        console.error('Saving the competitor result failed:', error);
+        saved = 'save_failed';
+      }
+      logStep(state, { capability: 'guardrails', outcome: 'ok', duration_ms: Date.now() - finalizeStarted, detail: `shown=${result.competitors.length} ${saved}` });
       return result;
     } catch {
       logStep(state, { capability: 'guardrails', outcome: 'failed', duration_ms: Date.now() - finalizeStarted });

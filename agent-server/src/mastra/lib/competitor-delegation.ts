@@ -10,6 +10,11 @@
 //                         (or builds a valid fallback), and adds the notes as sentences in the founder's language.
 //                         The supervisor sees only this, never the Competitor Agent's own text. It also tells the
 //                         reply guard (lib/reply-guard.ts) what the founder must see, and writes one run log line.
+//
+// Also decided here, in code:
+//   limits         a founder who used their daily or monthly analyses gets the limit note; nothing is searched (§12)
+//   clarification  the founder sees the Competitor Agent's question word for word, and when the supervisor forgets
+//                  to send their answer on the next call, the hook adds it from the question it remembers (§4)
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
 import { Handoff, Result, RunLog } from '../schemas/competitor';
@@ -17,6 +22,7 @@ import { HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
 import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
+import { analysisLimit } from './competitor-store';
 import { noteSentences } from './competitor-notes';
 import { detectLanguage, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
@@ -36,6 +42,10 @@ type Running = { handoff: Handoff; startedAt: number; droppedFacts: string[]; re
 
 // Handoffs of the delegations still running, by tool call id (both hooks receive it).
 const running = new Map<string, Running>();
+
+// The question each assessment is waiting on, by assessment_id. Kept in server memory: after a restart the
+// supervisor's own re-call (with clarification) still works; only this backup is lost.
+export const pendingQuestions = new Map<string, string>();
 
 // The JSON object inside the supervisor's message (it may wrap it in a code block).
 export function jsonInside(text: string): unknown {
@@ -90,8 +100,14 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   const language = detectLanguage(said.at(-1) ?? '') ?? written.data.language;
   const facts = said.length ? keepStatedFacts(written.data.known_facts, said.join('\n')) : { kept: written.data.known_facts, dropped: [] };
 
+  // The Competitor Agent asked a question last time, and the supervisor did not pass the answer: the founder's
+  // latest message is the answer to it.
+  const asked = pendingQuestions.get(assessment.assessment_id);
+  const clarification = written.data.clarification ?? (asked && said.length ? { question: asked, answer: said.at(-1)! } : undefined);
+
   const handoff = Handoff.parse({
     ...written.data,
+    ...(clarification ? { clarification } : {}),
     language,
     known_facts: facts.kept,
     assessment_id: assessment.assessment_id,
@@ -102,6 +118,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   const replyRules = ctx.requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined;
   // A fresh run state for every run, so nothing gathered by an earlier run leaks into this one (lib/competitor-run.ts).
   const state = newRunState();
+  state.limitNote = await analysisLimit(userId, assessment.assessment_id);
   running.set(ctx.toolCallId, { handoff, startedAt, droppedFacts: facts.dropped, replyRules, state });
   ctx.requestContext.set(HANDOFF_KEY, handoff);
   ctx.requestContext.set(RUN_STATE_KEY, state);
@@ -109,7 +126,9 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
 
   return {
     proceed: true,
-    modifiedPrompt: `Handoff:\n${JSON.stringify(handoff)}`,
+    modifiedPrompt: state.limitNote
+      ? `Handoff:\n${JSON.stringify(handoff)}\nThe founder has no analyses left for now: call finalize_result now.`
+      : `Handoff:\n${JSON.stringify(handoff)}`,
     modifiedMaxSteps: COMPETITOR_MAX_STEPS,
   };
 }
@@ -155,11 +174,21 @@ export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): 
     : fallbackResult(started.handoff, { durationMs: Date.now() - started.startedAt, traceId: null });
 
   const sentences = noteSentences(result.notes, started.handoff.language);
+  const question = result.status === 'needs_clarification' ? result.clarification?.question : undefined;
+  if (question) pendingQuestions.set(started.handoff.assessment_id, question);
+  else pendingQuestions.delete(started.handoff.assessment_id);
+
   if (started.replyRules) {
-    started.replyRules.sentences = sentences;
     started.replyRules.language = started.handoff.language;
-    // Nothing to present and no question to ask: the founder sees exactly the note sentences, written by code.
-    started.replyRules.codeWritesReply = result.competitors.length === 0 && result.status !== 'needs_clarification' && sentences.length > 0;
+    if (question) {
+      // A question to ask: the founder sees exactly that one question, written by code (design §4).
+      started.replyRules.sentences = [question];
+      started.replyRules.codeWritesReply = true;
+    } else {
+      started.replyRules.sentences = sentences;
+      // Nothing to present: the founder sees exactly the note sentences, written by code.
+      started.replyRules.codeWritesReply = result.competitors.length === 0 && sentences.length > 0;
+    }
   }
   console.info(JSON.stringify(runLog(started, result, checked.success)));
 
