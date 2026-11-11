@@ -81,6 +81,8 @@ export const Handoff = z
     named_competitors: z.array(z.string().min(1)).optional(),
     // Analogies ("like Talabat"): never returned as results.
     references: z.array(z.string().min(1)).optional(),
+    // A what-if only: a short name for the change, in the founder's language ("Jeddah instead of Riyadh").
+    scenario_label: z.string().trim().min(1).max(120).optional(),
     // On a re-call: the question the Competitor Agent asked, and the founder's answer.
     clarification: z.object({ question: z.string().min(1), answer: z.string().min(1) }).strict().optional(),
   })

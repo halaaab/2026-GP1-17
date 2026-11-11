@@ -1339,5 +1339,6 @@
   "comp.opp.not_enough_evidence.next": "اجمع أدلة أكثر عن هذا المنافس.",
   "comp.opp.possible_customer_difference": "اختلاف محتمل",
   "comp.opp.possible_customer_difference.text": "تركّز على فئة أضيق من العملاء مقارنة بهذا المنافس.",
-  "comp.opp.possible_customer_difference.next": "قابل عملاءك المستهدفين."
+  "comp.opp.possible_customer_difference.next": "قابل عملاءك المستهدفين.",
+  "whatIf.label": "ماذا لو: {change}"
 }

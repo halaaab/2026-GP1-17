@@ -6,6 +6,7 @@
 // Foundation checks (Competitor Agent, final design): describing an idea makes the Conversational Agent delegate
 // to the Competitor Agent, no form comes first, and the founder sees the capability_pending note in their language.
 // Understand check: a vague idea makes the Competitor Agent ask the founder one question instead.
+// What-if check: a what-if is never run on first mention; Darb asks the founder to confirm it first.
 import { RequestContext } from '@mastra/core/request-context';
 import { NOTE_TEXT } from '../src/mastra/lib/competitor-notes';
 import { replyProblems } from '../src/mastra/lib/reply-guard';
@@ -83,6 +84,12 @@ async function main() {
     // 5. A vague idea: the Competitor Agent asks one question instead of searching (design §4, PBI 34).
     const vague = await say(`live-test-vague-${Date.now()}`, 'I want to start a business in the food sector.');
     check('Vague idea: delegated to the Competitor Agent', vague.calls.some((c) => /competitor/i.test(c)), vague.calls.join(', '));
+    // 6. A what-if after an idea: Darb restates it and asks first (it uses one of the founder's analyses).
+    const whatIfThread = `live-test-what-if-${Date.now()}`;
+    await say(whatIfThread, 'An app that gives people one subscription to many gyms in Riyadh.');
+    const whatIf = await say(whatIfThread, 'What if I targeted Jeddah instead?');
+    check('What-if: asks the founder to confirm first', /[?؟]/.test(whatIf.text) && !whatIf.text.includes(NOTE_TEXT.capability_pending.en), whatIf.text);
+
     check('Vague idea: asks one question, shows no note', /[?؟]/.test(vague.text) && !vague.text.includes(NOTE_TEXT.capability_pending.en), vague.text);
   } finally {
     // 4. Clean up: deleting the test idea deletes its assessment with it.

@@ -26,6 +26,7 @@ Never pass mode, language or the other fields as separate arguments. The JSON ob
 - founder_startup (optional): { name, website } of the founder's own startup
 - named_competitors (optional): companies the founder mentioned as competitors
 - references (optional): analogies the founder used, such as "like Talabat"
+- scenario_label (what_if only, required then): a short name for the change in the founder's language, such as "Jeddah instead of Riyadh"
 - clarification (optional): { question, answer } when re-calling after a clarification question
 Do not send assessment_id or idea_id: the server adds them.`,
   instructions: `You are Darb's Competitor Agent. You receive a handoff and return a result; you never talk to the founder.

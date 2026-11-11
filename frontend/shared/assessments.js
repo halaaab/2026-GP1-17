@@ -23,6 +23,7 @@
        score:   72,                   // empty until the analysis has run
        iss:     64,                   // Idea Similarity Score 0–100; empty when no competitors were found
        issBasis, marketLevel, competitorNotes, analysedAt:   the competitor analysis (empty until it ran)
+       parentId, whatIf:   a what-if: the assessment it changes, and its short name ("Jeddah instead of Riyadh")
        factors: [14, 12, -3, -1],     // what moved the score up or down from 50
        roadmapShown: false,           // did the founder ask for the roadmap in the chat?
        extra:   [{ from: 'user', text: '...' }, { from: 'agent' }],   // follow-up messages after the result
@@ -276,6 +277,9 @@ function fromRows(idea, assessment, messages) {
     marketLevel: assessment.market_level || '',
     competitorNotes: assessment.competitor_notes || [],
     analysedAt: assessment.analysed_at || '',
+    // a what-if is a new assessment of the same idea, linked to the one it changes (migration 0019)
+    parentId: assessment.parent_assessment_id || '',
+    whatIf: assessment.scenario_label || '',
     factors: assessment.explanation ? assessment.explanation.factors : [],
     roadmapShown: Boolean(assessment.roadmap_generated_at),
     roadmapAt: assessment.roadmap_generated_at,
