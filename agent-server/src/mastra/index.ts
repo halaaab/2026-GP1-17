@@ -11,8 +11,14 @@ import { competitorAgent } from './agents/competitor-agent';
 import { conversationalAgent } from './agents/conversational-agent';
 import { darbStore } from './lib/storage';
 import { authMiddleware } from './server/auth';
+import { initCrRegistry } from './lib/cr-registry';
+import { checkCrTool } from './tools/check-cr';
 import { finalizeResultTool } from './tools/finalize-result';
+import { identifyCandidatesTool } from './tools/identify-candidates';
 import { predictSurvivalTool } from './tools/predict-survival';
+
+// The Ministry of Commerce list of active registrations, held in memory for the CR check (Task 3).
+await initCrRegistry();
 
 export const mastra = new Mastra({
   bundler: {
@@ -23,6 +29,8 @@ export const mastra = new Mastra({
   // The tools of the earlier design (similarity_search, web_search, ...) are kept in src/mastra/tools but no
   // longer connected: the Competitor Agent is being rebuilt from the final design.
   tools: {
+    checkCrTool,
+    identifyCandidatesTool,
     finalizeResultTool,
     predictSurvivalTool,
   },
