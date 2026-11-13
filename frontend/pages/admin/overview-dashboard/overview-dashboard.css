@@ -92,6 +92,28 @@ main {
   text-align: end;
 }
 
+/* ---------- Color ----------
+   A card or row sets --bar and --bar-tint to one pastel, and its icon, bars and
+   sparkline follow. Without them everything stays teal. The Insights tab on the
+   Founders page uses the same rules, so the two pages look the same. */
+
+.ov-kpi-icon {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--bar-tint, var(--teal-tint));
+  color: var(--bar, var(--teal-text));
+}
+.ov-kpi-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 /* ---------- 1. KPIs ---------- */
 
 .ov-kpi {
@@ -155,18 +177,18 @@ html[dir="rtl"] .ov-check-link svg {
 }
 .ov-spark-line {
   fill: none;
-  stroke: var(--teal);
+  stroke: var(--bar, var(--teal));
   stroke-width: 2;
   stroke-linejoin: round;
   stroke-linecap: round;
   vector-effect: non-scaling-stroke;
 }
 .ov-spark-area {
-  fill: var(--teal-tint);
+  fill: var(--bar-tint, var(--teal-tint));
   opacity: 0.8;
 }
 .ov-spark-dot {
-  fill: var(--teal);
+  fill: var(--bar, var(--teal));
   stroke: var(--bg);
   stroke-width: 2;
   vector-effect: non-scaling-stroke;
@@ -422,14 +444,14 @@ html[dir="rtl"] .ov-check-link svg {
   max-width: 120px;
   height: 6px;
   border-radius: var(--r-pill);
-  background: var(--bg-muted);
+  background: var(--bar-tint, var(--bg-muted));
   overflow: hidden;
 }
 .ov-progress-fill {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: var(--teal);
+  background: var(--bar, var(--teal));
   transition: width 0.6s var(--ease);
 }
 /* "3 founders have no region" → the Founders page */

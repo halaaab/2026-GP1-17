@@ -18,6 +18,7 @@ import { getAccount } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import { scoreBand, whenText } from '../../../shared/assessments.js';
 import { completeness } from '../../founder/incubators-accelerators/programs.js';
+import { TYPE_COLORS } from '../founder-management/founder-fields.js';
 import '../../../shared/guard.js';
 
 const ROOT = new URL('../../../', import.meta.url).href;
@@ -36,7 +37,7 @@ const PAGES = {
 // founder types → their words in translations (from the sign-up page)
 const TYPE_WORDS = {
   student: 'signup.student', entrepreneur: 'signup.entrepreneur', business_owner: 'signup.owner',
-  investor: 'signup.investor', other: 'signup.other',
+  investor: 'signup.investor', none: 'founders.justFounder',
 };
 
 let data = null;       // everything loaded from the database
@@ -112,11 +113,11 @@ async function readAll(table, columns) {
 
 async function load() {
   const results = await Promise.all([
-    readAll('users', 'user_id, full_name, user_type, region, status, locale, created_at'),
-    readAll('startup_ideas', 'idea_id, user_id, idea_name, sector, created_at'),
+    readAll('founder_profiles', 'user_id, full_name, user_type, region, status, locale, created_at'),
+    readAll('startup_ideas', 'idea_id, founder_id, idea_name, sector, created_at'),
     readAll('assessments', 'assessment_id, idea_id, status, fis_score, risk_level, started_at, completed_at, roadmap_generated_at'),
     readAll('startups', 'startup_id, sector, startup_description'),
-    readAll('support_organisations', '*'),
+    readAll('support_organizations', '*'),
     readAll('regulatory_requirements', 'requirement_id, last_verified'),
     readAll('market_indicators', 'record_id, year'),
   ]);
@@ -128,7 +129,9 @@ async function load() {
     return null;
   }
 
-  const [users, ideas, assessments, startups, programs, requirements, market] = results.map((result) => result.rows);
+  const [founders, ideas, assessments, startups, programs, requirements, market] = results.map((result) => result.rows);
+  // no type = just a founder (migration 0022)
+  const users = founders.map((user) => ({ ...user, user_type: user.user_type || 'none' }));
   document.querySelector('#load-error').hidden = !results.some((result) => result.failed);
 
   // quick look-ups: idea → founder, founder → name
@@ -255,13 +258,17 @@ function change(current, previous, inPoints = false) {
   return { text: `${difference > 0 ? '+' : ''}${difference}%`, kind: difference > 0 ? 'up' : difference < 0 ? 'down' : 'flat' };
 }
 
+// Each KPI has its own pastel and icon; its sparkline follows the same color
+const KPI_LOOKS = [['users', 1], ['file', 2], ['checkCircle', 3], ['trendUp', 4]];
+
 function kpiCard({ label: name, value, delta, spark, foot, link }, index) {
+  const [iconName, color] = KPI_LOOKS[index % KPI_LOOKS.length];
   const chip = { up: 'chip-good', down: 'chip-risk', flat: '' }[delta.kind];
   const arrow = delta.kind === 'flat' ? '' : `<span class="ov-arrow ${delta.kind === 'down' ? 'is-down' : ''}">${icon('arrowUp')}</span>`;
   return `
-    <article class="card ov-kpi fade-up" style="--i: ${index}">
+    <article class="card ov-kpi fade-up" style="--i: ${index}; --bar: var(--pastel-${color}-text); --bar-tint: var(--pastel-${color}-tint);">
       <div class="ov-kpi-top">
-        <span class="stat-label">${name}</span>
+        <span class="ov-kpi-title"><span class="ov-kpi-icon">${icon(iconName)}</span><span class="stat-label">${name}</span></span>
         <span class="chip ${chip}" title="${safe(fill('overview.vsPrevious', { days }))}">${arrow}<span dir="ltr">${delta.text}</span></span>
       </div>
       <span class="stat-value">${value}</span>
@@ -294,7 +301,7 @@ function showKpis() {
 
   const average = (items) => (items.length ? Math.round(items.reduce((sum, item) => sum + item.fis_score, 0) / items.length) : null);
   const activeFounders = data.users.filter((user) => user.status === 'active').length;
-  const ideaAuthors = new Set(newIdeas.map((idea) => idea.user_id)).size;
+  const ideaAuthors = new Set(newIdeas.map((idea) => idea.founder_id)).size;
   const ideasPerFounder = ideaAuthors ? (newIdeas.length / ideaAuthors).toFixed(1) : '0';
 
   const cards = [
@@ -502,12 +509,12 @@ function showPeople() {
   }
 
   // what each founder has done: an idea, a finished assessment, their scores
-  const withIdea = new Set(data.ideas.map((idea) => idea.user_id));
+  const withIdea = new Set(data.ideas.map((idea) => idea.founder_id));
   const scoresOf = new Map();
   data.assessments
     .filter((item) => item.fis_score !== null && item.completed_at)
     .forEach((item) => {
-      const founder = data.ideaById.get(item.idea_id)?.user_id;
+      const founder = data.ideaById.get(item.idea_id)?.founder_id;
       if (founder) scoresOf.set(founder, [...(scoresOf.get(founder) || []), item.fis_score]);
     });
 
@@ -530,9 +537,13 @@ function showPeople() {
     const assessed = founders.filter((user) => scoresOf.has(user.user_id)).length;
     const scores = founders.flatMap((user) => scoresOf.get(user.user_id) || []);
     const average = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+    // a founder type keeps its pastel here, the same as its chip on the Founders page
+    const color = peopleGroup === 'type' ? TYPE_COLORS[value] : null;
     return `
-      <tr>
-        <td class="ov-audience-name">${safe(groupName(peopleGroup, value))}</td>
+      <tr ${color ? `style="--bar: var(--pastel-${color}-text); --bar-tint: var(--pastel-${color}-tint);"` : ''}>
+        <td class="ov-audience-name">${peopleGroup === 'type' && value
+          ? `<a class="chip chip-pastel-${color}" href="${ROOT}${PAGES.founders}?tab=insights&type=${safe(value)}">${safe(groupName(peopleGroup, value))}</a>`
+          : safe(groupName(peopleGroup, value))}</td>
         <td><strong>${number(founders.length)}</strong> <span class="text-3">${percent(founders.length, total)}%</span></td>
         <td>${progress(ideas, founders.length)}</td>
         <td>${progress(assessed, founders.length)}</td>
@@ -636,14 +647,14 @@ function showFeed() {
       text: fill('overview.eJoined', { name: `<strong>${safe(user.full_name)}</strong>` }),
     })),
     ...data.ideas.map((idea) => ({
-      at: idea.created_at, who: nameOf(idea.user_id), kind: 'idea',
-      text: fill('overview.eIdea', { name: `<strong>${safe(nameOf(idea.user_id))}</strong>`, idea: safe(idea.idea_name) }),
+      at: idea.created_at, who: nameOf(idea.founder_id), kind: 'idea',
+      text: fill('overview.eIdea', { name: `<strong>${safe(nameOf(idea.founder_id))}</strong>`, idea: safe(idea.idea_name) }),
     })),
     ...data.assessments.filter((item) => item.completed_at && item.fis_score !== null).map((item) => {
       const idea = data.ideaById.get(item.idea_id);
       return {
-        at: item.completed_at, who: nameOf(idea?.user_id), kind: 'score', score: item.fis_score,
-        text: fill('overview.eScore', { name: `<strong>${safe(nameOf(idea?.user_id))}</strong>`, idea: safe(idea?.idea_name || '') }),
+        at: item.completed_at, who: nameOf(idea?.founder_id), kind: 'score', score: item.fis_score,
+        text: fill('overview.eScore', { name: `<strong>${safe(nameOf(idea?.founder_id))}</strong>`, idea: safe(idea?.idea_name || '') }),
       };
     }),
   ]

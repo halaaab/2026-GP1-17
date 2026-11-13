@@ -7,7 +7,12 @@
   "scripts": {
     "dev": "mastra dev",
     "build": "mastra build",
-    "start": "mastra start"
+    "start": "mastra start",
+    "test": "vitest run",
+    "test:assessment": "tsx scripts/create-test-assessment.ts",
+    "classify:startups": "tsx scripts/classify-startups-isic.ts",
+    "test:live": "tsx scripts/test-live.ts",
+    "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.exclude=src/**/*.test.ts --coverage.reporter=text-summary"
   },
   "keywords": [],
   "author": "",
@@ -29,7 +34,10 @@
   },
   "devDependencies": {
     "@types/node": "latest",
+    "@vitest/coverage-v8": "^3.2.7",
     "mastra": "1.36.0",
-    "typescript": "^6.0.3"
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "vitest": "^3.2.7"
   }
 }

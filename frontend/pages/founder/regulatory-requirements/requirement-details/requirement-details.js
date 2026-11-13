@@ -77,7 +77,7 @@ function show() {
   document.querySelector('#applies').innerHTML = lines.map((line) => `<li>${icon('checkCircle')}<span>${safe(line)}</span></li>`).join('');
 
   // What to do: numbered steps
-  const steps = stepsOf(field(row, 'what_darb_should_surface'));
+  const steps = stepsOf(field(row, 'what_darb_surface'));
   document.querySelector('#steps-section').hidden = steps.length === 0;
   document.querySelector('#steps-count').textContent = t('reg.stepsCount').replace('{n}', steps.length);
   document.querySelector('#steps').innerHTML = steps
