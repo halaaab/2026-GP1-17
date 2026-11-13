@@ -151,7 +151,7 @@ async function loadCompetitors(assessment) {
     website: row.website || '',
     score: row.similarity_score,
     opportunity,                            // proven / possible / no clear difference, or not enough evidence
-    difference: row.difference || '',       // the judge's one sentence (not stored yet: decision pending)
+    difference: row.difference || '',       // the judge's one sentence (migration 0038)
     };
   });
 }
@@ -275,7 +275,7 @@ function fromRows(idea, assessment, messages) {
     hiring: answers.hiring || '',
     noted: answers.noted || [],
     score: assessment.fis_score,
-    // the competitor analysis (migrations 0032, 0036); empty until the Competitor Agent saved one
+    // the competitor analysis (migrations 0032, 0036, 0038); empty until the Competitor Agent saved one
     iss: assessment.iss === null || assessment.iss === undefined ? null : Math.round(Number(assessment.iss)),
     issBasis: assessment.iss_basis || '',
     marketLevel: assessment.market_level || '',

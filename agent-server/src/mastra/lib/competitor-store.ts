@@ -1,7 +1,7 @@
 // The Competitor Agent's results in Supabase (design §11, migration 0032), written and read only by code:
 //
 //   saveResult        replaces the assessment's competitors (similar_startup_results, with their links in
-//                     result_sources) and saves its ISS, basis, market level and analysed_at.
+//                     result_sources) and saves its ISS, basis, market level, notes and analysed_at.
 //                     Only Darb's own outputs are saved, never page text (design §5).
 //   loadStoredResult  what was saved, for follow-up questions (PBI 36) and the result screen
 //   analysisLimit     the founder's daily and monthly analysis limits (design §12), counted from analysed_at
@@ -57,6 +57,7 @@ export function resultRows(assessmentId: string, competitors: readonly ResultCom
     comparison: c.comparison,
     similarity_score: c.similarity_score,
     opportunity: storedOpportunity(c.opportunity), // migration 0036
+    difference: c.difference ?? null, // the judge's one sentence (migration 0038)
   }));
 }
 
@@ -74,8 +75,7 @@ export function sourceRows(saved: readonly { result_id: string; rank: number }[]
 }
 
 // Saves a finished analysis. The old competitors of this assessment (and their links) are replaced, so a re-run
-// never mixes results. The notes and the judge's difference sentence are not saved yet: where they are stored is
-// still to be decided in the database design.
+// never mixes results.
 export async function saveResult(assessmentId: string, result: Result): Promise<void> {
   const supabase = getSupabase();
 
@@ -101,7 +101,13 @@ export async function saveResult(assessmentId: string, result: Result): Promise<
 
   const updated = await supabase
     .from('assessments')
-    .update({ iss: result.iss, iss_basis: result.iss_basis, market_level: result.market_level, analysed_at: new Date().toISOString() })
+    .update({
+      iss: result.iss,
+      iss_basis: result.iss_basis,
+      market_level: result.market_level,
+      competitor_notes: result.notes, // shown on the result screen, History and the report (migration 0038)
+      analysed_at: new Date().toISOString(),
+    })
     .eq('assessment_id', assessmentId);
   if (updated.error) throw updated.error;
 }
@@ -152,7 +158,7 @@ export async function loadStoredResult(assessmentId: string): Promise<StoredResu
       sources: r.result_sources ?? [],
       similarity_score: r.similarity_score,
       opportunity: readOpportunity(r.opportunity, r.comparison),
-      difference: null, // not stored yet (decision pending)
+      difference: r.difference ?? null,
     })),
   };
 }
