@@ -86,6 +86,8 @@ export async function buildIdeaProfile(text: string): Promise<IdeaProfile> {
 }
 
 // Small fixes before the check: empty strings become null (and "unknown"), and empty keywords are dropped.
+// A sector code in the wrong form ("6201", "62.0", "Retail") becomes null instead of rejecting the whole profile:
+// the sector only supports the search, so a bad code must never stop a startup or an idea from being profiled.
 function cleanProfile(raw: Record<string, unknown>): Record<string, unknown> {
   const fixPart = (p: unknown) => {
     const { value, origin } = (p ?? {}) as { value?: string | null; origin?: string };
@@ -101,13 +103,18 @@ function cleanProfile(raw: Record<string, unknown>): Record<string, unknown> {
     offering: fixPart(raw.offering),
     market: fixPart(raw.market),
     sector: {
-      isic_section: sector.isic_section?.trim().toUpperCase() || null,
-      isic_division: sector.isic_division?.trim() || null,
+      isic_section: validCode(sector.isic_section?.trim().toUpperCase(), /^[A-U]$/),
+      isic_division: validCode(sector.isic_division?.trim(), /^\d{2}$/),
     },
     business_model: model || null,
     keywords_en: words(raw.keywords_en),
     keywords_ar: words(raw.keywords_ar),
   };
+}
+
+// The code when it has the right form (an ISIC4 section letter, or a 2-digit division), else null.
+function validCode(code: string | undefined, form: RegExp): string | null {
+  return code && form.test(code) ? code : null;
 }
 
 // The text that is embedded for an idea or a corpus startup (design §16): the known parts, then the keywords.
