@@ -122,12 +122,9 @@ All the numbers that are tuned on the development set are in `config/scoring.ts`
 
 | Where | What |
 |---|---|
-| `similar_startup_results` | up to three competitors: label, evidence status, reason, comparison, score, opportunity (migration 0036) |
+| `similar_startup_results` | up to three competitors: label, evidence status, reason, comparison, score, opportunity (migration 0036) and the judge's difference sentence (0038) |
 | `result_sources` | each competitor's evidence links (url, source type, date checked) |
-| `assessments` | `iss`, `iss_basis`, `market_level`, `analysed_at` (used for the daily and monthly limits) |
-
-Not saved yet, until the database design decides where: the judge's difference sentence and the notes. Both are still
-shown in the chat.
+| `assessments` | `iss`, `iss_basis`, `market_level`, the note codes in `competitor_notes` (0038), and `analysed_at` (used for the daily and monthly limits) |
 
 ## Login and security
 
