@@ -190,7 +190,8 @@ describe('delegation: a what-if', () => {
     expect((await onCompetitorDelegationStart(ctx))?.proceed).toBe(true);
 
     const insert = calls.find((c) => c.op === 'insert');
-    expect(insert?.values).toMatchObject({ idea_id: IDEA, parent_assessment_id: ASSESSMENT, scenario_label: 'Jeddah instead of Riyadh', scenario_inputs: { idea_text: whatIf.idea_text } });
+    expect(insert?.values).toMatchObject({ idea_id: IDEA, confirmed_inputs: { idea_text: whatIf.idea_text, what_if_of: ASSESSMENT, what_if_label: 'Jeddah instead of Riyadh' } });
+    expect(insert?.values).not.toHaveProperty('parent_assessment_id'); // no new relation
     expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({ mode: 'what_if', assessment_id: WHAT_IF, idea_id: IDEA });
 
     // the run saved its result
@@ -208,7 +209,7 @@ describe('delegation: a what-if', () => {
     await new Promise((r) => setTimeout(r, 0));
     const removed = calls.find((c) => c.op === 'delete');
     expect(removed?.filters).toContainEqual(['eq', 'assessment_id', WHAT_IF]);
-    expect(removed?.filters).toContainEqual(['not', 'parent_assessment_id', 'is', null]); // never an original
+    expect(removed?.filters).toContainEqual(['not', 'confirmed_inputs->>what_if_of', 'is', null]); // never an original
   });
 
   it('counts towards the limits, and creates nothing when the founder has none left', async () => {

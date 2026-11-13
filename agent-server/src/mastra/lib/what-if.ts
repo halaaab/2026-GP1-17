@@ -1,5 +1,6 @@
 // What-if analyses (design §4, explainer §8): "what if I targeted Jeddah?" Each what-if is a new assessment of the
-// same idea, linked to the one it changes (parent_assessment_id, migration 0019), so the original never changes.
+// same idea, so the original never changes. Its link to the original and its short name are kept in its
+// confirmed_inputs ({ idea_text, what_if_of, what_if_label }): the team chose this over a new relation.
 // Decided in code, never by a model:
 //   askedBeforeLatestReply  a what-if runs only after Darb asked the founder to confirm it and the founder answered
 //   createWhatIf / removeWhatIf  the new assessment, and removing it again when nothing was saved for it
@@ -51,9 +52,7 @@ export async function createWhatIf(
       idea_id: parent.idea_id,
       language: parent.language,
       status: 'in_progress',
-      parent_assessment_id: parent.assessment_id,
-      scenario_label: label,
-      scenario_inputs: { idea_text: ideaText },
+      confirmed_inputs: { idea_text: ideaText, what_if_of: parent.assessment_id, what_if_label: label },
     })
     .select('assessment_id')
     .single();
@@ -64,7 +63,8 @@ export async function createWhatIf(
 // Removes a what-if that ended with nothing saved (a question to the founder, a limit, or a failed run),
 // so History never shows an empty what-if.
 export async function removeWhatIf(assessmentId: string): Promise<void> {
-  const { error } = await getSupabase().from('assessments').delete().eq('assessment_id', assessmentId).not('parent_assessment_id', 'is', null);
+  // only ever a what-if: an original has no what_if_of
+  const { error } = await getSupabase().from('assessments').delete().eq('assessment_id', assessmentId).not('confirmed_inputs->>what_if_of', 'is', null);
   if (error) throw error;
 }
 

@@ -28,6 +28,10 @@ function query(table: string) {
   calls.push(call);
   const answer = () => {
     if (db.fail) return { data: null, count: null, error: new Error('db down') };
+    // inserting competitors returns their new result_id (by rank), so their links can be saved
+    if (call.op === 'insert' && table === 'similar_startup_results') {
+      return { data: (call.values as { rank: number }[]).map((v) => ({ result_id: `r${v.rank}`, rank: v.rank })), error: null };
+    }
     if (call.op !== 'select') return { data: null, error: null };
     if (table === 'similar_startup_results') return { data: db.rows, error: null };
     // analysisLimit counts today first, then this month
@@ -43,6 +47,7 @@ function query(table: string) {
     insert: (values: unknown) => ((call.op = 'insert'), (call.values = values), builder),
     update: (values: unknown) => ((call.op = 'update'), (call.values = values), builder),
     eq: (column: string, value: unknown) => (call.filters.push(['eq', column, value]), builder),
+    in: (column: string, value: unknown) => (call.filters.push(['in', column, value]), builder),
     gte: (column: string, value: unknown) => (call.filters.push(['gte', column, value]), builder),
     order: () => builder,
     maybeSingle: async () => answer(),
@@ -133,31 +138,60 @@ describe('Saudi day and month', () => {
 });
 
 describe('saving a result', () => {
-  it('replaces the assessment’s competitors and saves the ISS, basis, market level and time', async () => {
+  it('replaces the old competitors and their links, saves each link in result_sources, and the ISS, basis and level', async () => {
+    db.rows = [{ result_id: 'old1' }];
     await store.saveResult(ASSESSMENT, result());
-    expect(calls.map((c) => `${c.table}:${c.op}`)).toEqual(['similar_startup_results:delete', 'similar_startup_results:insert', 'assessments:update']);
-    const rows = calls[1].values as Record<string, unknown>[];
-    expect(rows[0]).toMatchObject({ assessment_id: ASSESSMENT, rank: 1, source_type: 'web', startup_id: null, competitor_name: 'Co 1', source_url: 'https://co1.sa/about', label: 'direct' });
+    expect(calls.map((c) => `${c.table}:${c.op}`)).toEqual([
+      'similar_startup_results:select',
+      'result_sources:delete',
+      'similar_startup_results:delete',
+      'similar_startup_results:insert',
+      'result_sources:insert',
+      'assessments:update',
+    ]);
+    expect(calls[1].filters).toContainEqual(['in', 'result_id', ['old1']]);
+
+    const rows = calls[3].values as Record<string, unknown>[];
+    expect(rows[0]).toMatchObject({ assessment_id: ASSESSMENT, rank: 1, source_type: 'web', startup_id: null, competitor_name: 'Co 1', source_url: 'https://co1.sa/about', label: 'direct', opportunity: 'no_clear_difference' });
     expect(rows[1]).toMatchObject({ source_type: 'corpus', startup_id: 's2' });
-    expect(rows[0]).not.toHaveProperty('evidence_text');
-    expect(rows[0]).toMatchObject({ opportunity: 'no_clear_difference', differences: null });
-    expect(calls[2].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open', competitor_notes: ['fewer_than_three'] });
-    expect((calls[2].values as { analysed_at: string }).analysed_at).toBeTruthy();
+    for (const column of ['evidence_text', 'sources', 'differences', 'difference']) expect(rows[0]).not.toHaveProperty(column);
+
+    expect(calls[4].values).toEqual([
+      { result_id: 'r1', url: 'https://co1.sa/about', source_type: 'official_site', accessed_at: NOW },
+      { result_id: 'r2', url: 'https://co2.sa/about', source_type: 'official_site', accessed_at: NOW },
+    ]);
+    expect(calls[5].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open' });
+    expect(calls[5].values).not.toHaveProperty('competitor_notes'); // not stored yet (decision pending)
+    expect((calls[5].values as { analysed_at: string }).analysed_at).toBeTruthy();
   });
 
   it('saves "none found" without rows, and throws when the database fails', async () => {
     await store.saveResult(ASSESSMENT, result([]));
-    expect(calls.map((c) => c.op)).toEqual(['delete', 'update']);
+    expect(calls.map((c) => `${c.table}:${c.op}`)).toEqual(['similar_startup_results:select', 'assessments:update']);
     db.fail = true;
     await expect(store.saveResult(ASSESSMENT, result())).rejects.toThrow('db down');
   });
 
+  it('stores the design’s four opportunity values and reads the customer rule back from the comparison', () => {
+    expect(store.storedOpportunity('possible_customer_difference')).toBe('possible_difference');
+    expect(store.storedOpportunity('proven_difference')).toBe('proven_difference');
+    expect(store.storedOpportunity(undefined)).toBeNull();
+    expect(store.readOpportunity('possible_difference', { customer: { answer: 'partly' } })).toBe('possible_customer_difference');
+    expect(store.readOpportunity('possible_difference', { customer: { answer: 'same' } })).toBe('possible_difference');
+    expect(store.readOpportunity('no_clear_difference', null)).toBe('no_clear_difference');
+    expect(store.readOpportunity('something else', null)).toBeUndefined();
+  });
+
   it('reads the saved result back, in rank order', async () => {
     db.assessmentRow = { analysed_at: NOW, iss: '90.0', iss_basis: 'full', market_level: 'open' };
-    db.rows = store.resultRows(ASSESSMENT, result().competitors);
+    db.rows = store.resultRows(ASSESSMENT, result().competitors).map((row) => ({
+      ...row,
+      result_sources: [{ url: `https://co${row.rank}.sa/about`, source_type: 'official_site', accessed_at: NOW }],
+    }));
     const stored = await store.loadStoredResult(ASSESSMENT);
     expect(stored).toMatchObject({ analysed_at: NOW, iss: 90, iss_basis: 'full', market_level: 'open' });
     expect(stored.competitors.map((c) => c.name)).toEqual(['Co 1', 'Co 2']);
+    expect(stored.competitors[0].sources[0].url).toBe('https://co1.sa/about'); // read from result_sources
   });
 });
 
@@ -356,7 +390,7 @@ describe('get_competitor_result (follow-ups)', () => {
 
   it('returns the saved analysis of this founder’s assessment, without searching', async () => {
     db.assessmentRow = { analysed_at: NOW, iss: 90, iss_basis: 'full', market_level: 'open' };
-    db.rows = store.resultRows(ASSESSMENT, result().competitors);
+    db.rows = store.resultRows(ASSESSMENT, result().competitors).map((row) => ({ ...row, result_sources: [] }));
     const answer = await ask({ assessmentId: ASSESSMENT, userId: USER });
     expect(answer).toMatchObject({ status: 'ok', iss: 90 });
     expect(answer.competitors).toHaveLength(2);
