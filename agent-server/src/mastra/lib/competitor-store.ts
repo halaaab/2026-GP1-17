@@ -1,11 +1,12 @@
 // The Competitor Agent's results in Supabase (design §11, migration 0032), written and read only by code:
 //
-//   saveResult        replaces the assessment's competitors (similar_startup_results) and saves its ISS, basis,
-//                     market level, notes and analysed_at. Only Darb's own outputs are saved, never page text (design §5).
+//   saveResult        replaces the assessment's competitors (similar_startup_results, with their links in
+//                     result_sources) and saves its ISS, basis, market level and analysed_at.
+//                     Only Darb's own outputs are saved, never page text (design §5).
 //   loadStoredResult  what was saved, for follow-up questions (PBI 36) and the result screen
 //   analysisLimit     the founder's daily and monthly analysis limits (design §12), counted from analysed_at
 import { MAX_ANALYSES_PER_DAY, MAX_ANALYSES_PER_MONTH } from '../config/limits';
-import type { NoteCode, Result, ResultCompetitor } from '../schemas/competitor';
+import { OPPORTUNITY_KINDS, type NoteCode, type OpportunityKind, type Result, type ResultCompetitor } from '../schemas/competitor';
 import { getSupabase } from './supabase';
 
 // Saudi Arabia is UTC+3 all year (no daylight saving).
@@ -24,7 +25,21 @@ export function startOfSaudiMonth(now = new Date()): string {
   return new Date(saudi.getTime() - SAUDI_OFFSET_MS).toISOString();
 }
 
+// The opportunity is stored with the design's four values (migration 0036). The customer-partly rule is stored as
+// "possible_difference"; reading it back, a saved comparison whose customer is "partly" gives it back
+// (the customer rule is checked first, so that is exactly when it matched).
+export function storedOpportunity(kind: OpportunityKind | undefined): string | null {
+  if (!kind) return null;
+  return kind === 'possible_customer_difference' ? 'possible_difference' : kind;
+}
+export function readOpportunity(stored: string | null | undefined, comparison: { customer?: { answer?: string } } | null): OpportunityKind | undefined {
+  if (!stored || !(OPPORTUNITY_KINDS as readonly string[]).includes(stored)) return undefined;
+  if (stored === 'possible_difference' && comparison?.customer?.answer === 'partly') return 'possible_customer_difference';
+  return stored as OpportunityKind;
+}
+
 // One saved row per competitor shown. A web competitor has no startup_id, but always a name and a page.
+// Its evidence links go in the result_sources table (one row per link, Hala's migration 0033), not in this row.
 export function resultRows(assessmentId: string, competitors: readonly ResultCompetitor[]) {
   return competitors.map((c) => ({
     assessment_id: assessmentId,
@@ -40,31 +55,53 @@ export function resultRows(assessmentId: string, competitors: readonly ResultCom
     evidence_status: c.evidence_status,
     reason: c.reason,
     comparison: c.comparison,
-    sources: c.sources,
     similarity_score: c.similarity_score,
-    opportunity: c.opportunity ?? null, // migration 0034
-    differences: c.difference ?? null, // the existing column (0024): the judge's difference sentence
+    opportunity: storedOpportunity(c.opportunity), // migration 0036
   }));
 }
 
-// Saves a finished analysis. The old competitors of this assessment are replaced, so a re-run never mixes results.
+// The result_sources rows of the saved competitors: each competitor's links, by the result_id it was saved with.
+export function sourceRows(saved: readonly { result_id: string; rank: number }[], competitors: readonly ResultCompetitor[]) {
+  return saved.flatMap((row) => {
+    const competitor = competitors.find((c) => c.rank === row.rank);
+    return (competitor?.sources ?? []).map((source) => ({
+      result_id: row.result_id,
+      url: source.url,
+      source_type: source.source_type,
+      accessed_at: source.accessed_at,
+    }));
+  });
+}
+
+// Saves a finished analysis. The old competitors of this assessment (and their links) are replaced, so a re-run
+// never mixes results. The notes and the judge's difference sentence are not saved yet: where they are stored is
+// still to be decided in the database design.
 export async function saveResult(assessmentId: string, result: Result): Promise<void> {
   const supabase = getSupabase();
-  const removed = await supabase.from('similar_startup_results').delete().eq('assessment_id', assessmentId);
-  if (removed.error) throw removed.error;
-  if (result.competitors.length) {
-    const inserted = await supabase.from('similar_startup_results').insert(resultRows(assessmentId, result.competitors));
-    if (inserted.error) throw inserted.error;
+
+  const old = await supabase.from('similar_startup_results').select('result_id').eq('assessment_id', assessmentId);
+  if (old.error) throw old.error;
+  const oldIds = (old.data ?? []).map((r) => r.result_id as string);
+  if (oldIds.length) {
+    const removedSources = await supabase.from('result_sources').delete().in('result_id', oldIds);
+    if (removedSources.error) throw removedSources.error;
+    const removed = await supabase.from('similar_startup_results').delete().eq('assessment_id', assessmentId);
+    if (removed.error) throw removed.error;
   }
+
+  if (result.competitors.length) {
+    const inserted = await supabase.from('similar_startup_results').insert(resultRows(assessmentId, result.competitors)).select('result_id, rank');
+    if (inserted.error) throw inserted.error;
+    const links = sourceRows((inserted.data ?? []) as { result_id: string; rank: number }[], result.competitors);
+    if (links.length) {
+      const linked = await supabase.from('result_sources').insert(links);
+      if (linked.error) throw linked.error;
+    }
+  }
+
   const updated = await supabase
     .from('assessments')
-    .update({
-      iss: result.iss,
-      iss_basis: result.iss_basis,
-      market_level: result.market_level,
-      competitor_notes: result.notes, // shown on the result screen, History and the report (migration 0033)
-      analysed_at: new Date().toISOString(),
-    })
+    .update({ iss: result.iss, iss_basis: result.iss_basis, market_level: result.market_level, analysed_at: new Date().toISOString() })
     .eq('assessment_id', assessmentId);
   if (updated.error) throw updated.error;
 }
@@ -78,7 +115,8 @@ export type StoredResult = {
   competitors: StoredCompetitor[];
 };
 
-// The saved analysis of one assessment, competitors in rank order. analysed_at is null when it was never analysed.
+// The saved analysis of one assessment, competitors in rank order with their links. analysed_at is null when it was
+// never analysed. "*" keeps the read working while columns are still being added to the design.
 export async function loadStoredResult(assessmentId: string): Promise<StoredResult> {
   const supabase = getSupabase();
   const assessment = await supabase
@@ -89,7 +127,7 @@ export async function loadStoredResult(assessmentId: string): Promise<StoredResu
   if (assessment.error) throw assessment.error;
   const rows = await supabase
     .from('similar_startup_results')
-    .select('rank, competitor_name, website, description, city_region, source_type, startup_id, label, evidence_status, reason, comparison, sources, similarity_score, opportunity, differences')
+    .select('*, result_sources (url, source_type, accessed_at)')
     .eq('assessment_id', assessmentId)
     .order('rank');
   if (rows.error) throw rows.error;
@@ -111,10 +149,10 @@ export async function loadStoredResult(assessmentId: string): Promise<StoredResu
       evidence_status: r.evidence_status,
       reason: r.reason,
       comparison: r.comparison,
-      sources: r.sources ?? [],
+      sources: r.result_sources ?? [],
       similarity_score: r.similarity_score,
-      opportunity: r.opportunity ?? undefined,
-      difference: r.differences ?? null,
+      opportunity: readOpportunity(r.opportunity, r.comparison),
+      difference: null, // not stored yet (decision pending)
     })),
   };
 }
