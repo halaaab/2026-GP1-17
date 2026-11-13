@@ -13,6 +13,7 @@ import { darbStore } from './lib/storage';
 import { authMiddleware } from './server/auth';
 import { initCrRegistry } from './lib/cr-registry';
 import { checkCrTool } from './tools/check-cr';
+import { extractPagesTool } from './tools/extract-pages';
 import { finalizeResultTool } from './tools/finalize-result';
 import { identifyCandidatesTool } from './tools/identify-candidates';
 import { predictSurvivalTool } from './tools/predict-survival';
@@ -30,6 +31,7 @@ export const mastra = new Mastra({
   // longer connected: the Competitor Agent is being rebuilt from the final design.
   tools: {
     checkCrTool,
+    extractPagesTool,
     identifyCandidatesTool,
     finalizeResultTool,
     predictSurvivalTool,
