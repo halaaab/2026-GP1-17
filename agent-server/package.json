@@ -12,6 +12,7 @@
     "test:assessment": "tsx scripts/create-test-assessment.ts",
     "classify:startups": "tsx scripts/classify-startups-isic.ts",
     "prepare:cr": "tsx scripts/prepare-cr-numbers.ts",
+    "profile:startups": "tsx scripts/profile-startups.ts",
     "test:live": "tsx scripts/test-live.ts",
     "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.exclude=src/**/*.test.ts --coverage.reporter=text-summary"
   },
