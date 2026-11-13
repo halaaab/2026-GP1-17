@@ -97,22 +97,57 @@ const STAGE_ORDER = ['Planning', 'Design', 'Pre-market', 'Establishment', 'Pre-o
 export const MANDATORY = ['Required', 'Required when in scope', 'Conditional', 'Optional'];
 export const STATUSES = ['Active', 'Announced'];
 
+/* A requirement's ISIC4 sections and divisions are kept in their own tables (migration 0029).
+   This asks for them together with the requirement. */
+export const REQUIREMENT_COLUMNS = '*, requirement_isic_sections (isic_section), requirement_isic_divisions (isic_division)';
+
+/* Puts the two lists back on the row as simple lists:
+   row.isic_sections = ['C', 'G'] and row.isic_divisions = ['10', '11'] (or ['ALL']) */
+export function withIsic(row) {
+  if (!row) return row;
+  const { requirement_isic_sections: sections = [], requirement_isic_divisions: divisions = [], ...rest } = row;
+  return {
+    ...rest,
+    isic_sections: sections.map((item) => item.isic_section),
+    isic_divisions: divisions.map((item) => item.isic_division),
+  };
+}
+
+/* Saves a requirement's ISIC4 sections and divisions: the old rows are replaced by the new ones.
+   Returns the error, or null when it worked. */
+export async function saveIsic(requirementId, sections, divisions) {
+  const lists = [
+    { table: 'requirement_isic_sections', column: 'isic_section', values: sections },
+    { table: 'requirement_isic_divisions', column: 'isic_division', values: divisions },
+  ];
+  for (const list of lists) {
+    const removed = await supabase.from(list.table).delete().eq('requirement_id', requirementId);
+    if (removed.error) return removed.error;
+    const rows = list.values.map((value) => ({ requirement_id: requirementId, [list.column]: value }));
+    if (rows.length) {
+      const added = await supabase.from(list.table).insert(rows);
+      if (added.error) return added.error;
+    }
+  }
+  return null;
+}
+
 /* All requirements, sorted by id (GEN-001, GEN-002 …). Returns null when loading failed. */
 export async function loadRequirements() {
-  const { data, error } = await supabase.from('regulatory_requirements').select('*').order('requirement_id');
+  const { data, error } = await supabase.from('regulatory_requirements').select(REQUIREMENT_COLUMNS).order('requirement_id');
   if (error) {
     console.error('regulatory_requirements:', error.message);
     return null;
   }
-  return data;
+  return data.map(withIsic);
 }
 
 /* One requirement: { requirement, failed }.
    requirement is null when there is no such id; failed is true when the database did not answer. */
 export async function loadRequirement(id) {
-  const { data, error } = await supabase.from('regulatory_requirements').select('*').eq('requirement_id', id).maybeSingle();
+  const { data, error } = await supabase.from('regulatory_requirements').select(REQUIREMENT_COLUMNS).eq('requirement_id', id).maybeSingle();
   if (error) console.error('regulatory_requirements:', error.message);
-  return { requirement: data || null, failed: Boolean(error) };
+  return { requirement: withIsic(data) || null, failed: Boolean(error) };
 }
 
 /* ---------- Look: color, logo, initials ---------- */

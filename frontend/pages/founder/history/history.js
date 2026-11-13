@@ -46,15 +46,20 @@ function showRows() {
       ? `<a class="ring is-${scoreBand(assessment.score)}" style="--p: ${assessment.score}" href="${chatLink(assessment.id, 'score')}"><span>${assessment.score}</span></a>`
       : `<span class="ring is-none">${icon('spark')}</span>`;
 
-    const status = isAssessed
-      ? `<span>${t('history.messages').replace('{n}', assessment.messages)}</span>`
-      : `<span class="chip chip-wait">${t('history.notAssessed')}</span>`;
+    // a what-if opens straight on its competitor analysis; it has no conversation of its own
+    const isWhatIf = Boolean(assessment.whatIf);
+    const status = isWhatIf
+      ? '<span class="chip chip-teal chip-what-if"></span>'
+      : isAssessed
+        ? `<span>${t('history.messages').replace('{n}', assessment.messages)}</span>`
+        : `<span class="chip chip-wait">${t('history.notAssessed')}</span>`;
+    const openLink = isWhatIf ? chatLink(assessment.id, 'similar') : chatLink(assessment.id);
 
     return `
       <article class="project">
         ${ring}
         <div class="project-main">
-          <a class="project-title" href="${chatLink(assessment.id)}"></a>
+          <a class="project-title" href="${openLink}"></a>
           <div class="project-meta">
             ${assessment.sector ? '<span class="chip chip-sector"></span>' : ''}
             ${assessment.city ? '<span class="chip chip-city"></span>' : ''}
@@ -66,7 +71,7 @@ function showRows() {
           ${isAssessed ? `
             <a class="btn-icon" href="${chatLink(assessment.id, 'roadmap')}" aria-label="${t('history.viewRoadmapFull')}" title="${t('history.viewRoadmapFull')}">${icon('map')}</a>
             <a class="btn-icon" href="${chatLink(assessment.id, 'report')}" aria-label="${t('history.report')}" title="${t('history.report')}">${icon('download')}</a>` : ''}
-          <a class="btn ${isAssessed ? 'btn-secondary' : 'btn-primary'} btn-sm" href="${chatLink(assessment.id)}">${t(isAssessed ? 'history.open' : 'history.continue')}</a>
+          <a class="btn ${isAssessed || isWhatIf ? 'btn-secondary' : 'btn-primary'} btn-sm" href="${openLink}">${t(isAssessed || isWhatIf ? 'history.open' : 'history.continue')}</a>
         </div>
       </article>`;
   }).join('');
@@ -77,6 +82,8 @@ function showRows() {
     card.querySelector('.project-title').textContent = say(assessment.title);
     const sector = card.querySelector('.chip-sector');
     const city = card.querySelector('.chip-city');
+    const whatIf = card.querySelector('.chip-what-if');
+    if (whatIf) whatIf.textContent = t('whatIf.label').replace('{change}', assessment.whatIf);
     if (sector) sector.textContent = label(assessment.sector);
     if (city) city.textContent = label(assessment.city);
   });

@@ -44,22 +44,61 @@ To stop the server, press `Ctrl + C` in the terminal.
 | Agent | Job |
 |---|---|
 | Conversational Agent | The supervisor and the only agent that talks to the founder. It runs the assessment and delegates to the other two. |
-| Competitor Agent | Finds similar startups and computes the Idea Similarity Score. |
+| Competitor Agent | A child agent of the Conversational Agent. Finds a founder's real competitors and returns a checked result (being rebuilt from the final design; for now it returns the note `capability_pending`). |
 | Founder Roadmap Agent | Builds the ordered roadmap of regulatory and practical steps. |
 
 ## How the agents connect
 
+The design is in `Darb_Competitor_Agent_Design` (Version 4). The Competitor Agent is a child agent of the Conversational Agent
+(Mastra supervisor pattern: `agents: { competitorAgent }`). It never talks to the founder.
+
 ```
-Conversational Agent
- ├── delegate-competitor-analysis → Competitor Agent
- │                                   ├── web-search
- │                                   ├── similarity-search
- │                                   ├── extract-and-verify-profile
- │                                   └── build-comparison-matrix
- └── predict-survival → ML service
+Conversational Agent  (talks to the founder)
+ ├── competitor-agent  → Competitor Agent   (child agent)
+ │                        └── finalize_result (builds the Result in code)
+ └── predict_survival
 ```
 
-The two tools of the Conversational Agent are connected. The Competitor Agent's four tools are not built yet, and `predict-survival` returns `model_not_connected` until the ML service is ready.
+The shapes they exchange are in `src/mastra/schemas/competitor.ts`: Handoff, IdeaProfile, Candidate, JudgeOutput and Result.
+
+How facts stay true (`src/mastra/lib/competitor-delegation.ts`, Mastra's delegation hooks):
+- Before the Competitor Agent runs, the handoff the supervisor wrote is checked against the Handoff schema,
+  and the server adds `assessment_id` and `idea_id`. The model never chooses them.
+- The Competitor Agent sees only the handoff, not the founder's chat.
+- After it runs, only finalize_result's output is used, checked against the Result schema (or replaced by a valid
+  fallback). Notes are codes; `src/mastra/lib/competitor-notes.ts` turns them into Arabic or English sentences.
+
+Decided in code, never by a model:
+- The founder's language, from their own message (`lib/founder-text.ts`).
+- Stated facts only: a known fact the founder never said is dropped before the Competitor Agent sees it (`lib/founder-text.ts`).
+- When an analysis has no competitors to show, the founder sees exactly the note sentences: the reply guard
+  (`lib/reply-guard.ts`, a Mastra input and output processor) writes them into the stream and drops the model's own words.
+- One log line per run in the shared format (`RunLog` in `schemas/competitor.ts`): ids, codes and timings, never the idea text.
+
+`src/mastra/lib/idea-profile.ts` turns an idea or a startup description into the structured profile that is embedded.
+
+The earlier design's tools (cosine similarity search, ISIC confirmation, what-if) were removed; they are in the git history before this change.
+
+## Login and security
+
+Every API request is checked before any agent runs (`src/mastra/server/auth.ts`):
+
+- The website sends the founder's Supabase access token: `Authorization: Bearer <token>`.
+- The server checks it with Supabase and that the account is active, then uses the user id **from the token**.
+  An id the caller types is ignored, so a founder can never reach another founder's data.
+- `AUTH_MODE=dev` lets Mastra Studio work without signing in, for testing. Live, use `AUTH_MODE=required`.
+
+Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra` schema, so it survives restarts on the host.
+
+## Scripts
+
+| Command | What it does |
+|---|---|
+| `npm test` | Runs the automated tests with fake databases and fake AI (no keys, no cost, a few seconds). |
+| `npm run test:coverage` | The same tests, plus how much of the code they cover. |
+| `npm run test:live -- <username>` | A real chat with the real agents, OpenAI and Supabase: English, Arabic, and streamed like the website (12 checks, about 2 minutes, a fraction of a cent). Deletes its test data at the end. Run it before a demo. |
+| `npm run classify:startups` | Gives each startup its ISIC4 section and division (only startups without one). Add `-- --dry-run --limit 20` to preview without saving. |
+| `npm run test:assessment -- <username>` | Creates a test idea and assessment for that founder, and prints the request context to paste into Studio. |
 
 ## Where everything goes
 
@@ -70,6 +109,9 @@ The two tools of the Conversational Agent are connected. The Competitor Agent's 
 | Tavily search | `src/mastra/tools/web-search.ts` |
 | Approved websites | `src/mastra/config/approved-domains.ts` |
 | Which AI model each agent uses | `src/mastra/config/models.ts` |
+| Usage limits (steps, results, daily analyses) | `src/mastra/config/limits.ts` |
+| The ISIC4 sections (sector) | `src/mastra/config/sectors.ts` |
+| The 85 ISIC4 divisions (sub-sector), from GASTAT's SSIC file | `src/mastra/config/isic-divisions.ts` |
 | The Supabase connection | `src/mastra/lib/supabase.ts` |
 | Registering a new agent | `src/mastra/index.ts` |
 | Calling the model from the agents | `src/mastra/tools/predict-survival.ts` |
@@ -87,7 +129,7 @@ To add a tool:
 
 To remove a tool, delete its file and its line in the agent's `tools` list.
 
-The Conversational Agent only knows its two tools. You can change the Competitor Agent's tools without touching it, as long as `delegate-competitor-analysis` keeps the same output.
+You can change the Competitor Agent's tools without touching it, as long as `delegate-competitor-analysis` keeps the same output.
 
 ## Arabic and English
 

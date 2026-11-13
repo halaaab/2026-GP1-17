@@ -5,7 +5,6 @@ import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
-import { getCurrentUser } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
   loadStartups, listOf, listText, label, allValues, detailsLink, fillFilter, dateText, logoOf, logoHtml,
@@ -254,9 +253,9 @@ form.addEventListener('submit', async (event) => {
   if (editingId) {
     result = await supabase.from('startups').update(values).eq('startup_id', editingId).select().single();
   } else {
-    const user = await getCurrentUser();
+    // the database remembers which admin added it (startup_maintenance, migration 0024)
     result = await supabase.from('startups')
-      .insert({ ...values, startup_id: nextId(), created_by_admin_id: user?.id ?? null })
+      .insert({ ...values, startup_id: nextId() })
       .select().single();
   }
   saveButton.classList.remove('is-loading');
