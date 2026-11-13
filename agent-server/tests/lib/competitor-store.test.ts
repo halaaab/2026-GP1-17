@@ -154,14 +154,15 @@ describe('saving a result', () => {
     const rows = calls[3].values as Record<string, unknown>[];
     expect(rows[0]).toMatchObject({ assessment_id: ASSESSMENT, rank: 1, source_type: 'web', startup_id: null, competitor_name: 'Co 1', source_url: 'https://co1.sa/about', label: 'direct', opportunity: 'no_clear_difference' });
     expect(rows[1]).toMatchObject({ source_type: 'corpus', startup_id: 's2' });
-    for (const column of ['evidence_text', 'sources', 'differences', 'difference']) expect(rows[0]).not.toHaveProperty(column);
+    for (const column of ['evidence_text', 'sources', 'differences']) expect(rows[0]).not.toHaveProperty(column);
+    expect(rows[0]).toMatchObject({ difference: null });
 
     expect(calls[4].values).toEqual([
       { result_id: 'r1', url: 'https://co1.sa/about', source_type: 'official_site', accessed_at: NOW },
       { result_id: 'r2', url: 'https://co2.sa/about', source_type: 'official_site', accessed_at: NOW },
     ]);
     expect(calls[5].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open' });
-    expect(calls[5].values).not.toHaveProperty('competitor_notes'); // not stored yet (decision pending)
+    expect(calls[5].values).toMatchObject({ competitor_notes: ['fewer_than_three'] }); // migration 0038
     expect((calls[5].values as { analysed_at: string }).analysed_at).toBeTruthy();
   });
 
