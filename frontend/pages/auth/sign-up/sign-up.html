@@ -83,10 +83,11 @@
             <span class="text-2" data-i18n="signup.investorText"></span>
           </label>
           <label class="choice">
-            <input type="radio" name="userType" value="other">
+            <!-- "none" = just a founder: no type, so no row in a type table -->
+            <input type="radio" name="userType" value="none">
             <span class="choice-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg></span>
-            <strong data-i18n="signup.other"></strong>
-            <span class="text-2" data-i18n="signup.otherText"></span>
+            <strong data-i18n="signup.none"></strong>
+            <span class="text-2" data-i18n="signup.noneText"></span>
           </label>
         </div>
         <p class="field-error" data-error-for="userType" hidden></p>
@@ -344,15 +345,6 @@
             <label class="label is-required" for="investorTypeOther" data-i18n="signup.investorTypeOther"></label>
             <input class="input" id="investorTypeOther" name="investorTypeOther" type="text" maxlength="80" data-column="investor_type" data-required>
             <p class="field-error" data-error-for="investorTypeOther" hidden></p>
-          </div>
-        </div>
-
-        <!-- Other -->
-        <div class="form details" data-for="other" hidden>
-          <div class="field">
-            <label class="label is-required" for="statusOther" data-i18n="signup.statusOther"></label>
-            <input class="input" id="statusOther" name="statusOther" type="text" maxlength="80" data-column="status_description" data-required>
-            <p class="field-error" data-error-for="statusOther" hidden></p>
           </div>
         </div>
 

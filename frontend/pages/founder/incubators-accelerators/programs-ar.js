@@ -3,7 +3,7 @@
 
    programs.js reads it when the site is in Arabic and the database has no
    Arabic for a field yet. Once the *_ar columns exist and are filled
-   (migration 0012 and seed/support_organisations_ar.sql), the database
+   (migration 0012 and seed/support_organizations_ar.sql), the database
    text is used instead, and programs an admin adds get their Arabic from
    the admin page.
 

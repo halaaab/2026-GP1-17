@@ -6,7 +6,7 @@
 -- A field the English dataset leaves empty is left empty here too.
 -- ---------------------------------------------------------
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'حاضنة المشتل الإبداعية',
   sector_ar = 'الإبداع والثقافة',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -16,7 +16,7 @@ update public.support_organisations set
   eligibility_ar = 'روّاد الأعمال المبدعون، المبدعون المستقلون، المؤسسون في المراحل المبكرة، أصحاب الأعمال'
 where support_org_id = '3c24b12e-0840-4462-9e85-abca14e599ba';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة أطلق',
   sector_ar = 'التقنية',
   location_ar = 'المملكة العربية السعودية',
@@ -28,7 +28,7 @@ update public.support_organisations set
   eligibility_ar = 'مؤسسون سعوديون في مجال التقنية في المراحل المبكرة يعملون على تطوير منتج أولي'
 where support_org_id = 'db16541d-9457-4038-aaaa-19398a413ff5';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة بيوند سكوير',
   sector_ar = 'الخدمات اللوجستية، تقنية المعلومات والاتصالات والألعاب، الذكاء الاصطناعي الجغرافي',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -38,7 +38,7 @@ update public.support_organisations set
   eligibility_ar = 'شركة ناشئة ناضجة لديها منتج جاهز للتوسع'
 where support_org_id = 'cf363836-3291-48d3-b00b-9ac4279b9f12';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'حاضنة بيوند سكوير',
   sector_ar = 'الخدمات اللوجستية، تقنية المعلومات والاتصالات والألعاب، الذكاء الاصطناعي الجغرافي',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -49,7 +49,7 @@ update public.support_organisations set
   eligibility_ar = 'مؤسسون يبنون شركات ناشئة في الخدمات اللوجستية أو تقنية المعلومات والاتصالات والألعاب أو الذكاء الاصطناعي الجغرافي'
 where support_org_id = 'bc8bf0e3-1d5d-4a3f-9325-044d9e33027f';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'بوابة كود',
   sector_ar = 'التقنية / التقنيات الرقمية',
   location_ar = 'المملكة العربية السعودية — عن بُعد / برنامج هبوط ناعم',
@@ -60,7 +60,7 @@ update public.support_organisations set
   eligibility_ar = 'شركات ناشئة عالمية تسعى لدخول السوق السعودية أو التوسع فيها'
 where support_org_id = '1d4219bb-44d1-4242-a8d1-b4213705648d';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة E3',
   sector_ar = 'الذكاء الاصطناعي والتقنية المالية',
   location_ar = 'الرياض، المملكة العربية السعودية (هجين — عن بُعد + حضوري)',
@@ -72,7 +72,7 @@ update public.support_organisations set
   eligibility_ar = 'شركات ناشئة في الذكاء الاصطناعي والتقنية المالية؛ من ما قبل البذرة إلى البذرة؛ إثبات وجود نمو فعلي؛ مؤسسان متفرغان على الأقل؛ حضور مؤسس واحد على الأقل في الرياض خلال فترة البرنامج الحضوري'
 where support_org_id = 'f501c927-35c2-4ee2-be54-6b69dc896f83';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'برنامج فلك الرئيسي للتسريع',
   sector_ar = 'جميع القطاعات',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -84,7 +84,7 @@ update public.support_organisations set
   eligibility_ar = 'شركات ناشئة لديها منتج أولي، تبحث عن استثمار، مستعدة للالتزام لمدة 4 أشهر، تحتاج إلى إرشاد عملي'
 where support_org_id = 'a130aab6-9619-4e6b-8472-f0b9556db5ab';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مختبر المؤسسين',
   sector_ar = 'قطاعات متعددة',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -96,7 +96,7 @@ update public.support_organisations set
   eligibility_ar = 'فكرة أو شركة ناشئة في مرحلة مبكرة'
 where support_org_id = '594747d1-923d-4162-bb3f-94a03e8f8c49';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة جينيريتور السعودية',
   sector_ar = 'التقنية الحيوية، جميع الصناعات، علوم الحياة والابتكار الصحي',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -108,7 +108,7 @@ update public.support_organisations set
   eligibility_ar = 'شركات ناشئة عالية النمو ذات نموذج عمل قابل للتوسع وإمكانات نمو وخطط لحضور طويل الأمد في المملكة العربية السعودية'
 where support_org_id = 'b62393b2-fb0d-4e6c-bf44-5e6facf24079';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'حاضنة حلول للأعمال',
   sector_ar = 'قطاعات متعددة',
   location_ar = 'الخبر، المملكة العربية السعودية',
@@ -119,7 +119,7 @@ update public.support_organisations set
   eligibility_ar = 'روّاد أعمال يسعون إلى تحويل أفكارهم إلى مشاريع استثمارية مجدية؛ لا توجد معايير رسمية محددة'
 where support_org_id = '40d3bc7e-fc1b-4afd-8913-5556935b3677';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'نيلوفر',
   sector_ar = 'قطاعات متعددة',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -127,7 +127,7 @@ update public.support_organisations set
   target_stage_ar = 'فكرة ← الجاهزية للسوق'
 where support_org_id = '52ce8428-1c66-4104-b22e-846164fdd7f6';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'ون بيج – حاضنة محرك الأعمال',
   sector_ar = 'تقنية المعلومات، الصحة والطب، الذكاء الاصطناعي، إنترنت الأشياء، الروبوتات، التعليم الذكي، الطائرات المسيّرة، الواقع المختلط والمعزز، التطبيقات التجارية وتطبيقات نمط الحياة',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -138,7 +138,7 @@ update public.support_organisations set
   eligibility_ar = 'روّاد أعمال وشركات ناشئة يسعون إلى تطوير مشاريع قائمة على التقنية'
 where support_org_id = '8aa02264-0338-4301-ae2c-42f9a14fc62b';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'أوتلاير فنتشرز – معسكر الرياض',
   sector_ar = 'الويب 3 / البلوك تشين',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -150,7 +150,7 @@ update public.support_organisations set
   eligibility_ar = 'شركات ناشئة ومؤسسون في مجال الويب 3؛ يجب حضور مؤسس أو مؤسسَين في الرياض؛ يُشترط تسجيل الشركة في المملكة العربية السعودية'
 where support_org_id = '440dd2d2-3600-4940-a3c5-8445b7b420bd';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة سنابل من 500 جلوبال',
   sector_ar = 'التقنية',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -162,7 +162,7 @@ update public.support_organisations set
   eligibility_ar = 'شركة تقنية ناشئة لديها منتج أولي، تركّز على الشرق الأوسط وشمال أفريقيا، حققت نموًا مبكرًا وتسعى للتوسع'
 where support_org_id = 'b98c61c9-bf02-40d2-928d-a834b012d9fa';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة سنابل من أوربت',
   sector_ar = 'التقنية',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -174,7 +174,7 @@ update public.support_organisations set
   eligibility_ar = 'شركة تقنية ناشئة لديها منتج أولي يعمل؛ مؤسسون متفرغون بالكامل؛ الرغبة في التواجد في المنطقة انطلاقًا من المملكة العربية السعودية؛ القدرة على السفر إلى المملكة لحضور أجزاء البرنامج الحضورية'
 where support_org_id = '62b49be4-1e54-4a50-b4eb-250a14e4be87';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'ستارت أب وايز جايز – مسرّعة الأصول المبنية للمستقبل',
   sector_ar = 'التقنية العقارية / تقنيات العقار',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -186,7 +186,7 @@ update public.support_organisations set
   eligibility_ar = 'شركة ناشئة في التقنية العقارية تقدم برمجيات كخدمة (B2B/B2B2C)، منتج أولي يعمل، مؤسسان أو عضوان في الفريق على الأقل، إيرادات مثبتة، كيان قانوني سعودي أو الاستعداد لتأسيسه، التركيز على أحد مجالات التقنية العقارية المحددة'
 where support_org_id = '4cf5d37a-3b7f-4af8-9b8b-be69a569b8d1';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'مسرّعة تقدّم',
   sector_ar = 'جميع القطاعات',
   location_ar = 'ثول، المملكة العربية السعودية / كاوست',
@@ -198,7 +198,7 @@ update public.support_organisations set
   eligibility_ar = 'مؤسسان على الأقل، إثبات تقدم الشركة الناشئة، التزام كامل، عدم المشاركة في مسرّعة أخرى، تفويض باستخدام الملكية الفكرية عند الحاجة'
 where support_org_id = '3c5971ae-6058-46b9-90ae-bff22c487c2d';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'حاضنة ذا قراج',
   sector_ar = 'التقنية / التقنية العميقة',
   location_ar = 'الرياض، المملكة العربية السعودية',
@@ -208,7 +208,7 @@ update public.support_organisations set
   eligibility_ar = 'شركات ناشئة في المراحل المبكرة / شركات التقنية العميقة'
 where support_org_id = '65278470-ca01-46e9-b7b5-825c8e1317ce';
 
-update public.support_organisations set
+update public.support_organizations set
   name_ar = 'برنامج تيك توك × بلوسوم لتمكين المنشآت الصغيرة والمتوسطة',
   sector_ar = 'الذكاء الاصطناعي',
   location_ar = 'الرياض، المملكة العربية السعودية (هجين)',

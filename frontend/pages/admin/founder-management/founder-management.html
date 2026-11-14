@@ -1,9 +1,10 @@
 <!doctype html>
 <!--
   FOUNDER MANAGEMENT (admin console)
-  Every founder account: search, filter by status, and a side panel to
+  Two tabs. Founders: every founder account, with search, filters and a side panel to
   see one founder's details, edit them, deactivate / activate the account, or delete it.
-  The rows come from the admin_list_founders() database function (migrations 0004 and 0007).
+  Insights: what the sign-up answers say about Darb's audience (founder-insights.js).
+  The rows come from the admin_list_founders() database function (migrations 0004, 0007 and 0017).
   Edits are saved by admin_update_founder() (migration 0009).
 -->
 <html lang="en" dir="ltr">
@@ -12,6 +13,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Darb</title>
   <link rel="stylesheet" href="../../../shared/shared.css">
+  <!-- the Insights tab reuses the overview page's cards, numbers and bars, so both pages look the same -->
+  <link rel="stylesheet" href="../overview-dashboard/overview-dashboard.css">
   <link rel="stylesheet" href="founder-management.css">
 </head>
 <body data-layout="admin" data-page="founders" data-title="admin.founders" data-denied="403">
@@ -22,7 +25,14 @@
         <h2 class="page-title" data-i18n="founders.title"></h2>
         <p class="text-2" data-i18n="founders.sub"></p>
       </div>
+      <div class="segmented" id="tabs" role="group" data-i18n-aria-label="founders.title">
+        <button type="button" class="segmented-item is-active" data-tab="founders" data-i18n="founders.tabFounders"></button>
+        <button type="button" class="segmented-item" data-tab="insights" data-i18n="founders.tabInsights"></button>
+      </div>
     </div>
+
+    <!-- founder-insights.js fills this tab -->
+    <div id="insights" hidden></div>
 
     <div class="toolbar" id="filter">
       <label class="search">
@@ -32,9 +42,12 @@
       <button type="button" class="pill is-active" data-filter="all" data-i18n="founders.all"></button>
       <button type="button" class="pill" data-filter="active" data-i18n="founders.active"></button>
       <button type="button" class="pill" data-filter="deactivated" data-i18n="founders.deactivated"></button>
+      <select class="pill" id="type-filter" data-i18n-aria-label="founders.userType"></select>
+      <!-- founder-management.js adds one dropdown per question of the chosen type -->
+      <span class="founder-field-filters" id="field-filters"></span>
     </div>
 
-    <div class="table-card">
+    <div class="table-card" id="founders-table">
       <table class="table founder-table">
         <thead>
           <tr>
@@ -98,6 +111,13 @@
             <strong class="founder-tile-value" id="panel-language"></strong>
           </div>
         </div>
+
+        <!-- The sign-up answers for this founder's type. founder-management.js fills it. -->
+        <div class="founder-reports-head">
+          <h4 class="founder-reports-title" data-i18n="founders.about"></h4>
+        </div>
+        <div class="founder-id" id="panel-about"></div>
+        <p class="founder-about-empty" id="panel-about-empty" data-i18n="founders.noAnswers" hidden></p>
 
         <div class="founder-reports-head">
           <h4 class="founder-reports-title" data-i18n="founders.reports"></h4>

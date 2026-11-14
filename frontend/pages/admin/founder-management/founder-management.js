@@ -1,12 +1,14 @@
-/* Founder management: the list of founder accounts, a search box, a status
-   filter, and a side panel to see, edit, deactivate / activate or delete one founder.
-   Each row also has an edit and a delete button. */
+/* Founder management: the list of founder accounts, a search box, status and type
+   filters, and a side panel to see, edit, deactivate / activate or delete one founder.
+   Each row also has an edit and a delete button. The Insights tab is in founder-insights.js. */
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
+import { TYPE_FIELDS, TYPE_LABELS, TYPE_COLORS, TYPES, groupOf, groupText, answerText } from './founder-fields.js';
+import { setUpInsights, showInsights } from './founder-insights.js';
 import '../../../shared/guard.js';
 
 const rows = document.querySelector('#rows');
@@ -22,21 +24,11 @@ const saveButton = document.querySelector('#edit-save');
 // what a username may look like (the same rule the database checks)
 const USERNAME_RULE = /^[A-Za-z0-9_]{3,20}$/;
 
-// the user types from sign-up, and the words shown for them
-const TYPE_LABELS = {
-  student: 'signup.student',
-  entrepreneur: 'signup.entrepreneur',
-  business_owner: 'signup.owner',
-  investor: 'signup.investor',
-  other: 'signup.other',
-};
-
-// one pastel chip color per user type (chip-pastel-N in shared.css); no mint (6), it sits next to the green "Active"
-const TYPE_COLORS = { student: 1, entrepreneur: 2, business_owner: 3, investor: 4, other: 5 };
-
 let founders = [];
 let filter = 'all';       // 'all', 'active' or 'deactivated'
-let selectedId = null;    // the founder open in the side panel
+let typeFilter = '';      // one user type, or '' for all
+let fieldFilters = {};    // the chosen answers for that type: { column: group }
+let selectedId = null;   // the founder open in the side panel
 let editing = false;      // the side panel shows the edit form
 let deleteId = null;      // the founder the delete pop-up is asking about
 let loading = true;       // the spinner stays until the rows arrive
@@ -85,7 +77,11 @@ function showRows() {
   const visible = founders.filter((founder) => {
     const fitsFilter = filter === 'all' || founder.status === filter;
     const fitsSearch = `${founder.full_name} ${founder.email}`.toLowerCase().includes(words);
-    return fitsFilter && fitsSearch;
+    const fitsType = !typeFilter || founder.user_type === typeFilter;
+    const fitsFields = (TYPE_FIELDS[typeFilter] || []).every((field) => (
+      !(field.column in fieldFilters) || groupOf(field, founder) === fieldFilters[field.column]
+    ));
+    return fitsFilter && fitsSearch && fitsType && fitsFields;
   });
 
   rows.innerHTML = visible.map((founder) => `
@@ -142,6 +138,7 @@ function showPanel() {
   document.querySelector('#panel-joined').textContent = dateText(founder.created_at);
   document.querySelector('#panel-assessments').textContent = founder.assessments_count ?? 0;
   document.querySelector('#panel-language').textContent = t(founder.locale === 'en' ? 'founders.english' : 'founders.arabic');
+  showAbout(founder);
 
   const status = document.querySelector('#panel-status');
   status.textContent = t(isActive ? 'founders.activeOne' : 'founders.deactivatedOne');
@@ -163,6 +160,62 @@ function showPanel() {
   document.querySelector('#foot-edit').hidden = !editing;
 
   panel.classList.add('is-open');
+}
+
+function regionText(founder) {
+  if (!founder.region) return '';
+  const key = `signup.region.${founder.region}`;
+  return t(key) === key ? founder.region : t(key);
+}
+
+// The sign-up answers as an ID card: the first two answers lead, the rest sit underneath.
+// Founders write some of them, so everything is added as text.
+function showAbout(founder) {
+  const answers = (TYPE_FIELDS[founder.user_type] || []).map((field) => [
+    t(field.title),
+    groupOf(field, founder) === '' ? '' : answerText(field, founder),
+  ]);
+  const region = [t('overview.byRegion'), regionText(founder)];
+
+  // nothing answered yet: one sentence instead of an empty card
+  const nothing = [...answers, region].every(([, answer]) => !answer);
+  document.querySelector('#panel-about-empty').hidden = !nothing;
+
+  const card = document.querySelector('#panel-about');
+  card.hidden = nothing;
+  if (nothing) return;
+
+  const line = (tag, className, text) => {
+    const element = document.createElement(tag);
+    element.className = className;
+    element.textContent = text;
+    return element;
+  };
+
+  const head = document.createElement('div');
+  head.className = 'founder-id-head';
+  const badge = document.createElement('span');
+  badge.innerHTML = icon('user');
+  head.append(line('span', '', t('founders.idTitle').replace('{type}', typeText(founder))), badge);
+
+  const [title, subtitle, ...rest] = answers;
+  const items = [...rest, region].map(([question, answer]) => {
+    const item = document.createElement('div');
+    item.append(
+      line('span', 'founder-id-label', question),
+      line('strong', `founder-id-value ${answer ? '' : 'is-empty'}`, answer || t('overview.notSet')),
+    );
+    return item;
+  });
+  const grid = document.createElement('div');
+  grid.className = 'founder-id-grid';
+  grid.append(...items);
+
+  const parts = [head];
+  if (title) parts.push(line('strong', `founder-id-title ${title[1] ? '' : 'is-empty'}`, title[1] || `${title[0]}: ${t('overview.notSet')}`));
+  if (subtitle) parts.push(line('span', `founder-id-subtitle ${subtitle[1] ? '' : 'is-empty'}`, subtitle[1] || `${subtitle[0]}: ${t('overview.notSet')}`));
+  parts.push(grid);
+  card.replaceChildren(...parts);
 }
 
 /* ---------- Edit form ---------- */
@@ -233,7 +286,7 @@ form.addEventListener('submit', async (event) => {
     target_user_id: founder.user_id,
     new_full_name: changes.full_name,
     new_username: changes.username,
-    new_user_type: changes.user_type,
+    new_user_type: changes.user_type === 'none' ? null : changes.user_type,   // none = just a founder
     new_locale: changes.locale,
     new_status: changes.status,
   });
@@ -255,6 +308,7 @@ form.addEventListener('submit', async (event) => {
   showToast(t('founders.saved'), 'good');
   showRows();
   showPanel();
+  showInsights(founders);
 });
 
 /* ---------- Clicks in the table ---------- */
@@ -350,6 +404,7 @@ deleteConfirm.addEventListener('click', async () => {
   }
   showToast(t('founders.deleted'), 'good');
   showRows();
+  showInsights(founders);
 });
 
 /* ---------- Search and filter ---------- */
@@ -365,10 +420,82 @@ document.querySelector('#filter').addEventListener('click', (event) => {
 
 search.addEventListener('input', showRows);
 
+// The type dropdown, and one dropdown per question of the chosen type
+function showTypeFilters() {
+  const typeSelect = document.querySelector('#type-filter');
+  typeSelect.innerHTML = `<option value="">${t('founders.allTypes')}</option>`
+    + TYPES.map((type) => `<option value="${type}">${t(TYPE_LABELS[type])}</option>`).join('');
+  typeSelect.value = typeFilter;
+
+  const members = founders.filter((founder) => founder.user_type === typeFilter);
+  const holder = document.querySelector('#field-filters');
+  holder.replaceChildren(...(TYPE_FIELDS[typeFilter] || []).map((field) => {
+    const select = document.createElement('select');
+    select.className = 'pill';
+    select.dataset.column = field.column;
+    select.setAttribute('aria-label', t(field.title));
+    select.add(new Option(t(field.title), ''));
+    // "__empty" stands for founders who left this question empty
+    [...new Set(members.map((founder) => groupOf(field, founder)))].forEach((group) => {
+      select.add(new Option(groupText(field, group), group || '__empty'));
+    });
+    const chosen = fieldFilters[field.column];
+    select.value = chosen === undefined ? '' : chosen || '__empty';
+    return select;
+  }));
+}
+
+document.querySelector('#type-filter').addEventListener('change', (event) => {
+  typeFilter = event.target.value;
+  fieldFilters = {};
+  showTypeFilters();
+  showRows();
+});
+
+document.querySelector('#field-filters').addEventListener('change', (event) => {
+  const { column } = event.target.dataset;
+  if (event.target.value === '') delete fieldFilters[column];
+  else fieldFilters[column] = event.target.value === '__empty' ? '' : event.target.value;
+  showRows();
+});
+
+/* ---------- The two tabs ---------- */
+
+function showTab(tab) {
+  const isInsights = tab === 'insights';
+  document.querySelectorAll('[data-tab]').forEach((item) => item.classList.toggle('is-active', item.dataset.tab === tab));
+  document.querySelector('#insights').hidden = !isInsights;
+  document.querySelector('#filter').hidden = isInsights;
+  document.querySelector('#founders-table').hidden = isInsights;
+  if (isInsights && selectedId) {
+    panel.classList.remove('is-open');
+    clearSelection();
+  }
+}
+
+document.querySelector('#tabs').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-tab]');
+  if (button) showTab(button.dataset.tab);
+});
+
+// A bar in the Insights tab opens the founders behind that number
+setUpInsights(({ type, column, value }) => {
+  typeFilter = type;
+  fieldFilters = column ? { [column]: value } : {};
+  search.value = '';
+  filter = 'all';
+  document.querySelectorAll('[data-filter]').forEach((item) => item.classList.toggle('is-active', item.dataset.filter === 'all'));
+  showTypeFilters();
+  showRows();
+  showTab('founders');
+});
+
 // dates, types and statuses are text in the current language, so draw them again when it changes
 // (the form keeps what the admin typed: only the view is drawn again)
 document.addEventListener('darb:language', () => {
   showRows();
+  showTypeFilters();
+  showInsights(founders);
   if (selectedId) showPanel();
   if (deleteModal.open) {
     document.querySelector('#delete-text').textContent = t('founders.deleteText').replace('{name}', findFounder(deleteId).full_name);
@@ -389,7 +516,14 @@ if (error) {
   console.error('admin_list_founders:', error.message);
   showErrorPage(500);   // the list could not be loaded: the 500 page offers "Try again"
 } else {
-  founders = data;
+  // no type = just a founder (migration 0022)
+  founders = data.map((founder) => ({ ...founder, user_type: founder.user_type || 'none' }));
 }
 loading = false;
 showRows();
+showTypeFilters();
+
+// The overview page links here with ?tab=insights&type=student
+const address = new URLSearchParams(window.location.search);
+showInsights(founders, address.get('type'));
+if (address.get('tab') === 'insights') showTab('insights');

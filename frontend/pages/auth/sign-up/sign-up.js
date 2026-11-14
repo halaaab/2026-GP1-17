@@ -24,7 +24,7 @@ const STEP_DONE = 4;
 let currentStep = STEP_TYPE;
 let cameFromGoogle = false;   // true = signed in with Google, only the profile is missing
 
-// The category chosen on the first step: student, entrepreneur, business_owner, investor or other
+// The category chosen on the first step: student, entrepreneur, business_owner, investor or none (just a founder)
 const chosenType = () => form.elements.userType.value;
 
 /* ---------- Who is here? ---------- */
@@ -163,8 +163,11 @@ function updateDetails() {
 /* ---------- Words that depend on the answers ---------- */
 
 function updateWords() {
-  if (chosenType()) {
-    document.querySelector('#details-title').textContent = t(`signup.title.${chosenType()}`);
+  const typeTitle = document.querySelector('#details-title');
+  // "none" (just a founder) has no type questions, so no type heading either
+  typeTitle.hidden = chosenType() === 'none';
+  if (chosenType() && chosenType() !== 'none') {
+    typeTitle.textContent = t(`signup.title.${chosenType()}`);
   }
   document.querySelector('#name-title').textContent = t(document.querySelector('#name-title').dataset.i18n);
   detailsNext.textContent = t(detailsNext.dataset.i18n);
