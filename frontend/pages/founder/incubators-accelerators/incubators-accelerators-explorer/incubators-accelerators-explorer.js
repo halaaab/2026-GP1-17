@@ -9,7 +9,7 @@ import { showErrorPage } from '../../../../shared/errors.js';
 import {
   getPrograms, programType, sectorList, isOpenToAll, cityOf, regionOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
 } from '../programs.js?v=3';
-import { SAUDI_REGIONS, label } from '../../../../shared/startups.js?v=3';
+import { SAUDI_REGIONS, label } from '../../../../shared/startups.js?v=4';
 
 const PAGE_SIZE = 12;   // four rows of three cards
 

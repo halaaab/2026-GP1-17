@@ -15,7 +15,7 @@ import {
   getPrograms, programType, sectorList, isOpenToAll, regionOf, clean, detailsLink,
   text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
 } from '../../founder/incubators-accelerators/programs.js?v=3';
-import { SAUDI_REGIONS, label } from '../../../shared/startups.js?v=3';
+import { SAUDI_REGIONS, label } from '../../../shared/startups.js?v=4';
 
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;   // what an admin may pick; it is shrunk before upload

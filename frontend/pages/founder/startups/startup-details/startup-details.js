@@ -10,7 +10,7 @@ import { showErrorPage } from '../../../../shared/errors.js';
 import {
   loadStartup, listOf, listText, label, tagsOf, countryName, colorOf, descriptionOf,
   nameOf, logoOf, logoHtml,
-} from '../../../../shared/startups.js?v=3';
+} from '../../../../shared/startups.js?v=4';
 
 const id = new URLSearchParams(window.location.search).get('id');
 let startup = null;

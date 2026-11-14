@@ -9,7 +9,7 @@ import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
   loadStartups, listOf, listText, label, colorOf, detailsLink, descriptionOf, nameOf, logoOf, logoHtml, STAGES, SAUDI_REGIONS,
-} from '../../../../shared/startups.js?v=3';
+} from '../../../../shared/startups.js?v=4';
 
 const PAGE_SIZE = 12;   // four rows of three cards
 
@@ -244,7 +244,8 @@ const rows = await loadStartups();
 if (!rows) {
   showErrorPage(500);
 } else {
-  startups = rows;
+  // startups with a logo first, then those without (each group stays A–Z, as loaded)
+  startups = [...rows.filter((row) => logoOf(row)), ...rows.filter((row) => !logoOf(row))];
   loading = false;
 
   // the loading spinner gives way to the "no match" words (shown only when nothing matches)
