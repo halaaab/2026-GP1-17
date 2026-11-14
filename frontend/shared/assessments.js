@@ -242,6 +242,28 @@ async function loadRoadmap(assessment) {
     }));
 }
 
+/* After a reply in the chat: was a new competitor analysis just saved for this assessment?
+   If so, its numbers and competitors are loaded onto it and true is returned, so the chat can
+   show the competitor cards. A what-if is saved on its own assessment, so it never counts here. */
+export async function refreshAnalysis(assessment) {
+  if (!assessment || !assessment.isSaved) return false;
+  const { data, error } = await supabase.from('assessments').select('*').eq('assessment_id', assessment.id).maybeSingle();
+  if (error) {
+    report('check for a new competitor analysis', error);
+    return false;
+  }
+  if (!data || !data.analysed_at || data.analysed_at === assessment.analysedAt) return false;
+
+  assessment.analysedAt = data.analysed_at;
+  assessment.iss = data.iss === null || data.iss === undefined ? null : Math.round(Number(data.iss));
+  assessment.issBasis = data.iss_basis || '';
+  assessment.marketLevel = data.market_level || '';
+  assessment.competitorNotes = data.competitor_notes || [];
+  if (assessment.result) assessment.result.competitors = await loadCompetitors(assessment);
+  else await loadResult(assessment);
+  return true;
+}
+
 /* Loads the competitors, the market numbers and the roadmap of one assessment
    and keeps them on it as assessment.result, so the pages can show them. */
 export async function loadResult(assessment) {

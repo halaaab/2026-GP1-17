@@ -408,6 +408,56 @@ html[dir="rtl"] .trace[open] summary svg {
   color: var(--text-3);
 }
 
+/* ----- The competitor cards inside the chat: one per competitor ----- */
+
+.comp-chat-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.comp-chat-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+}
+.comp-chat-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+.comp-chat-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+.comp-chat-rank {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-3);
+}
+.comp-chat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.comp-chat-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12.5px;
+}
+.comp-chat-evidence svg {
+  width: 12px;
+  height: 12px;
+}
+.comp-chat-open {
+  margin-top: 10px;
+}
+
 /* ----- The roadmap inside the chat ----- */
 
 .roadmap-card {
