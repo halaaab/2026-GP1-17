@@ -129,8 +129,13 @@ export function logoHtml(row) {
 }
 
 /* Some logos are drawn in white for dark backgrounds and would vanish on a white square.
-   When a logo loads, a tiny copy is drawn on a canvas; if almost all of its visible pixels
-   are light, its square gets the class "is-light" and each page shows it on a dark color. */
+   When a logo loads, a tiny copy is drawn on a canvas, and its square gets the class
+   "is-light" (each page then shows it on a dark color) when:
+     - almost all of its visible pixels are light (an all-white logo), or
+     - it has a see-through background and a good part of it is white
+       (white words next to a colored icon: the words would vanish on white).
+   A logo on its own solid white background has (almost) no see-through pixels,
+   so it stays on the white square. */
 function isLightImage(image) {
   const size = 24;
   const canvas = document.createElement('canvas');
@@ -147,7 +152,11 @@ function isLightImage(image) {
     visible += 1;
     if (pixels[index] > 225 && pixels[index + 1] > 225 && pixels[index + 2] > 225) light += 1;
   }
-  return visible > 0 && light / visible > 0.9;
+  if (visible === 0) return false;
+
+  const lightShare = light / visible;                     // how much of the logo is white
+  const seeThrough = 1 - visible / (size * size);         // how much of the square is transparent
+  return lightShare > 0.9 || (seeThrough >= 0.1 && lightShare >= 0.3);
 }
 
 // "load" does not bubble either, so it is also caught on the way down
