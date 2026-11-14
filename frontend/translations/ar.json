@@ -1340,5 +1340,6 @@
   "comp.opp.possible_customer_difference": "اختلاف محتمل",
   "comp.opp.possible_customer_difference.text": "تركّز على فئة أضيق من العملاء مقارنة بهذا المنافس.",
   "comp.opp.possible_customer_difference.next": "قابل عملاءك المستهدفين.",
-  "whatIf.label": "ماذا لو: {change}"
+  "whatIf.label": "ماذا لو: {change}",
+  "chat.openCompetitors": "افتح تحليل المنافسين كاملًا"
 }
