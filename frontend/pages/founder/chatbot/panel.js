@@ -1,12 +1,13 @@
 /* The assessment: a full page that takes the place of the chat and shows one
-   assessment in five tabs (Score, Similar startups, Market, Roadmap, Report).
+   assessment in five tabs (Score, Competitor analysis, Market, Roadmap, Report).
 
    chatbot.js opens it:
      import { openPanel } from './panel.js';
      openPanel(assessment, 'score');
 
-   Each tab is one function below that returns HTML. The startups, market numbers
-   and roadmap are in assessment.result, loaded by loadResult() in shared/assessments.js. */
+   Each tab is one function below that returns HTML. The competitors, market numbers
+   and roadmap are in assessment.result, loaded by loadResult() in shared/assessments.js.
+   The "similar" tab is the Competitor Analysis: what the Competitor Agent checked and saved. */
 
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
@@ -15,6 +16,9 @@ import {
 } from '../../../shared/assessments.js';
 
 const TABS = ['score', 'similar', 'market', 'roadmap', 'report'];
+// A what-if is only a competitor analysis of a changed idea: it has no survival score, market or roadmap of its own.
+const WHAT_IF_TABS = ['similar', 'report'];
+const tabsOf = (shown) => (shown.whatIf ? WHAT_IF_TABS : TABS);
 
 // the Darb logo, for the top of the report
 const LOGO = new URL('../../../assets/images/%20Darb-logo-horizontal.png', import.meta.url).href;
@@ -39,7 +43,7 @@ function safe(text) {
 
 export function openPanel(assessmentToShow, tab = 'score') {
   assessment = assessmentToShow;
-  currentTab = TABS.includes(tab) ? tab : 'score';
+  currentTab = tabsOf(assessment).includes(tab) ? tab : tabsOf(assessment)[0];
 
   drawPanel();
   panel.classList.add('is-open');
@@ -72,9 +76,10 @@ function drawPanel() {
 
     <h2 class="assess-title">${safe(say(assessment.title))}</h2>
     <p class="assess-sub">${facts}</p>
+    ${assessment.whatIf ? `<p class="assess-sub"><span class="chip chip-teal">${safe(t('whatIf.label').replace('{change}', assessment.whatIf))}</span></p>` : ''}
 
     <nav class="assess-nav" role="tablist">
-      ${TABS.map((tab) => `
+      ${tabsOf(assessment).map((tab) => `
         <button type="button" role="tab" class="assess-tab ${tab === currentTab ? 'is-active' : ''}" data-tab="${tab}">${t(`tab.${tab}`)}</button>`).join('')}
     </nav>
 
@@ -265,41 +270,156 @@ function shorten(text, length = 220) {
   return text.length > length ? `${text.slice(0, length).trim()}…` : text;
 }
 
-/* ---------- Tab: Similar startups ---------- */
+/* ---------- Tab: Competitor analysis (PBI 35) ----------
+   Only what the Competitor Agent checked and saved: up to three competitors (Confirmed before
+   Limited evidence, then the closest), the comparison matrix, the ISS and the notes.
+   Nothing here is worked out on the page: every label, number and note comes from the analysis. */
 
-/* The first letter of a name in a tinted circle (the dataset has no startup logos) */
+/* The notes worth a line on the screen. "None found" is the empty state instead, and the
+   market level has its own line. */
+const SHOWN_NOTES = ['fewer_than_three', 'only_indirect', 'customer_unknown', 'web_search_failed', 'judge_call_failed', 'time_limit_reached', 'web_changed'];
+
+/* Only web addresses open: anything else from the database is left out */
+function safeUrl(url) {
+  return /^https?:\/\//i.test(url || '') ? safe(url) : '';
+}
+
+/* The first letter of a name in a tinted circle (competitors have no logos) */
 function initial(name) {
   const tints = ['navy', 'teal', 'good', 'warn'];
   const tint = tints[name.length % tints.length];
   return `<span class="initial is-${tint}">${safe(name.trim().charAt(0).toUpperCase())}</span>`;
 }
 
-function startupCard(startup) {
+/* The words next to the ISS ("Higher similarity"). The agent server uses the same cut-offs for the chat
+   (agent-server/src/mastra/config/scoring.ts, ISS_BANDS): change both together. */
+const ISS_BANDS = { higher: 70, moderate: 40 };
+const issBand = (iss) => (iss >= ISS_BANDS.higher ? 'higher' : iss >= ISS_BANDS.moderate ? 'moderate' : 'lower');
+
+/* The market level (Definition 4): Open, Competitive or Crowded, from the number of valid direct
+   competitors. A lower bound: Open never means none exist. */
+const MARKET_LEVELS = ['open', 'competitive', 'crowded'];
+
+/* The Idea Similarity Score: the number, its words, and the market level under it */
+function issBox() {
+  const band = issBand(assessment.iss);
+  const level = MARKET_LEVELS.includes(assessment.marketLevel) ? assessment.marketLevel : '';
   return `
-    <article class="box startup">
+    <div class="box iss is-${band}">
+      <p class="iss-number" dir="ltr"><strong>${assessment.iss}</strong><span>/ 100</span></p>
+      <div class="iss-words">
+        <p class="fis-label">${t('comp.iss')}</p>
+        <h3>${t(`comp.iss.${band}`)}</h3>
+        <p class="text-2">${t('comp.iss.why')}</p>
+        ${level ? `<p class="iss-level">${icon('info')} <span><strong>${t(`comp.market.${level}`)}:</strong> ${t(`comp.market.${level}.why`)}</span></p>` : ''}
+      </div>
+    </div>`;
+}
+
+/* "Source: App Store listing · checked 11 Nov 2026" */
+function sourceLine(competitor) {
+  const parts = [];
+  if (competitor.sourceType) parts.push(t(`comp.source.${competitor.sourceType}`));
+  if (competitor.checkedAt) parts.push(`${t('comp.checked')} ${new Date(competitor.checkedAt).toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}`);
+  return parts.length ? `<p class="competitor-checked">${t('comp.source')}: ${parts.join(' · ')}</p>` : '';
+}
+
+/* Competitive opportunities (explainer §6): for each competitor, the rule that matched, what it means
+   (the judge's own sentence for a possible difference) and the fixed next step. Never "where you will win". */
+const OPPORTUNITY_CHIP = { proven_difference: 'chip-good', possible_customer_difference: 'chip-teal', possible_difference: 'chip-teal', no_clear_difference: 'chip-warn', not_enough_evidence: '' };
+
+function opportunities(competitors) {
+  const rows = competitors.filter((c) => OPPORTUNITY_CHIP[c.opportunity] !== undefined);
+  if (rows.length === 0) return '';
+  return `
+    <div class="box comp-opportunities">
+      <h3 class="box-title">${icon('sprout')} ${t('comp.opp')}</h3>
+      ${rows.map((c) => `
+        <div class="opportunity">
+          <p><span class="chip ${OPPORTUNITY_CHIP[c.opportunity]}">${t(`comp.opp.${c.opportunity}`)}</span> <strong><bdi>${safe(c.name)}</bdi></strong></p>
+          <p dir="auto">${c.opportunity === 'possible_difference' && c.difference ? safe(c.difference) : t(`comp.opp.${c.opportunity}.text`)}</p>
+          <p class="text-2"><strong>${t('comp.opp.next')}:</strong> ${t(`comp.opp.${c.opportunity}.next`)}</p>
+        </div>`).join('')}
+      <p class="text-3 comp-matrix-note">${t('comp.opp.note')}</p>
+    </div>`;
+}
+
+function notesList() {
+  const notes = assessment.competitorNotes.filter((code) => SHOWN_NOTES.includes(code));
+  if (notes.length === 0) return '';
+  return `<ul class="comp-notes">${notes.map((code) => `<li>${icon('info')} ${t(`comp.note.${code}`)}</li>`).join('')}</ul>`;
+}
+
+function competitorCard(competitor, withActions = true) {
+  const source = safeUrl(competitor.source);
+  return `
+    <article class="box startup competitor">
       <div class="startup-top">
-        ${initial(startup.name)}
+        ${initial(competitor.name)}
         <div class="startup-name">
-          <strong>${safe(startup.name)}</strong>
-          <span class="text-3">${safe([startup.sector, startup.region].filter(Boolean).join(' · '))}</span>
+          <strong><bdi>${safe(competitor.name)}</bdi></strong>
+          ${competitor.city ? `<span class="text-3"><bdi>${safe(competitor.city)}</bdi></span>` : ''}
         </div>
-        ${startup.stage ? `<span class="chip">${safe(startup.stage)}</span>` : ''}
+        <span class="competitor-rank" dir="ltr">#${competitor.rank}</span>
       </div>
-      <p class="startup-about" dir="auto">${safe(shorten(startup.about, 200))}</p>
-      <div class="startup-actions">
-        <button type="button" class="btn btn-secondary btn-sm" data-ask="${startup.id}">${t('similar.ask')}</button>
-        ${startup.website ? `<a class="btn btn-ghost btn-sm" href="${safe(startup.website)}" target="_blank" rel="noopener">${t('similar.website')} ${icon('external')}</a>` : ''}
+      <div class="competitor-chips">
+        <span class="chip ${competitor.label === 'direct' ? 'chip-risk' : 'chip-warn'}">${t(`comp.label.${competitor.label}`)}</span>
+        ${competitor.evidence === 'likely' ? `<span class="chip chip-navy">${t('comp.limited')}</span>` : `<span class="chip chip-good">${t('comp.confirmed')}</span>`}
       </div>
+      <p class="startup-about" dir="auto">${safe(shorten(competitor.about, 200))}</p>
+      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : ''}
+      ${sourceLine(competitor)}
+      ${withActions ? `
+        <div class="startup-actions">
+          <button type="button" class="btn btn-secondary btn-sm" data-ask="${safe(competitor.id)}">${t('similar.ask')}</button>
+          ${source ? `<a class="btn btn-ghost btn-sm" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
+        </div>` : (source ? `<p class="competitor-source" dir="ltr">${source}</p>` : '')}
     </article>`;
 }
 
-function similarTab() {
-  const startups = assessment.result.similar;
-  if (startups.length === 0) return `${sectionTitle(t('similar.title'))}${nothingYet()}`;
+/* The comparison matrix: problem, customer and offering (the judge's answers, "Unknown" where
+   missing) and the city or region, which is shown but not scored */
+function comparisonMatrix(competitors) {
+  const ANSWER_CHIP = { same: 'chip-warn', partly: 'chip-teal', different: 'chip-good' };
+  const cell = (part) => {
+    const answer = (part && part.answer) || 'unknown';
+    const note = part && part.note ? `<small dir="auto">${safe(part.note)}</small>` : '';
+    return `<td><span class="chip ${ANSWER_CHIP[answer] || ''}">${t(`comp.answer.${answer}`)}</span>${note}</td>`;
+  };
+  const row = (name, cells) => `<tr><th scope="row">${t(name)}</th>${cells}</tr>`;
 
   return `
-    ${sectionTitle(t('similar.count').replace('{n}', startups.length), t('similar.note'))}
-    <div class="startups">${startups.map(startupCard).join('')}</div>`;
+    <div class="box comp-matrix">
+      <h3 class="box-title">${icon('grid')} ${t('comp.matrix')}</h3>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th></th>${competitors.map((c) => `<th><bdi>${safe(c.name)}</bdi></th>`).join('')}</tr></thead>
+          <tbody>
+            ${['problem', 'customer', 'offering'].map((part) => row(`comp.part.${part}`, competitors.map((c) => cell(c.comparison[part])).join(''))).join('')}
+            ${row('comp.part.city', competitors.map((c) => `<td>${c.city ? `<bdi>${safe(c.city)}</bdi>` : `<span class="chip">${t('comp.answer.unknown')}</span>`}</td>`).join(''))}
+          </tbody>
+        </table>
+      </div>
+      <p class="text-3 comp-matrix-note">${t('comp.matrix.note')}</p>
+    </div>`;
+}
+
+/* The whole analysis. withActions is false in the report (paper has no buttons). */
+function competitorAnalysis(withActions = true) {
+  if (!assessment.analysedAt) return `<p class="empty">${t('comp.notYet')}</p>`;
+  const competitors = assessment.result.competitors;
+  if (competitors.length === 0) return `<p class="empty">${t('comp.note.none_found')}</p>`;
+
+  return `
+    ${assessment.iss === null ? '' : issBox()}
+    ${notesList()}
+    <div class="startups competitors">${competitors.map((c) => competitorCard(c, withActions)).join('')}</div>
+    ${comparisonMatrix(competitors)}
+    ${opportunities(competitors)}`;
+}
+
+function similarTab() {
+  return `${sectionTitle(t('comp.title'), t('comp.sub'))}${competitorAnalysis()}`;
 }
 
 /* ---------- Tab: Market ---------- */
@@ -549,7 +669,7 @@ function reportSection(number, tab, title, content) {
 }
 
 function reportTab() {
-  const { similar, market } = assessment.result;
+  const { market } = assessment.result;
   const facts = ['sector', 'city', 'model'].map((field) => safe(label(assessment[field]))).join(' · ');
   const today = new Date().toLocaleDateString(document.documentElement.lang === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -575,10 +695,12 @@ function reportTab() {
         <p class="text-2">${facts}</p>
       </div>
 
-      ${reportSection(1, 'score', t('score.title'), scoreTab())}
+      ${assessment.whatIf
+        ? reportSection(1, 'similar', t('comp.title'), competitorAnalysis(false))
+        : `${reportSection(1, 'score', t('score.title'), scoreTab())}
       ${reportSection(2, 'market', t('market.title'), marketPart)}
-      ${reportSection(3, 'similar', t('similar.title'), similar.length === 0 ? nothingYet() : `<div class="startups">${similar.map(startupCard).join('')}</div>`)}
-      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapFull())}
+      ${reportSection(3, 'similar', t('comp.title'), competitorAnalysis(false))}
+      ${reportSection(4, 'roadmap', t('roadmap.title'), roadmapFull())}`}
     </div>`;
 }
 
@@ -615,10 +737,10 @@ panel.addEventListener('click', (event) => {
     window.print();
   }
 
-  // "Ask about it" on a startup card: tell the chat which startup the next question is about
+  // "Ask about it" on a competitor card: tell the chat which competitor the next question is about
   const askButton = event.target.closest('[data-ask]');
   if (askButton) {
-    const startup = assessment.result.similar.find((item) => item.id === askButton.dataset.ask);
+    const startup = assessment.result.competitors.find((item) => item.id === askButton.dataset.ask);
     document.dispatchEvent(new CustomEvent('darb:ask-startup', { detail: startup }));
   }
 });

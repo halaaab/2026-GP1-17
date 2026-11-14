@@ -1,5 +1,5 @@
 /* ==========================================================
-   Programs: the incubators and accelerators (table support_organisations,
+   Programs: the incubators and accelerators (table support_organizations,
    migration 0006). Used by the founder explorer, the founder details page
    and the admin management page, so they all read the data the same way.
 
@@ -207,7 +207,7 @@ function report(action, error) {
 
 /* Every program, A to Z. Returns null when the database could not be reached. */
 export async function getPrograms() {
-  const { data, error } = await supabase.from('support_organisations').select('*').order('name');
+  const { data, error } = await supabase.from('support_organizations').select('*').order('name');
   if (error) {
     report('load the programs', error);
     return null;
@@ -217,7 +217,7 @@ export async function getPrograms() {
 
 /* One program, or null */
 export async function getProgram(id) {
-  const { data, error } = await supabase.from('support_organisations').select('*').eq('support_org_id', id).maybeSingle();
+  const { data, error } = await supabase.from('support_organizations').select('*').eq('support_org_id', id).maybeSingle();
   if (error) {
     report('load the program', error);
     return null;

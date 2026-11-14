@@ -15,9 +15,9 @@ const ROOT = new URL('../../../', import.meta.url).href;
 
 // What the admin may have added, and the page where each is managed
 const WORK = [
-  { table: 'support_organisations', label: 'adminProfile.workPrograms',     icon: 'sprout',    href: 'pages/admin/incubator-accelerator-management/incubator-accelerator-management.html' },
-  { table: 'startups',              label: 'adminProfile.workStartups',     icon: 'briefcase', href: 'pages/admin/startup-management/startup-management.html' },
-  { table: 'regulatory_requirements', label: 'adminProfile.workRequirements', icon: 'shield',  href: 'pages/admin/regulatory-management/regulatory-management.html' },
+  { table: 'organization_maintenance', label: 'adminProfile.workPrograms',     icon: 'sprout',    href: 'pages/admin/incubator-accelerator-management/incubator-accelerator-management.html' },
+  { table: 'startup_maintenance',      label: 'adminProfile.workStartups',     icon: 'briefcase', href: 'pages/admin/startup-management/startup-management.html' },
+  { table: 'requirement_maintenance',  label: 'adminProfile.workRequirements', icon: 'shield',  href: 'pages/admin/regulatory-management/regulatory-management.html' },
 ];
 
 const USERNAME_PATTERN = /^[A-Za-z0-9_]{3,20}$/;
@@ -38,7 +38,7 @@ const passwordButton = document.querySelector('#password-save');
 let user = null;      // the login account (email, last sign-in)
 let profile = null;   // the row in the admins table
 let teamSize = null;
-let work = [];        // how many rows the admin created in each WORK table
+let work = [];        // how many records the admin maintains, from each maintenance table (migration 0024)
 
 /* ---------- Small helpers ---------- */
 
@@ -156,7 +156,7 @@ detailsForm.addEventListener('submit', async (event) => {
   }
 
   const changes = { full_name: fullName.value.trim(), username: wanted, phone: phoneToSave() };
-  const { data, error } = await supabase.from('admins').update(changes).eq('admin_id', user.id).select().single();
+  const { data, error } = await supabase.from('admins').update(changes).eq('user_id', user.id).select().single();
   saveButton.classList.remove('is-loading');
 
   if (error) {
@@ -216,7 +216,7 @@ async function countWork() {
     const { count, error } = await supabase
       .from(item.table)
       .select('*', { count: 'exact', head: true })
-      .eq('created_by_admin_id', user.id);
+      .eq('admin_id', user.id);
     return { count: error ? null : count };
   }));
 }
@@ -241,7 +241,7 @@ profile = account.profile;
 
 if (user && profile) {
   const [admins, counts] = await Promise.all([
-    supabase.from('admins').select('admin_id', { count: 'exact', head: true }),
+    supabase.from('admins').select('user_id', { count: 'exact', head: true }),
     countWork(),
   ]);
   teamSize = admins.error ? null : admins.count;
