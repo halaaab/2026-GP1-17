@@ -1,6 +1,6 @@
 // Tests for the structured idea profile. OpenAI is replaced by a fake answer, so nothing is sent or paid for.
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildIdeaProfile, PROFILE_PROMPT, profileText } from '../../src/mastra/lib/idea-profile';
+import { buildIdeaProfile, FOUNDER_IDEA_RULES, PROFILE_PROMPT, profileText } from '../../src/mastra/lib/idea-profile';
 
 function fakeOpenAI(answer: unknown) {
   const fetchMock = vi.fn(async () => new Response(JSON.stringify({ choices: [{ message: { content: JSON.stringify(answer) } }] })));
@@ -47,6 +47,16 @@ describe('buildIdeaProfile', () => {
     const sent = JSON.parse((fetchMock.mock.calls[0] as unknown as [string, { body: string }])[1].body);
     expect(sent.temperature).toBe(0);
     expect(sent.messages[1].content).toBe('تطبيق يربط المطاعم بالمزارع');
+  });
+
+  it("a founder's idea gets the rule against inventing the offering; Darb's startup list does not (16 Nov 2026)", async () => {
+    const fetchMock = fakeOpenAI(answer);
+    await buildIdeaProfile('An AI app for restaurants', { founderIdea: true });
+    await buildIdeaProfile('A Saudi startup that sells vegetables to restaurants.');
+    const system = (i: number) => JSON.parse((fetchMock.mock.calls[i] as unknown as [string, { body: string }])[1].body).messages[0].content;
+    expect(system(0)).toContain(FOUNDER_IDEA_RULES);
+    expect(system(1)).toBe(PROFILE_PROMPT); // the corpus profiles stay as they were made
+    expect(FOUNDER_IDEA_RULES).toContain('set offering to "unknown"');
   });
 
   it('leaves a sector code in the wrong form empty instead of failing (makan.design, TC-1.5)', async () => {
