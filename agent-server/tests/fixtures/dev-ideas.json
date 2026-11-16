@@ -1,45 +1,435 @@
 {
-  "about": "Development ideas from the Member 1 test plan (page 1). Paste one 'handoff' into Studio. 'expected' is what the test plan says should be found.",
+  "about": "Development ideas from the Member 1 test plan (page 1). 'handoff' is for the Competitor Agent (Agents tab). 'idea_profile' is a fixed profile, made once on 13 Nov 2026: paste { \"idea_profile\": … } into search-corpus so the same input always gives the same list (TC-2.7). 'expected' is what the test plan says should be found.",
   "ideas": [
     {
       "id": "D1",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "One monthly subscription that lets people in Riyadh use many different gyms" },
-      "expected": { "startup_ids": ["ST_073"], "names": ["1pass"] }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "One monthly subscription that lets people in Riyadh use many different gyms"
+      },
+      "expected": {
+        "startup_ids": [
+          "ST_073"
+        ],
+        "names": [
+          "1pass"
+        ]
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "Limited access to various gyms for fitness enthusiasts",
+          "origin": "inferred"
+        },
+        "customer": {
+          "value": null,
+          "origin": "unknown"
+        },
+        "offering": {
+          "value": "monthly subscription for access to multiple gyms",
+          "origin": "stated"
+        },
+        "market": {
+          "value": "Riyadh",
+          "origin": "stated"
+        },
+        "sector": {
+          "isic_section": "S",
+          "isic_division": "94"
+        },
+        "business_model": "subscription fees",
+        "keywords_en": [
+          "gym access",
+          "fitness subscription",
+          "multiple gyms",
+          "Riyadh fitness",
+          "health clubs",
+          "gym membership"
+        ],
+        "keywords_ar": [
+          "الوصول إلى الصالات الرياضية",
+          "اشتراك اللياقة البدنية",
+          "صالات رياضية متعددة",
+          "لياقة بدنية في الرياض",
+          "نوادي صحية",
+          "عضوية الصالة الرياضية"
+        ]
+      }
     },
     {
       "id": "D2",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "Sharia-compliant financing so construction companies can buy materials now and pay later" },
-      "expected": { "startup_ids": ["ST_291"], "names": ["Aajil"] }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "Sharia-compliant financing so construction companies can buy materials now and pay later"
+      },
+      "expected": {
+        "startup_ids": [
+          "ST_291"
+        ],
+        "names": [
+          "Aajil"
+        ]
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "construction companies need financing to purchase materials immediately while managing cash flow for later payments",
+          "origin": "stated"
+        },
+        "customer": {
+          "value": "construction companies",
+          "origin": "stated"
+        },
+        "offering": {
+          "value": "Sharia-compliant financing for purchasing construction materials",
+          "origin": "stated"
+        },
+        "market": {
+          "value": null,
+          "origin": "unknown"
+        },
+        "sector": {
+          "isic_section": "K",
+          "isic_division": "64"
+        },
+        "business_model": "financing fees or interest on deferred payments",
+        "keywords_en": [
+          "financing",
+          "construction",
+          "Sharia-compliant",
+          "materials",
+          "cash flow",
+          "payment plans"
+        ],
+        "keywords_ar": [
+          "تمويل",
+          "البناء",
+          "متوافق مع الشريعة",
+          "المواد",
+          "تدفق نقدي",
+          "خطط الدفع"
+        ]
+      }
     },
     {
       "id": "D3",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "Software that helps logistics companies optimize their delivery operations" },
-      "expected": { "startup_ids": ["ST_514"], "names": ["525K"] }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "Software that helps logistics companies optimize their delivery operations"
+      },
+      "expected": {
+        "startup_ids": [
+          "ST_514"
+        ],
+        "names": [
+          "525K"
+        ]
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "logistics companies need to optimize their delivery operations",
+          "origin": "stated"
+        },
+        "customer": {
+          "value": "logistics companies",
+          "origin": "stated"
+        },
+        "offering": {
+          "value": "software that helps optimize delivery operations",
+          "origin": "stated"
+        },
+        "market": {
+          "value": null,
+          "origin": "unknown"
+        },
+        "sector": {
+          "isic_section": "J",
+          "isic_division": "62"
+        },
+        "business_model": null,
+        "keywords_en": [
+          "logistics",
+          "delivery optimization",
+          "software",
+          "supply chain",
+          "transportation",
+          "operations management"
+        ],
+        "keywords_ar": [
+          "اللوجستيات",
+          "تحسين التسليم",
+          "البرمجيات",
+          "سلسلة التوريد",
+          "النقل",
+          "إدارة العمليات"
+        ]
+      }
     },
     {
       "id": "D4",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "An app with video lessons and practice questions for school students" },
-      "expected": { "startup_ids": ["ST_486"], "names": ["Abwaab"] }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "An app with video lessons and practice questions for school students"
+      },
+      "expected": {
+        "startup_ids": [
+          "ST_486"
+        ],
+        "names": [
+          "Abwaab"
+        ]
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "students need additional resources for learning and practice",
+          "origin": "inferred"
+        },
+        "customer": {
+          "value": "school students",
+          "origin": "stated"
+        },
+        "offering": {
+          "value": "an app with video lessons and practice questions",
+          "origin": "stated"
+        },
+        "market": {
+          "value": null,
+          "origin": "unknown"
+        },
+        "sector": {
+          "isic_section": "J",
+          "isic_division": "62"
+        },
+        "business_model": null,
+        "keywords_en": [
+          "education",
+          "learning app",
+          "video lessons",
+          "practice questions",
+          "students"
+        ],
+        "keywords_ar": [
+          "تعليم",
+          "تطبيق تعليمي",
+          "دروس فيديو",
+          "أسئلة تدريبية",
+          "طلاب"
+        ]
+      }
     },
     {
       "id": "D5",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "A website where people in Saudi Arabia search for apartments to rent or buy" },
-      "expected": { "startup_ids": ["ST_489", "ST_504"], "names": ["Bayut", "5050"] }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "A website where people in Saudi Arabia search for apartments to rent or buy"
+      },
+      "expected": {
+        "startup_ids": [
+          "ST_489",
+          "ST_504"
+        ],
+        "names": [
+          "Bayut",
+          "5050"
+        ]
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "People in Saudi Arabia need a platform to search for apartments to rent or buy.",
+          "origin": "stated"
+        },
+        "customer": {
+          "value": "Individuals looking for apartments in Saudi Arabia.",
+          "origin": "inferred"
+        },
+        "offering": {
+          "value": "A website for searching apartments for rent or sale.",
+          "origin": "stated"
+        },
+        "market": {
+          "value": "Saudi Arabia",
+          "origin": "stated"
+        },
+        "sector": {
+          "isic_section": "L",
+          "isic_division": "68"
+        },
+        "business_model": null,
+        "keywords_en": [
+          "real estate",
+          "apartments",
+          "rent",
+          "buy",
+          "Saudi Arabia",
+          "property search"
+        ],
+        "keywords_ar": [
+          "العقارات",
+          "شقق",
+          "إيجار",
+          "شراء",
+          "السعودية",
+          "بحث عن الممتلكات"
+        ]
+      }
     },
     {
       "id": "D6",
-      "handoff": { "mode": "new", "language": "ar", "idea_text": "اشتراك شهري واحد يتيح للناس استخدام عدة أندية رياضية في الرياض" },
-      "expected": { "startup_ids": ["ST_073"], "names": ["1pass"] }
+      "handoff": {
+        "mode": "new",
+        "language": "ar",
+        "idea_text": "اشتراك شهري واحد يتيح للناس استخدام عدة أندية رياضية في الرياض"
+      },
+      "expected": {
+        "startup_ids": [
+          "ST_073"
+        ],
+        "names": [
+          "1pass"
+        ]
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "Limited access to multiple gyms for fitness enthusiasts",
+          "origin": "inferred"
+        },
+        "customer": {
+          "value": null,
+          "origin": "unknown"
+        },
+        "offering": {
+          "value": "Monthly subscription for access to multiple gyms",
+          "origin": "stated"
+        },
+        "market": {
+          "value": "Riyadh",
+          "origin": "stated"
+        },
+        "sector": {
+          "isic_section": "S",
+          "isic_division": "94"
+        },
+        "business_model": "Subscription fees",
+        "keywords_en": [
+          "gym access",
+          "fitness subscription",
+          "multiple gyms",
+          "Riyadh fitness",
+          "monthly membership"
+        ],
+        "keywords_ar": [
+          "وصول إلى الأندية الرياضية",
+          "اشتراك لياقة بدنية",
+          "أندية متعددة",
+          "لياقة بدنية في الرياض",
+          "عضوية شهرية"
+        ]
+      }
     },
     {
       "id": "V1",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "An AI app for restaurants" },
-      "expected": { "status": "needs_clarification", "note": "Vague on purpose: one clarification question, no search." }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "An AI app for restaurants"
+      },
+      "expected": {
+        "status": "needs_clarification",
+        "note": "Vague on purpose: one clarification question, no search."
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "Restaurants need efficient management and customer engagement solutions.",
+          "origin": "inferred"
+        },
+        "customer": {
+          "value": "restaurants",
+          "origin": "stated"
+        },
+        "offering": {
+          "value": "an AI app",
+          "origin": "stated"
+        },
+        "market": {
+          "value": null,
+          "origin": "unknown"
+        },
+        "sector": {
+          "isic_section": "I",
+          "isic_division": "56"
+        },
+        "business_model": null,
+        "keywords_en": [
+          "AI",
+          "app",
+          "restaurants",
+          "management",
+          "customer engagement"
+        ],
+        "keywords_ar": [
+          "ذكاء اصطناعي",
+          "تطبيق",
+          "مطاعم",
+          "إدارة",
+          "تفاعل مع العملاء"
+        ]
+      }
     },
     {
       "id": "N1",
-      "handoff": { "mode": "new", "language": "en", "idea_text": "Falcon photography experiences for tourists in AlUla" },
-      "expected": { "startup_ids": [], "note": "Niche on purpose: must not invent competitors." }
+      "handoff": {
+        "mode": "new",
+        "language": "en",
+        "idea_text": "Falcon photography experiences for tourists in AlUla"
+      },
+      "expected": {
+        "startup_ids": [],
+        "note": "Niche on purpose: must not invent competitors."
+      },
+      "idea_profile": {
+        "problem": {
+          "value": "Tourists in AlUla may lack unique photography experiences that highlight the local culture and landscape.",
+          "origin": "inferred"
+        },
+        "customer": {
+          "value": "tourists",
+          "origin": "stated"
+        },
+        "offering": {
+          "value": "Falcon photography experiences",
+          "origin": "stated"
+        },
+        "market": {
+          "value": "AlUla",
+          "origin": "stated"
+        },
+        "sector": {
+          "isic_section": "N",
+          "isic_division": "77"
+        },
+        "business_model": null,
+        "keywords_en": [
+          "photography",
+          "tourism",
+          "experiences",
+          "AlUla",
+          "falconry",
+          "cultural activities",
+          "outdoor adventures"
+        ],
+        "keywords_ar": [
+          "تصوير",
+          "سياحة",
+          "تجارب",
+          "العلا",
+          "الصقور",
+          "أنشطة ثقافية",
+          "مغامرات في الهواء الطلق"
+        ]
+      }
     }
   ]
 }

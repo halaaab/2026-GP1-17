@@ -12,14 +12,21 @@ import { conversationalAgent } from './agents/conversational-agent';
 import { darbStore } from './lib/storage';
 import { authMiddleware } from './server/auth';
 import { initCrRegistry } from './lib/cr-registry';
+import { initCrNames } from './lib/cr-names';
 import { checkCrTool } from './tools/check-cr';
 import { extractPagesTool } from './tools/extract-pages';
 import { finalizeResultTool } from './tools/finalize-result';
+import { findCompetitorsTool } from './tools/find-competitors';
 import { identifyCandidatesTool } from './tools/identify-candidates';
+import { searchCorpusTool } from './tools/search-corpus';
+import { searchWebTool } from './tools/search-web';
+import { validateCandidateTool } from './tools/validate-candidate';
 import { predictSurvivalTool } from './tools/predict-survival';
 
 // The Ministry of Commerce list of active registrations, held in memory for the CR check (Task 3).
 await initCrRegistry();
+// The company-name fingerprints, for the legal-name check (Task 8).
+await initCrNames();
 
 export const mastra = new Mastra({
   bundler: {
@@ -33,6 +40,10 @@ export const mastra = new Mastra({
     checkCrTool,
     extractPagesTool,
     identifyCandidatesTool,
+    searchCorpusTool,
+    searchWebTool,
+    validateCandidateTool,
+    findCompetitorsTool,
     finalizeResultTool,
     predictSurvivalTool,
   },

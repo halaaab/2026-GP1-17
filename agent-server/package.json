@@ -12,7 +12,9 @@
     "test:assessment": "tsx scripts/create-test-assessment.ts",
     "classify:startups": "tsx scripts/classify-startups-isic.ts",
     "prepare:cr": "tsx scripts/prepare-cr-numbers.ts",
+    "prepare:cr-names": "tsx scripts/prepare-cr-names.ts",
     "profile:startups": "tsx scripts/profile-startups.ts",
+    "recheck:startups": "tsx scripts/recheck-startups.ts",
     "test:live": "tsx scripts/test-live.ts",
     "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.exclude=src/**/*.test.ts --coverage.reporter=text-summary"
   },
@@ -24,20 +26,22 @@
     "node": ">=22.13.0"
   },
   "dependencies": {
-    "@mastra/core": "1.80.0",
-    "@mastra/duckdb": "1.16.0",
-    "@mastra/libsql": "1.27.1",
-    "@mastra/memory": "^1.39.1",
-    "@mastra/observability": "1.22.0",
-    "@mastra/pg": "^1.33.0",
+    "@mastra/core": "1.83.0",
+    "@mastra/duckdb": "1.19.0",
+    "@mastra/libsql": "1.30.0",
+    "@mastra/memory": "^1.41.1",
+    "@mastra/observability": "1.24.0",
+    "@mastra/pg": "^1.36.0",
     "@supabase/supabase-js": "^2.118.0",
     "@tavily/core": "^0.7.14",
+    "playwright": "1.49.1",
+    "unpdf": "1.4.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "latest",
     "@vitest/coverage-v8": "^3.2.7",
-    "mastra": "1.36.0",
+    "mastra": "1.39.0",
     "tsx": "^4.23.15",
     "typescript": "^6.0.3",
     "vitest": "^3.2.7"

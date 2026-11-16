@@ -22,9 +22,10 @@ export function profileFromKnownFacts(handoff: Pick<Handoff, 'known_facts'> | nu
 
 type RunInfo = { durationMs: number; traceId: string | null; tavilyCalls?: number };
 
-function emptyResult(handoff: Handoff | null, notes: NoteCode[], status: Result['status'], run: RunInfo): Result {
+function emptyResult(handoff: Handoff | null, notes: NoteCode[], status: Result['status'], run: RunInfo, clarification?: Result['clarification']): Result {
   return Result.parse({
     status,
+    ...(clarification ? { clarification } : {}),
     idea_profile: profileFromKnownFacts(handoff),
     competitors: [],
     iss: null,
@@ -38,6 +39,21 @@ function emptyResult(handoff: Handoff | null, notes: NoteCode[], status: Result[
 // The foundation's answer to every valid handoff.
 export function pendingResult(handoff: Handoff, run: RunInfo): Result {
   return emptyResult(handoff, ['capability_pending'], 'complete', run);
+}
+
+// After Member 1's part has run (find-competitors, Task 11), before the judge exists: the valid companies are in the
+// trace, but none is shown as a competitor yet, so the note stays "capability_pending". A web search that failed
+// adds "web_search_failed"; an idea missing its problem or offering returns the clarification question instead.
+export function discoveryResult(
+  handoff: Handoff,
+  found: { status: 'complete' | 'partial' | 'needs_clarification'; clarification?: { question: string; missing_field: 'problem' | 'offering' }; notes: NoteCode[]; tavily_calls: number },
+  run: RunInfo,
+): Result {
+  const withCalls = { ...run, tavilyCalls: found.tavily_calls };
+  if (found.status === 'needs_clarification' && found.clarification) {
+    return emptyResult(handoff, [], 'needs_clarification', withCalls, found.clarification);
+  }
+  return emptyResult(handoff, ['capability_pending', ...found.notes], found.notes.length ? 'partial' : 'complete', withCalls);
 }
 
 // Used when a run did not return a valid Result: still a valid Result, never a crash (design §12).

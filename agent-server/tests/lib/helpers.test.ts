@@ -2,7 +2,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ISIC_DIVISIONS } from '../../src/mastra/config/isic-divisions';
 import { ISIC_SECTION_LETTERS } from '../../src/mastra/config/sectors';
-import { APPROVED_DOMAINS } from '../../src/mastra/config/approved-domains';
 import { embedTexts, toPgVector } from '../../src/mastra/lib/embeddings';
 
 const realFetch = globalThis.fetch;
@@ -47,12 +46,12 @@ describe('config data', () => {
     }
   });
 
-  it('has every site from the sheet once, with known values', () => {
-    expect(APPROVED_DOMAINS).toHaveLength(57);
-    expect(new Set(APPROVED_DOMAINS.map((d) => d.domain)).size).toBe(57);
-    for (const d of APPROVED_DOMAINS) {
-      expect(d.domain).toMatch(/^[a-z0-9.-]+\.[a-z]{2,}$/);
-      for (const s of d.sections) expect(ISIC_SECTION_LETTERS).toContain(s);
-    }
+  it('excludes exact hostnames only: google.com, not Google Play', async () => {
+    const { isExcludedSite } = await import('../../src/mastra/config/excluded-sources');
+    expect(isExcludedSite('www.linkedin.com')).toBe(true);
+    expect(isExcludedSite('google.com')).toBe(true);
+    expect(isExcludedSite('maps.google.com')).toBe(true);
+    expect(isExcludedSite('play.google.com')).toBe(false);
+    expect(isExcludedSite('magnitt.com')).toBe(true);
   });
 });
