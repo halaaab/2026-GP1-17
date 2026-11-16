@@ -22,7 +22,8 @@ export const MAX_NEW_WEB_COMPANIES = 10;
 // list plus up to 10 new ones from the web (explainer §3),
 // and at most this many at the same time, so a run stays within OpenAI's rate limits.
 export const JUDGE_MAX_CALLS = 25;
-export const JUDGE_PARALLEL_CALLS = 5;
+// 10 at the same time, not 5 (Hala, 16 Nov 2026): a run judges about 6 to 12 companies, so one batch instead of two.
+export const JUDGE_PARALLEL_CALLS = 10;
 
 // Competitor analyses per founder (design §12). A new idea and a what-if each count; follow-up questions and
 // re-running an assessment already analysed today do not. Counted from assessments.analysed_at (Saudi time).

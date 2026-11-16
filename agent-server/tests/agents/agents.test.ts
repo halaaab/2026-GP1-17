@@ -23,7 +23,7 @@ describe('Competitor Agent', () => {
   it('has every tool its instructions name', async () => {
     const tools = Object.keys(await competitorAgent.listTools());
     const named = toolNames(await instructionsOf(competitorAgent));
-    expect([...named].sort()).toEqual(['finalize_result', 'find_competitors', 'judge_candidates', 'understand_idea']);
+    expect([...named].sort()).toEqual(['analyse_idea']);
     for (const name of named) expect(tools).toContain(name);
   });
 

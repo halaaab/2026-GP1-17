@@ -282,7 +282,7 @@ describe('delegation: limits', () => {
     db.countToday = MAX_ANALYSES_PER_DAY;
     const { ctx } = start(written);
     const decision = await onCompetitorDelegationStart(ctx);
-    expect(decision?.modifiedPrompt).toContain('call finalize_result now');
+    expect(decision?.modifiedPrompt).toContain('call analyse_idea now');
     expect((ctx.requestContext.get(RUN_STATE_KEY) as { limitNote: string }).limitNote).toBe('daily_limit_reached');
 
     // finalize_result then returns only the limit note, and the founder sees it word for word

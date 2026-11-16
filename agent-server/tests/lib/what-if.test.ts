@@ -216,7 +216,7 @@ describe('delegation: a what-if', () => {
     db.countToday = MAX_ANALYSES_PER_DAY;
     const ctx = start(whatIf);
     const decision = await onCompetitorDelegationStart(ctx);
-    expect(decision?.modifiedPrompt).toContain('call finalize_result now');
+    expect(decision?.modifiedPrompt).toContain('call analyse_idea now');
     expect((ctx.requestContext.get(RUN_STATE_KEY) as RunStateT).limitNote).toBe('daily_limit_reached');
     expect(calls.some((c) => c.op === 'insert')).toBe(false);
   });

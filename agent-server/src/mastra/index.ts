@@ -22,6 +22,7 @@ import { searchCorpusTool } from './tools/search-corpus';
 import { searchWebTool } from './tools/search-web';
 import { validateCandidateTool } from './tools/validate-candidate';
 import { getCompetitorResultTool } from './tools/get-competitor-result';
+import { analyseIdeaTool } from './tools/analyse-idea';
 import { judgeCandidatesTool } from './tools/judge-candidates';
 import { understandIdeaTool } from './tools/understand-idea';
 import { predictSurvivalTool } from './tools/predict-survival';
@@ -50,6 +51,7 @@ export const mastra = new Mastra({
     finalizeResultTool,
     getCompetitorResultTool,
     judgeCandidatesTool,
+    analyseIdeaTool,
     understandIdeaTool,
     predictSurvivalTool,
   },

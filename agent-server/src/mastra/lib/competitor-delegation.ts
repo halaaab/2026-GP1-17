@@ -20,6 +20,7 @@
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
 import { Handoff, Result, RunLog } from '../schemas/competitor';
+import { analyseIdeaTool } from '../tools/analyse-idea';
 import { finalizeResultTool, HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
 import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
@@ -32,9 +33,9 @@ import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
 export const COMPETITOR_AGENT_ID = 'competitor-agent';
 
-// Most steps the Competitor Agent may take in one run. It needs 5 (understand_idea, find_competitors,
-// judge_candidates, finalize_result, a short reply); 6 leaves one spare (Hala, 16 Nov 2026, with Member 1's part).
-export const COMPETITOR_MAX_STEPS = 6;
+// Most steps the Competitor Agent may take in one run: one, the analyse_idea call (Hala, 16 Nov 2026). Only the
+// tool's Result is used, so its closing "Done." line was dropped: it took 13 of the 38 s of a vague idea's answer.
+export const COMPETITOR_MAX_STEPS = 1;
 
 // What the supervisor writes. The ids are left out: the server adds them.
 export const SupervisorHandoff = Handoff.omit({ assessment_id: true, idea_id: true });
@@ -194,7 +195,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   return {
     proceed: true,
     modifiedPrompt: state.limitNote
-      ? `Handoff:\n${JSON.stringify(handoff)}\nThe founder has no analyses left for now: call finalize_result now.`
+      ? `Handoff:\n${JSON.stringify(handoff)}\nThe founder has no analyses left for now: call analyse_idea now.`
       : `Handoff:\n${JSON.stringify(handoff)}`,
     modifiedMaxSteps: COMPETITOR_MAX_STEPS,
   };
@@ -234,17 +235,20 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
   running.delete(ctx.toolCallId);
   if (!started) return; // the delegation was rejected before it started: keep the rejection message
 
-  const fromTool = ctx.result?.subAgentToolResults?.find((r) => r.toolName === 'finalize_result' && !r.isError);
-  let checked = Result.safeParse(fromTool?.result);
-  // The agent stopped without calling finalize_result: build the result in code from this run's state, exactly as
-  // finalize_result would (Hala, 16 Nov 2026). In a real chat, after understand_idea said the idea needs a question,
-  // the model called its memory tool instead of finalize_result, so the founder saw "did not finish" instead of the
-  // question (5 of 5 vague ideas in the Sprint 2 test run).
-  if (!fromTool) {
+  // analyse_idea returns finalize_result's Result (tools/analyse-idea.ts); finalize_result alone is still accepted.
+  const tools = ctx.result?.subAgentToolResults ?? [];
+  const called = tools.find((r) => r.toolName === 'analyse_idea' || r.toolName === 'finalize_result');
+  let checked = Result.safeParse(called && !called.isError ? called.result : undefined);
+  // The analysis always runs, in code, even when the agent did not call it (Hala, 16 Nov 2026). The agent has one
+  // step and the delegation does not pass its "tool required" setting on, so it sometimes wrote a line instead of
+  // calling analyse_idea; earlier it also called its memory tool instead of finalize_result. When nothing ran, the
+  // whole analysis runs here; when it ran and failed, finalize_result builds the result from what was gathered.
+  if (!checked.success) {
     const values = new Map<string, unknown>([[HANDOFF_KEY, started.handoff], [RUN_STATE_KEY, started.state], [STARTED_AT_KEY, started.startedAt]]);
     const requestContext = { get: (key: string) => values.get(key), set: (key: string, value: unknown) => void values.set(key, value) };
     try {
-      checked = Result.safeParse(await finalizeResultTool.execute!({}, { requestContext } as never));
+      const tool = called ? finalizeResultTool : analyseIdeaTool;
+      checked = Result.safeParse(await tool.execute!({} as never, { requestContext } as never));
     } catch (error) {
       console.error('Building the result in code failed:', error);
     }
