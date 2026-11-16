@@ -1,11 +1,33 @@
-// Config: sites Darb never reads, from the Member 1 test plan (Task 4, "Already excluded") and the
-// legal policy in the design (§5): public pages only, nothing behind a login, no site that forbids
-// automated access, company facts only (never personal data).
+// Config: sites Darb never searches or reads (Hala's list, 14 Nov 2026), from the legal policy in the design
+// (§5): public pages only, nothing behind a login or paywall, no site that forbids automated access, company
+// facts only (never personal data).
 //
-//   linkedin.com     its User Agreement forbids automated access; mostly behind a login; personal data
-//   crunchbase.com   its terms forbid AI use
-//   google.com       Google Maps and search pages: terms forbid automated access
-//   hungerstation.com, dealroom.co   excluded in the domain audit
-export const EXCLUDED_SOURCES = ['linkedin.com', 'crunchbase.com', 'google.com', 'hungerstation.com', 'dealroom.co'];
+// These are EXACT hostnames ("www." is ignored): excluding google.com does not exclude play.google.com.
+//   linkedin.com       User Agreement forbids automated access; mostly behind a login; personal data
+//   crunchbase.com     terms forbid AI use
+//   dealroom.co, magnitt.com, tracxn.com, wellfound.com, producthunt.com
+//                      startup databases: paywalls, logins or bot blocking
+//   hungerstation.com  excluded in the domain audit
+//   google.com, maps.google.com   Google search and Maps: terms forbid automated access
+export const EXCLUDED_SOURCES = [
+  'linkedin.com',
+  'crunchbase.com',
+  'dealroom.co',
+  'magnitt.com',
+  'tracxn.com',
+  'wellfound.com',
+  'producthunt.com',
+  'hungerstation.com',
+  'google.com',
+  'maps.google.com',
+];
 
-export const isExcludedSite = (site: string) => EXCLUDED_SOURCES.some((d) => site === d || site.endsWith(`.${d}`));
+export const isExcludedSite = (site: string) => EXCLUDED_SOURCES.includes(site.toLowerCase().replace(/^www\./, ''));
+
+// Directories and classifieds (Hala, 16 Nov 2026): Saudi sites that list other businesses or people's ads, so they
+// pass the four checks but do not offer the product themselves. They are never taken as companies from the web
+// search. Seen in the Task 11 runs: Haraj (people reselling gym subscriptions) and Bluepages (a business directory)
+// came out as Confirmed gym competitors (D6). Exact hostnames, like the list above.
+export const DIRECTORY_SITES = ['haraj.com.sa', 'bluepages.com.sa', 'tripadvisor.com'];
+
+export const isDirectorySite = (site: string) => DIRECTORY_SITES.includes(site.toLowerCase().replace(/^www\./, ''));

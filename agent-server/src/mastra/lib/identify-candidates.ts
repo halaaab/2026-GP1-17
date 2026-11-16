@@ -3,8 +3,12 @@
 //
 //   1. Clean every link: lowercase, no "www.", no tracking parts, so the same site is recognised.
 //   2. Clean every name for comparing: no legal words (company, LLC, شركة, مؤسسة ...), unified Arabic letters.
-//   3. Remove what is not a company: list articles on news sites; government and directory pages are kept as
-//      evidence, not companies. Anything unclear is kept: the judge's "is it a company?" answer catches it later.
+//   3. What is not a company's own site becomes evidence, not a company: news, social media, government,
+//      directory and reference pages (encyclopedias, document sites, official tourism sites) (14 Nov 2026).
+//      News titles are also returned as leads (e.g. "GetMuv raises $1.5 million"), so the agent can look for that
+//      company's own site. Only the Saudi App Store (/sa/) counts as an app store page. A company's own site is
+//      always kept, even when its page is a list (a list there is usually the company's own product, e.g. a gym
+//      day-pass platform listing its gyms). Anything unclear is kept: the judge's "is it a company?" catches it.
 //   4. Merge duplicates: same website = one company (all names kept as aliases); an app store page joins the
 //      company with the same name; same name on different websites stays two companies; never merge by guess.
 //   5. Remove the founder's own startup and the companies they used as an analogy ("like Talabat").
@@ -22,17 +26,25 @@ export type RawResult = {
   title?: string; // the page title
   text?: string; // the page text or snippet
   accessed_at?: string;
+  published_date?: string; // the page's date, when the search gives one (news articles); used by Task 8's Active check
 };
 
 export type RemovedResult = {
   name: string | null;
   url: string;
-  reason: 'article_or_list' | 'founder_startup' | 'reference' | 'not_a_link' | 'no_company_name';
+  reason: 'founder_startup' | 'reference' | 'not_a_link' | 'no_company_name' | 'not_saudi_app_store';
 };
 
-export type EvidencePage = { url: string; domain: string; kind: 'government' | 'directory'; title: string | null };
+export type EvidencePage = {
+  url: string;
+  domain: string;
+  kind: 'government' | 'directory' | 'news' | 'social' | 'reference';
+  title: string | null;
+  published_date?: string; // only when the search gave the page's date
+};
 
-export type IdentifyOutput = { candidates: Candidate[]; evidence: EvidencePage[]; removed: RemovedResult[] };
+// leads: titles of news pages, which often name a company worth looking for (its own site is found separately).
+export type IdentifyOutput = { candidates: Candidate[]; evidence: EvidencePage[]; leads: string[]; removed: RemovedResult[] };
 
 // ---------------------------------------------------------------------------
 // 1. Links
@@ -65,8 +77,8 @@ export function cleanLink(url: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Kinds of sites. Taken from the groups in config/approved-domains.ts; to move into the source registry when
-// the source decisions (Task 4) are final.
+// Kinds of sites, from the source groups of the domain audit (design §5). Every site not listed is treated as
+// a company's own site.
 // ---------------------------------------------------------------------------
 
 const APP_STORES = ['apps.apple.com', 'play.google.com', 'apps.salla.sa', 'apps.zid.sa'];
@@ -82,12 +94,21 @@ const DIRECTORIES = [
   'capterra.com', 'saashub.com', 'alternativeto.net', 'theresanaiforthat.com', 'futurepedia.io', 'linkedin.com',
 ];
 
+// Reference and document sites: encyclopedias, document sharing, forums, official tourism portals.
+const REFERENCE = [
+  'wikipedia.org', 'saudipedia.com', 'scribd.com', 'medium.com', 'quora.com', 'reddit.com', 'slideshare.net',
+  'visitsaudi.com', 'experiencealula.com',
+];
+const SOCIAL = ['instagram.com', 'x.com', 'twitter.com', 'facebook.com', 'tiktok.com', 'youtube.com', 'snapchat.com', 'threads.net'];
+
 const onSite = (site: string, list: string[]) => list.some((d) => site === d || site.endsWith(`.${d}`));
 
-export type SiteKind = 'app_store' | 'news' | 'government' | 'directory' | 'company';
+export type SiteKind = 'app_store' | 'news' | 'government' | 'directory' | 'social' | 'reference' | 'company';
 
 export function siteKind(site: string): SiteKind {
   if (onSite(site, APP_STORES)) return 'app_store';
+  if (onSite(site, SOCIAL)) return 'social';
+  if (onSite(site, REFERENCE)) return 'reference';
   if (site.endsWith('.gov.sa')) return 'government';
   if (onSite(site, NEWS)) return 'news';
   if (onSite(site, DIRECTORIES)) return 'directory';
@@ -99,6 +120,8 @@ const SOURCE_TYPE: Record<SiteKind, SourceType> = {
   news: 'news',
   government: 'government',
   directory: 'ecosystem',
+  social: 'news',
+  reference: 'news',
   company: 'official_site',
 };
 
@@ -112,26 +135,24 @@ const LEGAL_WORDS = [
   'شركة', 'شركه', 'مؤسسة', 'مؤسسه', 'للتقنية', 'للتقنيه', 'لتقنية', 'لتقنيه', 'المحدودة', 'المحدوده', 'القابضة', 'القابضه',
 ];
 
-// "شركة ون باس للتقنية" → "ونباس"; "1pass Co." → "1pass". Used only for comparing, never shown.
+// Hidden direction marks that app stores put around names ("‏‫تطبيق 1Pass‬").
+export const BIDI_MARKS = /[\u200e\u200f\u202a-\u202e\u2066-\u2069]/g;
+// Words that describe the product, not its name: "تطبيق 1Pass" and "1Pass App" are both 1Pass.
+const PRODUCT_WORDS = ['app', 'application', 'تطبيق', 'منصة'];
+
+// "شركة ون باس للتقنية" → "ونباس"; "1pass Co." → "1pass"; "‏‫تطبيق 1Pass‬" → "1pass". Used only for comparing.
 export function cleanName(name: string): string {
   const words = name
+    .replace(BIDI_MARKS, '')
     .toLowerCase()
     .replace(/[ً-ْـ]/g, '') // Arabic diacritics and tatweel
     .replace(/[أإآ]/g, 'ا')
     .replace(/ى/g, 'ي')
     .split(/[^a-z0-9؀-ۿ]+/)
-    .filter((w) => w && !LEGAL_WORDS.includes(w));
+    .filter((w) => w && !LEGAL_WORDS.includes(w) && !PRODUCT_WORDS.includes(w));
   return words.join('').replace(/ة/g, 'ه');
 }
 
-// ---------------------------------------------------------------------------
-// 3. Not a company
-// ---------------------------------------------------------------------------
-
-// Titles of list articles: "Top 10 Saudi food startups", "Best fintech apps", "أفضل 10 شركات ناشئة".
-const LIST_TITLE = /\b(top|best)\b|\blist of\b|\b\d+\s+(\w+\s+){0,3}(startups|companies|apps)\b|\bstartups (in|to watch)\b|أفضل|أبرز|قائمة/i;
-
-export const isListTitle = (title: string | undefined) => !!title && LIST_TITLE.test(title);
 
 // ---------------------------------------------------------------------------
 // The whole step
@@ -164,6 +185,7 @@ export function identifyCandidates(
 ): IdentifyOutput {
   const removed: RemovedResult[] = [];
   const evidence: EvidencePage[] = [];
+  const leads: string[] = [];
   const groups = new Map<string, Group>();
   const accessedAt = (r: RawResult) => r.accessed_at ?? now.toISOString();
 
@@ -184,13 +206,14 @@ export function identifyCandidates(
     const kind = r.source_type === 'corpus' ? 'company' : siteKind(site);
     const name = r.name?.trim() || null;
 
-    // 3. Not a company.
-    if (kind === 'news' && isListTitle(r.title)) {
-      removed.push({ name, url: link, reason: 'article_or_list' });
+    // 3. Not a company's own site: evidence (news titles are leads too), or removed.
+    if (r.source_type === 'web' && (kind === 'news' || kind === 'social' || kind === 'government' || kind === 'directory' || kind === 'reference')) {
+      evidence.push({ url: link, domain: site, kind, title: r.title ?? null, ...(r.published_date ? { published_date: r.published_date } : {}) });
+      if (kind === 'news' && r.title?.trim()) leads.push(r.title.trim());
       continue;
     }
-    if ((kind === 'government' || kind === 'directory') && r.source_type === 'web') {
-      evidence.push({ url: link, domain: site, kind, title: r.title ?? null });
+    if (kind === 'app_store' && site === 'apps.apple.com' && !new URL(link).pathname.startsWith('/sa/')) {
+      removed.push({ name, url: link, reason: 'not_saudi_app_store' });
       continue;
     }
 
@@ -291,5 +314,5 @@ export function identifyCandidates(
     };
   });
 
-  return { candidates, evidence, removed };
+  return { candidates, evidence, leads: [...new Set(leads)], removed };
 }

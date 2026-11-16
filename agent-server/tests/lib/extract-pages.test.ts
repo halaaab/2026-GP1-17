@@ -1,7 +1,7 @@
 // Tests for Task 6, reading companies' own pages (test plan TC-6.1 to TC-6.6). Tavily is replaced by a fake,
 // so nothing is sent or paid for. The live runs are done once in Studio.
 import { describe, expect, it, vi } from 'vitest';
-import { extractPages, findAboutLink, type ExtractFunction } from '../../src/mastra/lib/extract-pages';
+import { extractPages, findAboutLink, withoutImages, type ExtractFunction } from '../../src/mastra/lib/extract-pages';
 
 const NOW = new Date('2026-11-13T09:00:00.000Z');
 const long = (text: string) => `${text} ${'Real page text. '.repeat(20)}`;
@@ -22,11 +22,23 @@ function fakeTavily(pages: Record<string, string>, failing: string[] = []): Extr
 describe('finding the About page', () => {
   it('finds a same-site link named like "About", in English or Arabic', () => {
     expect(findAboutLink('https://1pass.app', '[Home](/) [About us](/about-us) [Blog](/blog)')).toBe('https://1pass.app/about-us');
-    expect(findAboutLink('https://aajil.sa', '[من نحن](https://www.aajil.sa/ar/who)')).toBe('https://aajil.sa/ar/who');
+    expect(findAboutLink('https://aajil.sa', '[من نحن](https://www.aajil.sa/ar/who)')).toBe('https://www.aajil.sa/ar/who'); // read as written
   });
 
   it('ignores About links on other sites', () => {
     expect(findAboutLink('https://1pass.app', '[About Tavily](https://tavily.com/about)')).toBeNull();
+  });
+});
+
+describe('removing picture tags', () => {
+  it('removes pictures and links left empty, keeps the words and real links', () => {
+    const page = 'Gain access to 450+ Gyms\n\n![Image 47: horse shoe Shape](https://x.app/a.avif)\n\n\n\n[![Image 2: logo](https://x.app/l.svg)](https://x.app/en)\n[Plans & Pricing](https://x.app/subscription)';
+    expect(withoutImages(page)).toBe('Gain access to 450+ Gyms\n\n[logo](https://x.app/en)\n[Plans & Pricing](https://x.app/subscription)');
+  });
+
+  it('keeps the link of a clickable badge: App Store, VAT certificate', () => {
+    const page = '[![Image 182: apple icon](https://x/apple.svg) ![Image 183: apple text icon](https://x/t.svg)](https://apps.apple.com/sa/app/1pass/id1)\n[![Image 191: vat](https://x/vat.png)](https://x.app/vat_certificate.pdf)';
+    expect(withoutImages(page)).toBe('[apple icon apple text icon](https://apps.apple.com/sa/app/1pass/id1)\n[vat](https://x.app/vat_certificate.pdf)');
   });
 });
 
@@ -44,7 +56,7 @@ describe('Task 6: reading companies’ own pages', () => {
   });
 
   it('TC-6.2: a heavy page that comes back empty is in the failed list with a reason, no crash', async () => {
-    const out = await extractPages(['https://www.bayut.sa/'], fakeTavily({ 'https://bayut.sa': '' }), NOW);
+    const out = await extractPages(['https://www.bayut.sa/'], fakeTavily({ 'https://www.bayut.sa/': '' }), NOW);
     expect(out.failed).toEqual([{ url: 'https://bayut.sa', reason: 'blocked_or_empty' }]);
   });
 
@@ -54,11 +66,11 @@ describe('Task 6: reading companies’ own pages', () => {
   });
 
   it('TC-6.4: all three together: one broken link never stops the others, all homepages in one call', async () => {
-    const tavily = fakeTavily({ 'https://1pass.app': long('Gyms.'), 'https://bayut.sa': long('Homes.') }, ['https://darb-test-nonexistent.sa']);
+    const tavily = fakeTavily({ 'https://1pass.app': long('Gyms.'), 'https://www.bayut.sa/': long('Homes.') }, ['https://darb-test-nonexistent.sa']);
     const out = await extractPages(['https://1pass.app', 'https://www.bayut.sa/', 'https://darb-test-nonexistent.sa'], tavily, NOW);
     expect(out.pages.map((p) => p.url)).toEqual(['https://1pass.app', 'https://bayut.sa']);
     expect(out.failed.map((f) => f.url)).toEqual(['https://darb-test-nonexistent.sa']);
-    expect(tavily.calls).toEqual([['https://1pass.app', 'https://bayut.sa', 'https://darb-test-nonexistent.sa']]);
+    expect(tavily.calls).toEqual([['https://1pass.app', 'https://www.bayut.sa/', 'https://darb-test-nonexistent.sa']]); // read exactly as given
   });
 
   it('TC-6.5: a LinkedIn page is skipped as an excluded source and never opened', async () => {
@@ -70,7 +82,7 @@ describe('Task 6: reading companies’ own pages', () => {
   });
 
   it('skips the other excluded sites too: Crunchbase, Google, HungerStation, Dealroom', async () => {
-    const urls = ['https://crunchbase.com/x', 'https://maps.google.com/x', 'https://hungerstation.com/x', 'https://app.dealroom.co/x'];
+    const urls = ['https://crunchbase.com/x', 'https://maps.google.com/x', 'https://hungerstation.com/x', 'https://dealroom.co/x'];
     const out = await extractPages(urls, fakeTavily({}), NOW);
     expect(out.skipped).toHaveLength(4);
   });
@@ -97,9 +109,17 @@ describe('Task 6: reading companies’ own pages', () => {
     expect(out.pages[0].text).toContain('7012345678');
   });
 
+  it('reads exactly the link given (keeps www), but names and counts the page by its cleaned link', async () => {
+    const tavily = fakeTavily({ 'https://www.dinar.sa/': long('سجل تجاري رقم (1010742917)') });
+    const out = await extractPages(['https://www.dinar.sa/?utm_source=x'], tavily, NOW);
+    expect(tavily.calls[0]).toEqual(['https://www.dinar.sa/']);
+    expect(out.pages[0].url).toBe('https://dinar.sa');
+    expect(out.pages[0].text).toContain('1010742917');
+  });
+
   it('reads each page once, even when the same link is given twice', async () => {
     const tavily = fakeTavily({ 'https://bayut.sa': long('Homes.') });
-    const out = await extractPages(['https://www.bayut.sa/?utm_source=ads', 'https://bayut.sa'], tavily, NOW);
+    const out = await extractPages(['https://bayut.sa', 'https://www.bayut.sa/?utm_source=ads'], tavily, NOW);
     expect(out.pages).toHaveLength(1);
     expect(tavily.calls[0]).toEqual(['https://bayut.sa']);
   });

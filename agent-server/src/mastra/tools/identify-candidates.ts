@@ -19,7 +19,7 @@ const RawResult = z.object({
 export const identifyCandidatesTool = createTool({
   id: 'identify-candidates',
   description:
-    "Turns raw search results into a clean list of companies: removes list articles, keeps government and directory pages as evidence only, merges the same company found twice, keeps same-name companies on different websites apart, and removes the founder's own startup and their analogies.",
+    "Turns raw search results into a clean list of companies: keeps news, social media, government, directory and reference pages as evidence only (news titles as leads), keeps only the Saudi App Store, merges the same company found twice, keeps same-name companies on different websites apart, and removes the founder's own startup and their analogies.",
   inputSchema: z.object({
     results: z.array(RawResult),
     founder_startup: z.object({ name: z.string().optional(), website: z.string().optional() }).optional(),
@@ -27,12 +27,13 @@ export const identifyCandidatesTool = createTool({
   }),
   outputSchema: z.object({
     candidates: z.array(Candidate),
-    evidence: z.array(z.object({ url: z.string(), domain: z.string(), kind: z.enum(['government', 'directory']), title: z.string().nullable() })),
+    evidence: z.array(z.object({ url: z.string(), domain: z.string(), kind: z.enum(['government', 'directory', 'news', 'social', 'reference']), title: z.string().nullable(), published_date: z.string().optional() })),
+    leads: z.array(z.string()).describe('Titles of news pages that may name a company worth looking for.'),
     removed: z.array(
       z.object({
         name: z.string().nullable(),
         url: z.string(),
-        reason: z.enum(['article_or_list', 'founder_startup', 'reference', 'not_a_link', 'no_company_name']),
+        reason: z.enum(['founder_startup', 'reference', 'not_a_link', 'no_company_name', 'not_saudi_app_store']),
       }),
     ),
   }),

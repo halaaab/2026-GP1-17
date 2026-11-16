@@ -25,7 +25,31 @@ describe('Task 7: a clean list of companies', () => {
   it('TC-7.1: a "Top 10" article on a news site is removed', () => {
     const out = run([{ source_type: 'web', url: 'https://www.wamda.com/2026/10/top-10-saudi-food-startups', title: 'Top 10 Saudi food startups' }]);
     expect(out.candidates).toEqual([]);
-    expect(out.removed[0].reason).toBe('article_or_list');
+    expect(out.evidence[0]).toMatchObject({ kind: 'news', domain: 'wamda.com' }); // a news page is evidence, never a company
+  });
+
+  it('keeps a company’s own site even when its page is a list (e.g. a day-pass platform listing its gyms)', () => {
+    const out = run([
+      { source_type: 'web', name: 'Daypass.fit', url: 'https://daypass.fit/gyms-in-riyadh-day-passes', title: '15 gyms in Riyadh with day passes' },
+      { source_type: 'web', name: 'PureGym', url: 'https://ksa.puregymarabia.com', title: 'رحلة اللياقة تبدأ معنا مع أفضل عروض الاشتراك' },
+    ]);
+    expect(out.candidates.map((c) => c.name).sort()).toEqual(['Daypass.fit', 'PureGym']);
+    expect(out.removed).toEqual([]);
+  });
+
+  it('reference and document sites are evidence, not companies', () => {
+    const out = run([
+      { source_type: 'web', name: 'Scribd', url: 'https://www.scribd.com/document/1/gyms-riyadh', title: 'Gyms in Riyadh | PDF' },
+      { source_type: 'web', name: 'Saudipedia', url: 'https://saudipedia.com/x', title: 'كأس العلا للصقور' },
+      { source_type: 'web', name: 'Wikipedia', url: 'https://en.wikipedia.org/wiki/AlUla', title: 'AlUla - Wikipedia' },
+      { source_type: 'web', name: 'Visitsaudi', url: 'https://www.visitsaudi.com/ar/alula', title: 'العلا' },
+    ]);
+    expect(out.candidates).toEqual([]);
+    expect(out.evidence.map((e) => e.kind)).toEqual(['reference', 'reference', 'reference', 'reference']);
+  });
+
+  it('cleans hidden marks and product words when comparing names', () => {
+    expect(cleanName('\u200f\u202bتطبيق 1Pass\u202c')).toBe(cleanName('1pass'));
   });
 
   it('TC-7.2: "Jahez" and "جاهز" on jahez.net become one company, both names kept', () => {
@@ -128,8 +152,8 @@ describe('Task 7: a clean list of companies', () => {
       { founder_startup: { name: '1pass' } },
     );
     expect(names(out)).toEqual(['Aajil', 'Barq', 'Barq', 'Jahez']);
-    expect(out.removed.map((r) => r.reason).sort()).toEqual(['article_or_list', 'founder_startup', 'founder_startup']);
-    expect(out.evidence).toHaveLength(1);
+    expect(out.removed.map((r) => r.reason).sort()).toEqual(['founder_startup', 'founder_startup']);
+    expect(out.evidence).toHaveLength(2); // the news article and the government page
     for (const c of out.candidates) expect(Candidate.safeParse(c).success).toBe(true);
   });
 });
