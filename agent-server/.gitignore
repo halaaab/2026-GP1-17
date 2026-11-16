@@ -13,5 +13,8 @@ src/mastra/public/
 *.duckdb
 *.duckdb.wal
 
-# CR numbers file made by "npm run prepare:cr" (numbers only, rebuilt each quarter)
-data/
+# Files made by "npm run prepare:cr" and "npm run prepare:cr-names", rebuilt each quarter. Only data/cr/ is kept in
+# git: the hosted server needs it to check CR numbers and legal names (Ministry of Commerce open data, reused under the
+# Open Data License with attribution). Anything else in data/ stays local.
+data/*
+!data/cr/
