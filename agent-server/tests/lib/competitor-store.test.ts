@@ -318,11 +318,12 @@ describe('delegation: the clarification question', () => {
     expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({ clarification: { question: 'Q?', answer: 'A' } });
   });
 
-  it('lets the supervisor present competitors itself, and writes "none found" in code', async () => {
+  it('writes the reply in code when cards are shown (never the competitors again), and "none found" in code', async () => {
     const shown = start(written);
     await onCompetitorDelegationStart(shown.ctx);
     await onCompetitorDelegationComplete(complete(shown.ctx.toolCallId, result()));
-    expect(shown.rules.codeWritesReply).toBe(false);
+    expect(shown.rules.codeWritesReply).toBe(true);
+    expect(shown.rules.sentences[0]).toMatch(/^I found \d+ competitors? for your idea\. The cards below show each one with its evidence\.$/);
 
     const none = start(written);
     await onCompetitorDelegationStart(none.ctx);

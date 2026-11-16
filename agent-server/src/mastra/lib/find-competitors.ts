@@ -8,13 +8,13 @@
 //   1. Darb's list (Task 2): the 15 closest startups. The founder's own startup, their analogies and startups less
 //      close than MIN_SIMILARITY (0.55) are removed.
 //   2. Their stored checks (Task 9) are used when they are less than 90 days old: pass is valid, fail never appears,
-//      empty is not shown. The top 10 without a recent check are checked now (Task 8) and the result is saved.
+//      empty is not shown. The top 6 without a recent check are checked now (Task 8) and the result is saved.
 //   3. The web (Task 5) is searched only when Darb's list gives fewer than 3 valid startups that are close to
 //      the idea. "Close" is a closeness (cosine similarity) of at least 0.75: a stand-in until the judge decides
 //      which startups really compete (design §5 "web only when the corpus results are weak"). With 0.75, D1 and
 //      N1 search the web and D5 does not (TC-11.1 to 11.3).
 //   4. The new web companies are checked (Task 8), with the news pages the search found (their dates count for
-//      Active). Only Confirmed and Likely companies are passed on: at most 25 (15 + 10).
+//      Active). Up to 6 new web companies are checked. Only Confirmed and Likely companies are passed on.
 //   5. Tavily calls are counted across every step, and never go over 15.
 import { TAVILY_CALLS_PER_IDEA, TAVILY_READ_CALLS } from '../config/limits';
 import type { Candidate, IdeaProfile } from '../schemas/competitor';
@@ -32,7 +32,10 @@ export const CLOSE_SIMILARITY = 0.75;
 // The web is searched when Darb's list gives fewer valid, close startups than this (test plan TC-11.1).
 export const ENOUGH_VALID = 3;
 // Startups from Darb's list checked live in one run (one reading batch).
-const CORPUS_TO_CHECK = 10;
+// 6, not 10 (Hala, 16 Nov 2026): only 3 competitors are ever shown, and checking fewer startups and web companies cut
+// a cold run from 125 to 54 s and from 173 to 84 s (with the 25 s page budget), with the same competitors found.
+const CORPUS_TO_CHECK = 6;
+const WEB_TO_CHECK = 6;
 // A startup from Darb's list less close to the idea than this is not checked or passed on (Hala, 16 Nov 2026).
 // Checking far startups cost time and gave the judge junk: N1 (falcon photography) checked Unifonic, SDM and ZORY
 // at 0.40 to 0.45, and took 283 s. In the Task 10 and 11 runs, every relevant startup was above it (1pass 0.80,
@@ -151,7 +154,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
     return !why;
   });
 
-  // 2. Stored checks, then the top 10 without a recent one are checked now.
+  // 2. Stored checks, then the top 6 without a recent one are checked now.
   const stored = await deps.storedChecks(shortlist.map((c) => c.startup_id!));
   const recent = (at: string | null) => !!at && now.getTime() - new Date(at).getTime() < CHECK_VALID_DAYS * 86_400_000;
   const toCheck: Candidate[] = [];
@@ -213,7 +216,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
         references: input.references,
       },
       deps.web,
-      { calls: Math.min(searchCalls, TAVILY_CALLS_PER_IDEA), newCompanies: 10 },
+      { calls: Math.min(searchCalls, TAVILY_CALLS_PER_IDEA), newCompanies: WEB_TO_CHECK },
     );
     calls += web.tavily_calls;
     notes.push(...web.notes);

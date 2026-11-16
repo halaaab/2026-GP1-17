@@ -139,3 +139,13 @@ export function opportunitySentences(result: Pick<Result, 'competitors'>, langua
 export function noteSentences(notes: readonly NoteCode[], language: Language): string[] {
   return notes.map((code) => NOTE_TEXT[code][language]);
 }
+
+// The one sentence above the competitor cards (Hala, 16 Nov 2026). Code writes the whole reply when cards are shown,
+// so the model can never list the competitors again in its own words (it did in every analysis of the Sprint 2 test).
+export function cardsSentence(count: number, language: Language): string {
+  if (language === 'ar') {
+    const found = count === 1 ? 'منافساً واحداً' : count === 2 ? 'منافسَين' : `${count} منافسين`;
+    return `وجدتُ ${found} لفكرتك. تعرض البطاقات أدناه كل منافس مع أدلته.`;
+  }
+  return `I found ${count} competitor${count === 1 ? '' : 's'} for your idea. The cards below show each one with its evidence.`;
+}

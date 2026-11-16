@@ -36,7 +36,7 @@ import { findLegalNameMatch, normalizeArabic, repairPdfArabic, type CrNames } fr
 import { cleanLink, cleanName, siteOf } from './identify-candidates';
 import type { AppFacts } from './app-stores';
 import type { RawPage } from './raw-page';
-import { findAboutLink, keepStartAndEnd } from './extract-pages';
+import { CONTACT_WORDS, findAboutLink, keepStartAndEnd } from './extract-pages';
 import { isExcludedSite } from '../config/excluded-sources';
 
 // ---------------------------------------------------------------------------
@@ -569,6 +569,8 @@ export type ValidateDeps = {
   readRaw?: (url: string) => Promise<RawPage>;
   readBrowser?: (url: string) => Promise<RawPage>; // a real browser, for pages built by JavaScript (lib/browser-page.ts)
   appFacts?: (url: string) => Promise<AppFacts | null>;
+  // The company's own app on the Saudi App Store when its site does not link one (lib/app-stores.ts findOwnApp).
+  findApp?: (names: string[], domain: string) => Promise<string | null>;
 };
 
 export type NewsItem = { url: string; title: string | null; published_date?: string | null };
@@ -652,6 +654,13 @@ const isErrorPage = (text: string) => ERROR_PAGE.test(text.slice(0, 2000));
 // A page that does not exist (404, 410) is not sent to Tavily: Tavily would not find it either.
 const missing = (r: RawPage | null) => r?.status === 'skipped' && /HTTP 4(04|10)/.test(r.reason);
 
+// Each page gets at most this long (Hala, 16 Nov 2026). Pages are read side by side, so the slowest site set the time
+// for every company: one slow homepage took 60 of the 89 s of a run (plain read twice, then the browser twice can
+// take about 113 s). A page not read in time goes to the backup reader (Tavily) like a blocked page.
+export const PAGE_BUDGET_MS = 25_000;
+const withinBudget = <T>(work: Promise<T | null>): Promise<T | null> =>
+  Promise.race([work, new Promise<null>((done) => setTimeout(() => done(null), PAGE_BUDGET_MS).unref?.())]);
+
 // Darb's server reads each page itself first (Hala, 15 Nov 2026): the same page gives the same text every run, so
 // the same company gets the same result. Tavily reads only the pages this could not get (blocked, robots.txt says
 // no, down, or a JavaScript site that gives almost no text). The About page of a page read directly is found on it
@@ -674,7 +683,7 @@ export async function readOwnPages(urls: string[], deps: ValidateDeps, options: 
     if (seen?.status === 'ok' && !isErrorPage(seen.text) && squash(seen.text).length > (plain?.status === 'ok' ? squash(plain.text).length : 0)) return seen;
     return plain;
   };
-  const direct = await Promise.all(urls.map((u) => (isExcludedSite(u) ? Promise.resolve(null) : readOne(u))));
+  const direct = await Promise.all(urls.map((u) => (isExcludedSite(u) ? Promise.resolve(null) : withinBudget(readOne(u)))));
   const pages: Read['pages'] = [];
   const toTavily: string[] = [];
   direct.forEach((r, i) => {
@@ -688,7 +697,7 @@ export async function readOwnPages(urls: string[], deps: ValidateDeps, options: 
       pages.map(async (p) => {
         const link = findAboutLink(p.url, p.text);
         if (!link) return;
-        if (!done.has(link)) done.set(link, readOne(link));
+        if (!done.has(link)) done.set(link, withinBudget(readOne(link)));
         const r = await done.get(link)!;
         if (r?.status === 'ok' && squash(r.text).length >= 200) {
           p.about_url = cleanLink(r.url) ?? r.url;
@@ -737,8 +746,22 @@ export async function validateCompanies(
   // 2. App pages, in one more batch, when the reading calls allow it: the App Store or Google Play page given, or
   // the one linked on the homepage. It is read for its last update (Active) and, when the site could not be read,
   // instead of the site (decision 1). Only the app page itself is read, not an "About" page on the app store.
-  const appOf = list.map((c, i) => c.app_store_url ?? appLinkOn([...pagesOf(first, sites[i]), ...rawPages[i]]));
+  const linked = list.map((c, i) => c.app_store_url ?? appLinkOn([...pagesOf(first, sites[i]), ...rawPages[i]]));
+  // No app link found: the Saudi App Store is searched for the company's own app (its seller's website is its domain).
+  const appOf = await Promise.all(
+    linked.map((u, i) => (u || !deps.findApp || !sites[i] ? u : deps.findApp([list[i].name, ...(list[i].aliases ?? [])], sites[i]!).catch(() => null))),
+  );
   const certOf = list.map((_c, i) => certificateLinkOn([...pagesOf(first, sites[i]), ...rawPages[i]]));
+  // Its Contact page, read by Darb's server only (free, never Tavily): big companies keep their email, phone and
+  // address there, not on the homepage (Foodics, Cura and Gathern had none on it; Hala, 16 Nov 2026).
+  const contactOf = list.map((_c, i) => {
+    for (const p of [...rawPages[i], ...pagesOf(first, sites[i])]) {
+      const link = findAboutLink(p.url, p.text, CONTACT_WORDS);
+      if (link) return link;
+    }
+    return null;
+  });
+  const contactLinks = [...new Set(contactOf.filter((u): u is string => !!u))];
   // The app's listing and last update come from the stores directly (free: lib/app-stores.ts), so Tavily reads the
   // app page only when the site itself could not be read (decision 1). A certificate is read directly first.
   const appToRead = appOf.map((u, i) => (u && (!deps.appFacts || !pagesOf(first, sites[i]).length) ? u : null));
@@ -746,7 +769,12 @@ export async function validateCompanies(
   const maxCalls = deps.maxCalls ?? TAVILY_READ_CALLS;
   const [second, apps] = await Promise.all([
     (async () => {
-      const read = await readOwnPages(certLinks, { ...deps, read: async () => ({ pages: [], failed: [], tavily_calls: 0 }) }, { about: false, minText: 50 }); // a certificate is a short page
+      const noTavily = { ...deps, read: async () => ({ pages: [], failed: [], tavily_calls: 0 }) };
+      const [read, contacts] = await Promise.all([
+        readOwnPages(certLinks, noTavily, { about: false, minText: 50 }), // a certificate is a short page
+        readOwnPages(contactLinks, noTavily, { about: false, minText: 50 }),
+      ]);
+      read.pages.push(...contacts.pages);
       const certFailed = certLinks.filter((u) => !read.pages.some((p) => p.url === (cleanLink(u) ?? u)));
       const viaTavily = [...new Set([...appToRead.filter((u): u is string => !!u), ...certFailed])];
       const tavily = viaTavily.length && calls < maxCalls ? await deps.read(viaTavily, { about: false }) : { pages: [], failed: [], tavily_calls: 0 };
@@ -771,7 +799,10 @@ export async function validateCompanies(
       // Bayut's "support@bayut.sa" is in its release notes.
       if (apps[i]?.text && app && !appPages.some((p) => p.url === app)) appPages.push({ url: app, text: keepStartAndEnd(apps[i]!.text!) });
       const pages = [...pagesOf(first, sites[i]), ...appPages]; // what the AI reads
-      const codePages = [...pages, ...rawPages[i]]; // what code searches: also the homepage's own HTML
+      // The Contact page is searched by code only (email, Saudi phone, address, CR number), never sent to the AI.
+      const contact = contactOf[i] ? cleanLink(contactOf[i]!) : null;
+      const contactPages = contact ? second.pages.filter((p) => p.url === contact).map((p) => ({ url: p.url, text: p.text })) : [];
+      const codePages = [...pages, ...rawPages[i], ...contactPages]; // what code searches: also the homepage's own HTML
 
       // 3. Signals: code first, then the AI with checked quotes.
       const news = [...(company.news ?? []), ...(found[i]?.news ?? [])];

@@ -1,7 +1,7 @@
 // Tests for the free reads by Darb's server: the homepage's HTML (code checks only) and the app stores.
 // A fake fetch: nothing is sent.
 import { describe, expect, it } from 'vitest';
-import { playDate, readAppFacts } from '../../src/mastra/lib/app-stores';
+import { findOwnApp, playDate, readAppFacts } from '../../src/mastra/lib/app-stores';
 import { htmlToText, readRawPage, robotsAllow, type FetchLike } from '../../src/mastra/lib/raw-page';
 
 const fake = (answers: Record<string, { status: number; body?: string; type?: string } | 'ENOTFOUND'>): FetchLike & { asked: string[] } => {
@@ -81,3 +81,16 @@ describe('the app stores', () => {
     expect(await readAppFacts('https://play.google.com/store/apps/details?id=com.tendegrees.testahel.child', f)).toMatchObject({ store: 'Google Play', listed: true, updated: '2024-06-25' });
   });
 });
+
+describe("the company's own app, when its site does not link one (16 Nov 2026)", () => {
+  const search = (results: object[]) => fake({ 'https://itunes.apple.com/search?term=Jahez&country=sa&entity=software&limit=10': { status: 200, body: JSON.stringify({ results }) } });
+  it('takes the app whose seller website is the company domain (Jahez)', async () => {
+    const f = search([{ trackId: 1, sellerUrl: 'https://other.com' }, { trackId: 2, sellerUrl: 'https://www.jahez.net/ar' }]);
+    expect(await findOwnApp(['Jahez'], 'jahez.net', f)).toBe('https://apps.apple.com/sa/app/id2');
+  });
+  it('never takes an app on its name alone ("Cura: Natural Remedies" is not Cura)', async () => {
+    const f = search([{ trackId: 3, trackName: 'Jahez fan app', sellerName: 'Jahez Fans LLC' }]);
+    expect(await findOwnApp(['Jahez'], 'jahez.net', f)).toBeNull();
+  });
+});
+

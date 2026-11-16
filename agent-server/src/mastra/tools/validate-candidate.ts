@@ -6,7 +6,7 @@ import { tavily } from '@tavily/core';
 import { z } from 'zod';
 import { EXCLUDED_SOURCES } from '../config/excluded-sources';
 import { API_TIMEOUT_MS } from '../config/limits';
-import { readAppFacts } from '../lib/app-stores';
+import { readAppFacts, findOwnApp } from '../lib/app-stores';
 import { extractPages, tavilyExtract } from '../lib/extract-pages';
 import { readRawPage } from '../lib/raw-page';
 import { readWithBrowser } from '../lib/browser-page';
@@ -53,6 +53,7 @@ export function liveValidateDeps(maxCalls?: number): ValidateDeps {
     readRaw: (url) => readRawPage(url),
     readBrowser: (url) => readWithBrowser(url),
     appFacts: (url) => readAppFacts(url),
+    findApp: (names, domain) => findOwnApp(names, domain),
   };
 }
 

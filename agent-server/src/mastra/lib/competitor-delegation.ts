@@ -26,7 +26,7 @@ import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
 import { analysisLimit, loadStoredResult, type StoredResult } from './competitor-store';
 import { askedBeforeLatestReply, compareResults, comparisonSentences, createWhatIf, removeWhatIf } from './what-if';
-import { noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
+import { cardsSentence, noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
 import { detectLanguage, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
@@ -273,6 +273,18 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
     if (question) {
       // A question to ask: the founder sees exactly that one question, written by code (design §4).
       started.replyRules.sentences = [question];
+      started.replyRules.codeWritesReply = true;
+    } else if (result.competitors.length > 0 && !started.whatIf?.created) {
+      // Cards are shown under the reply: code writes the whole reply (one sentence, the score and market, the
+      // opportunities and the notes), so the model never lists the competitors again (Hala, 16 Nov 2026).
+      // A what-if has no cards, so the model still lists its competitors in text.
+      const language = started.handoff.language;
+      started.replyRules.sentences = [
+        cardsSentence(result.competitors.length, language),
+        ...summarySentences(result, language),
+        ...opportunitySentences(result, language),
+        ...sentences,
+      ];
       started.replyRules.codeWritesReply = true;
     } else {
       started.replyRules.sentences = sentences;
