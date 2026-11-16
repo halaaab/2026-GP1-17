@@ -2,6 +2,7 @@
 // so nothing is sent or paid for. The live runs are done once in Studio.
 import { describe, expect, it, vi } from 'vitest';
 import { extractPages, findAboutLink, withoutImages, type ExtractFunction } from '../../src/mastra/lib/extract-pages';
+import { CONTACT_WORDS, findAboutLink as findLink } from '../../src/mastra/lib/extract-pages';
 
 const NOW = new Date('2026-11-13T09:00:00.000Z');
 const long = (text: string) => `${text} ${'Real page text. '.repeat(20)}`;
@@ -133,3 +134,12 @@ describe('Task 6: reading companies’ own pages', () => {
     expect((await extractPages(['https://1pass.app'], null, NOW)).failed[0].reason).toBe('service_unavailable');
   });
 });
+
+describe('the Contact page link (read by code only, 16 Nov 2026)', () => {
+  it('finds a Contact page in English or Arabic, on the same site only', () => {
+    expect(findLink('https://foodics.com', '[Contact us](/contact) [Blog](/blog)', CONTACT_WORDS)).toBe('https://foodics.com/contact');
+    expect(findLink('https://x.sa', '[تواصل معنا](https://x.sa/ar/support)', CONTACT_WORDS)).toBe('https://x.sa/ar/support');
+    expect(findLink('https://x.sa', '[Contact](https://other.com/contact)', CONTACT_WORDS)).toBeNull();
+  });
+});
+

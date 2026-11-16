@@ -93,8 +93,11 @@ export function readableLink(url: string): string | null {
   return !given.endsWith('/') && text.endsWith('/') && link.pathname === '/' && !link.search ? text.slice(0, -1) : text;
 }
 
+// Names a Contact page goes by (Hala, 16 Nov 2026): big companies keep their email, phone and address there.
+export const CONTACT_WORDS = /\bcontact\b|contact-?us|تواصل معنا|اتصل بنا|اتصل|تواصل/i;
+
 // The About page of a homepage: a link on the same site whose text or address looks like "About".
-export function findAboutLink(homepageUrl: string, markdown: string): string | null {
+export function findAboutLink(homepageUrl: string, markdown: string, words: RegExp = ABOUT_WORDS): string | null {
   const site = siteOf(homepageUrl);
   for (const [, label, target] of markdown.matchAll(/\[([^\]]{0,80})\]\(([^)\s]+)/g)) {
     let link: string;
@@ -104,7 +107,7 @@ export function findAboutLink(homepageUrl: string, markdown: string): string | n
       continue;
     }
     if (siteOf(link) !== site || cleanLink(link) === cleanLink(homepageUrl)) continue;
-    if (ABOUT_WORDS.test(label) || ABOUT_WORDS.test(new URL(link).pathname)) return readableLink(link);
+    if (words.test(label) || words.test(new URL(link).pathname)) return readableLink(link);
   }
   return null;
 }

@@ -53,3 +53,36 @@ export async function readAppFacts(url: string, fetchFn: FetchLike = fetch as un
   }
   return null;
 }
+
+// The company's own app when its site does not link it (Hala, 16 Nov 2026): Apple's Saudi store is searched by the
+// company's name (free), and an app counts only when its seller's website is the company's own domain, so a
+// look-alike app from someone else never counts. Foodics, Cura and Gathern had no app link Darb could read, so
+// they stayed Unconfirmed. Returns the app's Saudi store link, or null.
+export async function findOwnApp(names: string[], domain: string, fetchFn: FetchLike = fetch as unknown as FetchLike): Promise<string | null> {
+  const own = domain.toLowerCase().replace(/^www\./, '');
+  const isOwn = (sellerUrl?: string) => {
+    try {
+      const host = new URL(sellerUrl ?? '').hostname.toLowerCase().replace(/^www\./, '');
+      return host === own || host.endsWith(`.${own}`) || own.endsWith(`.${host}`);
+    } catch {
+      return false;
+    }
+  };
+  for (const name of names.filter((n) => n.trim()).slice(0, 2)) {
+    try {
+      const r = await fetchFn(`https://itunes.apple.com/search?term=${encodeURIComponent(name.trim())}&country=sa&entity=software&limit=10`, {
+        headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DarbBot/1.0; university project)' },
+        signal: AbortSignal.timeout(10_000),
+      });
+      if (r.status !== 200) continue;
+      type Found = { trackId?: number; sellerUrl?: string };
+      // Only the seller's website proves the app is the company's own. Matching on names was tried and dropped: it
+      // took "Cura: Natural Remedies" (Cura Health & Wellness LLC) for Cura, the Saudi telemedicine app.
+      const app = ((JSON.parse(await r.text()) as { results?: Found[] }).results ?? []).find((a) => a.trackId && isOwn(a.sellerUrl));
+      if (app) return `https://apps.apple.com/sa/app/id${app.trackId}`;
+    } catch {
+      // the search is a bonus: when it fails, the checks go on without it
+    }
+  }
+  return null;
+}
