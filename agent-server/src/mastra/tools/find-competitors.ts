@@ -36,34 +36,7 @@ export const findCompetitorsTool = createTool({
     const ctx = (context as { requestContext?: RequestContextLike } | undefined)?.requestContext;
     const handoff = Handoff.safeParse(ctx?.get(HANDOFF_KEY));
 
-    // Inside the Competitor Agent.
-    if (handoff.success) {
-      const state = getRunState(ctx);
-      if (state.limitNote) return { searched: false, why: 'the founder has used their analyses' };
-      if (!state.profile) return { searched: false, why: 'call understand_idea first' };
-      if (state.clarification) return { searched: false, why: 'the idea needs clarification first' };
-      const started = Date.now();
-      const out = await findCompetitors(
-        {
-          idea_text: handoff.data.idea_text,
-          idea_id: handoff.data.idea_id,
-          language: handoff.data.language,
-          idea_profile: state.profile, // understand_idea's profile: the idea is read once (design §4)
-          founder_startup: handoff.data.founder_startup,
-          references: handoff.data.references,
-        },
-        liveDeps(false),
-      );
-      addToRunState(state, out, Date.now() - started);
-      return {
-        searched: true,
-        valid_companies: out.companies.length,
-        from_darb_list: out.companies.filter((c) => c.source_type === 'corpus').length,
-        from_web: out.companies.filter((c) => c.source_type === 'web').length,
-        web_searched: out.web.searched,
-        tavily_calls: out.tavily_calls,
-      };
-    }
+    if (handoff.success) return runInAgent(ctx!, handoff.data);
 
     // Alone, in Studio's Tools tab: the whole output, to check by hand.
     const find: FindInput | null = input.idea_text?.trim() || input.idea_profile ? { ...input, idea_text: input.idea_text ?? '' } : null;
@@ -85,3 +58,48 @@ function liveDeps(dryRun: boolean): FindDeps {
     },
   };
 }
+
+// Inside the Competitor Agent: the checked handoff and understand_idea's profile, never the model's input.
+async function runInAgent(ctx: RequestContextLike, handoff: Handoff) {
+  const state = getRunState(ctx);
+  if (state.limitNote) return { searched: false, why: 'the founder has used their analyses' };
+  if (!state.profile) return { searched: false, why: 'call understand_idea first' };
+  if (state.clarification) return { searched: false, why: 'the idea needs clarification first' };
+  const started = Date.now();
+  const out = await findCompetitors(
+    {
+      idea_text: handoff.idea_text,
+      idea_id: handoff.idea_id,
+      language: handoff.language,
+      idea_profile: state.profile, // understand_idea's profile: the idea is read once (design §4)
+      founder_startup: handoff.founder_startup,
+      references: handoff.references,
+    },
+    liveDeps(false),
+  );
+  addToRunState(state, out, Date.now() - started);
+  return {
+    searched: true,
+    valid_companies: out.companies.length,
+    from_darb_list: out.companies.filter((c) => c.source_type === 'corpus').length,
+    from_web: out.companies.filter((c) => c.source_type === 'web').length,
+    web_searched: out.web.searched,
+    tavily_calls: out.tavily_calls,
+  };
+}
+
+// The version the Competitor Agent is given (Hala, 16 Nov 2026): it takes no input at all. With the Studio version's
+// optional fields, the model sometimes passed its own idea profile, which failed the input check, so the tool ran
+// twice (4 of 16 runs in the Sprint 2 test). The work is the same.
+export const findCompetitorsAgentTool = createTool({
+  id: 'find_competitors',
+  description:
+    "Finds and checks the competitors of the idea in this run (Darb's startup list, the web when needed, and the four validity checks). Call it once, after understand_idea says the idea is ready, with an empty input.",
+  inputSchema: z.object({}),
+  execute: async (_input, context) => {
+    const ctx = (context as { requestContext?: RequestContextLike } | undefined)?.requestContext;
+    const handoff = Handoff.safeParse(ctx?.get(HANDOFF_KEY));
+    if (!ctx || !handoff.success) return { searched: false, why: 'no checked handoff in this run' };
+    return runInAgent(ctx, handoff.data);
+  },
+});

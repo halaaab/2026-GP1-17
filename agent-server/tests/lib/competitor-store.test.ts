@@ -295,7 +295,7 @@ describe('delegation: the clarification question', () => {
   it('shows the founder exactly the question, and remembers it', async () => {
     const { ctx, rules } = start(written);
     await onCompetitorDelegationStart(ctx);
-    onCompetitorDelegationComplete(complete(ctx.toolCallId, clarifying(CLARIFY_QUESTIONS.offering.en)));
+    await onCompetitorDelegationComplete(complete(ctx.toolCallId, clarifying(CLARIFY_QUESTIONS.offering.en)));
     expect(rules).toMatchObject({ sentences: [CLARIFY_QUESTIONS.offering.en], language: 'en', codeWritesReply: true });
     expect(pendingQuestions.get(ASSESSMENT)).toBe(CLARIFY_QUESTIONS.offering.en);
   });
@@ -307,7 +307,7 @@ describe('delegation: the clarification question', () => {
     expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({
       clarification: { question: 'What will your product do?', answer: 'An app to order vegetables from farms' },
     });
-    onCompetitorDelegationComplete(complete(ctx.toolCallId, result()));
+    await onCompetitorDelegationComplete(complete(ctx.toolCallId, result()));
     expect(pendingQuestions.has(ASSESSMENT)).toBe(false);
   });
 
@@ -321,12 +321,12 @@ describe('delegation: the clarification question', () => {
   it('lets the supervisor present competitors itself, and writes "none found" in code', async () => {
     const shown = start(written);
     await onCompetitorDelegationStart(shown.ctx);
-    onCompetitorDelegationComplete(complete(shown.ctx.toolCallId, result()));
+    await onCompetitorDelegationComplete(complete(shown.ctx.toolCallId, result()));
     expect(shown.rules.codeWritesReply).toBe(false);
 
     const none = start(written);
     await onCompetitorDelegationStart(none.ctx);
-    onCompetitorDelegationComplete(complete(none.ctx.toolCallId, result([])));
+    await onCompetitorDelegationComplete(complete(none.ctx.toolCallId, result([])));
     expect(none.rules).toMatchObject({ sentences: [NOTE_TEXT.none_found.en], codeWritesReply: true });
   });
 });
@@ -436,7 +436,7 @@ describe('the summary and opportunity sentences (written in code)', async () => 
   it('passes them to the supervisor with the result', async () => {
     const { ctx } = start(written);
     await onCompetitorDelegationStart(ctx);
-    const reply = JSON.parse(onCompetitorDelegationComplete(complete(ctx.toolCallId, result()))!.resultText);
+    const reply = JSON.parse((await onCompetitorDelegationComplete(complete(ctx.toolCallId, result())))!.resultText);
     expect(reply.summary_sentences[0]).toContain('Idea Similarity Score: 90');
     expect(reply.opportunity_sentences).toHaveLength(2);
   });

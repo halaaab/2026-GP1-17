@@ -151,7 +151,7 @@ describe('delegation: after the Competitor Agent runs', () => {
   it('passes on finalize_result’s result, with the notes in the founder’s language', async () => {
     const ctx = await started();
     const handoff = Handoff.parse(ctx.requestContext.get(HANDOFF_KEY));
-    const reply = onCompetitorDelegationComplete(completeContext(ctx.toolCallId, pendingResult(handoff, { durationMs: 1, traceId: null })));
+    const reply = await onCompetitorDelegationComplete(completeContext(ctx.toolCallId, pendingResult(handoff, { durationMs: 1, traceId: null })));
     const parsed = JSON.parse(reply!.resultText);
     expect(Result.safeParse(parsed.result).success).toBe(true);
     expect(parsed.result.notes).toEqual(['capability_pending']);
@@ -161,14 +161,14 @@ describe('delegation: after the Competitor Agent runs', () => {
   it('replaces an invalid or missing result with a valid fallback', async () => {
     for (const bad of [{ status: 'complete', competitors: [{ name: 'Invented Co' }] }, undefined]) {
       const ctx = await started();
-      const parsed = JSON.parse(onCompetitorDelegationComplete(completeContext(ctx.toolCallId, bad))!.resultText);
+      const parsed = JSON.parse((await onCompetitorDelegationComplete(completeContext(ctx.toolCallId, bad)))!.resultText);
       expect(Result.safeParse(parsed.result).success).toBe(true);
       expect(parsed.result).toMatchObject({ status: 'partial', competitors: [], notes: ['analysis_incomplete'] });
     }
   });
 
-  it('leaves a rejected delegation’s message alone', () => {
-    expect(onCompetitorDelegationComplete(completeContext('never-started', undefined))).toBeUndefined();
+  it('leaves a rejected delegation’s message alone', async () => {
+    expect(await onCompetitorDelegationComplete(completeContext('never-started', undefined))).toBeUndefined();
   });
 });
 
@@ -200,7 +200,7 @@ describe('delegation: decided in code from what the founder wrote', () => {
     ctx.requestContext.set('darbReplyRules', rules);
     await onCompetitorDelegationStart(ctx);
     const handoff = Handoff.parse(ctx.requestContext.get(HANDOFF_KEY));
-    onCompetitorDelegationComplete(completeContext(ctx.toolCallId, pendingResult(handoff, { durationMs: 1, traceId: null })));
+    await onCompetitorDelegationComplete(completeContext(ctx.toolCallId, pendingResult(handoff, { durationMs: 1, traceId: null })));
     expect(rules).toEqual({ sentences: [NOTE_TEXT.capability_pending.ar], language: 'ar', codeWritesReply: true });
   });
 });
