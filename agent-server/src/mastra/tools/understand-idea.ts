@@ -52,7 +52,7 @@ export const understandIdeaTool = createTool({
 
     let profile;
     try {
-      profile = withStatedFacts(await buildIdeaProfile(understandText(handoff.data)), handoff.data);
+      profile = withStatedFacts(await buildIdeaProfile(understandText(handoff.data), { founderIdea: true }), handoff.data);
     } catch {
       // OpenAI failed: keep only what the founder stated, and let finalize_result say the analysis did not finish.
       state.profile = profileFromKnownFacts(handoff.data);
