@@ -15,7 +15,7 @@ import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { getAccount } from '../../../shared/auth.js';
 import {
-  say, label, scoreBand, whenText, chatLink, loadResult,
+  say, label, scoreBand, whenText, chatLink, loadResult, refreshAnalysis,
   getAssessments, getAssessment, saveAssessment, saveMessage, newAssessment,
   showSidebarHistory, assessmentsFailed,
 } from '../../../shared/assessments.js';
@@ -23,6 +23,13 @@ import { askDarb } from '../../../shared/agent.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import { showToast } from '../../../shared/ui.js';
 import { openPanel, closePanel, roadmapList } from './panel.js';
+
+/* Text from the database (competitor names, reasons) is made safe before it goes into HTML */
+function safe(text) {
+  const box = document.createElement('span');
+  box.textContent = text ?? '';
+  return box.innerHTML;
+}
 
 const chat = document.querySelector('#chat');
 const thread = document.querySelector('#thread');
@@ -143,6 +150,43 @@ function addResult() {
   scrollToEnd();
 }
 
+/* The competitor analysis inside the chat: one card per competitor (at most three), each with its
+   labels, the one-sentence reason and its evidence link, then a button that opens the full analysis.
+   Everything comes from the saved analysis; nothing is worked out here. */
+function addCompetitors() {
+  const competitors = (current.result && current.result.competitors) || [];
+  if (competitors.length === 0) return;   // nothing found: Darb's message already says so
+  const body = addAgent();
+
+  const list = document.createElement('div');
+  list.className = 'comp-chat-cards';
+  list.innerHTML = competitors.map((competitor) => {
+    const source = /^https?:\/\//i.test(competitor.source || '') ? safe(competitor.source) : '';
+    return `
+      <article class="card comp-chat-card">
+        <div class="comp-chat-top">
+          <strong><bdi>${safe(competitor.name)}</bdi></strong>
+          <span class="comp-chat-rank" dir="ltr">#${competitor.rank}</span>
+        </div>
+        <div class="comp-chat-chips">
+          <span class="chip ${competitor.label === 'direct' ? 'chip-risk' : 'chip-warn'}">${t(`comp.label.${competitor.label}`)}</span>
+          <span class="chip ${competitor.evidence === 'likely' ? 'chip-navy' : 'chip-good'}">${t(competitor.evidence === 'likely' ? 'comp.limited' : 'comp.confirmed')}</span>
+        </div>
+        ${competitor.reason ? `<p dir="auto">${safe(competitor.reason)}</p>` : ''}
+        ${source ? `<a class="link comp-chat-evidence" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
+      </article>`;
+  }).join('');
+
+  const open = document.createElement('button');
+  open.type = 'button';
+  open.className = 'btn btn-secondary btn-sm comp-chat-open';
+  open.dataset.openTab = 'similar';
+  open.textContent = t('chat.openCompetitors');
+
+  body.append(list, open);
+  scrollToEnd();
+}
+
 /* The roadmap inside the chat, with a button that opens it in the panel */
 function addRoadmap() {
   const steps = current.result.roadmap.length;
@@ -176,9 +220,9 @@ function addFollowUps() {
   scrollToEnd();
 }
 
-/* One of the similar startups of this assessment, by its id */
+/* One of the competitors of this assessment, by its id */
 function findStartup(id) {
-  return current.result.similar.find((item) => item.id === id) || null;
+  return current.result.competitors.find((item) => item.id === id) || null;
 }
 
 /* ---------- The home state ---------- */
@@ -261,6 +305,8 @@ async function talk(text, about = null) {
     await saveMessage(current, 'agent', { text: reply });
   }
   await save();   // updates the time, so the conversation moves to the top of History
+  // a competitor analysis was just saved for this idea: show its competitors as cards
+  if (reply && await refreshAnalysis(current)) addCompetitors();
   if (current.score) addFollowUps();
   input.focus();
 }
@@ -317,6 +363,12 @@ async function showSaved() {
     } else {
       addAgent(say(message.text));
     }
+  }
+
+  // the competitor analysis, if this idea has one: the same cards as when it ran
+  if (current.analysedAt) {
+    if (!current.result) await loadResult(current);
+    addCompetitors();
   }
 
   // older assessments with a score: the result card that opens the assessment panel
@@ -382,7 +434,7 @@ document.addEventListener('click', (event) => {
 
   // anything that opens the assessment panel on a tab
   const opener = event.target.closest('[data-open-tab]');
-  if (opener && current && current.score) {
+  if (opener && current && (current.score || current.analysedAt)) {
     openPanel(current, opener.dataset.openTab);
   }
 
@@ -440,7 +492,9 @@ if (address.get('id')) {
 
   if (current) {
     await showSaved();
-    if (address.get('tab') && current.score) {
+    // a what-if has no survival score, only its competitor analysis, so it opens on that
+    if (address.get('tab') && (current.score || current.analysedAt)) {
+      if (!current.result) await loadResult(current);
       openPanel(current, address.get('tab'));
     }
   } else {

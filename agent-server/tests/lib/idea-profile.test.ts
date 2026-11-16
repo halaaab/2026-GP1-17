@@ -49,6 +49,17 @@ describe('buildIdeaProfile', () => {
     expect(sent.messages[1].content).toBe('تطبيق يربط المطاعم بالمزارع');
   });
 
+  it('leaves a sector code in the wrong form empty instead of failing (makan.design, TC-1.5)', async () => {
+    for (const [section, division] of [['G', '6201'], ['g', '62.0'], ['Retail', '4'], ['Z', 'ab']]) {
+      fakeOpenAI({ ...answer, sector: { isic_section: section, isic_division: division } });
+      const profile = await buildIdeaProfile('makan.design: interior design platform');
+      expect(profile.sector.isic_division).toBeNull();
+      expect(profile.problem.origin).toBe('inferred'); // the rest of the profile is kept
+    }
+    fakeOpenAI({ ...answer, sector: { isic_section: 'Retail', isic_division: '47' } });
+    expect((await buildIdeaProfile('An idea')).sector).toEqual({ isic_section: null, isic_division: '47' });
+  });
+
   it('throws when the answer does not match the profile', async () => {
     fakeOpenAI({ ...answer, problem: { value: 'x', origin: 'guessed' } });
     await expect(buildIdeaProfile('An idea')).rejects.toThrow();

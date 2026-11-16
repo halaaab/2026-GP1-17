@@ -121,6 +121,15 @@ export function rankStartups(rows: CorpusRow[], ideaKeywords: string[], size = S
   }));
 }
 
+// The first sentence of a description (at most 200 characters), or null.
+export function firstSentence(text: string | null): string | null {
+  const t = text?.replace(/\s+/g, ' ').trim();
+  if (!t) return null;
+  const end = t.search(/[.!?؟](\s|$)/);
+  const one = end >= 0 ? t.slice(0, end + 1) : t;
+  return one.length <= 200 ? one : `${one.slice(0, 197).replace(/\s+\S*$/, '')}…`;
+}
+
 // A startup from Darb's list in the shared candidate format, with its profile and description as evidence.
 export function corpusCandidate(row: CorpusRow, now: Date): Candidate {
   const website = row.website ? cleanLink(row.website) : null;
@@ -138,6 +147,8 @@ export function corpusCandidate(row: CorpusRow, now: Date): Candidate {
     website,
     domain: website ? siteOf(website) : null,
     evidence_text: [row.profile_text, row.startup_description ? `Description: ${row.startup_description}` : ''].filter(Boolean).join('\n\n'),
+    // Shown on the competitor card: the first sentence of its description in Darb's list (Hala, 16 Nov 2026).
+    description: firstSentence(row.startup_description),
     sources,
   };
 }

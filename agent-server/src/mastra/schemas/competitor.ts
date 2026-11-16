@@ -81,6 +81,8 @@ export const Handoff = z
     named_competitors: z.array(z.string().min(1)).optional(),
     // Analogies ("like Talabat"): never returned as results.
     references: z.array(z.string().min(1)).optional(),
+    // A what-if only: a short name for the change, in the founder's language ("Jeddah instead of Riyadh").
+    scenario_label: z.string().trim().min(1).max(120).optional(),
     // On a re-call: the question the Competitor Agent asked, and the founder's answer.
     clarification: z.object({ question: z.string().min(1), answer: z.string().min(1) }).strict().optional(),
   })
@@ -155,6 +157,10 @@ export const Candidate = z
     domain: z.string().min(1).nullable(),
     // Page text or corpus profile shown to the judge. Used live only, never stored (Tavily terms, design §5).
     evidence_text: z.string(),
+    // Shown on the competitor card (design §11, §15). A short description in Darb's own words (never copied page
+    // text, Tavily terms) and the city or region. A candidate with no description is never shown.
+    description: z.string().min(1).nullable().optional(),
+    city_region: z.string().min(1).nullable().optional(),
     sources: z.array(Source),
     // Missing until the validation step has run.
     validation: Validation.optional(),
@@ -175,6 +181,8 @@ export const JudgeAnswer = z
     answer: Answer,
     note: z.string(),
     source_url: z.url().optional(),
+    // The exact sentence from the evidence that supports the answer (explainer §4). Code checks it is really there.
+    quote: z.string().trim().min(1).optional(),
   })
   .strict();
 export type JudgeAnswer = z.infer<typeof JudgeAnswer>;
@@ -191,6 +199,8 @@ export const JudgeOutput = z
     offering: JudgeAnswer,
     label: JudgeLabel, // only a proposal: code applies the policy rules
     reason: z.string().trim().min(1), // one founder-facing sentence
+    // One sentence on how the idea differs from this candidate, or "none" (competitive opportunities, explainer §6).
+    difference: z.string().trim().min(1).optional(),
   })
   .strict();
 export type JudgeOutput = z.infer<typeof JudgeOutput>;
@@ -214,11 +224,20 @@ export const NOTE_CODES = [
   'web_changed', // the web changed since the stored result (design §12)
   'temporarily_unavailable', // OpenAI or Tavily spending limit reached (design §12)
   'analysis_incomplete', // the run did not return a valid result; code returned this instead
+  'daily_limit_reached', // the founder used today's analyses (design §12); nothing was searched
+  'monthly_limit_reached', // the founder used this month's analyses (design §12); nothing was searched
+  'time_limit_reached', // the run hit its overall time limit: only what was checked in time is shown (design §12)
 ] as const;
 export const NoteCode = z.enum(NOTE_CODES);
 export type NoteCode = z.infer<typeof NoteCode>;
 
 export const ComparisonCell = z.object({ answer: Answer, note: z.string() }).strict();
+
+// Competitive opportunities (explainer §6): four fixed rules in code turn the judge's answers into one of these,
+// each with a fixed next step. Darb never says "where you will win".
+export const OPPORTUNITY_KINDS = ['proven_difference', 'possible_customer_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'] as const;
+export const OpportunityKind = z.enum(OPPORTUNITY_KINDS);
+export type OpportunityKind = z.infer<typeof OpportunityKind>;
 
 export const ResultCompetitor = z
   .object({
@@ -235,6 +254,8 @@ export const ResultCompetitor = z
     comparison: z.object({ problem: ComparisonCell, customer: ComparisonCell, offering: ComparisonCell }).strict(),
     sources: z.array(Source).min(1), // every competitor has a working source link
     similarity_score: z.number().int().min(0).max(100),
+    opportunity: OpportunityKind.optional(),
+    difference: z.string().min(1).nullable().optional(), // the judge's one sentence, for a possible difference
   })
   .strict()
   .refine((c) => c.source_type !== 'corpus' || c.startup_id !== undefined, {

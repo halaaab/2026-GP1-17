@@ -18,6 +18,7 @@
 //   5. Tavily calls are counted across every step, and never go over 15.
 import { TAVILY_CALLS_PER_IDEA, TAVILY_READ_CALLS } from '../config/limits';
 import type { Candidate, IdeaProfile } from '../schemas/competitor';
+import type { RunState } from './competitor-run';
 import { cleanName, siteOf } from './identify-candidates';
 import { CHECK_VALID_DAYS } from './recheck-startups';
 import type { SavedIdeaDeps, SearchCorpusOutput } from './search-corpus';
@@ -157,7 +158,10 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
   for (const c of shortlist) {
     const s = stored.get(c.startup_id!);
     if (s && recent(s.validated_at) && s.validation_status === 'pass') {
-      companies.push({ ...c, evidence_status: s.evidence_status ?? 'likely', checked: 'stored', similarity: similarity.get(c.startup_id!) ?? null });
+      // A stored pass means all four checks passed (Task 9). The judge and the guardrails need it as a validation.
+      const evidence_status = s.evidence_status ?? 'likely';
+      const validation = { real_entity: 'pass', real_offering: 'pass', active: 'pass', saudi_reach: 'pass', evidence_status, checked_at: new Date(s.validated_at!).toISOString() } as const;
+      companies.push({ ...c, validation, evidence_status, checked: 'stored', similarity: similarity.get(c.startup_id!) ?? null });
     } else if (s && recent(s.validated_at)) {
       not_shown.push({ name: c.name, source: 'corpus', why: `its check of ${s.validated_at!.slice(0, 10)} found nothing definite` });
     } else if (toCheck.length < CORPUS_TO_CHECK) {
@@ -178,6 +182,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
     if (r.evidence_status === 'unconfirmed') return not_shown.push({ name: c.name, source, why: `Unconfirmed: ${failedChecks(r)}` });
     companies.push({
       ...c,
+      description: c.description ?? r.description ?? null, // a web company: the AI's sentence from its own page
       validation: { real_entity: r.real_entity, real_offering: r.real_offering, active: r.active, saudi_reach: r.saudi_reach, evidence_status: r.evidence_status, checked_at: r.checked_at },
       evidence_status: r.evidence_status,
       checked: 'now',
@@ -251,4 +256,21 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
     not_shown,
     tavily_calls: calls,
   };
+}
+
+// In the Competitor Agent: hands what was found to the run state the other capabilities share (lib/competitor-run.ts,
+// Member 2's contract): the valid companies as candidates for the judge, the Tavily calls, the notes and a "discover"
+// step for the run log. Only the shared candidate fields are kept (the Candidate schema is strict).
+export function addToRunState(state: RunState, out: FindOutput, durationMs: number): void {
+  for (const { evidence_status: _status, checked: _checked, similarity: _similarity, ...candidate } of out.companies) {
+    state.candidates.set(candidate.candidate_key, candidate);
+  }
+  state.tavilyCalls += out.tavily_calls;
+  for (const note of out.notes) state.notes.add(note);
+  state.steps.push({
+    capability: 'discover',
+    outcome: 'ok',
+    duration_ms: Math.max(0, Math.round(durationMs)),
+    detail: `valid=${out.companies.length} not_shown=${out.not_shown.length} web=${out.web.searched ? 'yes' : 'no'} tavily=${out.tavily_calls}`,
+  });
 }

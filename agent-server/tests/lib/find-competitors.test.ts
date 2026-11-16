@@ -1,7 +1,8 @@
 // Tests for Task 11, Member 1's whole part (test plan TC-11.1 to TC-11.6, TC-11.11, TC-11.12, TC-11.14).
 // Fake list, fake web, fake pages and a fake AI: nothing is sent, paid for or saved.
 import { describe, expect, it, vi } from 'vitest';
-import { CLOSE_SIMILARITY, findCompetitors, type FindDeps } from '../../src/mastra/lib/find-competitors';
+import { addToRunState, CLOSE_SIMILARITY, findCompetitors, type FindDeps } from '../../src/mastra/lib/find-competitors';
+import { newRunState } from '../../src/mastra/lib/competitor-run';
 import type { CorpusRow } from '../../src/mastra/lib/search-corpus';
 import type { AiAnswer, ReadPages } from '../../src/mastra/lib/validate-candidate';
 import { Candidate, type IdeaProfile } from '../../src/mastra/schemas/competitor';
@@ -164,4 +165,19 @@ describe('Task 11: Darb’s list, the web when needed, and the checks', () => {
     const always = deps(rows);
     expect((await findCompetitors({ idea_text: 'x', idea_profile: PROFILE, web: 'always' }, always, NOW)).web.searched).toBe(true);
   });
+
+  it('in the agent: the valid companies go to the run state as strict Candidates, ready for the judge (Member 2)', async () => {
+    const stored = new Map([['ST_073', { validation_status: 'pass', evidence_status: 'confirmed', validated_at: '2026-11-01T00:00:00Z' }]]);
+    const out = await findCompetitors({ idea_text: 'x', idea_profile: PROFILE, web: 'always' }, deps([row('ST_073', '1pass', 0.84)], [{ url: 'https://gymy.sa', title: 'GymY - gym pass' }], stored), NOW);
+    const state = newRunState();
+    addToRunState(state, out, 1234);
+    const candidates = [...state.candidates.values()];
+    expect(candidates.map((c) => c.name).sort()).toEqual(['1pass', 'GymY']);
+    for (const c of candidates) expect(() => Candidate.parse(c)).not.toThrow(); // no extra fields
+    // A stored pass becomes a validation, so the guardrails can show it (with its saved Confirmed).
+    expect(state.candidates.get('corpus:ST_073')?.validation).toMatchObject({ evidence_status: 'confirmed', checked_at: '2026-11-01T00:00:00.000Z' });
+    expect(state.tavilyCalls).toBe(out.tavily_calls);
+    expect(state.steps).toEqual([{ capability: 'discover', outcome: 'ok', duration_ms: 1234, detail: expect.stringContaining('valid=2') }]);
+  });
 });
+

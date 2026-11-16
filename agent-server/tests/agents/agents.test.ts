@@ -9,8 +9,8 @@ const { COMPETITOR_MAX_STEPS, competitorDelegation } = await import('../../src/m
 const { RequestContext } = await import('@mastra/core/request-context');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
-const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|analysis|details|if|profile|survival|result)\b/g;
-const RESULT_FIELDS = new Set(['needs_web_search', 'named_competitors', 'idea_profile']); // named in the instructions, but fields, not tools
+const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|candidates|analysis|details|if|idea|profile|survival|result)\b/g;
+const RESULT_FIELDS = new Set(['needs_web_search', 'named_competitors', 'idea_profile', 'what_if']); // named in the instructions, but fields or modes, not tools
 const toolNames = (text: string) => new Set((text.match(TOOL_NAME) ?? []).filter((n) => !RESULT_FIELDS.has(n)));
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -23,7 +23,7 @@ describe('Competitor Agent', () => {
   it('has every tool its instructions name', async () => {
     const tools = Object.keys(await competitorAgent.listTools());
     const named = toolNames(await instructionsOf(competitorAgent));
-    expect([...named].sort()).toEqual(['finalize_result', 'find_competitors']);
+    expect([...named].sort()).toEqual(['finalize_result', 'find_competitors', 'judge_candidates', 'understand_idea']);
     for (const name of named) expect(tools).toContain(name);
   });
 
@@ -46,6 +46,11 @@ describe('Conversational Agent', () => {
     expect(Object.values(agents).map((a) => a.id)).toContain('competitor-agent');
     const options = await conversationalAgent.getDefaultOptions();
     expect(options.delegation).toBe(competitorDelegation);
+  });
+
+  it('decides at temperature 0, so the same message gets the same decision', async () => {
+    const options = await conversationalAgent.getDefaultOptions();
+    expect(options.modelSettings).toMatchObject({ temperature: 0 });
   });
 
   it('is connected to the survival prediction', async () => {

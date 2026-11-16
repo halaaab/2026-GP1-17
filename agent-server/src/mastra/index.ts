@@ -21,6 +21,9 @@ import { identifyCandidatesTool } from './tools/identify-candidates';
 import { searchCorpusTool } from './tools/search-corpus';
 import { searchWebTool } from './tools/search-web';
 import { validateCandidateTool } from './tools/validate-candidate';
+import { getCompetitorResultTool } from './tools/get-competitor-result';
+import { judgeCandidatesTool } from './tools/judge-candidates';
+import { understandIdeaTool } from './tools/understand-idea';
 import { predictSurvivalTool } from './tools/predict-survival';
 
 // The Ministry of Commerce list of active registrations, held in memory for the CR check (Task 3).
@@ -45,6 +48,9 @@ export const mastra = new Mastra({
     validateCandidateTool,
     findCompetitorsTool,
     finalizeResultTool,
+    getCompetitorResultTool,
+    judgeCandidatesTool,
+    understandIdeaTool,
     predictSurvivalTool,
   },
   // Mastra's own data lives in Postgres (the "mastra" schema), so it survives restarts on the host.
