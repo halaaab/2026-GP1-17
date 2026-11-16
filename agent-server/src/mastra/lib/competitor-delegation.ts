@@ -20,7 +20,7 @@
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
 import { Handoff, Result, RunLog } from '../schemas/competitor';
-import { HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
+import { finalizeResultTool, HANDOFF_KEY, STARTED_AT_KEY } from '../tools/finalize-result';
 import { getUserId, loadOwnedAssessment } from './assessments';
 import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
@@ -228,14 +228,27 @@ export function runLog(started: Running, result: Result, resultValid: boolean): 
   });
 }
 
-export function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): { resultText: string } | void {
+export async function onCompetitorDelegationComplete(ctx: DelegationCompleteContext): Promise<{ resultText: string } | void> {
   if (ctx.primitiveId !== COMPETITOR_AGENT_ID) return;
   const started = running.get(ctx.toolCallId);
   running.delete(ctx.toolCallId);
   if (!started) return; // the delegation was rejected before it started: keep the rejection message
 
   const fromTool = ctx.result?.subAgentToolResults?.find((r) => r.toolName === 'finalize_result' && !r.isError);
-  const checked = Result.safeParse(fromTool?.result);
+  let checked = Result.safeParse(fromTool?.result);
+  // The agent stopped without calling finalize_result: build the result in code from this run's state, exactly as
+  // finalize_result would (Hala, 16 Nov 2026). In a real chat, after understand_idea said the idea needs a question,
+  // the model called its memory tool instead of finalize_result, so the founder saw "did not finish" instead of the
+  // question (5 of 5 vague ideas in the Sprint 2 test run).
+  if (!fromTool) {
+    const values = new Map<string, unknown>([[HANDOFF_KEY, started.handoff], [RUN_STATE_KEY, started.state], [STARTED_AT_KEY, started.startedAt]]);
+    const requestContext = { get: (key: string) => values.get(key), set: (key: string, value: unknown) => void values.set(key, value) };
+    try {
+      checked = Result.safeParse(await finalizeResultTool.execute!({}, { requestContext } as never));
+    } catch (error) {
+      console.error('Building the result in code failed:', error);
+    }
+  }
   const result = checked.success
     ? checked.data
     : fallbackResult(started.handoff, { durationMs: Date.now() - started.startedAt, traceId: null });

@@ -28,7 +28,7 @@ Rules:
 // "An AI app for restaurants" became "AI application for management and customer engagement" with an inferred
 // problem, so no clarification question was asked (3 of 7 vague ideas searched). Not used for Darb's startup list,
 // so the corpus profiles stay as they are.
-export const FOUNDER_IDEA_RULES = `This text is a founder's idea. Never invent what the product does. If the text only names a technology or format (an app, a platform, a website, AI, software) and perhaps a customer, but does not say what the product does for them (for example "an AI app for restaurants", "an app for students"), set offering to "unknown" with value null. When the text says what it does (for example "delivers groceries", "lets shops create an online store", "a POS system"), the offering is "stated" as usual.`
+export const FOUNDER_IDEA_RULES = `This text is a founder's idea. Never invent what the product does. If the text only names a technology or format (an app, a platform, a website, AI, software) and perhaps a customer, but does not say what the product does for them (for example "an AI app for restaurants", "an app for students"), set offering to "unknown" with value null. When the text says what it does, the offering is "stated" as usual: a format with an activity is an offering (for example "a car rental app", "a food delivery app", "a POS system", "lets shops create an online store").`
 
 // The JSON shape the model must return. IdeaProfile (schemas/competitor.ts) checks the answer again afterwards.
 const part = {
@@ -98,6 +98,8 @@ function cleanProfile(raw: Record<string, unknown>): Record<string, unknown> {
   const fixPart = (p: unknown) => {
     const { value, origin } = (p ?? {}) as { value?: string | null; origin?: string };
     const text = typeof value === 'string' ? value.trim() : '';
+    // The model sometimes writes the word instead of null ("unknown" with origin "stated", 16 Nov 2026).
+    if (/^(unknown|null|none|n\/a|not stated|not specified)$/i.test(text)) return { value: null, origin: 'unknown' };
     return text && origin !== 'unknown' ? { value: text, origin } : { value: null, origin: 'unknown' };
   };
   const words = (list: unknown) => (Array.isArray(list) ? list.map((w) => String(w).trim()).filter(Boolean) : []);

@@ -196,7 +196,7 @@ describe('delegation: a what-if', () => {
 
     // the run saved its result
     (ctx.requestContext.get(RUN_STATE_KEY) as RunStateT).steps.push({ capability: 'guardrails', outcome: 'ok', duration_ms: 1, detail: 'shown=1 saved' });
-    const reply = JSON.parse(complete(ctx, resultWith([competitor(1, 'Jeddah Gyms', 'https://jgyms.sa')], 78, 'competitive'))!.resultText);
+    const reply = JSON.parse((await complete(ctx, resultWith([competitor(1, 'Jeddah Gyms', 'https://jgyms.sa')], 78, 'competitive')))!.resultText);
     expect(reply.comparison_sentences[0]).toContain('64 (moderate similarity) → 78 (higher similarity)');
     expect(calls.some((c) => c.op === 'delete')).toBe(false);
   });
@@ -204,7 +204,7 @@ describe('delegation: a what-if', () => {
   it('removes the new assessment when nothing was saved for it', async () => {
     const ctx = start(whatIf);
     await onCompetitorDelegationStart(ctx);
-    const reply = JSON.parse(complete(ctx, resultWith([], null, null))!.resultText);
+    const reply = JSON.parse((await complete(ctx, resultWith([], null, null)))!.resultText);
     expect(reply).not.toHaveProperty('comparison_sentences');
     await new Promise((r) => setTimeout(r, 0));
     const removed = calls.find((c) => c.op === 'delete');
