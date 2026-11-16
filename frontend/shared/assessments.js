@@ -3,14 +3,15 @@
 
    The founder's ideas, answers and messages are saved in Supabase
    (tables startup_ideas, assessments and messages, migration 0005).
-   The similar startups, market numbers and roadmap come from the real datasets
+   The competitor analysis is what the Competitor Agent saved (similar_startup_results with its
+   links in result_sources, migrations 0032–0036). The market numbers and roadmap come from the real datasets
    in the database (migration 0006). The conversation itself is answered by the
    agent server (see shared/agent.js); this file only reads and saves it.
 
      import { getAssessments, getAssessment, saveAssessment } from '../../../shared/assessments.js';
      const list = await getAssessments();        // newest first
      const one  = await getAssessment(id);
-     await loadResult(one);                      // adds one.result = { similar, market, roadmap }
+     await loadResult(one);                      // adds one.result = { competitors, market, roadmap }
 
    One assessment, as the pages see it:
      {
@@ -20,6 +21,10 @@
        sector, city, model, hiring:   the founder's answers (empty until answered)
        noted:   ['city'],             // answers Darb understood from the description, without asking
        score:   72,                   // empty until the analysis has run
+       iss:     64,                   // Idea Similarity Score 0–100; empty when no competitors were found
+       issBasis, marketLevel, competitorNotes, analysedAt:   the competitor analysis (empty until it ran)
+       parentId, whatIf:   a what-if: the assessment it changes, and its short name ("Jeddah instead of Riyadh"),
+                           kept in its confirmed_inputs (what_if_of, what_if_label)
        factors: [14, 12, -3, -1],     // what moved the score up or down from 50
        roadmapShown: false,           // did the founder ask for the roadmap in the chat?
        extra:   [{ from: 'user', text: '...' }, { from: 'agent' }],   // follow-up messages after the result
@@ -90,19 +95,11 @@ export function whenText(date) {
 export const SCORE_FACTORS = ['score.factor.demand', 'score.factor.difference', 'score.factor.competition', 'score.factor.sectorRisk'];
 
 
-/* ---------- Similar startups, market and roadmap (REAL data from the database) ----------
-   The rows are real (tables startups, market_indicators and regulatory_requirements,
-   filled from the Excel files in datasets/). What is still simple is HOW they are
-   chosen: by the idea's sector. Later the similarity engine ranks the startups by
-   meaning, and the Roadmap Agent decides which requirements apply to this venture. */
-
-/* How to find startups of a sector: which column to look in, and for which word */
-const STARTUP_SEARCH = {
-  ai:        ['sector', 'Tech'],
-  food:      ['sector', 'Food'],
-  fashion:   ['sector', 'Fashion'],
-  furniture: ['startup_description', 'furniture'],
-};
+/* ---------- Competitors, market and roadmap (REAL data from the database) ----------
+   The competitors are the ones the Competitor Agent checked and saved for this assessment.
+   The market and roadmap rows are real (tables market_indicators and regulatory_requirements,
+   filled from the Excel files in datasets/). What is still simple is HOW they are chosen:
+   by the idea's sector. Later the Roadmap Agent decides which requirements apply to this venture. */
 
 /* The economic activity (ISIC code) shown for each sector until the agent matches the exact one */
 const MAIN_ACTIVITY = { ai: '62', food: '56', fashion: '14', furniture: '31' };
@@ -119,29 +116,44 @@ function stageRank(stage) {
   return position === -1 ? STAGE_ORDER.length : position;
 }
 
-async function loadSimilar(assessment) {
-  const search = STARTUP_SEARCH[assessment.sector];
-  if (!search) return [];
-
-  const { data, error } = await supabase
-    .from('startups')
-    .select('startup_id, startup_name, startup_description, sector, region, stage, website')
-    .ilike(search[0], `%${search[1]}%`)
-    .limit(4);
+/* The competitors the Competitor Agent saved for this assessment, closest first (up to 3).
+   The database's security rules return only the founder's own. Empty until the analysis ran. */
+async function loadCompetitors(assessment) {
+  if (!assessment.isSaved) return [];
+  // "*" keeps this working while columns are still being added to the design; the links are in result_sources
+  const read = (columns) => supabase.from('similar_startup_results').select(columns).eq('assessment_id', assessment.id).order('rank');
+  let { data, error } = await read('*, result_sources (url, source_type, accessed_at)');
+  if (error) ({ data, error } = await read('*'));   // the links could not be read: show the competitors anyway
 
   if (error) {
-    report('load similar startups', error);
+    report('load the competitors', error);
     return [];
   }
-  return data.map((row) => ({
-    id: row.startup_id,
-    name: row.startup_name,
-    about: row.startup_description || '',
-    sector: row.sector || '',
-    region: row.region || '',
-    stage: row.stage || '',
+  return data.map((row) => {
+    const first = (row.result_sources && row.result_sources[0]) || {};
+    // stored with the design's four values; "possible difference" whose customer is only partly the same is
+    // the customer rule (checked first), whose next step is to interview customers
+    const customerPartly = row.comparison && row.comparison.customer && row.comparison.customer.answer === 'partly';
+    const opportunity = row.opportunity === 'possible_difference' && customerPartly ? 'possible_customer_difference' : row.opportunity || '';
+    return {
+    id: row.result_id || String(row.rank),
+    rank: row.rank,
+    name: row.competitor_name,
+    about: row.description || '',
+    city: row.city_region || '',
+    label: row.label,                       // direct / indirect
+    evidence: row.evidence_status,          // confirmed / likely
+    reason: row.reason || '',
+    comparison: row.comparison || {},       // { problem, customer, offering }: { answer, note }
+    source: first.url || row.source_url || '',
+    sourceType: first.source_type || '',   // official_site, app_store, ecosystem, news, government
+    checkedAt: first.accessed_at || '',    // when Darb checked it
     website: row.website || '',
-  }));
+    score: row.similarity_score,
+    opportunity,                            // proven / possible / no clear difference, or not enough evidence
+    difference: row.difference || '',       // the judge's one sentence (migration 0038)
+    };
+  });
 }
 
 // part as a percent of whole, with two decimals (0.049% shows as 0.05%); null when either is missing
@@ -230,13 +242,35 @@ async function loadRoadmap(assessment) {
     }));
 }
 
-/* Loads the similar startups, the market numbers and the roadmap of one assessment
+/* After a reply in the chat: was a new competitor analysis just saved for this assessment?
+   If so, its numbers and competitors are loaded onto it and true is returned, so the chat can
+   show the competitor cards. A what-if is saved on its own assessment, so it never counts here. */
+export async function refreshAnalysis(assessment) {
+  if (!assessment || !assessment.isSaved) return false;
+  const { data, error } = await supabase.from('assessments').select('*').eq('assessment_id', assessment.id).maybeSingle();
+  if (error) {
+    report('check for a new competitor analysis', error);
+    return false;
+  }
+  if (!data || !data.analysed_at || data.analysed_at === assessment.analysedAt) return false;
+
+  assessment.analysedAt = data.analysed_at;
+  assessment.iss = data.iss === null || data.iss === undefined ? null : Math.round(Number(data.iss));
+  assessment.issBasis = data.iss_basis || '';
+  assessment.marketLevel = data.market_level || '';
+  assessment.competitorNotes = data.competitor_notes || [];
+  if (assessment.result) assessment.result.competitors = await loadCompetitors(assessment);
+  else await loadResult(assessment);
+  return true;
+}
+
+/* Loads the competitors, the market numbers and the roadmap of one assessment
    and keeps them on it as assessment.result, so the pages can show them. */
 export async function loadResult(assessment) {
-  const [similar, market, roadmap] = await Promise.all([
-    loadSimilar(assessment), loadMarket(assessment), loadRoadmap(assessment),
+  const [competitors, market, roadmap] = await Promise.all([
+    loadCompetitors(assessment), loadMarket(assessment), loadRoadmap(assessment),
   ]);
-  assessment.result = { similar, market, roadmap };
+  assessment.result = { competitors, market, roadmap };
 }
 
 /* ---------- Reading and saving (Supabase) ---------- */
@@ -263,6 +297,15 @@ function fromRows(idea, assessment, messages) {
     hiring: answers.hiring || '',
     noted: answers.noted || [],
     score: assessment.fis_score,
+    // the competitor analysis (migrations 0032, 0036, 0038); empty until the Competitor Agent saved one
+    iss: assessment.iss === null || assessment.iss === undefined ? null : Math.round(Number(assessment.iss)),
+    issBasis: assessment.iss_basis || '',
+    marketLevel: assessment.market_level || '',
+    competitorNotes: assessment.competitor_notes || [],
+    analysedAt: assessment.analysed_at || '',
+    // a what-if is a new assessment of the same idea; its link and name are in its confirmed_inputs
+    parentId: (assessment.confirmed_inputs && assessment.confirmed_inputs.what_if_of) || '',
+    whatIf: (assessment.confirmed_inputs && assessment.confirmed_inputs.what_if_label) || '',
     factors: assessment.explanation ? assessment.explanation.factors : [],
     roadmapShown: Boolean(assessment.roadmap_generated_at),
     roadmapAt: assessment.roadmap_generated_at,

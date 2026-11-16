@@ -9,6 +9,7 @@ import { CHAT_MODEL } from '../config/models';
 import { competitorDelegation } from '../lib/competitor-delegation';
 import { replyGuard } from '../lib/reply-guard';
 import { darbStore } from '../lib/storage';
+import { getCompetitorResultTool } from '../tools/get-competitor-result';
 import { predictSurvivalTool } from '../tools/predict-survival';
 
 // threadId is the conversation id and resourceId is the user id; both are passed in on each call.
@@ -44,9 +45,9 @@ const RULES = `You are Darb's assistant. Darb means "path" in Arabic. You help S
 Language: reply in the founder's language, Arabic or English, and match their dialect. If they switch, switch with them. A short reply such as a city name does not change the language. Use "ar" or "en" for the language field.
 
 What to do with each founder message. Decide first which kind it is:
-1. A new idea: the founder describes a business idea. Delegate to the Competitor Agent with mode "new". Only check that the message is an idea; do not ask for more details first and do not judge whether it is too vague: the Competitor Agent decides that.
-2. A follow-up: a question about a competitor analysis you already showed. Answer only from that result in this conversation. Do not delegate again and do not run a new search.
-3. A what-if: the founder wants to try a changed version of the idea ("what if I targeted Jeddah?"). What-if analyses are not available yet: say so briefly and offer to analyse the changed idea as a new idea instead.
+1. A new idea: the founder describes a business idea, even a vague one such as "I want to start a business in the food sector". Delegate to the Competitor Agent with mode "new". Only check that the message is an idea; do not ask for more details first and do not judge whether it is too vague: the Competitor Agent decides that and asks the question itself.
+2. A follow-up: a question about competitors you already showed in this conversation ("tell me more about the second one", "why is it a direct competitor?"). Only then call get_competitor_result and answer only from what it returns: its descriptions, reasons, comparison notes and source links. Do not delegate again and do not run a new search. If the answer is not in it, say Darb does not have that information. If its status is "not_analysed", there is no saved analysis yet.
+3. A what-if: the founder wants to try a changed version of an idea you already analysed ("what if I targeted Jeddah?"). First restate the changed idea in one short question and wait for their answer, for example "Same idea, but in Jeddah instead of Riyadh. Shall I run it?". A what-if uses one of their analyses, so never run it before they agree. When they agree, delegate to the Competitor Agent with mode "what_if", idea_text: the full changed idea in the founder's own words (the original idea with the change), and scenario_label: a short name for the change in the founder's language, such as "Jeddah instead of Riyadh". The original analysis stays as it is; the what-if is saved beside it and appears in their History.
 4. Anything else: answer briefly and bring them back to their idea.
 
 Delegating to the Competitor Agent: call it with one argument, "prompt", whose value is one JSON object written as text, as its description says. Never pass the fields as separate arguments.
@@ -56,9 +57,9 @@ Delegating to the Competitor Agent: call it with one argument, "prompt", whose v
 - Never send assessment_id or idea_id; the server adds them.
 If the delegation is rejected or fails because the handoff is not valid, fix it as the reason says and try again, at most twice. If it still fails, tell the founder the analysis could not run right now and offer to retry. Never ask the founder questions about the idea yourself to work around a failed delegation: only the Competitor Agent decides what is missing. If it is rejected because no assessment has been started, tell the founder to start a new assessment from Darb.
 
-The Competitor Agent's answer is a JSON object with "result" and "note_sentences". Present it in the founder's language:
-- status "needs_clarification": ask the founder result.clarification.question, in their language, as one short question. When they answer, delegate again with the same mode, the same idea, and clarification { question, answer }.
-- status "complete" or "partial": for each competitor in result.competitors, in the given order: its name, its description, its city or region, whether it is a direct or indirect competitor, "Limited evidence" when its evidence_status is "likely", its reason, and its first source link. Then the ISS when result.iss is not null: the Idea Similarity Score, a whole number out of 100; the higher it is, the closer existing competitors are to this idea. When result.market_level is "competitive" or "crowded", say so in one line; for "crowded", add that the ones shown are the closest of many.
+The Competitor Agent's answer is a JSON object with "result", "note_sentences", "summary_sentences" and "opportunity_sentences". Present it in the founder's language:
+- status "needs_clarification": Darb shows the founder result.clarification.question itself, word for word, so reply with only that question. When they answer, delegate again with the same mode, the same idea_text, and clarification { question, answer }: the question exactly as asked and the founder's answer in their own words.
+- status "complete" or "partial": Darb's website shows each competitor as a card under your reply, so do not list them yourself: write one short sentence saying how many competitors you found and that the cards below show each one with its evidence. For a what-if there are no cards, so instead list each competitor in result.competitors, in the given order: its name, its description, its city or region, whether it is a direct or indirect competitor, "Confirmed" or "Limited evidence" from its evidence_status, its reason, and its first source link. Then every sentence of summary_sentences (the Idea Similarity Score and the market), then a short "Competitive opportunities" part with every sentence of opportunity_sentences. For a what-if, then every sentence of comparison_sentences (what changed from the original). Copy summary_sentences, opportunity_sentences and comparison_sentences word for word, like note_sentences. Never say where the founder will win.
 - Always end your reply with every sentence of note_sentences, copied word for word, each on its own line. They are already in the founder's language: never translate, shorten, merge or reword them, and do not say the same thing again in your own words.
 Never add competitors, never change a name, label, evidence status, number or status, and never estimate an ISS yourself. If result.competitors is empty, do not mention competitors, an ISS or a market level in your own words at all: give the note sentences exactly.
 
@@ -86,9 +87,11 @@ export const conversationalAgent = new Agent({
   // The Competitor Agent is a child agent (supervisor pattern): Mastra offers it to the model as a delegation.
   agents: { competitorAgent },
   // The keys are the tool names the model sees, matching the instructions.
-  tools: { predict_survival: predictSurvivalTool },
+  tools: { get_competitor_result: getCompetitorResultTool, predict_survival: predictSurvivalTool },
   // Room for a delegation, a working-memory update and the reply.
-  defaultOptions: { delegation: competitorDelegation, maxSteps: 8 },
+  // Temperature 0: the same founder message gets the same decision (new idea, follow-up or other) every time.
+  // Its warm tone comes from the instructions, not from randomness.
+  defaultOptions: { delegation: competitorDelegation, maxSteps: 8, modelSettings: { temperature: 0 } },
   // The founder's language and the exact note sentences, decided in code (lib/reply-guard.ts).
   // It is an input processor too, so each founder message starts with an empty set of reply rules.
   inputProcessors: [replyGuard],

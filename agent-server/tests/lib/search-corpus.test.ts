@@ -1,7 +1,7 @@
 // Tests for Task 2, finding similar startups in Darb's list. Made-up startups and a fake database:
 // no OpenAI, no Supabase. The real cases (TC-2.1 to TC-2.8) are run in Studio.
 import { describe, expect, it } from 'vitest';
-import { corpusCandidate, keywordsOfProfileText, keywordWords, rankStartups, searchCorpus, searchForIdea, type CorpusRow, type SavedIdeaDeps } from '../../src/mastra/lib/search-corpus';
+import { corpusCandidate, firstSentence, keywordsOfProfileText, keywordWords, rankStartups, searchCorpus, searchForIdea, type CorpusRow, type SavedIdeaDeps } from '../../src/mastra/lib/search-corpus';
 import { Candidate, type IdeaProfile } from '../../src/mastra/schemas/competitor';
 
 const row = (id: string, name: string, similarity: number, en: string, ar = 'شيء'): CorpusRow => ({
@@ -157,3 +157,13 @@ describe('same idea, same result (design §4, §12)', () => {
     await expect(searchForIdea({ idea_id: IDEA }, deps)).rejects.toThrow('no saved profile yet');
   });
 });
+
+describe('the card description from Darb’s list', () => {
+  it('is the first sentence of the description, at most 200 characters', () => {
+    expect(firstSentence('Provides home physical therapy in Riyadh by qualified specialists. Book now.')).toBe('Provides home physical therapy in Riyadh by qualified specialists.');
+    expect(firstSentence('منصة عقارية في السعودية؟ ابحث الآن')).toBe('منصة عقارية في السعودية؟');
+    expect(firstSentence(null)).toBeNull();
+    expect(firstSentence('word '.repeat(80))!.length).toBeLessThanOrEqual(200);
+  });
+});
+

@@ -80,6 +80,7 @@ export type CompanyResult = Validation & {
   pages_read: string[];
   pages_failed: string[];
   notes: string[]; // e.g. "signal_reading_failed": the AI could not read the pages, so those checks stay unknown
+  description: string | null; // the AI's one sentence on what the company offers, for the competitor card
 };
 
 // ---------------------------------------------------------------------------
@@ -282,6 +283,9 @@ export type AiAnswer = {
   // Only when an expected product is given: does the site sell it? "different" only when the pages clearly show
   // another business.
   same_product?: { answer: 'same' | 'different' | 'unclear'; quote: string; page: number };
+  // One sentence in the AI's own words: what the company offers (shown on the competitor card, design §11).
+  // Never copied from the page (Tavily terms). Empty when the page does not say (Hala, 16 Nov 2026).
+  description?: string;
 };
 
 export const SIGNAL_PROMPT = `You read a company's own web pages and report evidence, quoting the pages exactly.
@@ -298,12 +302,13 @@ Report:
   "different": the pages sell a different kind of product or service, or are about something unrelated (for example, an e-learning app expected, but the pages are a marketplace for used phones, or spam about other software). Quote what the pages sell.
   "unclear": only when the pages say almost nothing about what is sold.
   With no expected product, answer "unclear" with an empty quote and page 1.
+- description: one short sentence in English, in your own words, saying what the company offers and to whom (for example "A Riyadh gym chain with monthly memberships."). Never copy a sentence from the pages. An empty string if the pages do not say what the company offers.
 Give at most 5 items in each list, the clearest ones (for dated, the newest ones).`;
 
 const AI_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['offering', 'blocking', 'dated', 'saudi_address', 'same_product'],
+  required: ['offering', 'blocking', 'dated', 'saudi_address', 'same_product', 'description'],
   properties: {
     offering: {
       type: 'array',
@@ -331,6 +336,7 @@ const AI_SCHEMA = {
       type: 'object', additionalProperties: false, required: ['answer', 'quote', 'page'],
       properties: { answer: { type: 'string', enum: ['same', 'different', 'unclear'] }, quote: { type: 'string' }, page: { type: 'integer' } },
     },
+    description: { type: 'string' },
   },
 };
 
@@ -381,6 +387,8 @@ export async function askEachPage(askAi: AskAi, companyName: string, pages: Page
     dated: answers.flatMap((a, i) => at(a.dated, i)),
     saudi_address: answers.flatMap((a, i) => at(a.saudi_address, i)),
     same_product: same.find((x) => x.answer === 'same') ?? same.find((x) => x.answer === 'different') ?? same[0],
+    // The first page's description (the homepage comes first), else the next page that has one.
+    description: answers.map((a) => a.description?.trim() ?? '').find(Boolean) ?? '',
   };
 }
 
@@ -769,6 +777,7 @@ export async function validateCompanies(
       const news = [...(company.news ?? []), ...(found[i]?.news ?? [])];
       const signals = [...codeSignals({ ...company, app_store_url: appOf[i] }, codePages, sites[i]), ...activeSignals({ ...company, news }, codePages, now)];
       const notes: string[] = [];
+      let description: string | null = null;
       // The app: listed now = it can be downloaded (Real offering); its last update = a date for Active.
       const facts = apps[i];
       if (facts?.listed) {
@@ -797,7 +806,9 @@ export async function validateCompanies(
       if (found[i]) notes.push('news_searched'); // the news it found, if any, is in the signals ("news article (…)")
       if (pages.length) {
         try {
-          signals.push(...aiSignals(await askEachPage(deps.askAi, company.name, pages, company.description), pages, now));
+          const answer = await askEachPage(deps.askAi, company.name, pages, company.description);
+          description = answer.description?.trim() || null;
+          signals.push(...aiSignals(answer, pages, now));
         } catch {
           // The AI failed: its checks stay unknown, so the company is Unconfirmed, never wrongly shown. The note says so.
           notes.push('signal_reading_failed');
@@ -886,6 +897,7 @@ export async function validateCompanies(
         cr,
         pages_read: [...read],
         notes,
+        description,
         pages_failed: [...first.failed, ...second.failed].map((f) => f.url).filter((u) => siteOf(u) === sites[i] || u === app),
       };
     }),
