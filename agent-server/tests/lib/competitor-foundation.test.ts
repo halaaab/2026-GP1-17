@@ -158,12 +158,13 @@ describe('delegation: after the Competitor Agent runs', () => {
     expect(parsed.note_sentences).toEqual([NOTE_TEXT.capability_pending.ar]);
   });
 
-  it('replaces an invalid or missing result with a valid fallback', async () => {
+  it('replaces an invalid or missing result with one rebuilt in code, never the invented one (16 Nov 2026)', async () => {
     for (const bad of [{ status: 'complete', competitors: [{ name: 'Invented Co' }] }, undefined]) {
       const ctx = await started();
       const parsed = JSON.parse((await onCompetitorDelegationComplete(completeContext(ctx.toolCallId, bad)))!.resultText);
       expect(Result.safeParse(parsed.result).success).toBe(true);
-      expect(parsed.result).toMatchObject({ status: 'partial', competitors: [], notes: ['analysis_incomplete'] });
+      expect(parsed.result.competitors).toEqual([]); // nothing was found in this run, so nothing is shown
+      expect(JSON.stringify(parsed)).not.toContain('Invented Co');
     }
   });
 
