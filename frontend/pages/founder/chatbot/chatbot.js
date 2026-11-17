@@ -117,21 +117,20 @@ function addCopy(body, text) {
   body.append(copy);
 }
 
-/* Darb could not answer: a "Try again" button under the failed reply. It removes the
-   founder's message and the failed reply, then sends the same message again. */
-function addRetry(userRow, text, about) {
-  const failedRow = userRow.nextElementSibling;
-  const retry = document.createElement('button');
-  retry.type = 'button';
-  retry.className = 'btn btn-secondary btn-sm';
-  retry.innerHTML = `${icon('retry')} ${t('chat.retry')}`;
-  retry.addEventListener('click', () => {
+/* Darb could not answer: a "Try again" button under the failed reply. The founder's
+   message is already shown and saved (talk), so only the failed reply is replaced:
+   Darb is asked again about the same message, which never appears twice. */
+function addRetry(failedBody, retry) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'btn btn-secondary btn-sm';
+  button.innerHTML = `${icon('retry')} ${t('chat.retry')}`;
+  button.addEventListener('click', () => {
     if (busy) return;
-    userRow.remove();
-    failedRow.remove();
-    talk(text, about);
+    failedBody.closest('.msg').remove();
+    retry();
   });
-  failedRow.querySelector('.msg-body').append(retry);
+  failedBody.append(button);
   scrollToEnd();
 }
 
@@ -156,7 +155,7 @@ function addAgent(text = '') {
 /* Darb's reply from the agent server, shown as it arrives.
    Three dots first, then the text grows piece by piece. Returns the full reply,
    or an error message in the founder's language when Darb could not answer. */
-async function agentAnswers(text) {
+async function agentAnswers(text, retry = null) {
   const body = addAgent();
   body.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
   const paragraph = document.createElement('p');
@@ -186,6 +185,7 @@ async function agentAnswers(text) {
     paragraph.textContent = message;
     paragraph.classList.add('agent-failed');
     body.replaceChildren(paragraph);
+    if (retry && error.kind !== 'signin') addRetry(body, retry);
     return null;
   }
 }
@@ -366,23 +366,24 @@ async function becomeIdea() {
 /* Sends one founder message to Darb, shows the reply and saves both.
    about = the startup the question is about (from "Ask about it" in the panel) */
 async function talk(text, about = null) {
-  const userRow = addUser(text, about);
+  addUser(text, about);
+  // The founder's message is saved at once, before Darb answers (17 Nov 2026): a refresh or a failed
+  // answer never removes it. A failed answer gets "Try again", which asks again without a second copy.
+  await saveMessage(current, 'user', { text, about: about ? about.id : '' });
+  await answer(text, about);
+}
 
+/* Darb's answer to a founder message that is already shown and saved */
+async function answer(text, about = null) {
   // the agent only sees the words, so say which startup the question is about
   const forAgent = about ? `(${t('chat.askingAbout')} ${about.name}) ${text}` : text;
 
   busy = true;
-  const reply = await agentAnswers(forAgent);
+  const reply = await agentAnswers(forAgent, () => answer(text, about));
   busy = false;
 
-  // Both messages are saved only when Darb answered. A failed answer is shown but
-  // not saved, so the founder can send the message again without it appearing twice.
-  if (reply) {
-    await saveMessage(current, 'user', { text, about: about ? about.id : '' });
-    await saveMessage(current, 'agent', { text: reply });
-  } else {
-    addRetry(userRow, text, about);
-  }
+  // only Darb's real answers are saved; a failed one is shown with "Try again"
+  if (reply) await saveMessage(current, 'agent', { text: reply });
   const wasIdea = hasIdea(current);
   await save();   // updates the time, so the conversation moves to the top of History
   // a competitor analysis was just saved for this idea: show its competitors as cards
@@ -447,6 +448,18 @@ async function showSaved() {
     } else {
       addCopy(addAgent(say(message.text)), say(message.text));
     }
+  }
+
+  // The founder's last message has no answer yet (Darb failed, or the page was closed while it worked):
+  // it stays, with "Try again".
+  const last = current.history[current.history.length - 1];
+  if (last && last.from === 'user') {
+    const body = addAgent();
+    const note = document.createElement('p');
+    note.className = 'agent-failed';
+    note.textContent = t('chat.noAnswerYet');
+    body.append(note);
+    addRetry(body, () => answer(last.text));
   }
 
   // the competitor analysis, if this idea has one: the same cards as when it ran

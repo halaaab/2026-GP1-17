@@ -598,6 +598,7 @@
   "chat.retry": "Try again",
   "chat.notCopied": "Could not copy. Select the text and copy it instead.",
   "chat.agentSignIn": "Please sign in again so Darb can answer.",
+  "chat.noAnswerYet": "Darb has not answered this message yet.",
   "history.none": "You have no ideas yet. Start your first assessment.",
   "assess.back": "Back to conversation",
   "score.outOf": "out of 100",
