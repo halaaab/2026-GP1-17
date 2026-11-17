@@ -15,9 +15,10 @@
      });
      // reply = the full text of Darb's answer
 
-   It uses Mastra's own HTTP API: POST /api/agents/conversationalAgent/stream.
-   The answer comes back as a stream of small "data: {...}" lines (server-sent
-   events); the pieces of text are the lines whose type is "text-delta".
+   It uses the server's chat route: POST /chat (17 Nov 2026; before, Mastra's own
+   /api/agents/conversationalAgent/stream). The answer comes back as a stream of small
+   "data: {...}" lines (server-sent events); the pieces of text are the lines whose
+   type is "text-delta". Lines starting with ":" only keep the connection alive.
 
    Security: no API key is ever in this file. The server checks the founder's
    Supabase login (the access token below) and takes the founder's id from it.
@@ -42,7 +43,9 @@ export async function askDarb({ text, assessmentId, threadId, onText = () => {} 
 
   let response;
   try {
-    response = await fetch(`${AGENT_SERVER_URL}/api/agents/conversationalAgent/stream`, {
+    // /chat sends only Darb's reply text (agent-server/src/mastra/server/chat-route.ts). Mastra's own
+    // route also sent every step of the competitor analysis (about 197 KB), which phones cut off.
+    response = await fetch(`${AGENT_SERVER_URL}/chat`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,11 +53,11 @@ export async function askDarb({ text, assessmentId, threadId, onText = () => {} 
       },
       body: JSON.stringify({
         // only the new message: the agent keeps the earlier ones in its memory
-        messages: [{ role: 'user', content: text }],
-        // thread = this conversation, resource = this founder
-        memory: { thread: threadId, resource: session.user.id },
+        text,
+        // this conversation; the founder is taken from the login on the server
+        threadId,
         // the agent needs the assessment to run the competitor analysis
-        requestContext: { assessmentId },
+        assessmentId,
       }),
     });
   } catch (error) {

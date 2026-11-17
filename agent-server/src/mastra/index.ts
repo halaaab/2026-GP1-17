@@ -11,6 +11,7 @@ import { competitorAgent } from './agents/competitor-agent';
 import { conversationalAgent } from './agents/conversational-agent';
 import { darbStore } from './lib/storage';
 import { authMiddleware } from './server/auth';
+import { chatRoute } from './server/chat-route';
 import { initCrRegistry } from './lib/cr-registry';
 import { initCrNames } from './lib/cr-names';
 import { checkCrTool } from './tools/check-cr';
@@ -67,7 +68,12 @@ export const mastra = new Mastra({
         }),
   server: {
     // Every API request is checked first: the founder's id comes from their Supabase login (server/auth.ts).
-    middleware: [{ path: '/api/*', handler: authMiddleware }],
+    middleware: [
+      { path: '/api/*', handler: authMiddleware },
+      { path: '/chat', handler: authMiddleware },
+    ],
+    // The website's chat: only Darb's reply text, not every step of the agents (server/chat-route.ts).
+    apiRoutes: [chatRoute],
     // Live, only the Darb website may call the server.
     ...(process.env.WEBSITE_ORIGIN
       ? {
