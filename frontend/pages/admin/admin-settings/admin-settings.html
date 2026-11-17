@@ -3,7 +3,7 @@
   ADMIN PROFILE (admin console → Settings in the sidebar)
   The signed-in admin's own account: name, username and phone (the columns an
   admin may change on their own row, migration 0001), a new password, the
-  language, what they added to Darb, and logging out.
+  language, and what they added to Darb. Signing out is in the sidebar.
   The email is read only: admin accounts are created by the Darb team.
 -->
 <html lang="en" dir="ltr">
@@ -170,14 +170,6 @@
       </form>
     </section>
 
-    <!-- Session -->
-    <section class="card profile-card profile-row fade-up" style="--i: 5">
-      <div>
-        <h3 class="section-title" data-i18n="adminProfile.session"></h3>
-        <p class="text-3" data-i18n="adminProfile.sessionSub"></p>
-      </div>
-      <button type="button" class="btn btn-secondary" data-logout data-i18n="auth.logout"></button>
-    </section>
   </main>
 
   <script type="module" src="../../../shared/layout.js"></script>

@@ -1527,6 +1527,24 @@ body.sidebar-collapsed .header-toggle {
   border-radius: var(--r-pill);
   color: var(--text-nav);
 }
+/* On the phone the language button is the same everywhere: a round button with only
+   the globe. The language's name stays for screen readers (hidden from view, not removed). */
+@media (max-width: 640px) {
+  .language-toggle,
+  .public-header-actions .language-toggle {   /* the landing page's header buttons have their own shape */
+    aspect-ratio: 1;   /* as wide as it is tall: a circle, whatever height the page's buttons have */
+    padding: 0;
+    border-radius: var(--r-pill);
+  }
+  .language-toggle span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 
 /* The phone menu and its button are hidden on wide screens */
 .public-menu-button,
@@ -2361,4 +2379,213 @@ html[dir="rtl"] .auth-title {
 @keyframes fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* ==========================================================
+   Profile pages: the founder's Profile and the admin's Profile share this layout.
+   A hero card (avatar, name, badge, facts), then two columns
+   (details | smaller cards), then full-width cards (security, session).
+   ========================================================== */
+
+/* the gap between the hero, the columns and the cards under them */
+.profile-hero + .profile-columns,
+.profile-columns ~ section {
+  margin-top: 14px;
+}
+
+/* ----- Who is signed in ----- */
+
+.profile-hero {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 22px;
+  background: var(--gradient-aurora), var(--bg);
+}
+.profile-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 22px;
+  box-shadow: var(--shadow-brand);
+}
+.profile-hero-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.profile-hero-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.profile-hero-name h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 800;
+}
+.profile-hero-line {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+}
+.profile-hero-facts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.profile-hero-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 112px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: rgba(255, 255, 255, 0.7);
+  font-size: 12px;
+}
+.profile-hero-fact strong {
+  font-size: 14px;
+}
+
+/* ----- Columns ----- */
+
+.profile-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+  align-items: start;
+}
+.profile-side {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-card {
+  padding: 22px;
+}
+.profile-card > .text-3,
+.profile-card-head .text-3,
+.profile-row .text-3 {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+.profile-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* "@" and "+966" in front of the box */
+.profile-prefix {
+  display: flex;
+  align-items: stretch;
+}
+.profile-prefix-sign {
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 12px;
+  border: 1px solid var(--border-strong);
+  border-inline-end: none;
+  border-start-start-radius: var(--r-sm);
+  border-end-start-radius: var(--r-sm);
+  background: var(--bg-subtle);
+  color: var(--text-2);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.profile-prefix .input {
+  border-start-start-radius: 0;
+  border-end-start-radius: 0;
+}
+
+.input[readonly] {
+  background: var(--bg-subtle);
+  color: var(--text-2);
+}
+
+.profile-form-foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 4px;
+}
+.profile-form-foot .text-3 {
+  margin-inline-end: auto;
+  font-size: 12.5px;
+}
+
+/* ----- Security ----- */
+
+.profile-password .rules {
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .profile-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  /* the hero on a phone: a smaller avatar beside the name, then the facts in one row */
+  .profile-hero,
+  .profile-card {
+    padding: 16px;
+  }
+  .profile-hero {
+    gap: 14px;
+  }
+  .profile-avatar {
+    width: 48px;
+    height: 48px;
+    font-size: 17px;
+  }
+  .profile-hero-text {
+    flex-basis: 0;
+  }
+  .profile-hero-name h3 {
+    font-size: 19px;
+  }
+  .profile-hero-facts {
+    width: 100%;
+    gap: 6px;
+  }
+  .profile-hero-fact {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 10px;
+    font-size: 11px;
+  }
+  .profile-hero-fact strong {
+    font-size: 13px;
+  }
+  .profile-form-foot .btn {
+    flex: 1;
+  }
+}
+
+/* iPhone zooms the page in when a text box's text is smaller than 16px, and it stays
+   zoomed after sending. On phones every text box uses 16px, so it never zooms. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea,
+  .input,
+  .composer-input {
+    font-size: 16px;
+  }
 }

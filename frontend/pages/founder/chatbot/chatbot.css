@@ -5,92 +5,75 @@
    1. The page: home state and conversation state
    ========================================================== */
 
+/* The chat fills the screen under the header, like a chat app:
+   home      the greeting in the middle, the examples and the box at the bottom
+   started   the messages, and the box stays at the bottom while they scroll */
+body[data-page="chatbot"] .app-content {
+  padding-bottom: 0;
+}
 .chat {
   display: flex;
   flex-direction: column;
   max-width: 760px;
-  min-height: calc(100dvh - var(--header-h) - 130px);
+  min-height: calc(100dvh - var(--header-h) - 28px);
   margin-inline: auto;
 }
 
 /* ----- Home ----- */
 
 .chat-home {
-  padding-top: 9vh;
-  margin-bottom: 26px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex: 1;
+  padding-block: 24px;
   text-align: center;
 }
 .chat-greeting {
   margin: 0 0 8px;
-  font-size: clamp(28px, 4.4vw, 40px);
+  font-size: clamp(26px, 4.4vw, 38px);
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
 }
 .chat-question {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-2);
 }
 
-.chat-start {
+/* the bottom of the screen: examples (home only) and the box. It stays at the
+   bottom; its background hides the messages that scroll under it. */
+.chat-bottom {
+  position: sticky;
+  inset-block-end: 0;
+  z-index: 50;
   display: flex;
   flex-direction: column;
-  gap: 36px;
-  margin-top: 16px;
+  gap: 10px;
+  padding-block: 8px max(16px, env(safe-area-inset-bottom));
+  background: var(--bg);
 }
+
+/* short example chips in one line */
 .chat-examples {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
 }
-/* a long example wraps inside its pill instead of leaving the screen */
 .chat-examples .pill {
-  height: auto;
-  min-height: 34px;
-  padding-block: 6px;
-  text-align: start;
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.recent-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  font-size: 13.5px;
-}
-.recent-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-}
-.recent-card {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  font-size: 12.5px;
-}
-.recent-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  min-height: 22px;
-}
-.recent-title {
-  font-size: 14.5px;
-  color: var(--text);
-}
-
-/* ----- Conversation: the home pieces go away, the box sticks to the bottom ----- */
+/* ----- Conversation: the home pieces go away ----- */
 
 .thread {
   display: none;
 }
 .chat.is-started .chat-home,
-.chat.is-started .chat-start {
+.chat.is-started .chat-examples {
   display: none;
 }
 .chat.is-started .thread {
@@ -98,20 +81,19 @@
   flex-direction: column;
   flex: 1;
   gap: 22px;
-  padding-bottom: 28px;
-}
-.chat.is-started .composer {
-  position: sticky;
-  inset-block-end: 16px;
-  z-index: 50;
-  /* the second shadow is a white strip under the box, so messages do not show below it */
-  box-shadow: var(--shadow-float), 0 28px 0 0 var(--bg);
+  padding-block: 8px 20px;
 }
 
 /* this page has no title in the header, so give the header a background
    and messages do not show through behind its buttons */
 body[data-page="chatbot"] .app-header {
   background: var(--bg);
+}
+
+/* the new chat button in the header */
+.chat-new svg {
+  width: 18px;
+  height: 18px;
 }
 
 /* ==========================================================
@@ -216,6 +198,26 @@ body[data-page="chatbot"] .app-header {
   line-height: 1.6;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+/* Darb's avatar: its mark in white, small, inside the brand circle (.avatar).
+   darb-mark.png is a small copy of assets/images/Darb.png (1.6 MB), so phones load it fast. */
+.avatar-darb img {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
+  filter: brightness(0) invert(1);   /* the blue mark turns white */
+}
+/* the bigger one above the greeting on the home state */
+.chat-home-mark {
+  align-self: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 14px;
+}
+.chat-home-mark img {
+  width: 20px;
+  height: 20px;
 }
 
 /* Darb: a small avatar and plain text */
@@ -1558,13 +1560,37 @@ body.assess-open #header-actions {
   }
 }
 
+@media (max-width: 960px) {
+  .chat {
+    min-height: calc(100dvh - var(--header-h) - 20px);
+  }
+}
+
 @media (max-width: 640px) {
-  .chat-home {
-    padding-top: 4vh;
+  /* the header like a phone chat app: menu, the name in the middle, the buttons */
+  body[data-page="chatbot"] .app-header-space {
+    display: none;
   }
-  .recent-grid {
-    grid-template-columns: 1fr;
+  .chat-title {
+    flex: 1;
+    text-align: center;
   }
+  /* the examples in one line that slides sideways, edge to edge */
+  .chat-examples {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .chat-examples::-webkit-scrollbar {
+    display: none;
+  }
+  .composer-input {
+    min-height: 44px;
+  }
+
   .msg-user {
     max-width: 92%;
   }
