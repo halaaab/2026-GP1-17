@@ -1,117 +1,12 @@
-/* Profile page only. Cards, fields, tiles, the segmented control, buttons
-   and the modal come from shared/shared.css. */
+/* Founder profile only. The layout (hero, columns, cards, password) is the profile
+   layout in shared/shared.css, the same one the admin's Profile uses. */
 
-/* the cards stay narrow enough to read comfortably */
-.pf {
-  max-width: 760px;
-}
-
-.pf-cards {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.pf-card {
-  padding: 20px;
-}
-.pf-card .section-title {
-  margin: 0;
-}
-.pf-card-sub {
-  margin: 2px 0 16px;
-  font-size: 12.5px;
-}
-/* the Preferences card has no subtitle, so the title keeps the same gap below it */
-#language-label {
-  margin-top: 16px;
-}
-
-/* ---------- Personal details: the initials, then the fields ---------- */
-
-.pf-personal {
-  display: flex;
-  align-items: flex-start;
-  gap: 18px;
-}
-.pf-personal > .form {
-  flex: 1;
-  min-width: 0;
-}
-
-.pf-avatar {
-  width: 48px;
-  height: 48px;
-  font-size: 15px;
-}
-
-/* +966 in a grey box before the number */
-.pf-phone {
-  display: flex;
-  gap: 8px;
-}
-.pf-phone .input {
-  flex: 1;
-  min-width: 0;
-}
-.pf-phone-code {
-  display: inline-flex;
-  align-items: center;
-  padding-inline: 12px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-sm);
-  background: var(--bg-tile);
-  color: var(--text-2);
-  font-weight: 600;
-}
-
-/* the country is fixed to Saudi Arabia: shown greyed, it cannot be changed */
-.pf-country {
-  background: var(--bg-tile);
-  color: var(--text-2);
-  cursor: default;
-}
-
-.pf-actions {
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* ---------- Preferences ---------- */
-
-.pf-language {
-  display: flex;
-  margin: 6px 0 16px;
-}
-.pf-language .segmented-item {
-  flex: 1;
-}
-
-.pf-tiles {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-}
-.pf-tiles strong {
-  overflow-wrap: anywhere;
-}
-
-/* ---------- Session and delete: the words on one side, the button on the other ---------- */
-
-.pf-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-.pf-row .pf-card-sub {
-  margin-bottom: 0;
-}
-.pf-row .btn {
+/* the buttons on the side cards keep their size next to the words */
+.profile-row .btn {
   flex-shrink: 0;
 }
 
-/* Delete: soft red, the strong red is kept for the confirm button in the modal */
+/* Delete: soft red, the strong red is kept for the confirm button in the pop-up */
 .pf-danger-soft {
   background: var(--risk-tint);
   border-color: var(--risk-tint);
@@ -128,26 +23,9 @@
   color: var(--risk-text);
 }
 
-/* Phones: the initials go above the fields, tiles and buttons stack */
+/* Phones: the side cards' buttons take the whole width under their words */
 @media (max-width: 640px) {
-  .pf-card {
-    padding: 16px;
-  }
-  .pf-personal {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .pf-avatar {
-    align-self: flex-start;
-  }
-  .pf-actions .btn {
+  .profile-row .btn {
     width: 100%;
-  }
-  .pf-tiles {
-    grid-template-columns: minmax(0, 1fr);
-  }
-  .pf-row {
-    flex-direction: column;
-    align-items: stretch;
   }
 }

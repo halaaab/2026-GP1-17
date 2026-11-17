@@ -15,9 +15,9 @@ import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { getAccount } from '../../../shared/auth.js';
 import {
-  say, label, scoreBand, whenText, chatLink, loadResult, refreshAnalysis,
-  getAssessments, getAssessment, saveAssessment, saveMessage, newAssessment,
-  showSidebarHistory, assessmentsFailed,
+  say, scoreBand, chatLink, loadResult, refreshAnalysis,
+  getAssessment, saveAssessment, saveMessage, newAssessment,
+  showSidebarHistory, assessmentsFailed, hasIdea, titleFrom,
 } from '../../../shared/assessments.js';
 import { askDarb } from '../../../shared/agent.js';
 import { showErrorPage } from '../../../shared/errors.js';
@@ -80,7 +80,7 @@ function addUser(text, about = null) {
 function addAgent(text = '') {
   const row = document.createElement('div');
   row.className = 'msg msg-agent';
-  row.innerHTML = `<span class="avatar avatar-sm">${icon('spark')}</span><div class="msg-body"></div>`;
+  row.innerHTML = `<span class="avatar avatar-sm avatar-darb"><img src="../../../assets/images/darb-mark.png" alt=""></span><div class="msg-body"></div>`;
 
   const body = row.querySelector('.msg-body');
   if (text) {
@@ -237,31 +237,16 @@ function showGreeting() {
   document.querySelector('#greeting').textContent = firstName ? greeting : greeting.replace(/[,،]\s*$/, '');
 }
 
-async function showHome() {
+/* The home state: the greeting, and short example chips above the box.
+   A chip shows a short name; clicking it puts the full example in the box.
+   Past ideas are in the sidebar (the menu button on the phone), not here. */
+function showHome() {
   showGreeting();
+  showHeader();
 
   document.querySelector('#examples').innerHTML = [0, 1, 2]
-    .map((number) => `<button type="button" class="pill" data-example>${t(`chat.example.${number}`)}</button>`)
+    .map((number) => `<button type="button" class="pill" data-example="${number}">${t(`chat.exampleLabel.${number}`)}</button>`)
     .join('');
-
-  const recent = (await getAssessments()).slice(0, 3);
-  document.querySelector('#recent').hidden = recent.length === 0;
-
-  const grid = document.querySelector('#recent-grid');
-  grid.innerHTML = recent.map((assessment) => `
-    <a class="card card-hover recent-card" href="${chatLink(assessment.id)}">
-      <span class="recent-top">
-        <span class="text-3">${assessment.sector ? `${label(assessment.sector)} · ` : ''}${label(assessment.city)}</span>
-        ${assessment.score ? `<span class="chip chip-${scoreBand(assessment.score)}">${assessment.score}</span>` : ''}
-      </span>
-      <strong class="recent-title"></strong>
-      <span class="text-3">${whenText(assessment.updated)}</span>
-    </a>`).join('');
-
-  // titles are written by founders, so they are added as text
-  grid.querySelectorAll('.recent-title').forEach((title, index) => {
-    title.textContent = say(recent[index].title);
-  });
 }
 
 /* ---------- The conversation ---------- */
@@ -275,15 +260,46 @@ function setPlaceholder() {
 /* Switches the page from the home state to the conversation */
 function showChat() {
   chat.classList.add('is-started');
-  showHeaderButton();
+  showHeader();
 }
 
-/* The "Assessment 72" button in the header, once there is a score */
-function showHeaderButton() {
+/* The header, like a chat app: the idea's name in the middle, and on the other side
+   the "Assessment 72" button (once there is a score) and the new chat button.
+   Before Darb has found an idea in the conversation, the middle says "Darb". */
+function showHeader() {
+  let title = document.querySelector('#chat-title');
+  if (!title) {
+    title = document.createElement('h1');
+    title.id = 'chat-title';
+    title.className = 'app-header-title chat-title';
+    document.querySelector('.app-header .app-header-space').before(title);
+  }
+  title.textContent = current && hasIdea(current) ? say(current.title) : t('chat.titleEmpty');   // founder's words: as text
+
   const actions = document.querySelector('#header-actions');
-  actions.innerHTML = current && current.score
-    ? `<button type="button" class="btn btn-secondary btn-sm" data-open-tab="score"><span class="chip chip-${scoreBand(current.score)}">${current.score}</span> ${t('chat.assessment')}</button>`
-    : '';
+  actions.innerHTML = `
+    ${current && current.score
+      ? `<button type="button" class="btn btn-secondary btn-sm" data-open-tab="score"><span class="chip chip-${scoreBand(current.score)}">${current.score}</span> ${t('chat.assessment')}</button>`
+      : ''}
+    ${current
+      ? `<a class="btn-icon chat-new" href="chatbot.html" aria-label="${t('nav.newAssessment')}" title="${t('nav.newAssessment')}">${icon('pencil')}</a>`
+      : ''}`;
+}
+
+/* The first competitor analysis of this conversation was just saved, so it is about a
+   real idea now: it gets its name and shows in History and the sidebar. The name comes
+   from the founder's longest message, since that is where the idea was described
+   (the first message may only have been "hi"). */
+async function becomeIdea() {
+  const said = current.history.filter((message) => message.from === 'user').map((message) => message.text);
+  const idea = said.reduce((longest, text) => (text.length > longest.length ? text : longest), '');
+  if (idea) {
+    current.idea = idea;
+    current.title = titleFrom(idea);
+  }
+  await save();
+  showHeader();
+  showSidebarHistory();
 }
 
 /* Sends one founder message to Darb, shows the reply and saves both.
@@ -304,9 +320,13 @@ async function talk(text, about = null) {
     await saveMessage(current, 'user', { text, about: about ? about.id : '' });
     await saveMessage(current, 'agent', { text: reply });
   }
+  const wasIdea = hasIdea(current);
   await save();   // updates the time, so the conversation moves to the top of History
   // a competitor analysis was just saved for this idea: show its competitors as cards
-  if (reply && await refreshAnalysis(current)) addCompetitors();
+  if (reply && await refreshAnalysis(current)) {
+    if (!wasIdea) await becomeIdea();
+    addCompetitors();
+  }
   if (current.score) addFollowUps();
   input.focus();
 }
@@ -318,9 +338,10 @@ async function startConversation(idea) {
   showChat();
   setPlaceholder();
 
+  // saved before Darb answers: the agent needs it in the database to run the analysis.
+  // It only shows in History once Darb finds an idea in the conversation (becomeIdea).
   await save();
   history.replaceState(null, '', chatLink(current.id));
-  showSidebarHistory();
 
   await talk(idea);
 }
@@ -427,7 +448,7 @@ document.addEventListener('click', (event) => {
   // an example on the home state fills the box
   const example = event.target.closest('[data-example]');
   if (example) {
-    input.value = example.textContent;
+    input.value = t(`chat.example.${example.dataset.example}`);
     resizeInput();
     input.focus();
   }
@@ -502,7 +523,7 @@ if (address.get('id')) {
     showErrorPage(assessmentsFailed ? 500 : 404);
   }
 } else {
-  await showHome();
+  showHome();
 }
 
 input.focus();
