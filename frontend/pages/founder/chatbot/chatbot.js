@@ -74,6 +74,65 @@ function addUser(text, about = null) {
   row.querySelector('.bubble').textContent = text;   // as text, never as HTML
   thread.append(row);
   scrollToEnd();
+  return row;
+}
+
+/* Puts text on the clipboard. Some browsers block the new way (navigator.clipboard),
+   so the old way is tried too: select the text in a hidden box and copy it. */
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const box = document.createElement('textarea');
+    box.value = text;
+    box.setAttribute('readonly', '');
+    box.style.position = 'fixed';
+    box.style.opacity = '0';
+    document.body.append(box);
+    box.select();
+    const worked = document.execCommand('copy');
+    box.remove();
+    if (!worked) throw new Error('copy blocked');
+  }
+}
+
+/* The copy button under one of Darb's replies: puts the reply's text on the clipboard */
+function addCopy(body, text) {
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'btn-icon msg-action';
+  copy.setAttribute('aria-label', t('chat.copy'));
+  copy.title = t('chat.copy');
+  copy.innerHTML = icon('copy');
+  copy.addEventListener('click', async () => {
+    try {
+      await copyText(text);
+      copy.innerHTML = icon('check');   // a tick for a moment, then the copy icon again
+      copy.title = t('chat.copied');
+      setTimeout(() => { copy.innerHTML = icon('copy'); copy.title = t('chat.copy'); }, 1500);
+    } catch {
+      showToast(t('chat.notCopied'), 'risk');
+    }
+  });
+  body.append(copy);
+}
+
+/* Darb could not answer: a "Try again" button under the failed reply. It removes the
+   founder's message and the failed reply, then sends the same message again. */
+function addRetry(userRow, text, about) {
+  const failedRow = userRow.nextElementSibling;
+  const retry = document.createElement('button');
+  retry.type = 'button';
+  retry.className = 'btn btn-secondary btn-sm';
+  retry.innerHTML = `${icon('retry')} ${t('chat.retry')}`;
+  retry.addEventListener('click', () => {
+    if (busy) return;
+    userRow.remove();
+    failedRow.remove();
+    talk(text, about);
+  });
+  failedRow.querySelector('.msg-body').append(retry);
+  scrollToEnd();
 }
 
 /* A message from Darb (small avatar, plain text). Returns the box so more can be added to it. */
@@ -109,7 +168,7 @@ async function agentAnswers(text) {
   const threadId = current.threadId || current.id;
 
   try {
-    return await askDarb({
+    const reply = await askDarb({
       text,
       assessmentId: current.id,
       threadId,
@@ -119,6 +178,8 @@ async function agentAnswers(text) {
         scrollToEnd();
       },
     });
+    if (reply) addCopy(body, reply);
+    return reply;
   } catch (error) {
     console.error('Chat: Darb could not answer:', error.message);
     const message = t(error.kind === 'signin' ? 'chat.agentSignIn' : 'chat.agentOffline');
@@ -305,7 +366,7 @@ async function becomeIdea() {
 /* Sends one founder message to Darb, shows the reply and saves both.
    about = the startup the question is about (from "Ask about it" in the panel) */
 async function talk(text, about = null) {
-  addUser(text, about);
+  const userRow = addUser(text, about);
 
   // the agent only sees the words, so say which startup the question is about
   const forAgent = about ? `(${t('chat.askingAbout')} ${about.name}) ${text}` : text;
@@ -319,6 +380,8 @@ async function talk(text, about = null) {
   if (reply) {
     await saveMessage(current, 'user', { text, about: about ? about.id : '' });
     await saveMessage(current, 'agent', { text: reply });
+  } else {
+    addRetry(userRow, text, about);
   }
   const wasIdea = hasIdea(current);
   await save();   // updates the time, so the conversation moves to the top of History
@@ -382,7 +445,7 @@ async function showSaved() {
     if (message.from === 'user') {
       addUser(say(message.text));
     } else {
-      addAgent(say(message.text));
+      addCopy(addAgent(say(message.text)), say(message.text));
     }
   }
 

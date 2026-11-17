@@ -247,6 +247,15 @@ body[data-page="chatbot"] .app-header {
   color: var(--text-3);
 }
 
+/* the copy button under Darb's reply: small and quiet, close to the text */
+.msg-body .msg-action {
+  width: 30px;
+  height: 30px;
+  margin-top: -8px;
+  margin-inline-start: -7px;
+  color: var(--text-3);
+}
+
 .replies,
 .follow-ups {
   display: flex;
