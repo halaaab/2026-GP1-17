@@ -4,7 +4,7 @@
 //                   the competitor's similarity score from the answers (the judge never writes numbers),
 //                   and its competitive opportunity (explainer §6)
 //   rankCompetitors the policy gate: only valid companies with evidence, one per company, never the founder's own
-//                   startup or a reference; Confirmed before Likely, then the strongest overlap
+//                   startup or a reference; the strongest overlap first, then Confirmed before Likely
 //   computeIss      the Idea Similarity Score from the top 3, the closest counting most
 //   marketLevel     open / competitive / crowded from the number of valid direct competitors
 //   buildResult     the Result the supervisor receives, with the notes as codes
@@ -188,12 +188,14 @@ function companyKey(c: Candidate): string {
   return hostOf(c.domain ?? c.website) ?? `name:${normalizeName(c.name)}`;
 }
 
-// Confirmed before Likely, then the strongest overlap; candidate_key keeps equal ones in a fixed order.
+// The strongest overlap with the idea first, then Confirmed before Likely, then candidate_key keeps equal ones in a
+// fixed order (Hala, 18 Nov 2026: Confirmed first put Lugmety, fine dining, above Jahez for a food delivery app only
+// because Jahez's registration was not matched; closeness to the idea is what the founder needs first).
 function compare(a: Judged, b: Judged): number {
   const rank = (j: Judged) => (j.candidate.validation?.evidence_status === 'confirmed' ? 0 : 1);
   return (
-    rank(a) - rank(b) ||
     b.policy.similarity_score - a.policy.similarity_score ||
+    rank(a) - rank(b) ||
     a.candidate.candidate_key.localeCompare(b.candidate.candidate_key)
   );
 }

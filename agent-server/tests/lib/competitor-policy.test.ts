@@ -193,7 +193,7 @@ describe('competitive opportunities (four fixed rules)', () => {
 });
 
 describe('the policy gate and ranking', () => {
-  it('shows Confirmed before Likely, then the strongest overlap', () => {
+  it('shows the strongest overlap first, then Confirmed before Likely (18 Nov 2026)', () => {
     const ranked = rankCompetitors(
       [
         judged('likely100', {}, {}, 'likely'),
@@ -202,7 +202,8 @@ describe('the policy gate and ranking', () => {
       ],
       handoff,
     );
-    expect(ranked.map((j) => j.candidate.candidate_key)).toEqual(['confirmed100', 'confirmed50', 'likely100']);
+    // a Likely company as close as the idea comes before a Confirmed one that is further away (Jahez above Lugmety)
+    expect(ranked.map((j) => j.candidate.candidate_key)).toEqual(['confirmed100', 'likely100', 'confirmed50']);
   });
 
   it('never shows unconfirmed or unvalidated candidates, ones with no source or no description, or non-competitors', () => {
