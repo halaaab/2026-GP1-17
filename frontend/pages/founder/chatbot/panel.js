@@ -383,12 +383,14 @@ function opportunityLine(c) {
     </div>`;
 }
 
-/* The basis of classification: the judge's three answers with its notes, and how sure the evidence is */
+/* The basis of classification (Hala, 18 Nov 2026: the cards were crowded): what the company does, the judge's three
+   answers with its notes, and the opportunity, behind one formal heading. */
 function basis(c, open) {
   const source = safeUrl(c.source);
   return `
     <details class="competitor-basis"${open ? ' open' : ''}>
       <summary>${icon('chevron')} ${t('comp.basis')}</summary>
+      ${c.about ? `<p class="basis-about" dir="auto">${safe(shorten(c.about, 200))}</p>` : ''}
       ${PARTS.map((part) => {
         const answer = answerOf(c.comparison[part]);
         const note = c.comparison[part] && c.comparison[part].note;
@@ -398,15 +400,8 @@ function basis(c, open) {
             <div><p>${t(`comp.part.${part}`)}: <strong>${t(`comp.answer.${answer}`)}</strong></p>${note ? `<small dir="auto">${safe(note)}</small>` : ''}</div>
           </div>`;
       }).join('')}
-      <div class="basis-row">
-        <span class="answer-dot is-evidence">${icon('shield')}</span>
-        <div>
-          <p>${t('comp.evidenceLevel')}: <strong>${t(c.evidence === 'likely' ? 'comp.limited' : 'comp.confirmed')}</strong></p>
-          <small>${t(c.evidence === 'likely' ? 'comp.evidenceWhy.likely' : 'comp.evidenceWhy.confirmed')}</small>
-          ${sourceLine(c)}
-          ${source && open === false ? `<a class="link basis-source" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
-        </div>
-      </div>
+      ${opportunityLine(c)}
+      ${source && !open ? `<a class="link basis-source" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
       <p class="text-3 basis-note">${t('comp.opp.note')}</p>
     </details>`;
 }
@@ -428,16 +423,14 @@ function competitorCard(competitor, withActions = true) {
         <span class="chip ${competitor.label === 'direct' ? 'chip-risk' : 'chip-warn'}">${t(`comp.label.${competitor.label}`)}</span>
         ${competitor.evidence === 'likely' ? `<span class="chip chip-navy">${t('comp.limited')}</span>` : `<span class="chip chip-good">${t('comp.confirmed')}</span>`}
       </div>
-      <p class="startup-about" dir="auto">${safe(shorten(competitor.about, 200))}</p>
-      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : ''}
+      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : (competitor.about ? `<p class="startup-about" dir="auto">${safe(shorten(competitor.about, 200))}</p>` : '')}
       ${score === null ? '' : `
         <div class="competitor-score">
           <span>${t('comp.similarity')}</span>
           <span class="competitor-bar"><span style="width: ${Math.max(0, Math.min(100, score))}%"></span></span>
           <span dir="ltr">${score}%</span>
         </div>`}
-      ${opportunityLine(competitor)}
-      ${basis(competitor, !withActions ? true : false)}
+      ${basis(competitor, !withActions)}
       ${withActions ? `
         <div class="startup-actions">
           ${website ? `<a class="btn btn-secondary btn-sm" href="${website}" target="_blank" rel="noopener noreferrer">${icon('globe')} ${t('comp.website')}</a>` : ''}
