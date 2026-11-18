@@ -264,6 +264,16 @@ export async function refreshAnalysis(assessment) {
   return true;
 }
 
+/* Whether a new competitor analysis of this assessment has been saved, and how many competitors it shows,
+   without changing the page's copy (refreshAnalysis does that next). null while there is none yet. */
+export async function newAnalysis(assessment) {
+  if (!assessment || !assessment.isSaved) return null;
+  const { data } = await supabase.from('assessments').select('analysed_at').eq('assessment_id', assessment.id).maybeSingle();
+  if (!data || !data.analysed_at || data.analysed_at === assessment.analysedAt) return null;
+  const { count } = await supabase.from('similar_startup_results').select('result_id', { count: 'exact', head: true }).eq('assessment_id', assessment.id);
+  return { competitors: count || 0 };
+}
+
 /* Loads the competitors, the market numbers and the roadmap of one assessment
    and keeps them on it as assessment.result, so the pages can show them. */
 export async function loadResult(assessment) {
@@ -290,6 +300,7 @@ function fromRows(idea, assessment, messages) {
     ideaId: idea.idea_id,
     isSaved: true,
     title: idea.idea_name,
+    savedTitle: idea.idea_name,   // the name as last saved, to notice when the agent server renamed the idea
     idea: idea.idea_description || '',
     sector: idea.sector || '',
     city: idea.city || '',
@@ -400,6 +411,14 @@ export async function saveAssessment(assessment) {
   assessment.updated = now;
   if (assessment.score && !assessment.completedAt) assessment.completedAt = now;
   if (assessment.roadmapShown && !assessment.roadmapAt) assessment.roadmapAt = now;
+
+  // The agent server names the idea formally once it understands it ("بنك رقمي للتسوق الإلكتروني", 18 Nov 2026).
+  // A name in the database that this page did not write is that formal name: it is kept, never overwritten.
+  if (assessment.isSaved) {
+    const { data: row } = await supabase.from('startup_ideas').select('idea_name').eq('idea_id', assessment.ideaId).maybeSingle();
+    if (row && row.idea_name && row.idea_name !== assessment.savedTitle) assessment.title = row.idea_name;
+  }
+  assessment.savedTitle = assessment.title;
 
   const ideaColumns = {
     idea_name: assessment.title,

@@ -8,6 +8,7 @@ import { profileFromKnownFacts } from '../lib/competitor-result';
 import { getRunState, logStep } from '../lib/competitor-run';
 import { embedTexts, toPgVector } from '../lib/embeddings';
 import { buildIdeaProfile, profileText } from '../lib/idea-profile';
+import { nameIdea } from '../lib/idea-title';
 import { getSupabase } from '../lib/supabase';
 import { clarificationFor, understandText, withStatedFacts } from '../lib/understand';
 import { Handoff, Origin } from '../schemas/competitor';
@@ -63,7 +64,12 @@ export const understandIdeaTool = createTool({
 
     const clarification = clarificationFor(profile, handoff.data);
     state.clarification = clarification;
-    if (!clarification) state.ideaEmbedding = await saveEmbedding(handoff.data.idea_id, profileText(profile));
+    if (!clarification) {
+      // the conversation's formal name, written beside the search (not awaited: the founder never waits for it).
+      // Only for the founder's own idea: a what-if keeps the name of the analysis it varies.
+      if (handoff.data.mode === 'new') void nameIdea(handoff.data.idea_id, profile, handoff.data.language);
+      state.ideaEmbedding = await saveEmbedding(handoff.data.idea_id, profileText(profile));
+    }
 
     logStep(state, {
       capability: 'understand',

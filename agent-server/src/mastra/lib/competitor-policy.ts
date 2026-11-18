@@ -246,8 +246,30 @@ export function displayName(candidate: Pick<Candidate, 'name' | 'name_aliases'>,
   return wanted ?? candidate.name;
 }
 
+// The company's other names inside a sentence become the name on its card (Hala, 18 Nov 2026: an Arabic card said
+// "تتناول Lugmety ..." under the title "لقمتي"). Its own names only (Darb's list, its pages, its web address);
+// a name the company does not use is never made up, and the judge's wording is otherwise left as it is.
+export function withCardName(sentence: string, candidate: Pick<Candidate, 'name' | 'name_aliases' | 'domain'>, cardName: string): string {
+  const label = (candidate.domain ?? '').replace(/^www\./, '').split('.')[0];
+  const others = [candidate.name, ...candidate.name_aliases, label.length >= 4 ? label : '']
+    .map((n) => n.trim())
+    // only names in the other script: an Arabic card's English names, an English card's Arabic names
+    .filter((n) => n && n !== cardName && ARABIC.test(n) !== ARABIC.test(cardName))
+    .sort((x, y) => y.length - x.length);
+  const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  // the card name already in the sentence is set aside first, so "بنك D360" never becomes "بنك بنك D360"
+  const KEEP = '\u0000';
+  let out = sentence.split(cardName).join(KEEP);
+  for (const other of others) {
+    out = out.replace(new RegExp(`(?<![\\p{L}\\p{N}])${escape(other)}(?![\\p{L}\\p{N}])`, 'giu'), KEEP);
+  }
+  return out.split(KEEP).join(cardName);
+}
+
 function toCompetitor(j: Judged, rank: number, language: Language): ResultCompetitor {
   const c = j.candidate;
+  const name = displayName(c, language);
+  const named = (sentence: string) => withCardName(sentence, c, name);
   // The proof sentence is kept only when it is really in this competitor's evidence and its link is the competitor's own.
   // Only for companies found on the web: the evidence of a startup from Darb's list is Darb's own summary of it
   // ("Problem: ..."), not a sentence from the company's page (live check, 18 Nov 2026).
@@ -257,20 +279,20 @@ function toCompetitor(j: Judged, rank: number, language: Language): ResultCompet
   const cell = (a: JudgeAnswer) => ({ answer: a.answer, note: a.note, ...(proven(a) ? { quote: a.quote!.trim(), source_url: a.source_url! } : {}) });
   return {
     rank,
-    name: displayName(c, language),
+    name,
     website: c.website,
-    description: j.policy.description ?? c.description!,
+    description: named(j.policy.description ?? c.description!),
     city_region: c.city_region ?? null,
     source_type: c.source_type,
     ...(c.startup_id ? { startup_id: c.startup_id } : {}),
     label: j.policy.label as 'direct' | 'indirect',
     evidence_status: c.validation!.evidence_status as 'confirmed' | 'likely',
-    reason: j.policy.reason,
+    reason: named(j.policy.reason),
     comparison: { problem: cell(j.policy.problem), customer: cell(j.policy.customer), offering: cell(j.policy.offering) },
     sources: c.sources,
     similarity_score: j.policy.similarity_score,
     opportunity: j.policy.opportunity,
-    difference: j.policy.difference,
+    difference: j.policy.difference ? named(j.policy.difference) : j.policy.difference,
   };
 }
 

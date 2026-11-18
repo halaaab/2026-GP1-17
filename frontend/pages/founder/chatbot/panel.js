@@ -289,26 +289,13 @@ function safeUrl(url) {
   return /^https?:\/\//i.test(url || '') ? safe(url) : '';
 }
 
-/* The competitor's logo (Hala, 18 Nov 2026): the founder's browser loads the icon straight from the competitor's
-   own site while the card shows, so the analysis takes no extra time and nothing is saved. The large app icon is
-   tried first, then the small site icon; if neither loads, the first letter of the name stays in its tinted circle. */
+/* The first letter of the competitor's name in a tinted circle. Its own logo comes later, from the icon its site
+   declares (live test, 18 Nov 2026: guessing /favicon.ico showed Al Rajhi with its website builder's icon). */
 export function logoOf(competitor) {
   const name = competitor.name || '';
   const tints = ['navy', 'teal', 'good', 'warn'];
   const tint = tints[name.length % tints.length];
-  let site = '';
-  try {
-    const url = new URL(competitor.website || competitor.source || '');
-    if (url.protocol === 'https:' || url.protocol === 'http:') site = `https://${url.hostname}`;
-  } catch {
-    // no website: the letter only
-  }
-  const img = site
-    ? `<img src="${safe(site)}/apple-touch-icon.png" data-next="${safe(site)}/favicon.ico" alt="" loading="lazy" referrerpolicy="no-referrer"
-         onload="if (this.naturalWidth < 8) this.onerror(); else this.parentNode.classList.add('has-logo')"
-         onerror="if (this.dataset.next) { this.src = this.dataset.next; this.dataset.next = ''; } else this.remove()">`
-    : '';
-  return `<span class="initial is-${tint}"><span>${safe(name.trim().charAt(0).toUpperCase())}</span>${img}</span>`;
+  return `<span class="initial is-${tint}"><span>${safe(name.trim().charAt(0).toUpperCase())}</span></span>`;
 }
 const initial = (competitor) => logoOf(competitor);
 
