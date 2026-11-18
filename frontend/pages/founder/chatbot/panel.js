@@ -352,6 +352,25 @@ const PARTS = ['problem', 'customer', 'offering'];
 const ANSWERS = ['same', 'partly', 'different', 'unknown', 'conflicting'];
 const answerOf = (part) => (part && ANSWERS.includes(part.answer) ? part.answer : 'unknown');
 
+/* The founder's idea as Darb understood it (Hala, 18 Nov 2026): the comparison below is against these parts, so the
+   founder can read "the same problem" knowing which problem. Shown only when the analysis wrote it. */
+function yourIdea() {
+  const summary = assessment.ideaSummary;
+  if (!summary) return '';
+  const rows = ['problem', 'customer', 'offering', 'market'].filter((part) => summary[part]);
+  if (rows.length === 0) return '';
+  return `
+    <div class="box your-idea">
+      <h3 class="box-title">${icon('bulb')} ${t('comp.yourIdea')}</h3>
+      <p class="text-2 comp-overview-sub">${t('comp.yourIdea.sub')}</p>
+      ${rows.map((part) => `
+        <div class="compare-row">
+          <span class="compare-part">${t(`comp.part.short.${part}`)}</span>
+          <p dir="auto">${safe(summary[part])}</p>
+        </div>`).join('')}
+    </div>`;
+}
+
 /* The overview: each competitor's three answers in short words (Hala, 18 Nov 2026: marks alone needed a key to read),
    with its kind of competition under its name. Short enough for a phone. */
 function overview(competitors) {
@@ -451,6 +470,7 @@ function competitorAnalysis(withActions = true) {
   return `
     ${assessment.iss === null ? '' : issBox()}
     ${notesList()}
+    ${yourIdea()}
     ${overview(competitors)}
     <div class="startups competitors">${competitors.map((c) => competitorCard(c, withActions)).join('')}</div>`;
 }
