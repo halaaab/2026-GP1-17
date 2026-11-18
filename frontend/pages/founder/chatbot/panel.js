@@ -332,25 +332,9 @@ function sourceLine(competitor) {
   return parts.length ? `<p class="competitor-checked">${t('comp.source')}: ${parts.join(' · ')}</p>` : '';
 }
 
-/* Competitive opportunities (explainer §6): for each competitor, the rule that matched, what it means
-   (the judge's own sentence for a possible difference) and the fixed next step. Never "where you will win". */
-const OPPORTUNITY_CHIP = { proven_difference: 'chip-good', possible_customer_difference: 'chip-teal', possible_difference: 'chip-teal', no_clear_difference: 'chip-warn', not_enough_evidence: '' };
-
-function opportunities(competitors) {
-  const rows = competitors.filter((c) => OPPORTUNITY_CHIP[c.opportunity] !== undefined);
-  if (rows.length === 0) return '';
-  return `
-    <div class="box comp-opportunities">
-      <h3 class="box-title">${icon('sprout')} ${t('comp.opp')}</h3>
-      ${rows.map((c) => `
-        <div class="opportunity">
-          <p><span class="chip ${OPPORTUNITY_CHIP[c.opportunity]}">${t(`comp.opp.${c.opportunity}`)}</span> <strong><bdi>${safe(c.name)}</bdi></strong></p>
-          <p dir="auto">${c.opportunity === 'possible_difference' && c.difference ? safe(c.difference) : t(`comp.opp.${c.opportunity}.text`)}</p>
-          <p class="text-2"><strong>${t('comp.opp.next')}:</strong> ${t(`comp.opp.${c.opportunity}.next`)}</p>
-        </div>`).join('')}
-      <p class="text-3 comp-matrix-note">${t('comp.opp.note')}</p>
-    </div>`;
-}
+/* Competitive opportunities (explainer §6): for each competitor, the rule that matched, what it means (the judge's own
+   sentence for a possible difference) and the fixed next step. Never "where you will win". Shown inside its card. */
+const OPPORTUNITIES = ['proven_difference', 'possible_customer_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'];
 
 function notesList() {
   const notes = assessment.competitorNotes.filter((code) => SHOWN_NOTES.includes(code));
@@ -358,8 +342,74 @@ function notesList() {
   return `<ul class="comp-notes">${notes.map((code) => `<li>${icon('info')} ${t(`comp.note.${code}`)}</li>`).join('')}</ul>`;
 }
 
+/* The competitor analysis (Hala, 18 Nov 2026): everything about one competitor was spread over its card, a column of
+   the comparison table (with long notes in every cell, too wide for a phone) and a row of the opportunities box.
+   Now an overview of answers at the top, and one complete card per competitor with its basis of classification. */
+const PARTS = ['problem', 'customer', 'offering'];
+const ANSWER_ICON = { same: 'equal', partly: 'half', different: 'differ', unknown: 'question', conflicting: 'question' };
+const answerOf = (part) => (part && ANSWER_ICON[part.answer] ? part.answer : 'unknown');
+
+function answerDot(answer) {
+  return `<span class="answer-dot is-${answer}" title="${t(`comp.answer.${answer}`)}">${icon(ANSWER_ICON[answer])}</span>`;
+}
+
+/* The overview: each competitor's three answers as marks, so the whole comparison fits a phone */
+function overview(competitors) {
+  return `
+    <div class="box comp-overview">
+      <h3 class="box-title">${icon('grid')} ${t('comp.overview')}</h3>
+      <div class="comp-overview-grid">
+        <span></span>${PARTS.map((part) => `<span class="comp-overview-head">${t(`comp.part.short.${part}`)}</span>`).join('')}
+        ${competitors.map((c) => `
+          <span class="comp-overview-name"><bdi>${safe(c.name)}</bdi></span>
+          ${PARTS.map((part) => `<span class="comp-overview-cell">${answerDot(answerOf(c.comparison[part]))}</span>`).join('')}`).join('')}
+      </div>
+      <p class="comp-legend">${['same', 'partly', 'different', 'unknown'].map((a) => `<span>${answerDot(a)} ${t(`comp.answer.${a}`)}</span>`).join('')}</p>
+    </div>`;
+}
+
+/* The opportunity of one competitor, in one line */
+function opportunityLine(c) {
+  if (!OPPORTUNITIES.includes(c.opportunity)) return '';
+  const meaning = c.opportunity === 'possible_difference' && c.difference ? safe(c.difference) : t(`comp.opp.${c.opportunity}.text`);
+  return `
+    <div class="competitor-opp">
+      ${icon('bulb')}
+      <p dir="auto"><strong>${t(`comp.opp.${c.opportunity}`)}:</strong> ${meaning} <span>${t('comp.opp.next')}: ${t(`comp.opp.${c.opportunity}.next`)}</span></p>
+    </div>`;
+}
+
+/* The basis of classification: the judge's three answers with its notes, and how sure the evidence is */
+function basis(c, open) {
+  const source = safeUrl(c.source);
+  return `
+    <details class="competitor-basis"${open ? ' open' : ''}>
+      <summary>${icon('chevron')} ${t('comp.basis')}</summary>
+      ${PARTS.map((part) => {
+        const answer = answerOf(c.comparison[part]);
+        const note = c.comparison[part] && c.comparison[part].note;
+        return `
+          <div class="basis-row">
+            ${answerDot(answer)}
+            <div><p>${t(`comp.part.${part}`)}: <strong>${t(`comp.answer.${answer}`)}</strong></p>${note ? `<small dir="auto">${safe(note)}</small>` : ''}</div>
+          </div>`;
+      }).join('')}
+      <div class="basis-row">
+        <span class="answer-dot is-evidence">${icon('shield')}</span>
+        <div>
+          <p>${t('comp.evidenceLevel')}: <strong>${t(c.evidence === 'likely' ? 'comp.limited' : 'comp.confirmed')}</strong></p>
+          <small>${t(c.evidence === 'likely' ? 'comp.evidenceWhy.likely' : 'comp.evidenceWhy.confirmed')}</small>
+          ${sourceLine(c)}
+          ${source && open === false ? `<a class="link basis-source" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
+        </div>
+      </div>
+      <p class="text-3 basis-note">${t('comp.opp.note')}</p>
+    </details>`;
+}
+
 function competitorCard(competitor, withActions = true) {
-  const source = safeUrl(competitor.source);
+  const website = safeUrl(competitor.website) || safeUrl(competitor.source);
+  const score = Number.isFinite(Number(competitor.score)) && competitor.score !== null ? Math.round(Number(competitor.score)) : null;
   return `
     <article class="box startup competitor">
       <div class="startup-top">
@@ -376,43 +426,23 @@ function competitorCard(competitor, withActions = true) {
       </div>
       <p class="startup-about" dir="auto">${safe(shorten(competitor.about, 200))}</p>
       ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : ''}
-      ${sourceLine(competitor)}
+      ${score === null ? '' : `
+        <div class="competitor-score">
+          <span>${t('comp.similarity')}</span>
+          <span class="competitor-bar"><span style="width: ${Math.max(0, Math.min(100, score))}%"></span></span>
+          <span dir="ltr">${score}%</span>
+        </div>`}
+      ${opportunityLine(competitor)}
+      ${basis(competitor, !withActions ? true : false)}
       ${withActions ? `
         <div class="startup-actions">
-          <button type="button" class="btn btn-secondary btn-sm" data-ask="${safe(competitor.id)}">${t('similar.ask')}</button>
-          ${source ? `<a class="btn btn-ghost btn-sm" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
-        </div>` : (source ? `<p class="competitor-source" dir="ltr">${source}</p>` : '')}
+          ${website ? `<a class="btn btn-secondary btn-sm" href="${website}" target="_blank" rel="noopener noreferrer">${icon('globe')} ${t('comp.website')}</a>` : ''}
+          <button type="button" class="btn btn-ghost btn-sm" data-ask="${safe(competitor.id)}">${t('similar.ask')}</button>
+        </div>` : (website ? `<p class="competitor-source" dir="ltr">${website}</p>` : '')}
     </article>`;
 }
 
-/* The comparison matrix: problem, customer and offering (the judge's answers, "Unknown" where
-   missing) and the city or region, which is shown but not scored */
-function comparisonMatrix(competitors) {
-  const ANSWER_CHIP = { same: 'chip-warn', partly: 'chip-teal', different: 'chip-good' };
-  const cell = (part) => {
-    const answer = (part && part.answer) || 'unknown';
-    const note = part && part.note ? `<small dir="auto">${safe(part.note)}</small>` : '';
-    return `<td><span class="chip ${ANSWER_CHIP[answer] || ''}">${t(`comp.answer.${answer}`)}</span>${note}</td>`;
-  };
-  const row = (name, cells) => `<tr><th scope="row">${t(name)}</th>${cells}</tr>`;
-
-  return `
-    <div class="box comp-matrix">
-      <h3 class="box-title">${icon('grid')} ${t('comp.matrix')}</h3>
-      <div class="table-wrap">
-        <table class="table">
-          <thead><tr><th></th>${competitors.map((c) => `<th><bdi>${safe(c.name)}</bdi></th>`).join('')}</tr></thead>
-          <tbody>
-            ${['problem', 'customer', 'offering'].map((part) => row(`comp.part.${part}`, competitors.map((c) => cell(c.comparison[part])).join(''))).join('')}
-            ${row('comp.part.city', competitors.map((c) => `<td>${c.city ? `<bdi>${safe(c.city)}</bdi>` : `<span class="chip">${t('comp.answer.unknown')}</span>`}</td>`).join(''))}
-          </tbody>
-        </table>
-      </div>
-      <p class="text-3 comp-matrix-note">${t('comp.matrix.note')}</p>
-    </div>`;
-}
-
-/* The whole analysis. withActions is false in the report (paper has no buttons). */
+/* The whole analysis. withActions is false in the report (paper has no buttons, and every basis is open). */
 function competitorAnalysis(withActions = true) {
   if (!assessment.analysedAt) return `<p class="empty">${t('comp.notYet')}</p>`;
   const competitors = assessment.result.competitors;
@@ -421,9 +451,8 @@ function competitorAnalysis(withActions = true) {
   return `
     ${assessment.iss === null ? '' : issBox()}
     ${notesList()}
-    <div class="startups competitors">${competitors.map((c) => competitorCard(c, withActions)).join('')}</div>
-    ${comparisonMatrix(competitors)}
-    ${opportunities(competitors)}`;
+    ${overview(competitors)}
+    <div class="startups competitors">${competitors.map((c) => competitorCard(c, withActions)).join('')}</div>`;
 }
 
 function similarTab() {

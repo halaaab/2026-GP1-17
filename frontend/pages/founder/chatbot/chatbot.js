@@ -202,6 +202,7 @@ async function agentAnswers(text, retry = null) {
   const threadId = current.threadId || current.id;
 
   let analysing = false;   // a progress step arrived: the competitor analysis is running on the server
+  body.dataset.started = String(Date.now());   // the steps' counter counts from the founder's message
   try {
     const reply = await askDarb({
       text,
@@ -216,16 +217,7 @@ async function agentAnswers(text, retry = null) {
       onStatus: (step) => {
         analysing = true;
         if (paragraph.isConnected) return;   // the reply has started
-        const words = t(`chat.step.${step}`);
-        if (words === `chat.step.${step}`) return;   // a step this page does not know: keep the dots
-        let line = body.querySelector('.agent-step');
-        if (!line) {
-          line = document.createElement('p');
-          line.className = 'agent-step';
-          body.append(line);
-        }
-        line.textContent = words;
-        scrollToEnd();
+        showStep(body, step);
       },
     });
     if (reply) addCopy(body, plainReply(reply));
@@ -254,16 +246,60 @@ async function agentAnswers(text, retry = null) {
   }
 }
 
+/* What Darb is doing while it analyses (Hala, 18 Nov 2026), like Claude and ChatGPT: one line per step with its icon,
+   the current step turning, the finished ones ticked, and the seconds so far. Steps appear when they really start
+   (the web search runs only when Darb's list is not enough). Nothing is saved: the reply replaces it. */
+const STEP_ICONS = {
+  understanding: 'bulb', searching_list: 'database', searching_web: 'globe',
+  checking_companies: 'shield', comparing: 'scale', finishing: 'file', stillWorking: 'clock',
+};
+
+function showStep(body, step) {
+  const words = t(`chat.step.${step}`);
+  if (words === `chat.step.${step}` || !STEP_ICONS[step]) return;   // a step this page does not know
+  let box = body.querySelector('.agent-steps');
+  if (!box) {
+    box = document.createElement('div');
+    box.className = 'agent-steps';
+    box.innerHTML = `<p class="agent-steps-head">${icon('spark')}<span>${t('chat.step.title')}</span><span class="agent-steps-time"></span></p><ol></ol>`;
+    body.replaceChildren(box);   // the three dots make room for the steps
+    const started = Number(body.dataset.started) || Date.now();
+    const time = box.querySelector('.agent-steps-time');
+    const tick = () => {
+      if (!box.isConnected) return clearInterval(timer);
+      time.textContent = t('chat.step.seconds').replace('{n}', Math.round((Date.now() - started) / 1000));
+    };
+    const timer = setInterval(tick, 1000);
+    tick();
+  }
+  const list = box.querySelector('ol');
+  list.querySelectorAll('li').forEach((item) => {
+    if (item.classList.contains('is-now')) {
+      item.classList.replace('is-now', 'is-done');
+      item.querySelector('.step-icon').innerHTML = icon('check');
+    }
+  });
+  // the same step again (the companies from the web are checked after Darb's list): it is the current one again
+  let item = list.querySelector(`li[data-step="${step}"]`);
+  if (item) {
+    item.className = 'is-now';
+    item.querySelector('.step-icon').innerHTML = icon(STEP_ICONS[step]);
+    list.append(item);
+  } else {
+    item = document.createElement('li');
+    item.dataset.step = step;
+    item.className = 'is-now';
+    item.innerHTML = `<span class="step-icon">${icon(STEP_ICONS[step])}</span><span class="step-text"></span>`;
+    item.querySelector('.step-text').textContent = words;
+    list.append(item);
+  }
+  scrollToEnd();
+}
+
 /* Waits up to four minutes for the competitor analysis to be saved, checking every 5 seconds.
    Returns { competitors } once it is saved, or null. */
 async function waitForAnalysis(body) {
-  let line = body.querySelector('.agent-step');
-  if (!line) {
-    line = document.createElement('p');
-    line.className = 'agent-step';
-    body.append(line);
-  }
-  line.textContent = t('chat.step.stillWorking');
+  showStep(body, 'stillWorking');
   for (let waited = 0; waited < 240_000; waited += 5_000) {
     const saved = await newAnalysis(current).catch(() => null);
     if (saved) return saved;
@@ -445,7 +481,8 @@ async function becomeIdea() {
   const idea = said.reduce((longest, text) => (text.length > longest.length ? text : longest), '');
   if (idea) {
     current.idea = idea;
-    current.title = titleFrom(idea);
+    // the founder's words name it only while it has no formal name from the agent server yet (18 Nov 2026)
+    if (current.title === titleFrom(said[0] || '')) current.title = titleFrom(idea);
   }
   await save();
   showHeader();
