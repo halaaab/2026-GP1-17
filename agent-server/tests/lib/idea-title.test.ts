@@ -1,6 +1,6 @@
 // Tests for the conversation's formal name (18 Nov 2026): only a short, clean name is used.
 import { describe, expect, it } from 'vitest';
-import { cleanTitle } from '../../src/mastra/lib/idea-title';
+import { cleanPart, cleanTitle } from '../../src/mastra/lib/idea-title';
 
 describe('cleanTitle', () => {
   it('keeps one short line without quotes or a full stop', () => {
@@ -10,5 +10,13 @@ describe('cleanTitle', () => {
   it('drops an empty or too long answer, so the founder’s first words stay', () => {
     expect(cleanTitle('  ')).toBeNull();
     expect(cleanTitle('x'.repeat(61))).toBeNull();
+  });
+});
+
+describe('cleanPart', () => {
+  it('keeps one short line, and drops an empty or too long part', () => {
+    expect(cleanPart('  توصيل الطعام   إلى المنازل ')).toBe('توصيل الطعام إلى المنازل');
+    expect(cleanPart('')).toBeNull();
+    expect(cleanPart('x'.repeat(201))).toBeNull();
   });
 });

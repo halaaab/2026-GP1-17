@@ -1088,8 +1088,14 @@ body.assess-open #header-actions {
 }
 
 /* The comparison overview (18 Nov 2026): each competitor's three answers as marks, small enough for a phone */
-.comp-overview {
+.comp-overview,
+.your-idea {
   margin-bottom: 16px;
+}
+.your-idea .compare-row p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.7;
 }
 .comp-overview-sub {
   margin: -4px 0 16px;

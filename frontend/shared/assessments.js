@@ -262,6 +262,9 @@ export async function refreshAnalysis(assessment) {
   assessment.issBasis = data.iss_basis || '';
   assessment.marketLevel = data.market_level || '';
   assessment.competitorNotes = data.competitor_notes || [];
+  // the idea as Darb understood it, written beside the analysis (startup_ideas.idea_summary, migration 0040)
+  const idea = await supabase.from('startup_ideas').select('idea_summary').eq('idea_id', assessment.ideaId).maybeSingle();
+  if (idea.data && idea.data.idea_summary) assessment.ideaSummary = idea.data.idea_summary;
   if (assessment.result) assessment.result.competitors = await loadCompetitors(assessment);
   else await loadResult(assessment);
   return true;
@@ -303,6 +306,7 @@ function fromRows(idea, assessment, messages) {
     ideaId: idea.idea_id,
     isSaved: true,
     title: idea.idea_name,
+    ideaSummary: idea.idea_summary || null,   // the idea as Darb understood it, in the founder's language (0040)
     savedTitle: idea.idea_name,   // the name as last saved, to notice when the agent server renamed the idea
     idea: idea.idea_description || '',
     sector: idea.sector || '',
