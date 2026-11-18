@@ -1082,41 +1082,161 @@ body.assess-open #header-actions {
   list-style: none;
 }
 
-/* The comparison matrix: each answer as a chip, its short note under it */
-.comp-matrix .table th[scope="row"] {
-  padding-top: 14px;
-  vertical-align: top;
+/* The comparison overview (18 Nov 2026): each competitor's three answers as marks, small enough for a phone */
+.comp-overview {
+  margin-bottom: 16px;
 }
-.comp-matrix td {
-  vertical-align: top;
-  font-size: 14px;     /* the same size as the rest of the competitor tab's text */
+.comp-overview-grid {
+  max-width: 520px;   /* on a laptop the names stay close to their marks */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 64px);
+  align-items: center;
+  row-gap: 12px;
+  text-align: center;
 }
-.comp-matrix td small {
-  display: block;
-  margin-top: 6px;
+.comp-overview-head {
   font-size: 12px;
-  line-height: 1.5;
   color: var(--text-2);
 }
-/* Competitive opportunities: one row per competitor */
-.comp-opportunities {
-  margin-top: 16px;
-}
-.opportunity {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding: 12px 0;
-  border-top: 1px solid var(--divider);
+.comp-overview-name {
+  text-align: start;
   font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.comp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--divider);
+  font-size: 12px;
+  color: var(--text-2);
+}
+.comp-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.comp-legend .answer-dot {
+  width: 18px;
+  height: 18px;
+}
+.comp-legend .answer-dot svg {
+  width: 10px;
+  height: 10px;
+}
+/* one mark per answer: the same as the idea (a close competitor), partly, different, or not known */
+.answer-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+}
+.answer-dot svg {
+  width: 13px;
+  height: 13px;
+}
+.answer-dot.is-same      { background: var(--risk-tint); color: var(--risk-text); }
+.answer-dot.is-partly    { background: var(--warn-tint); color: var(--warn-text); }
+.answer-dot.is-different { background: var(--good-tint); color: var(--good-text); }
+.answer-dot.is-unknown,
+.answer-dot.is-conflicting { background: var(--bg-muted); color: var(--text-3); }
+.answer-dot.is-evidence  { background: var(--navy-tint); color: var(--navy); }
+
+/* Inside each competitor card: its similarity, its opportunity and its basis of classification */
+.competitor-score {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+.competitor-bar {
+  flex: 1;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--bg-muted);
+  overflow: hidden;
+}
+.competitor-bar span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--teal);
+}
+.competitor-opp {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--teal-tint);
+  color: var(--teal-text);
+  font-size: 13px;
   line-height: 1.6;
 }
-.opportunity:first-of-type {
-  border-top: none;
-  padding-top: 0;
+.competitor-opp svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
 }
-.comp-matrix-note {
-  margin-top: 12px;
+.competitor-opp p { margin: 0; }
+.competitor-opp span { display: block; }
+.competitor-basis summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--link-text);
+}
+.competitor-basis summary::-webkit-details-marker { display: none; }
+.competitor-basis summary svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+[dir="rtl"] .competitor-basis summary svg { transform: scaleX(-1); }
+.competitor-basis[open] summary svg,
+[dir="rtl"] .competitor-basis[open] summary svg { transform: rotate(90deg); }
+.basis-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--divider);
+  font-size: 13.5px;
+}
+.competitor-basis summary + .basis-row { margin-top: 8px; }
+.basis-row p { margin: 0; }
+.basis-row small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+.basis-row .competitor-checked { margin: 4px 0 0; }
+.basis-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+.basis-source svg { width: 12px; height: 12px; }
+.basis-note {
+  margin: 4px 0 0;
   font-size: 12px;
 }
 
@@ -1808,11 +1928,94 @@ body.assess-open #header-actions {
 }
 
 /* What Darb is doing now, under the typing dots (18 Nov 2026) */
-.msg-body .agent-step {
-  margin: 6px 0 0;
+/* What Darb is doing while it analyses: one line per step, the current one turning, the finished ones ticked */
+.agent-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: min(100%, 340px);
+}
+.agent-steps-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--text-2);
+}
+.agent-steps-head svg { color: var(--teal); }
+.agent-steps-time {
+  margin-inline-start: auto;
+  font-size: 12px;
   color: var(--text-3);
-  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+.agent-steps ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.agent-steps li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 5px 0;
+  font-size: 14px;
+  color: var(--text-2);
   animation: agent-step-in 0.3s ease;
+}
+.step-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+}
+.step-icon svg { width: 15px; height: 15px; }
+.agent-steps li.is-done .step-icon {
+  background: var(--teal-tint);
+  border-color: transparent;
+  color: var(--teal-text);
+}
+.agent-steps li.is-now { color: var(--text); }
+.agent-steps li.is-now .step-icon {
+  color: var(--teal-text);
+  border-color: var(--teal);
+}
+/* the turning ring around the current step */
+.agent-steps li.is-now .step-icon::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  border-top-color: var(--teal);
+  animation: step-turn 0.9s linear infinite;
+}
+/* a light that moves over the current step's words */
+.agent-steps li.is-now .step-text {
+  background: linear-gradient(90deg, var(--text) 35%, var(--teal) 50%, var(--text) 65%);
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: step-shine 1.8s linear infinite;
+}
+@keyframes step-turn { to { transform: rotate(360deg); } }
+@keyframes step-shine { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .agent-steps li.is-now .step-icon::after,
+  .agent-steps li.is-now .step-text { animation: none; }
+  .agent-steps li.is-now .step-text { color: var(--text); background: none; }
 }
 
 @keyframes agent-step-in {
