@@ -5,7 +5,7 @@ import { icon } from '../../../shared/layout.js';
 import '../../../shared/guard.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
-  say, label, scoreBand, whenText, chatLink, getAssessments, assessmentsFailed, hasIdea,
+  say, label, scoreBand, whenText, chatLink, getAssessments, assessmentsFailed, isListed,
 } from '../../../shared/assessments.js';
 
 const rows = document.querySelector('#rows');
@@ -117,8 +117,8 @@ document.querySelectorAll('[data-icon]').forEach((box) => {
   box.innerHTML = icon(box.dataset.icon);
 });
 
-// only real ideas: a chat that only said "hi" is not listed
-assessments = (await getAssessments()).filter(hasIdea);
+// every conversation the founder wrote in (the ones without a score show a dashed circle)
+assessments = (await getAssessments()).filter(isListed);
 if (assessmentsFailed) {
   showErrorPage(500);   // the history could not be loaded: the 500 page offers "Try again"
 } else {

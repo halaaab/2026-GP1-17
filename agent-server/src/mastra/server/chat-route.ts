@@ -8,15 +8,29 @@
 //   data: {"type":"error","payload":{"message":"..."}}      the agent stopped with an error
 //   data: {"type":"status","payload":{"step":"..."}}       what Darb is doing now (lib/progress.ts, 18 Nov 2026)
 //   data: [DONE]                                            the end
+// A conversation that opens with only a greeting ("hi", "السلام عليكم") is answered at once from code (lib/greeting.ts).
 // and a short ": still working" line every 5 seconds, so a phone or a proxy never sees a silent connection.
 // The format is the one the website already reads (frontend/shared/agent.js), so only the address changed there.
 import { registerApiRoute } from '@mastra/core/server';
 import type { RequestContext } from '@mastra/core/request-context';
+import { greetingIn, greetingReply } from '../lib/greeting';
 import { listenToProgress } from '../lib/progress';
 
 export const KEEP_ALIVE_MS = 5_000;
 
 type Body = { text?: unknown; threadId?: unknown; assessmentId?: unknown };
+
+// True when the agent has no saved messages for this conversation yet (one quick read). If it cannot tell,
+// the message goes to the agent as usual.
+async function isNewConversation(agent: { getMemory?: () => unknown }, threadId: string): Promise<boolean> {
+  try {
+    const memory = (await agent.getMemory?.()) as { getThreadById?: (args: { threadId: string }) => Promise<unknown> } | undefined;
+    if (!memory?.getThreadById) return false;
+    return !(await memory.getThreadById({ threadId }));
+  } catch {
+    return false;
+  }
+}
 
 export const chatRoute = registerApiRoute('/chat', {
   method: 'POST',
@@ -36,6 +50,14 @@ export const chatRoute = registerApiRoute('/chat', {
     const agent = c.get('mastra').getAgent('conversationalAgent');
     const encoder = new TextEncoder();
     const line = (data: unknown) => encoder.encode(`data: ${typeof data === 'string' ? data : JSON.stringify(data)}\n\n`);
+    const headers = { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no' };
+
+    // A conversation that opens with only a greeting gets Darb's welcome at once, from code (lib/greeting.ts).
+    const greeting = greetingIn(text);
+    if (greeting && (await isNewConversation(agent, threadId))) {
+      const reply = line({ type: 'text-delta', payload: { text: greetingReply(greeting) } });
+      return new Response(new Blob([reply, line('[DONE]')]).stream(), { headers });
+    }
 
     const stream = new ReadableStream<Uint8Array>({
       async start(controller) {
@@ -71,8 +93,6 @@ export const chatRoute = registerApiRoute('/chat', {
       },
     });
 
-    return new Response(stream, {
-      headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', 'X-Accel-Buffering': 'no' },
-    });
+    return new Response(stream, { headers });
   },
 });

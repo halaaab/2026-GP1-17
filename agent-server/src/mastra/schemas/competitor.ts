@@ -233,7 +233,9 @@ export const NOTE_CODES = [
 export const NoteCode = z.enum(NOTE_CODES);
 export type NoteCode = z.infer<typeof NoteCode>;
 
-export const ComparisonCell = z.object({ answer: Answer, note: z.string() }).strict();
+// quote and source_url: the sentence from the competitor's own source that proves the answer, kept only when code
+// found it word for word in the evidence (Hala, 18 Nov 2026: shown on the card, so the founder sees the proof).
+export const ComparisonCell = z.object({ answer: Answer, note: z.string(), quote: z.string().min(1).optional(), source_url: z.url().optional() }).strict();
 
 // Competitive opportunities (explainer §6): four fixed rules in code turn the judge's answers into one of these,
 // each with a fixed next step. Darb never says "where you will win".

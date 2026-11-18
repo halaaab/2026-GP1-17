@@ -285,6 +285,19 @@ describe('the Result', () => {
     expect(result.competitors[0]).toMatchObject({ label: 'direct', evidence_status: 'confirmed', description: 'a supplies restaurants with fresh produce.', opportunity: 'no_clear_difference' });
   });
 
+  it('keeps the proof sentence only when it is really on the competitor’s own page (18 Nov 2026)', () => {
+    const shown = buildResult({ handoff, profile: profile(), judged: [judged('a')], runNotes: [], usage }).competitors[0];
+    expect(shown.comparison.problem).toEqual({ answer: 'same', note: 'Same.', quote: QUOTE, source_url: 'https://www.a.sa/about' });
+
+    // a "partly" whose sentence is not in the evidence, or that cites another site, keeps no quote
+    const invented = { answer: 'partly' as const, note: 'Partly.', source_url: 'https://www.a.sa/about', quote: 'we deliver groceries to every home in Jeddah' };
+    const elsewhere = { answer: 'partly' as const, note: 'Partly.', source_url: 'https://news.example.com/a', quote: QUOTE };
+    const other = buildResult({ handoff, profile: profile(), judged: [judged('a', { problem: invented, offering: elsewhere, label: 'indirect' })], runNotes: [], usage }).competitors[0];
+    expect(other.comparison.problem).toEqual({ answer: 'partly', note: 'Partly.' });
+    expect(other.comparison.offering).toEqual({ answer: 'partly', note: 'Partly.' });
+    expect(Result.safeParse(buildResult({ handoff, profile: profile(), judged: [judged('a')], runNotes: [], usage })).success).toBe(true);
+  });
+
   it('says none were found, with no ISS and no market level', () => {
     const result = buildResult({ handoff, profile: profile(), judged: [judged('a', { label: 'not_competitor' })], runNotes: [], usage });
     expect(result).toMatchObject({ status: 'complete', competitors: [], iss: null, iss_basis: null, market_level: null, notes: ['none_found'] });

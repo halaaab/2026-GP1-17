@@ -17,6 +17,7 @@ function fakeContext(userId: string | undefined, body: unknown, chunks: Chunk[])
     },
   };
   const mastra = { getAgent: () => agent };
+  (agent as any).getMemory = async () => ({ getThreadById: async ({ threadId }: { threadId: string }) => (threadId === 'old-thread' ? { id: threadId } : null) });
   const context = {
     get: (k: string) => (k === 'requestContext' ? requestContext : k === 'mastra' ? mastra : undefined),
     req: { json: async () => body },
@@ -89,5 +90,20 @@ describe('POST /chat', () => {
   it('refuses a caller who is not signed in, and a message without its conversation', async () => {
     expect((await run(fakeContext(undefined, body, []).context)).status).toBe(401);
     expect((await run(fakeContext('founder-1', { text: 'hi' }, []).context)).status).toBe(400);
+  });
+
+  it('welcomes a conversation that opens with a greeting at once, without the agent (18 Nov 2026)', async () => {
+    const { context, calls } = fakeContext('founder-1', { ...body, text: 'السلام عليكم' }, []);
+    const raw = await (await run(context)).text();
+    expect(raw).toMatch(/^data: \{"type":"text-delta","payload":\{"text":"وعليكم السلام ورحمة الله وبركاته 👋/);
+    expect(raw.endsWith('data: [DONE]\n\n')).toBe(true);
+    expect(calls).toHaveLength(0);
+  });
+
+  it('sends a greeting later in a conversation to the agent as usual', async () => {
+    const { context, calls } = fakeContext('founder-1', { ...body, threadId: 'old-thread', text: 'hi' }, [{ type: 'text-delta', payload: { text: 'Hello again!' } }]);
+    const raw = await (await run(context)).text();
+    expect(raw).toContain('Hello again!');
+    expect(calls).toHaveLength(1);
   });
 });

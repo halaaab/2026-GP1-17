@@ -289,12 +289,28 @@ function safeUrl(url) {
   return /^https?:\/\//i.test(url || '') ? safe(url) : '';
 }
 
-/* The first letter of a name in a tinted circle (competitors have no logos) */
-function initial(name) {
+/* The competitor's logo (Hala, 18 Nov 2026): the founder's browser loads the icon straight from the competitor's
+   own site while the card shows, so the analysis takes no extra time and nothing is saved. The large app icon is
+   tried first, then the small site icon; if neither loads, the first letter of the name stays in its tinted circle. */
+export function logoOf(competitor) {
+  const name = competitor.name || '';
   const tints = ['navy', 'teal', 'good', 'warn'];
   const tint = tints[name.length % tints.length];
-  return `<span class="initial is-${tint}">${safe(name.trim().charAt(0).toUpperCase())}</span>`;
+  let site = '';
+  try {
+    const url = new URL(competitor.website || competitor.source || '');
+    if (url.protocol === 'https:' || url.protocol === 'http:') site = `https://${url.hostname}`;
+  } catch {
+    // no website: the letter only
+  }
+  const img = site
+    ? `<img src="${safe(site)}/apple-touch-icon.png" data-next="${safe(site)}/favicon.ico" alt="" loading="lazy" referrerpolicy="no-referrer"
+         onload="if (this.naturalWidth < 8) this.onerror(); else this.parentNode.classList.add('has-logo')"
+         onerror="if (this.dataset.next) { this.src = this.dataset.next; this.dataset.next = ''; } else this.remove()">`
+    : '';
+  return `<span class="initial is-${tint}"><span>${safe(name.trim().charAt(0).toUpperCase())}</span>${img}</span>`;
 }
+const initial = (competitor) => logoOf(competitor);
 
 /* The words next to the ISS ("Higher similarity"). The agent server uses the same cut-offs for the chat
    (agent-server/src/mastra/config/scoring.ts, ISS_BANDS): change both together. */
@@ -360,7 +376,7 @@ function competitorCard(competitor, withActions = true) {
   return `
     <article class="box startup competitor">
       <div class="startup-top">
-        ${initial(competitor.name)}
+        ${initial(competitor)}
         <div class="startup-name">
           <strong><bdi>${safe(competitor.name)}</bdi></strong>
           ${competitor.city ? `<span class="text-3"><bdi>${safe(competitor.city)}</bdi></span>` : ''}
