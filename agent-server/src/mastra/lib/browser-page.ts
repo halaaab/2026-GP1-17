@@ -16,9 +16,20 @@ const IDLE_MS = 60_000;
 
 let browser: Promise<Browser> | null = null;
 let idle: NodeJS.Timeout | null = null;
+// Why the browser could not start (e.g. Chromium not installed on the host), or null. Once set, pages are skipped
+// at once instead of trying to start it again for every page; the plain read is used for them (18 Nov 2026).
+let unavailable: string | null = null;
 
 async function open(): Promise<Browser> {
-  if (!browser) browser = import('playwright').then(({ chromium }) => chromium.launch({ headless: true }));
+  if (!browser) {
+    browser = import('playwright').then(({ chromium }) => chromium.launch({ headless: true }));
+    // A browser that cannot start must never stop the server: the failure is kept here, and every caller
+    // (readWithBrowser, closeBrowser) handles it. Without this, the close timer's await had no handler (Render, 18 Nov).
+    browser.catch((error: Error) => {
+      unavailable = error.message.split('\n')[0].slice(0, 80);
+      console.warn(`The browser could not start, so pages built by JavaScript are read without it: ${unavailable}`);
+    });
+  }
   return browser;
 }
 
@@ -27,7 +38,7 @@ export async function closeBrowser(): Promise<void> {
   idle = null;
   const b = browser;
   browser = null;
-  if (b) await (await b).close().catch(() => {});
+  if (b) await b.then((open) => open.close()).catch(() => {});
 }
 
 export async function readWithBrowser(url: string): Promise<RawPage> {
@@ -37,6 +48,7 @@ export async function readWithBrowser(url: string): Promise<RawPage> {
   } catch {
     return { status: 'skipped', url, reason: 'not a link' };
   }
+  if (unavailable) return { status: 'skipped', url, reason: `browser: ${unavailable}` };
   if (!(await robotsAllowUrl(u))) return { status: 'skipped', url, reason: 'robots.txt does not allow it' };
   if (idle) clearTimeout(idle);
   let context;

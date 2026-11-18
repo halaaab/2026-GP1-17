@@ -23,7 +23,7 @@ function fakeContext(userId: string | undefined, body: unknown, chunks: Chunk[])
   return { context, calls, values };
 }
 
-const run = (context: unknown) => (chatRoute.handler as (c: unknown) => Promise<Response>)(context);
+const run = (context: unknown) => (chatRoute as unknown as { handler: (c: unknown) => Promise<Response> }).handler(context);
 const body = { text: 'A food delivery app in Riyadh', threadId: 'thread-1', assessmentId: 'assessment-1' };
 
 describe('POST /chat', () => {
