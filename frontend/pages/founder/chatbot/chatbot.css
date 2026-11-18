@@ -963,7 +963,12 @@ body.assess-open #header-actions {
   background: #fff;
   opacity: 0;
 }
-.initial.has-logo img { opacity: 1; }
+.initial.has-logo {
+  background: #fff;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.initial.has-logo span { visibility: hidden; }
+.initial.has-logo img { opacity: 1; padding: 3px; border-radius: inherit; }
 .initial-sm {
   width: 32px;
   height: 32px;
@@ -1124,7 +1129,7 @@ body.assess-open #header-actions {
   font-weight: 400;
   color: var(--text-2);
 }
-/* the answer in a short word, in the same colours as the marks in the basis */
+/* the answer in a short word, in the same colours as in each card's comparison */
 .answer-cell {
   display: flex;
   align-items: center;
@@ -1138,33 +1143,13 @@ body.assess-open #header-actions {
   font-weight: 700;
   text-align: center;
 }
-.answer-word.is-same      { background: var(--risk-tint); color: var(--risk-text); }
-.answer-word.is-partly    { background: var(--warn-tint); color: var(--warn-text); }
-.answer-word.is-different { background: var(--good-tint); color: var(--good-text); }
+/* calm colours: being the same as the idea is not an error, so no red (Hala, 18 Nov 2026) */
+.answer-word.is-same      { background: var(--pastel-3-tint); color: var(--pastel-3-text); }
+.answer-word.is-partly    { background: var(--pastel-1-tint); color: var(--pastel-1-text); }
+.answer-word.is-different { background: var(--bg-muted); color: var(--text-nav); }
 .answer-word.is-unknown,
-.answer-word.is-conflicting { background: var(--bg-muted); color: var(--text-2); }
-/* one mark per answer: the same as the idea (a close competitor), partly, different, or not known */
-.answer-dot {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 26px;
-  height: 26px;
-  border-radius: 50%;
-}
-.answer-dot svg {
-  width: 13px;
-  height: 13px;
-}
-.answer-dot.is-same      { background: var(--risk-tint); color: var(--risk-text); }
-.answer-dot.is-partly    { background: var(--warn-tint); color: var(--warn-text); }
-.answer-dot.is-different { background: var(--good-tint); color: var(--good-text); }
-.answer-dot.is-unknown,
-.answer-dot.is-conflicting { background: var(--bg-muted); color: var(--text-3); }
-.answer-dot.is-evidence  { background: var(--navy-tint); color: var(--navy); }
-
-/* Inside each competitor card: its similarity, its opportunity and its basis of classification */
+.answer-word.is-conflicting { background: transparent; color: var(--text-3); box-shadow: inset 0 0 0 1px var(--border-strong); }
+/* Inside each competitor card: its similarity, its comparison with the idea and its opportunity */
 .competitor-score {
   display: flex;
   align-items: center;
@@ -1204,62 +1189,48 @@ body.assess-open #header-actions {
 }
 .competitor-opp p { margin: 0; }
 .competitor-opp span { display: block; }
-.competitor-basis summary {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  list-style: none;
+.competitor-compare {
+  margin-top: 4px;
+}
+.compare-title {
+  margin: 0 0 4px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-2);
+}
+.compare-row {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--divider);
+}
+.compare-row:first-of-type { border-top: none; }
+.compare-part {
+  padding-top: 3px;
   font-size: 13px;
   font-weight: 700;
-  color: var(--link-text);
 }
-.competitor-basis summary::-webkit-details-marker { display: none; }
-.competitor-basis summary svg {
-  width: 14px;
-  height: 14px;
-  transition: transform 0.2s ease;
+.compare-row .answer-word {
+  display: inline-block;
+  width: auto;
+  padding: 2px 10px;
+  margin-bottom: 4px;
+  font-size: 11.5px;
 }
-[dir="rtl"] .competitor-basis summary svg { transform: scaleX(-1); }
-.competitor-basis[open] summary svg,
-[dir="rtl"] .competitor-basis[open] summary svg { transform: rotate(90deg); }
-.basis-about {
-  margin: 10px 0 0;
+.compare-row p {
+  margin: 0;
   font-size: 13.5px;
   line-height: 1.7;
   color: var(--text-2);
 }
-.competitor-basis .competitor-opp { margin-top: 10px; }
-.basis-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 0;
-  border-top: 1px solid var(--divider);
-  font-size: 13.5px;
-}
-.competitor-basis summary + .basis-row { margin-top: 8px; }
-.basis-row p { margin: 0; }
-.basis-row small {
-  display: block;
-  margin-top: 2px;
-  font-size: 12.5px;
-  line-height: 1.6;
-  color: var(--text-2);
-}
-.basis-row .competitor-checked { margin: 4px 0 0; }
-.basis-source {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 12px;
-  font-size: 12.5px;
-}
-.basis-source svg { width: 12px; height: 12px; }
-.basis-note {
-  margin: 10px 0 0;
-  line-height: 1.6;
+.competitor-note {
+  margin: 0;
   font-size: 12px;
+  line-height: 1.7;
+}
+.competitor-actions {
+  flex-wrap: wrap;
 }
 
 @media (max-width: 640px) {

@@ -289,13 +289,16 @@ function safeUrl(url) {
   return /^https?:\/\//i.test(url || '') ? safe(url) : '';
 }
 
-/* The first letter of the competitor's name in a tinted circle. Its own logo comes later, from the icon its site
-   declares (live test, 18 Nov 2026: guessing /favicon.ico showed Al Rajhi with its website builder's icon). */
+/* The competitor's logo: the one saved with Darb's list of startups (startups.logo), or, when it has none or the
+   image does not load, the first letter of its name in a tinted circle. Companies found on the web have no logo yet
+   (guessing /favicon.ico showed Al Rajhi with its website builder's icon, 18 Nov 2026). */
 export function logoOf(competitor) {
   const name = competitor.name || '';
   const tints = ['navy', 'teal', 'good', 'warn'];
   const tint = tints[name.length % tints.length];
-  return `<span class="initial is-${tint}"><span>${safe(name.trim().charAt(0).toUpperCase())}</span></span>`;
+  const logo = /^https:\/\//i.test(competitor.logo || '') ? safe(competitor.logo) : '';
+  const img = logo ? `<img src="${logo}" alt="" loading="lazy" onload="this.parentNode.classList.add('has-logo')" onerror="this.remove()">` : '';
+  return `<span class="initial is-${tint}"><span>${safe(name.trim().charAt(0).toUpperCase())}</span>${img}</span>`;
 }
 const initial = (competitor) => logoOf(competitor);
 
@@ -346,12 +349,8 @@ function notesList() {
    the comparison table (with long notes in every cell, too wide for a phone) and a row of the opportunities box.
    Now an overview of answers at the top, and one complete card per competitor with its basis of classification. */
 const PARTS = ['problem', 'customer', 'offering'];
-const ANSWER_ICON = { same: 'equal', partly: 'half', different: 'differ', unknown: 'question', conflicting: 'question' };
-const answerOf = (part) => (part && ANSWER_ICON[part.answer] ? part.answer : 'unknown');
-
-function answerDot(answer) {
-  return `<span class="answer-dot is-${answer}" title="${t(`comp.answer.${answer}`)}">${icon(ANSWER_ICON[answer])}</span>`;
-}
+const ANSWERS = ['same', 'partly', 'different', 'unknown', 'conflicting'];
+const answerOf = (part) => (part && ANSWERS.includes(part.answer) ? part.answer : 'unknown');
 
 /* The overview: each competitor's three answers in short words (Hala, 18 Nov 2026: marks alone needed a key to read),
    with its kind of competition under its name. Short enough for a phone. */
@@ -383,32 +382,29 @@ function opportunityLine(c) {
     </div>`;
 }
 
-/* The basis of classification (Hala, 18 Nov 2026: the cards were crowded): what the company does, the judge's three
-   answers with its notes, and the opportunity, behind one formal heading. */
-function basis(c, open) {
-  const source = safeUrl(c.source);
-  return `
-    <details class="competitor-basis"${open ? ' open' : ''}>
-      <summary>${icon('chevron')} ${t('comp.basis')}</summary>
-      ${c.about ? `<p class="basis-about" dir="auto">${safe(shorten(c.about, 200))}</p>` : ''}
-      ${PARTS.map((part) => {
-        const answer = answerOf(c.comparison[part]);
-        const note = c.comparison[part] && c.comparison[part].note;
-        return `
-          <div class="basis-row">
-            ${answerDot(answer)}
-            <div><p>${t(`comp.part.${part}`)}: <strong>${t(`comp.answer.${answer}`)}</strong></p>${note ? `<small dir="auto">${safe(note)}</small>` : ''}</div>
-          </div>`;
-      }).join('')}
-      ${opportunityLine(c)}
-      ${source && !open ? `<a class="link basis-source" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
-      <p class="text-3 basis-note">${t('comp.opp.note')}</p>
-    </details>`;
+/* One competitor (Hala, 18 Nov 2026): everything shows, in clear sections. What the company does, how close it is,
+   then "Compared with your idea": the problem, the customer and the product, each with the judge's answer as a
+   calm label (no red: the same as your idea is not an error) and its sentence on how it is the same or different.
+   Then the opportunity and the formal note. */
+function comparisonRows(c) {
+  return PARTS.map((part) => {
+    const answer = answerOf(c.comparison[part]);
+    const note = c.comparison[part] && c.comparison[part].note;
+    return `
+      <div class="compare-row">
+        <span class="compare-part">${t(`comp.part.short.${part}`)}</span>
+        <div>
+          <span class="answer-word is-${answer}">${t(`comp.answer.${answer}`)}</span>
+          ${note ? `<p dir="auto">${safe(note)}</p>` : ''}
+        </div>
+      </div>`;
+  }).join('');
 }
 
 function competitorCard(competitor, withActions = true) {
   const website = safeUrl(competitor.website) || safeUrl(competitor.source);
-  const score = Number.isFinite(Number(competitor.score)) && competitor.score !== null ? Math.round(Number(competitor.score)) : null;
+  const evidence = safeUrl(competitor.source);
+  const score = competitor.score !== null && competitor.score !== undefined && Number.isFinite(Number(competitor.score)) ? Math.round(Number(competitor.score)) : null;
   return `
     <article class="box startup competitor">
       <div class="startup-top">
@@ -423,17 +419,24 @@ function competitorCard(competitor, withActions = true) {
         <span class="chip ${competitor.label === 'direct' ? 'chip-risk' : 'chip-warn'}">${t(`comp.label.${competitor.label}`)}</span>
         ${competitor.evidence === 'likely' ? `<span class="chip chip-navy">${t('comp.limited')}</span>` : `<span class="chip chip-good">${t('comp.confirmed')}</span>`}
       </div>
-      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : (competitor.about ? `<p class="startup-about" dir="auto">${safe(shorten(competitor.about, 200))}</p>` : '')}
+      ${competitor.about ? `<p class="startup-about" dir="auto">${safe(shorten(competitor.about, 220))}</p>` : ''}
+      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : ''}
       ${score === null ? '' : `
         <div class="competitor-score">
           <span>${t('comp.similarity')}</span>
           <span class="competitor-bar"><span style="width: ${Math.max(0, Math.min(100, score))}%"></span></span>
           <span dir="ltr">${score}%</span>
         </div>`}
-      ${basis(competitor, !withActions)}
+      <div class="competitor-compare">
+        <p class="compare-title">${t('comp.compared')}</p>
+        ${comparisonRows(competitor)}
+      </div>
+      ${opportunityLine(competitor)}
+      <p class="text-3 competitor-note">${t('comp.opp.note')}</p>
       ${withActions ? `
-        <div class="startup-actions">
+        <div class="startup-actions competitor-actions">
           ${website ? `<a class="btn btn-secondary btn-sm" href="${website}" target="_blank" rel="noopener noreferrer">${icon('globe')} ${t('comp.website')}</a>` : ''}
+          ${evidence ? `<a class="btn btn-secondary btn-sm" href="${evidence}" target="_blank" rel="noopener noreferrer">${icon('file')} ${t('comp.evidenceShort')}</a>` : ''}
           <button type="button" class="btn btn-ghost btn-sm" data-ask="${safe(competitor.id)}">${t('similar.ask')}</button>
         </div>` : (website ? `<p class="competitor-source" dir="ltr">${website}</p>` : '')}
     </article>`;

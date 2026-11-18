@@ -122,7 +122,9 @@ async function loadCompetitors(assessment) {
   if (!assessment.isSaved) return [];
   // "*" keeps this working while columns are still being added to the design; the links are in result_sources
   const read = (columns) => supabase.from('similar_startup_results').select(columns).eq('assessment_id', assessment.id).order('rank');
-  let { data, error } = await read('*, result_sources (url, source_type, accessed_at)');
+  // a startup from Darb's list brings its logo (startups.logo, migration 0034): no extra wait for the founder
+  let { data, error } = await read('*, result_sources (url, source_type, accessed_at), startups (logo)');
+  if (error) ({ data, error } = await read('*, result_sources (url, source_type, accessed_at)'));
   if (error) ({ data, error } = await read('*'));   // the links could not be read: show the competitors anyway
 
   if (error) {
@@ -149,6 +151,7 @@ async function loadCompetitors(assessment) {
     sourceType: first.source_type || '',   // official_site, app_store, ecosystem, news, government
     checkedAt: first.accessed_at || '',    // when Darb checked it
     website: row.website || '',
+    logo: (row.startups && row.startups.logo) || '',   // only startups from Darb's list have one
     score: row.similarity_score,
     opportunity,                            // proven / possible / no clear difference, or not enough evidence
     difference: row.difference || '',       // the judge's one sentence (migration 0038)
