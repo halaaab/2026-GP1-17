@@ -17,7 +17,7 @@ import { getAccount } from '../../../shared/auth.js';
 import {
   say, scoreBand, chatLink, loadResult, refreshAnalysis,
   getAssessment, saveAssessment, saveMessage, newAssessment,
-  showSidebarHistory, assessmentsFailed, hasIdea, isListed, titleFrom,
+  showSidebarHistory, assessmentsFailed, hasIdea, isListed, titleFrom, newAnalysis,
 } from '../../../shared/assessments.js';
 import { askDarb } from '../../../shared/agent.js';
 import { showErrorPage } from '../../../shared/errors.js';
@@ -201,6 +201,7 @@ async function agentAnswers(text, retry = null) {
   // it never changes, so the agent finds the same conversation next time.
   const threadId = current.threadId || current.id;
 
+  let analysing = false;   // a progress step arrived: the competitor analysis is running on the server
   try {
     const reply = await askDarb({
       text,
@@ -213,6 +214,7 @@ async function agentAnswers(text, retry = null) {
       },
       // What Darb is doing now, under the dots, until the reply starts (18 Nov 2026)
       onStatus: (step) => {
+        analysing = true;
         if (paragraph.isConnected) return;   // the reply has started
         const words = t(`chat.step.${step}`);
         if (words === `chat.step.${step}`) return;   // a step this page does not know: keep the dots
@@ -230,6 +232,19 @@ async function agentAnswers(text, retry = null) {
     return reply;
   } catch (error) {
     console.error('Chat: Darb could not answer:', error.message);
+    // The connection dropped while the analysis was running (a phone locks its screen or switches apps during the
+    // wait, live test 18 Nov 2026): the server still finishes and saves it, so the page waits for the saved result
+    // instead of asking the founder to start the whole analysis again.
+    if (analysing && error.kind !== 'signin') {
+      const saved = await waitForAnalysis(body);
+      if (saved) {
+        const reply = foundSentence(saved.competitors);
+        paragraph.innerHTML = formatReply(reply);
+        body.replaceChildren(paragraph);
+        addCopy(body, reply);
+        return reply;
+      }
+    }
     const message = t(error.kind === 'signin' ? 'chat.agentSignIn' : 'chat.agentOffline');
     paragraph.textContent = message;
     paragraph.classList.add('agent-failed');
@@ -237,6 +252,30 @@ async function agentAnswers(text, retry = null) {
     if (retry && error.kind !== 'signin') addRetry(body, retry);
     return null;
   }
+}
+
+/* Waits up to four minutes for the competitor analysis to be saved, checking every 5 seconds.
+   Returns { competitors } once it is saved, or null. */
+async function waitForAnalysis(body) {
+  let line = body.querySelector('.agent-step');
+  if (!line) {
+    line = document.createElement('p');
+    line.className = 'agent-step';
+    body.append(line);
+  }
+  line.textContent = t('chat.step.stillWorking');
+  for (let waited = 0; waited < 240_000; waited += 5_000) {
+    const saved = await newAnalysis(current).catch(() => null);
+    if (saved) return saved;
+    await wait(5_000);
+  }
+  return null;
+}
+
+/* The sentence above the cards when the page fetched the saved result itself (the same words as the server's) */
+function foundSentence(count) {
+  if (count === 0) return t('chat.found.none');
+  return t(count === 1 ? 'chat.found.one' : count === 2 ? 'chat.found.two' : 'chat.found.many').replace('{n}', count);
 }
 
 /* The result: a short summary and the card that opens the assessment */
@@ -258,20 +297,6 @@ function addResult() {
 
   body.append(more, card);
   scrollToEnd();
-}
-
-/* The sentence from the competitor's own page that proves it solves the same problem (or offers the same thing),
-   copied word for word and checked by the agent server (Hala, 18 Nov 2026). Nothing when there is none. */
-function proofOf(competitor) {
-  const comparison = competitor.comparison || {};
-  const cell = [comparison.problem, comparison.offering].find((part) => part && part.quote);
-  if (!cell) return '';
-  const link = /^https?:\/\//i.test(cell.source_url || '') ? safe(cell.source_url) : '';
-  const label = link
-    ? `<a class="link" href="${link}" target="_blank" rel="noopener noreferrer">${t('comp.proof')}</a>`
-    : t('comp.proof');
-  const quote = cell.quote.replace(/\s*\[(\.\.\.|…)\][\s\S]*$/, '…');   // a search snippet's cut mark ends the sentence
-  return `<blockquote class="comp-proof"><p dir="auto">“${safe(quote)}”</p><small>${label}</small></blockquote>`;
 }
 
 /* The competitor analysis inside the chat: one card per competitor (at most three), each with its
@@ -298,7 +323,6 @@ function addCompetitors() {
           <span class="chip ${competitor.evidence === 'likely' ? 'chip-navy' : 'chip-good'}">${t(competitor.evidence === 'likely' ? 'comp.limited' : 'comp.confirmed')}</span>
         </div>
         ${competitor.reason ? `<p dir="auto">${safe(competitor.reason)}</p>` : ''}
-        ${proofOf(competitor)}
         ${source ? `<a class="link comp-chat-evidence" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
       </article>`;
   }).join('');
@@ -456,7 +480,12 @@ async function answer(text, about = null) {
   // only Darb's real answers are saved; a failed one is shown with "Try again"
   if (reply) await saveMessage(current, 'agent', { text: reply });
   const wasIdea = hasIdea(current);
+  const oldTitle = current.title;
   await save();   // updates the time, so the conversation moves to the top of History
+  if (current.title !== oldTitle) {   // the agent server gave the idea its formal name
+    showHeader();
+    showSidebarHistory();
+  }
   // a competitor analysis was just saved for this idea: show its competitors as cards
   if (reply && await refreshAnalysis(current)) {
     if (!wasIdea) await becomeIdea();

@@ -1826,25 +1826,3 @@ body.assess-open #header-actions {
   min-width: 0;
 }
 
-/* the proof sentence from the competitor's own page */
-.comp-proof {
-  margin: 0;
-  padding: 8px 12px;
-  border-inline-start: 3px solid var(--teal);
-  background: var(--teal-tint);
-  border-radius: var(--r-sm);
-}
-.comp-proof p {
-  margin: 0;
-  font-size: 13.5px;
-  line-height: 1.6;
-  white-space: normal;
-  display: -webkit-box;          /* a long sentence is cut after three lines */
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-.comp-proof small {
-  font-size: 12px;
-  color: var(--text-3);
-}

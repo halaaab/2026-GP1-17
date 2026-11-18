@@ -6,6 +6,7 @@ import {
   buildResult,
   opportunityFor,
   quoteInEvidence,
+  withCardName,
   citesCandidate,
   computeIss,
   hostOf,
@@ -323,5 +324,20 @@ describe('the Result', () => {
   it('keeps a corpus competitor’s startup_id', () => {
     const result = buildResult({ handoff, profile: profile(), judged: [judged('a', {}, { source_type: 'corpus', startup_id: '42' })], runNotes: [], usage });
     expect(result.competitors[0]).toMatchObject({ source_type: 'corpus', startup_id: '42' });
+  });
+});
+
+describe('the company name inside the card sentences (18 Nov 2026)', () => {
+  const lugmety = { name: 'Lugmety', name_aliases: ['لقمتي', 'Lugmety App'], domain: 'lugmety.com' };
+  it('uses the card name in an Arabic card', () => {
+    expect(withCardName('تتناول Lugmety مشكلة توصيل الطعام، و Lugmety App متاح في الرياض.', lugmety, 'لقمتي')).toBe('تتناول لقمتي مشكلة توصيل الطعام، و لقمتي متاح في الرياض.');
+    expect(withCardName('يقدم lugmety وجبات', lugmety, 'لقمتي')).toBe('يقدم لقمتي وجبات');
+    // the card name already contains the other name: it is not doubled (live run, 18 Nov 2026)
+    const d360 = { name: 'D360', name_aliases: ['بنك D360'], domain: 'd360.com' };
+    expect(withCardName('يقدم بنك D360 خدمات، و D360 متوافق مع الشريعة.', d360, 'بنك D360')).toBe('يقدم بنك D360 خدمات، و بنك D360 متوافق مع الشريعة.');
+  });
+  it('uses the card name in an English card, and never touches words of the same script', () => {
+    expect(withCardName('لقمتي delivers food.', lugmety, 'Lugmety')).toBe('Lugmety delivers food.');
+    expect(withCardName('A food app.', { name: 'Food Co', name_aliases: ['فود'], domain: 'food.sa' }, 'Food Co')).toBe('A food app.');
   });
 });
