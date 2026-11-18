@@ -1,7 +1,7 @@
 // Tests for Task 5, searching the web (test plan TC-5.1 to TC-5.8). The AI and Tavily are fakes:
 // nothing is sent or paid for. The live runs are done once in Studio.
 import { describe, expect, it } from 'vitest';
-import { nameFromTitle, PREFERRED_SITES, queryProblem, searchWeb, type SearchWebDeps, type WebHit } from '../../src/mastra/lib/search-web';
+import { siteName, nameFromTitle, PREFERRED_SITES, queryProblem, searchWeb, type SearchWebDeps, type WebHit } from '../../src/mastra/lib/search-web';
 
 const PROFILE = 'Offering: a monthly subscription for access to many gyms\nKeywords: gym access, fitness\nالكلمات المفتاحية: نوادي رياضية';
 const FOUNDER = 'One monthly subscription that lets people in Riyadh use many different gyms';
@@ -31,6 +31,11 @@ describe('queries: written by the AI, checked by code', () => {
   it('uses the website’s own name when no part of the title matches it', () => {
     expect(nameFromTitle('Gyms In Riyadh', 'gymnation.com')).toBe('Gymnation');
     expect(nameFromTitle('Some page', 'core-life.com')).toBe('Core Life');
+    // The part before the ending, not the longest part (18 Nov 2026: "eshq.coffee" was shown as "Coffee").
+    expect(nameFromTitle('متجر عشق القهوة المختصة', 'eshq.coffee')).toBe('Eshq');
+    expect(siteName('eshq.coffee')).toBe('eshq');
+    expect(siteName('ksa.puregymarabia.com')).toBe('puregymarabia');
+    expect(siteName('optimo.com.sa')).toBe('optimo');
   });
 
   it('on an app store page, uses the first part of the title', () => {

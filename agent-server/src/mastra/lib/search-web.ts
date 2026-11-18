@@ -173,13 +173,16 @@ export function tavilySearch(): SearchWebDeps['search'] {
   };
 }
 
-// The website's own name, from its address: "ksa.puregymarabia.com" → "puregymarabia", "optimo.com.sa" → "optimo".
+// The website's own name, from its address: "ksa.puregymarabia.com" → "puregymarabia", "optimo.com.sa" → "optimo",
+// "eshq.coffee" → "eshq". The last part is always the ending (.com, .sa, .coffee …), so the name is the part just
+// before the endings, not the longest part (fix of 18 Nov 2026: "eshq.coffee" gave "coffee").
 const ENDINGS = new Set(['com', 'sa', 'net', 'org', 'ae', 'io', 'co', 'app', 'ai', 'me', 'tech', 'info', 'biz', 'gov', 'edu']);
 const PREFIXES = new Set(['ksa', 'sa', 'en', 'ar', 'web', 'app', 'm', 'shop', 'store', 'my', 'go', 'get', 'try']);
 export function siteName(site: string): string {
-  const labels = site.toLowerCase().replace(/^www\./, '').split('.').filter((l) => !ENDINGS.has(l));
+  const all = site.toLowerCase().replace(/^www\./, '').split('.').filter(Boolean);
+  const labels = all.slice(0, -1).filter((l) => !ENDINGS.has(l)); // the last part is the ending, whatever it is
   const kept = labels.filter((l) => !PREFIXES.has(l));
-  return (kept.length ? kept : labels).sort((a, b) => b.length - a.length)[0] ?? site;
+  return (kept.length ? kept : labels).at(-1) ?? all[0] ?? site;
 }
 
 const compact = (text: string) => text.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g, '');

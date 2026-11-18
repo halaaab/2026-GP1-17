@@ -6,11 +6,13 @@
 // This route runs the same Conversational Agent, with the same login check, and sends only what the website uses:
 //   data: {"type":"text-delta","payload":{"text":"..."}}   the reply, piece by piece
 //   data: {"type":"error","payload":{"message":"..."}}      the agent stopped with an error
+//   data: {"type":"status","payload":{"step":"..."}}       what Darb is doing now (lib/progress.ts, 18 Nov 2026)
 //   data: [DONE]                                            the end
 // and a short ": still working" line every 5 seconds, so a phone or a proxy never sees a silent connection.
 // The format is the one the website already reads (frontend/shared/agent.js), so only the address changed there.
 import { registerApiRoute } from '@mastra/core/server';
 import type { RequestContext } from '@mastra/core/request-context';
+import { listenToProgress } from '../lib/progress';
 
 export const KEEP_ALIVE_MS = 5_000;
 
@@ -47,6 +49,7 @@ export const chatRoute = registerApiRoute('/chat', {
           }
         };
         const keepAlive = setInterval(() => send(encoder.encode(': still working\n\n')), KEEP_ALIVE_MS);
+        const stopListening = listenToProgress(assessmentId, (step) => send(line({ type: 'status', payload: { step } })));
         try {
           const output = await agent.stream(text, { requestContext, memory: { thread: threadId, resource: userId } });
           for await (const chunk of output.fullStream as AsyncIterable<{ type: string; payload?: { text?: string; error?: unknown } }>) {
@@ -61,6 +64,7 @@ export const chatRoute = registerApiRoute('/chat', {
           send(line({ type: 'error', payload: { message: 'The agent could not answer' } }));
         } finally {
           clearInterval(keepAlive);
+          stopListening();
           send(line('[DONE]'));
           if (open) controller.close();
         }

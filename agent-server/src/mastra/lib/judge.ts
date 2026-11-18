@@ -28,6 +28,7 @@ Then propose a label:
 is_company: false when the candidate is an article, a news story, a list, a ranking or a directory page rather than one business.
 reason: one sentence for the founder explaining the label, naming the specific overlap or difference. No marketing language.
 difference: one sentence on how the founder's idea differs from this candidate, based only on the evidence, or "none" when the evidence shows no difference. Never say the founder will win, and never write a missing fact as "they don't have it": write "not found in our sources".
+description: one short sentence saying what the candidate offers and to whom, for the founder's card, based only on the evidence. An empty string if the evidence does not say.
 
 Rules:
 - Use only the evidence given. Never use outside knowledge about the candidate, and never guess. When unsure, answer "unknown".
@@ -51,7 +52,7 @@ const answer = {
 const JUDGE_JSON_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['is_company', 'problem', 'customer', 'offering', 'label', 'reason', 'difference'],
+  required: ['is_company', 'problem', 'customer', 'offering', 'label', 'reason', 'difference', 'description'],
   properties: {
     is_company: { type: 'boolean' },
     problem: answer,
@@ -60,6 +61,7 @@ const JUDGE_JSON_SCHEMA = {
     label: { type: 'string', enum: ['direct', 'indirect', 'not_competitor'] },
     reason: { type: 'string' },
     difference: { type: 'string' },
+    description: { type: 'string' },
   },
 };
 
@@ -91,7 +93,7 @@ export function judgeMessage(profile: IdeaProfile, candidate: Candidate, referen
     candidate.evidence_text.slice(0, MAX_EVIDENCE_CHARS),
     '>>>',
     '',
-    `Write the notes, the reason and the difference in ${LANGUAGE_NAME[language]}. Copy quotes exactly as they appear, in their own language.`,
+    `Write the notes, the reason, the difference and the description in ${LANGUAGE_NAME[language]}. Copy quotes exactly as they appear, in their own language.`,
   ];
   return lines.join('\n');
 }
@@ -138,5 +140,6 @@ function cleanAnswers(raw: Record<string, unknown>): Record<string, unknown> {
     return { answer: a, note: typeof note === 'string' ? note.trim() : '', ...(validUrl ? { source_url: url } : {}), ...(quoted ? { quote: quoted } : {}) };
   };
   const difference = typeof raw.difference === 'string' ? raw.difference.trim() : '';
-  return { ...raw, problem: fix(raw.problem), customer: fix(raw.customer), offering: fix(raw.offering), difference: difference || undefined };
+  const description = typeof raw.description === 'string' ? raw.description.trim() : '';
+  return { ...raw, problem: fix(raw.problem), customer: fix(raw.customer), offering: fix(raw.offering), difference: difference || undefined, description: description || undefined };
 }

@@ -1767,3 +1767,16 @@ body.assess-open #header-actions {
     print-color-adjust: exact;
   }
 }
+
+/* What Darb is doing now, under the typing dots (18 Nov 2026) */
+.msg-body .agent-step {
+  margin: 6px 0 0;
+  color: var(--text-3);
+  font-size: 0.875rem;
+  animation: agent-step-in 0.3s ease;
+}
+
+@keyframes agent-step-in {
+  from { opacity: 0; transform: translateY(2px); }
+  to { opacity: 1; transform: none; }
+}

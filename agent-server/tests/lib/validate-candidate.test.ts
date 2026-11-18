@@ -301,6 +301,14 @@ describe('the whole step', () => {
     expect(answer.same_product?.answer).toBe('same'); // "different" only when no page says "same"
   });
 
+  it('keeps the company name the AI read only if it is really on the page (18 Nov 2026, eshq.coffee)', async () => {
+    const pages = [{ url: 'https://eshq.coffee/ar', text: 'متجر عشق القهوة المختصة سجل تجاري 2055127142' }];
+    const askAi = vi.fn(async () => ({ ...none, name_ar: 'عشق القهوة', name_en: 'Eshq Coffee' }));
+    const answer = await askEachPage(askAi, 'Coffee', pages);
+    expect(answer.name_ar).toBe('عشق القهوة'); // on the page
+    expect(answer.name_en).toBe(''); // not written on the page: never a guess or a transliteration
+  });
+
   it('reads the VAT certificate behind a badge, and its legal name makes the company Confirmed (Hala, 14 Nov 2026)', async () => {
     const names = parseCrNamesFile(
       `# ${JSON.stringify({ quarter: 'Q3', as_of: '2026-09-30', companies: 1, ambiguous: 0, cities: ['جده'] })}\n${nameFingerprint(normalizeLegalName('شركة النوادي التفاعلية لتقنية المعلومات')).toString(16)},7007504611,0`,

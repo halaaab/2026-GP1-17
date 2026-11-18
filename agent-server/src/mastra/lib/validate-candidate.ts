@@ -81,6 +81,7 @@ export type CompanyResult = Validation & {
   pages_failed: string[];
   notes: string[]; // e.g. "signal_reading_failed": the AI could not read the pages, so those checks stay unknown
   description: string | null; // the AI's one sentence on what the company offers, for the competitor card
+  page_names: { ar: string | null; en: string | null }; // its own name as its pages write it (checked on the page)
 };
 
 // ---------------------------------------------------------------------------
@@ -286,6 +287,11 @@ export type AiAnswer = {
   // One sentence in the AI's own words: what the company offers (shown on the competitor card, design §11).
   // Never copied from the page (Tavily terms). Empty when the page does not say (Hala, 16 Nov 2026).
   description?: string;
+  // The business's own short name as written on the pages, in Arabic and in Latin letters ("" when not written).
+  // Code keeps a name only if it is really on the page (Hala, 18 Nov 2026: eshq.coffee was shown as "Coffee",
+  // from its web address, while its pages say "عشق القهوة").
+  name_ar?: string;
+  name_en?: string;
 };
 
 export const SIGNAL_PROMPT = `You read a company's own web pages and report evidence, quoting the pages exactly.
@@ -303,12 +309,13 @@ Report:
   "unclear": only when the pages say almost nothing about what is sold.
   With no expected product, answer "unclear" with an empty quote and page 1.
 - description: one short sentence in English, in your own words, saying what the company offers and to whom (for example "A Riyadh gym chain with monthly memberships."). Never copy a sentence from the pages. An empty string if the pages do not say what the company offers.
+- name_ar and name_en: the business's own short brand name as the pages write it, in Arabic letters (name_ar) and in Latin letters (name_en), for example "عشق القهوة" and "Eshq Coffee". Copy it exactly from the pages, without words such as شركة, مؤسسة, متجر, company, store or LLC, and without the product description. An empty string when the pages do not write the name in those letters; never translate or transliterate it yourself.
 Give at most 5 items in each list, the clearest ones (for dated, the newest ones).`;
 
 const AI_SCHEMA = {
   type: 'object',
   additionalProperties: false,
-  required: ['offering', 'blocking', 'dated', 'saudi_address', 'same_product', 'description'],
+  required: ['offering', 'blocking', 'dated', 'saudi_address', 'same_product', 'description', 'name_ar', 'name_en'],
   properties: {
     offering: {
       type: 'array',
@@ -337,6 +344,8 @@ const AI_SCHEMA = {
       properties: { answer: { type: 'string', enum: ['same', 'different', 'unclear'] }, quote: { type: 'string' }, page: { type: 'integer' } },
     },
     description: { type: 'string' },
+    name_ar: { type: 'string' },
+    name_en: { type: 'string' },
   },
 };
 
@@ -389,7 +398,17 @@ export async function askEachPage(askAi: AskAi, companyName: string, pages: Page
     same_product: same.find((x) => x.answer === 'same') ?? same.find((x) => x.answer === 'different') ?? same[0],
     // The first page's description (the homepage comes first), else the next page that has one.
     description: answers.map((a) => a.description?.trim() ?? '').find(Boolean) ?? '',
+    // The first page that writes the name (the homepage comes first), checked to be really on that page.
+    name_ar: answers.map((a, i) => namedOn(a.name_ar, pages[i])).find(Boolean) ?? '',
+    name_en: answers.map((a, i) => namedOn(a.name_en, pages[i])).find(Boolean) ?? '',
   };
+}
+
+// A name the AI read counts only if it is really on that page (spaces and letter case aside): never a guess.
+function namedOn(name: string | undefined, page: PageText | undefined): string {
+  const n = squash(name ?? '');
+  if (!page || n.length < 2 || n.length > 60) return '';
+  return squash(page.text).toLowerCase().includes(n.toLowerCase()) ? n : '';
 }
 
 // An AI quote counts only if it is really on that page (ignoring spaces and case) and is at least 6 characters.
@@ -809,6 +828,7 @@ export async function validateCompanies(
       const signals = [...codeSignals({ ...company, app_store_url: appOf[i] }, codePages, sites[i]), ...activeSignals({ ...company, news }, codePages, now)];
       const notes: string[] = [];
       let description: string | null = null;
+      const page_names: CompanyResult['page_names'] = { ar: null, en: null };
       // The app: listed now = it can be downloaded (Real offering); its last update = a date for Active.
       const facts = apps[i];
       if (facts?.listed) {
@@ -839,6 +859,8 @@ export async function validateCompanies(
         try {
           const answer = await askEachPage(deps.askAi, company.name, pages, company.description);
           description = answer.description?.trim() || null;
+          page_names.ar = answer.name_ar || null;
+          page_names.en = answer.name_en || null;
           signals.push(...aiSignals(answer, pages, now));
         } catch {
           // The AI failed: its checks stay unknown, so the company is Unconfirmed, never wrongly shown. The note says so.
@@ -929,6 +951,7 @@ export async function validateCompanies(
         pages_read: [...read],
         notes,
         description,
+        page_names,
         pages_failed: [...first.failed, ...second.failed].map((f) => f.url).filter((u) => siteOf(u) === sites[i] || u === app),
       };
     }),
