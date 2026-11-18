@@ -12,16 +12,16 @@ export type Clarification = { question: string; missing_field: MissingField };
 // One question per case. When both are missing, one question asks for both (the product first, as PBI 34 says).
 export const CLARIFY_QUESTIONS: Record<MissingField | 'both', Record<Language, string>> = {
   problem: {
-    en: 'What problem does your idea solve, and for whom?',
-    ar: 'ما المشكلة التي تحلّها فكرتك، ولمن؟',
+    en: 'Thank you for sharing your idea 😊 Could you tell me what problem it solves, and for whom?',
+    ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي المشكلة التي تحلّها، ولمن؟',
   },
   offering: {
-    en: 'What exactly will your product or service do for its customers?',
-    ar: 'ماذا سيقدّم منتجك أو خدمتك لعملائك بالتحديد؟',
+    en: 'Thank you for sharing your idea 😊 Could you tell me what exactly your product or service will offer its customers?',
+    ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي ما الذي سيقدّمه منتجك أو خدمتك لعملائك بالتحديد؟',
   },
   both: {
-    en: 'Could you tell me a bit more: what will your product do, and what problem does it solve?',
-    ar: 'هل يمكنك أن توضّح أكثر: ماذا سيقدّم منتجك، وما المشكلة التي يحلّها؟',
+    en: 'I would be glad to help 😊 Could you tell me a bit more: what will your product offer, and what problem does it solve?',
+    ar: 'يسعدني مساعدتك 😊 هل يمكنك أن توضّح لي أكثر: ماذا سيقدّم منتجك، وما المشكلة التي يحلّها؟',
   },
 };
 

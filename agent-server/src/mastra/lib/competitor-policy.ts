@@ -248,7 +248,10 @@ export function displayName(candidate: Pick<Candidate, 'name' | 'name_aliases'>,
 
 function toCompetitor(j: Judged, rank: number, language: Language): ResultCompetitor {
   const c = j.candidate;
-  const cell = (a: JudgeAnswer) => ({ answer: a.answer, note: a.note });
+  // the proof sentence is kept only when it is really in this competitor's evidence and its link is the competitor's own
+  const proven = (a: JudgeAnswer) =>
+    (a.answer === 'same' || a.answer === 'partly') && a.quote && a.source_url && quoteInEvidence(a.quote, c.evidence_text) && citesCandidate(a.source_url, c);
+  const cell = (a: JudgeAnswer) => ({ answer: a.answer, note: a.note, ...(proven(a) ? { quote: a.quote!.trim(), source_url: a.source_url! } : {}) });
   return {
     rank,
     name: displayName(c, language),

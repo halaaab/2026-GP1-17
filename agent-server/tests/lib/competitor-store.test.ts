@@ -323,7 +323,7 @@ describe('delegation: the clarification question', () => {
     await onCompetitorDelegationStart(shown.ctx);
     await onCompetitorDelegationComplete(complete(shown.ctx.toolCallId, result()));
     expect(shown.rules.codeWritesReply).toBe(true);
-    expect(shown.rules.sentences[0]).toMatch(/^I found \d+ competitors? for your idea\. The cards below show each one with its evidence\.$/);
+    expect(shown.rules.sentences[0]).toMatch(/^I found \d+ competitors? for your idea 🔍 You will find each one in the cards below, with its evidence\.$/);
 
     const none = start(written);
     await onCompetitorDelegationStart(none.ctx);

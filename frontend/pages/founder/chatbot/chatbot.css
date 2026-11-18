@@ -243,8 +243,30 @@ body[data-page="chatbot"] .app-header {
   overflow-wrap: anywhere;      /* long links wrap instead of widening the page */
 }
 /* shown when Darb could not answer (the agent server is off, or the login expired) */
-.msg-body p.agent-failed {
+.msg-body .agent-failed {
   color: var(--text-3);
+}
+
+/* Darb's reply with its formatting: paragraphs, bold words and lists (18 Nov 2026) */
+.agent-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.agent-text strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+.agent-text ul,
+.agent-text ol {
+  margin: 0;
+  padding-inline-start: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 /* the copy button under Darb's reply: small and quiet, close to the text */
@@ -441,7 +463,7 @@ html[dir="rtl"] .trace[open] summary svg {
 }
 .comp-chat-top {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
@@ -930,6 +952,23 @@ body.assess-open #header-actions {
 .initial.is-teal { background: var(--teal-tint); color: var(--teal-text); }
 .initial.is-good { background: var(--good-tint); color: var(--good-text); }
 .initial.is-warn { background: var(--warn-tint); color: var(--warn-text); }
+/* the competitor's own icon covers the letter once it loads */
+.initial { position: relative; overflow: hidden; }
+.initial img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  opacity: 0;
+}
+.initial.has-logo img { opacity: 1; }
+.initial-sm {
+  width: 32px;
+  height: 32px;
+  font-size: 14px;
+}
 .startup-name {
   display: flex;
   flex-direction: column;
@@ -1779,4 +1818,33 @@ body.assess-open #header-actions {
 @keyframes agent-step-in {
   from { opacity: 0; transform: translateY(2px); }
   to { opacity: 1; transform: none; }
+}
+
+/* the name between the logo and the rank */
+.comp-chat-name {
+  flex: 1;
+  min-width: 0;
+}
+
+/* the proof sentence from the competitor's own page */
+.comp-proof {
+  margin: 0;
+  padding: 8px 12px;
+  border-inline-start: 3px solid var(--teal);
+  background: var(--teal-tint);
+  border-radius: var(--r-sm);
+}
+.comp-proof p {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: normal;
+  display: -webkit-box;          /* a long sentence is cut after three lines */
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.comp-proof small {
+  font-size: 12px;
+  color: var(--text-3);
 }

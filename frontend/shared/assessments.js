@@ -363,6 +363,12 @@ export function hasIdea(assessment) {
   return Boolean(assessment.analysedAt || assessment.score);
 }
 
+/* A conversation the founder wrote in: it is listed in History and the sidebar at once, like ChatGPT
+   (Hala, 18 Nov 2026). Its name is the founder's first words until Darb finds the idea (becomeIdea). */
+export function isListed(assessment) {
+  return hasIdea(assessment) || assessment.messages > 0;
+}
+
 /* The title of a conversation, taken from what the founder wrote: the first line,
    cut at 44 letters */
 export function titleFrom(text) {
@@ -466,8 +472,8 @@ export async function showSidebarHistory() {
   const box = document.querySelector('#sidebar-history');
   if (!box) return;
 
-  // only real ideas: a chat that only said "hi" is not listed
-  const assessments = (await getAssessments()).filter(hasIdea);
+  // every conversation the founder wrote in, at once
+  const assessments = (await getAssessments()).filter(isListed);
   if (assessments.length === 0) return;
 
   const openId = new URLSearchParams(window.location.search).get('id');

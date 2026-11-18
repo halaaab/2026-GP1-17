@@ -37,20 +37,20 @@ export const NOTE_TEXT: Record<NoteCode, Record<Language, string>> = {
     ar: 'تغيّرت بعض المواقع منذ آخر فحص، لذلك قد تختلف النتائج قليلًا.',
   },
   temporarily_unavailable: {
-    en: 'The competitor search is temporarily unavailable. Please try again later.',
-    ar: 'البحث عن المنافسين غير متاح مؤقتًا. حاول مرة أخرى لاحقًا.',
+    en: 'We apologise, the competitor search is temporarily unavailable. Please try again a little later.',
+    ar: 'نعتذر منك، البحث عن المنافسين غير متاح مؤقتًا. نرجو المحاولة مرة أخرى بعد قليل.',
   },
   analysis_incomplete: {
-    en: 'The competitor analysis did not finish this time. You can try again.',
-    ar: 'لم يكتمل تحليل المنافسين هذه المرة. يمكنك المحاولة مرة أخرى.',
+    en: 'We apologise, the competitor analysis did not finish this time. You are welcome to try again.',
+    ar: 'نعتذر منك، لم يكتمل تحليل المنافسين هذه المرة. يسعدنا أن تحاول مرة أخرى.',
   },
   daily_limit_reached: {
-    en: 'You have used today’s competitor analyses. You can run a new one tomorrow.',
-    ar: 'استخدمت كل تحليلات المنافسين المتاحة لك اليوم. يمكنك إجراء تحليل جديد غدًا.',
+    en: 'You have used all of today’s competitor analyses. You are welcome to run a new one tomorrow (after midnight, Saudi time) 🌙',
+    ar: 'لقد استخدمت جميع تحليلات المنافسين المتاحة لك اليوم. يسعدنا أن تُجري تحليلاً جديدًا غدًا (بعد منتصف الليل بتوقيت السعودية) 🌙',
   },
   monthly_limit_reached: {
-    en: 'You have used this month’s competitor analyses. You can run a new one next month.',
-    ar: 'استخدمت كل تحليلات المنافسين المتاحة لك هذا الشهر. يمكنك إجراء تحليل جديد الشهر القادم.',
+    en: 'You have used all of this month’s competitor analyses. You are welcome to run a new one next month.',
+    ar: 'لقد استخدمت جميع تحليلات المنافسين المتاحة لك هذا الشهر. يسعدنا أن تُجري تحليلاً جديدًا في الشهر القادم.',
   },
   time_limit_reached: {
     en: 'The search took longer than allowed, so only the competitors checked in time are shown.',
@@ -145,7 +145,7 @@ export function noteSentences(notes: readonly NoteCode[], language: Language): s
 export function cardsSentence(count: number, language: Language): string {
   if (language === 'ar') {
     const found = count === 1 ? 'منافساً واحداً' : count === 2 ? 'منافسَين' : `${count} منافسين`;
-    return `وجدتُ ${found} لفكرتك. تعرض البطاقات أدناه كل منافس مع أدلته.`;
+    return `وجدتُ لك ${found} لفكرتك 🔍 تجد كل منافس في البطاقات أدناه مع أدلته.`;
   }
-  return `I found ${count} competitor${count === 1 ? '' : 's'} for your idea. The cards below show each one with its evidence.`;
+  return `I found ${count} competitor${count === 1 ? '' : 's'} for your idea 🔍 You will find each one in the cards below, with its evidence.`;
 }

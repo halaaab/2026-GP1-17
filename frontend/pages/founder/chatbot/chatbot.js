@@ -17,18 +17,52 @@ import { getAccount } from '../../../shared/auth.js';
 import {
   say, scoreBand, chatLink, loadResult, refreshAnalysis,
   getAssessment, saveAssessment, saveMessage, newAssessment,
-  showSidebarHistory, assessmentsFailed, hasIdea, titleFrom,
+  showSidebarHistory, assessmentsFailed, hasIdea, isListed, titleFrom,
 } from '../../../shared/assessments.js';
 import { askDarb } from '../../../shared/agent.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import { showToast } from '../../../shared/ui.js';
-import { openPanel, closePanel, roadmapList } from './panel.js';
+import { openPanel, closePanel, roadmapList, logoOf } from './panel.js';
 
 /* Text from the database (competitor names, reasons) is made safe before it goes into HTML */
 function safe(text) {
   const box = document.createElement('span');
   box.textContent = text ?? '';
   return box.innerHTML;
+}
+
+/* Darb's reply with its simple formatting (Hala, 18 Nov 2026): the model writes **bold** and lists, which showed
+   as stars. Only bold, bullet and numbered lists and paragraphs are turned into HTML; everything else stays text,
+   because the words are made safe first. Each block gets dir="auto", so Arabic and English lines both read right. */
+function formatReply(text) {
+  const bold = (line) => safe(line).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  const blocks = [];
+  let list = null;   // { tag: 'ul' | 'ol', items: [] }
+  const closeList = () => {
+    if (list) blocks.push(`<${list.tag} dir="auto">${list.items.map((item) => `<li>${item}</li>`).join('')}</${list.tag}>`);
+    list = null;
+  };
+  for (const raw of (text || '').split('\n')) {
+    const line = raw.trim();
+    const bullet = line.match(/^[-*•]\s+(.*)$/);
+    const numbered = line.match(/^\d+[.)]\s+(.*)$/);
+    const item = bullet || numbered;
+    if (item) {
+      const tag = bullet ? 'ul' : 'ol';
+      if (!list || list.tag !== tag) { closeList(); list = { tag, items: [] }; }
+      list.items.push(bold(item[1]));
+      continue;
+    }
+    closeList();
+    if (line) blocks.push(`<p dir="auto">${bold(line.replace(/^#{1,6}\s+/, ''))}</p>`);
+  }
+  closeList();
+  return blocks.join('');
+}
+
+/* The reply as plain words, for the copy button */
+function plainReply(text) {
+  return (text || '').replace(/\*\*(.+?)\*\*/g, '$1');
 }
 
 const chat = document.querySelector('#chat');
@@ -142,9 +176,10 @@ function addAgent(text = '') {
 
   const body = row.querySelector('.msg-body');
   if (text) {
-    const paragraph = document.createElement('p');
-    paragraph.textContent = text;
-    body.append(paragraph);
+    const box = document.createElement('div');
+    box.className = 'agent-text';
+    box.innerHTML = formatReply(text);   // made safe inside formatReply
+    body.append(box);
   }
 
   thread.append(row);
@@ -158,7 +193,7 @@ function addAgent(text = '') {
 async function agentAnswers(text, retry = null) {
   const body = addAgent();
   body.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
-  const paragraph = document.createElement('p');
+  const paragraph = document.createElement('div');
   paragraph.className = 'agent-text';
 
   // the agent's own conversation id for this assessment. The founder cannot write
@@ -173,7 +208,7 @@ async function agentAnswers(text, retry = null) {
       threadId,
       onText: (soFar) => {
         if (!paragraph.isConnected) body.replaceChildren(paragraph);   // the dots (and the step) make room for the text
-        paragraph.textContent = soFar;   // as text, never as HTML
+        paragraph.innerHTML = formatReply(soFar);   // made safe inside formatReply
         scrollToEnd();
       },
       // What Darb is doing now, under the dots, until the reply starts (18 Nov 2026)
@@ -191,7 +226,7 @@ async function agentAnswers(text, retry = null) {
         scrollToEnd();
       },
     });
-    if (reply) addCopy(body, reply);
+    if (reply) addCopy(body, plainReply(reply));
     return reply;
   } catch (error) {
     console.error('Chat: Darb could not answer:', error.message);
@@ -225,6 +260,20 @@ function addResult() {
   scrollToEnd();
 }
 
+/* The sentence from the competitor's own page that proves it solves the same problem (or offers the same thing),
+   copied word for word and checked by the agent server (Hala, 18 Nov 2026). Nothing when there is none. */
+function proofOf(competitor) {
+  const comparison = competitor.comparison || {};
+  const cell = [comparison.problem, comparison.offering].find((part) => part && part.quote);
+  if (!cell) return '';
+  const link = /^https?:\/\//i.test(cell.source_url || '') ? safe(cell.source_url) : '';
+  const label = link
+    ? `<a class="link" href="${link}" target="_blank" rel="noopener noreferrer">${t('comp.proof')}</a>`
+    : t('comp.proof');
+  const quote = cell.quote.replace(/\s*\[(\.\.\.|…)\][\s\S]*$/, '…');   // a search snippet's cut mark ends the sentence
+  return `<blockquote class="comp-proof"><p dir="auto">“${safe(quote)}”</p><small>${label}</small></blockquote>`;
+}
+
 /* The competitor analysis inside the chat: one card per competitor (at most three), each with its
    labels, the one-sentence reason and its evidence link, then a button that opens the full analysis.
    Everything comes from the saved analysis; nothing is worked out here. */
@@ -240,7 +289,8 @@ function addCompetitors() {
     return `
       <article class="card comp-chat-card">
         <div class="comp-chat-top">
-          <strong><bdi>${safe(competitor.name)}</bdi></strong>
+          ${logoOf(competitor).replace('class="initial ', 'class="initial initial-sm ')}
+          <strong class="comp-chat-name"><bdi>${safe(competitor.name)}</bdi></strong>
           <span class="comp-chat-rank" dir="ltr">#${competitor.rank}</span>
         </div>
         <div class="comp-chat-chips">
@@ -248,6 +298,7 @@ function addCompetitors() {
           <span class="chip ${competitor.evidence === 'likely' ? 'chip-navy' : 'chip-good'}">${t(competitor.evidence === 'likely' ? 'comp.limited' : 'comp.confirmed')}</span>
         </div>
         ${competitor.reason ? `<p dir="auto">${safe(competitor.reason)}</p>` : ''}
+        ${proofOf(competitor)}
         ${source ? `<a class="link comp-chat-evidence" href="${source}" target="_blank" rel="noopener noreferrer">${t('comp.evidence')} ${icon('external')}</a>` : ''}
       </article>`;
   }).join('');
@@ -349,7 +400,7 @@ function showHeader() {
     title.className = 'app-header-title chat-title';
     document.querySelector('.app-header .app-header-space').before(title);
   }
-  title.textContent = current && hasIdea(current) ? say(current.title) : t('chat.titleEmpty');   // founder's words: as text
+  title.textContent = current && isListed(current) ? say(current.title) : t('chat.titleEmpty');   // founder's words: as text
 
   const actions = document.querySelector('#header-actions');
   actions.innerHTML = `
@@ -383,7 +434,13 @@ async function talk(text, about = null) {
   addUser(text, about);
   // The founder's message is saved at once, before Darb answers (17 Nov 2026): a refresh or a failed
   // answer never removes it. A failed answer gets "Try again", which asks again without a second copy.
+  const first = !isListed(current);
   await saveMessage(current, 'user', { text, about: about ? about.id : '' });
+  // the first message: the conversation shows in the sidebar and the header at once, before Darb answers
+  if (first) {
+    showHeader();
+    showSidebarHistory();
+  }
   await answer(text, about);
 }
 
@@ -460,7 +517,7 @@ async function showSaved() {
     if (message.from === 'user') {
       addUser(say(message.text));
     } else {
-      addCopy(addAgent(say(message.text)), say(message.text));
+      addCopy(addAgent(say(message.text)), plainReply(say(message.text)));
     }
   }
 

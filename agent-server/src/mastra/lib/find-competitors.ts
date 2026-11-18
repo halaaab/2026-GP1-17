@@ -84,8 +84,8 @@ export type FindDeps = {
 
 // Asked when the problem or the offering is unknown (design §4). Member 2 owns the wording of clarification questions.
 const QUESTIONS = {
-  problem: { en: 'What problem does your idea solve, and for whom?', ar: 'ما المشكلة التي تحلها فكرتك، ولمن؟' },
-  offering: { en: 'What exactly will you offer: an app, a service or a product?', ar: 'ما الذي ستقدمه بالضبط: تطبيق أم خدمة أم منتج؟' },
+  problem: { en: 'Thank you for sharing your idea 😊 Could you tell me what problem it solves, and for whom?', ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي المشكلة التي تحلّها، ولمن؟' },
+  offering: { en: 'Thank you for sharing your idea 😊 Could you tell me what you will offer: an app, a service or a product?', ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي ما ستقدّمه: تطبيق أم خدمة أم منتج؟' },
 };
 
 class NeedsClarification extends Error {
