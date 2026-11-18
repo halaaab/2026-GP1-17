@@ -1086,49 +1086,63 @@ body.assess-open #header-actions {
 .comp-overview {
   margin-bottom: 16px;
 }
+.comp-overview-sub {
+  margin: -4px 0 16px;
+  font-size: 13px;
+}
 .comp-overview-grid {
-  max-width: 520px;   /* on a laptop the names stay close to their marks */
+  max-width: 560px;   /* on a laptop the names stay close to their answers */
   display: grid;
   grid-template-columns: minmax(0, 1fr) repeat(3, 64px);
-  align-items: center;
-  row-gap: 12px;
-  text-align: center;
+  align-items: stretch;
 }
 .comp-overview-head {
+  padding: 0 3px 6px;
   font-size: 12px;
   color: var(--text-2);
+  text-align: center;
+}
+.comp-overview-name,
+.answer-cell {
+  border-top: 1px solid var(--divider);
+  padding: 10px 3px;
 }
 .comp-overview-name {
-  text-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
   font-size: 14px;
   font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
-.comp-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  margin: 14px 0 0;
-  padding-top: 12px;
-  border-top: 1px solid var(--divider);
-  font-size: 12px;
+.comp-overview-name bdi {
+  overflow-wrap: anywhere;   /* a long name takes two lines instead of being cut */
+  line-height: 1.35;
+}
+.comp-overview-name small {
+  font-size: 11.5px;
+  font-weight: 400;
   color: var(--text-2);
 }
-.comp-legend span {
-  display: inline-flex;
+/* the answer in a short word, in the same colours as the marks in the basis */
+.answer-cell {
+  display: flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
 }
-.comp-legend .answer-dot {
-  width: 18px;
-  height: 18px;
+.answer-word {
+  width: 100%;
+  padding: 4px 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
 }
-.comp-legend .answer-dot svg {
-  width: 10px;
-  height: 10px;
-}
+.answer-word.is-same      { background: var(--risk-tint); color: var(--risk-text); }
+.answer-word.is-partly    { background: var(--warn-tint); color: var(--warn-text); }
+.answer-word.is-different { background: var(--good-tint); color: var(--good-text); }
+.answer-word.is-unknown,
+.answer-word.is-conflicting { background: var(--bg-muted); color: var(--text-2); }
 /* one mark per answer: the same as the idea (a close competitor), partly, different, or not known */
 .answer-dot {
   display: inline-flex;

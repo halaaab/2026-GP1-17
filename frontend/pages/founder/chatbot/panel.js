@@ -353,18 +353,22 @@ function answerDot(answer) {
   return `<span class="answer-dot is-${answer}" title="${t(`comp.answer.${answer}`)}">${icon(ANSWER_ICON[answer])}</span>`;
 }
 
-/* The overview: each competitor's three answers as marks, so the whole comparison fits a phone */
+/* The overview: each competitor's three answers in short words (Hala, 18 Nov 2026: marks alone needed a key to read),
+   with its kind of competition under its name. Short enough for a phone. */
 function overview(competitors) {
   return `
     <div class="box comp-overview">
       <h3 class="box-title">${icon('grid')} ${t('comp.overview')}</h3>
+      <p class="text-2 comp-overview-sub">${t('comp.overview.sub')}</p>
       <div class="comp-overview-grid">
         <span></span>${PARTS.map((part) => `<span class="comp-overview-head">${t(`comp.part.short.${part}`)}</span>`).join('')}
         ${competitors.map((c) => `
-          <span class="comp-overview-name"><bdi>${safe(c.name)}</bdi></span>
-          ${PARTS.map((part) => `<span class="comp-overview-cell">${answerDot(answerOf(c.comparison[part]))}</span>`).join('')}`).join('')}
+          <span class="comp-overview-name"><bdi>${safe(c.name)}</bdi><small>${t(`comp.label.short.${c.label}`)}</small></span>
+          ${PARTS.map((part) => {
+            const answer = answerOf(c.comparison[part]);
+            return `<span class="answer-cell"><span class="answer-word is-${answer}">${t(`comp.answer.short.${answer}`)}</span></span>`;
+          }).join('')}`).join('')}
       </div>
-      <p class="comp-legend">${['same', 'partly', 'different', 'unknown'].map((a) => `<span>${answerDot(a)} ${t(`comp.answer.${a}`)}</span>`).join('')}</p>
     </div>`;
 }
 
