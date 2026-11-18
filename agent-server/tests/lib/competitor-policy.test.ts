@@ -296,6 +296,10 @@ describe('the Result', () => {
     expect(other.comparison.problem).toEqual({ answer: 'partly', note: 'Partly.' });
     expect(other.comparison.offering).toEqual({ answer: 'partly', note: 'Partly.' });
     expect(Result.safeParse(buildResult({ handoff, profile: profile(), judged: [judged('a')], runNotes: [], usage })).success).toBe(true);
+
+    // a startup from Darb's list: its evidence is Darb's own summary, not the company's page, so no quote is shown
+    const listed = buildResult({ handoff, profile: profile(), judged: [judged('a', {}, { source_type: 'corpus', startup_id: '33333333-3333-4333-8333-333333333333' })], runNotes: [], usage }).competitors[0];
+    expect(listed.comparison.problem).toEqual({ answer: 'same', note: 'Same.' });
   });
 
   it('says none were found, with no ISS and no market level', () => {
