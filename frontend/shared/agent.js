@@ -12,6 +12,7 @@
        assessmentId: '...',          // the assessment this conversation belongs to
        threadId: '...',              // the agent's conversation id for it
        onText: (soFar) => { ... },   // called as the reply arrives, with the text so far
+       onStatus: (step) => { ... },  // optional: what Darb is doing now ('understanding', 'searching_web', ...)
      });
      // reply = the full text of Darb's answer
 
@@ -35,7 +36,7 @@ export class AgentError extends Error {
   }
 }
 
-export async function askDarb({ text, assessmentId, threadId, onText = () => {} }) {
+export async function askDarb({ text, assessmentId, threadId, onText = () => {}, onStatus = () => {} }) {
   // the founder's login: the server checks it and knows who they are from it
   const { data } = await supabase.auth.getSession();
   const session = data.session;
@@ -98,6 +99,8 @@ export async function askDarb({ text, assessmentId, threadId, onText = () => {} 
       if (chunk.type === 'text-delta') {
         reply += chunk.payload.text;
         onText(reply);
+      } else if (chunk.type === 'status') {
+        onStatus(chunk.payload.step);   // what Darb is doing now, e.g. "searching_web"
       } else if (chunk.type === 'error') {
         console.error('Agent: the agent server reported an error:', chunk.payload);
         throw new AgentError('offline', 'The agent stopped with an error');

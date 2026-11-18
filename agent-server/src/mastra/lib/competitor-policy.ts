@@ -18,6 +18,7 @@ import {
   type IdeaProfile,
   type JudgeAnswer,
   type JudgeOutput,
+  type Language,
   type NoteCode,
   type OpportunityKind,
   type ResultCompetitor,
@@ -39,6 +40,7 @@ export type PolicyOutcome = {
   reason: string;
   opportunity: OpportunityKind;
   difference: string | null; // the judge's sentence, or null for "none"
+  description: string | null; // the card's description in the founder's language, or null (then the candidate's own)
 };
 
 // The ISS uses the customer only when the founder's customer is known (design §10, "Customer unknown").
@@ -120,6 +122,7 @@ export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: I
     reason: judge.reason.trim(),
     opportunity: opportunityFor(answers),
     difference: judge.difference && !/^none\.?$/i.test(judge.difference.trim()) ? judge.difference.trim() : null,
+    description: judge.description?.trim() || null,
   });
 
   // Articles, lists and directory pages are never results.
@@ -233,14 +236,24 @@ export function marketLevel(valid: readonly Judged[]): 'open' | 'competitive' | 
 // The Result (design §11)
 // ---------------------------------------------------------------------------
 
-function toCompetitor(j: Judged, rank: number): ResultCompetitor {
+// The name shown on the card, in the founder's language when the company has one (18 Nov 2026): an Arabic chat
+// shows "مرسول" and "عشق القهوة", an English chat "Mrsool" and "Eshq Coffee". Only names the company really uses:
+// Darb's list (its Arabic name) or its own pages; never a translation.
+const ARABIC = /[\u0600-\u06FF]/;
+export function displayName(candidate: Pick<Candidate, 'name' | 'name_aliases'>, language: Language): string {
+  const all = [candidate.name, ...candidate.name_aliases];
+  const wanted = all.find((n) => (language === 'ar' ? ARABIC.test(n) : !ARABIC.test(n)));
+  return wanted ?? candidate.name;
+}
+
+function toCompetitor(j: Judged, rank: number, language: Language): ResultCompetitor {
   const c = j.candidate;
   const cell = (a: JudgeAnswer) => ({ answer: a.answer, note: a.note });
   return {
     rank,
-    name: c.name,
+    name: displayName(c, language),
     website: c.website,
-    description: c.description!,
+    description: j.policy.description ?? c.description!,
     city_region: c.city_region ?? null,
     source_type: c.source_type,
     ...(c.startup_id ? { startup_id: c.startup_id } : {}),
@@ -287,7 +300,7 @@ export function clarificationResult(profile: IdeaProfile, clarification: Clarifi
 // The checked Result: up to 3 competitors, the ISS and its basis, the market level and the notes.
 export function buildResult({ handoff, profile, judged, runNotes, usage }: BuildInput): Result {
   const valid = rankCompetitors(judged, handoff);
-  const competitors = valid.slice(0, MAX_SHOWN).map((j, i) => toCompetitor(j, i + 1));
+  const competitors = valid.slice(0, MAX_SHOWN).map((j, i) => toCompetitor(j, i + 1, handoff.language));
   const basis = issBasis(profile);
   const found = competitors.length > 0;
 

@@ -172,8 +172,22 @@ async function agentAnswers(text, retry = null) {
       assessmentId: current.id,
       threadId,
       onText: (soFar) => {
-        if (!paragraph.isConnected) body.replaceChildren(paragraph);   // the dots make room for the text
+        if (!paragraph.isConnected) body.replaceChildren(paragraph);   // the dots (and the step) make room for the text
         paragraph.textContent = soFar;   // as text, never as HTML
+        scrollToEnd();
+      },
+      // What Darb is doing now, under the dots, until the reply starts (18 Nov 2026)
+      onStatus: (step) => {
+        if (paragraph.isConnected) return;   // the reply has started
+        const words = t(`chat.step.${step}`);
+        if (words === `chat.step.${step}`) return;   // a step this page does not know: keep the dots
+        let line = body.querySelector('.agent-step');
+        if (!line) {
+          line = document.createElement('p');
+          line.className = 'agent-step';
+          body.append(line);
+        }
+        line.textContent = words;
         scrollToEnd();
       },
     });

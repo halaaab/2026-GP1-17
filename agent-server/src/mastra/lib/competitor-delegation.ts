@@ -279,16 +279,12 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
       started.replyRules.sentences = [question];
       started.replyRules.codeWritesReply = true;
     } else if (result.competitors.length > 0 && !started.whatIf?.created) {
-      // Cards are shown under the reply: code writes the whole reply (one sentence, the score and market, the
-      // opportunities and the notes), so the model never lists the competitors again (Hala, 16 Nov 2026).
+      // Cards are shown under the reply: code writes the whole reply, so the model never lists the competitors again
+      // (Hala, 16 Nov 2026). Only one sentence and the notes (Hala, 18 Nov 2026: the score, the market and the
+      // opportunities made the reply crowded; the cards and the analysis panel already show them).
       // A what-if has no cards, so the model still lists its competitors in text.
       const language = started.handoff.language;
-      started.replyRules.sentences = [
-        cardsSentence(result.competitors.length, language),
-        ...summarySentences(result, language),
-        ...opportunitySentences(result, language),
-        ...sentences,
-      ];
+      started.replyRules.sentences = [cardsSentence(result.competitors.length, language), ...sentences];
       started.replyRules.codeWritesReply = true;
     } else {
       started.replyRules.sentences = sentences;

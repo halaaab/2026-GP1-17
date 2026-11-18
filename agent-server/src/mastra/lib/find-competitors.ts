@@ -17,6 +17,7 @@
 //      Active). Up to 6 new web companies are checked. Only Confirmed and Likely companies are passed on.
 //   5. Tavily calls are counted across every step, and never go over 15.
 import { TAVILY_CALLS_PER_IDEA, TAVILY_READ_CALLS } from '../config/limits';
+import type { ProgressStep } from './progress';
 import type { Candidate, IdeaProfile } from '../schemas/competitor';
 import type { RunState } from './competitor-run';
 import { cleanName, siteOf } from './identify-candidates';
@@ -52,6 +53,7 @@ export type FindInput = {
   founder_startup?: { name?: string; website?: string };
   references?: string[];
   web?: 'auto' | 'off' | 'always'; // auto: the rule in step 3. off / always: for TC-11.14 (list only vs list + web)
+  onProgress?: (step: ProgressStep) => void; // what Darb is doing now, for the founder's screen (lib/progress.ts)
 };
 
 export type FoundCompany = Candidate & {
@@ -113,6 +115,8 @@ const failedChecks = (r: CompanyResult) =>
 
 export async function findCompetitors(input: FindInput, deps: FindDeps, now = new Date()): Promise<FindOutput> {
   const language = input.language ?? 'en';
+  const progress = (step: ProgressStep) => input.onProgress?.(step);
+  progress('searching_list');
   const notes: FindOutput['notes'] = [];
   const not_shown: FindOutput['not_shown'] = [];
   const companies: FoundCompany[] = [];
@@ -173,6 +177,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
   }
   const results = new Map<string, CompanyResult>();
   if (toCheck.length) {
+    progress('checking_companies');
     const checked = await validateCompanies(
       toCheck.map((c) => ({ name: c.name, aliases: c.name_aliases, website: c.website, startup_id: c.startup_id, description: c.evidence_text })),
       { ...deps.validate, maxCalls: TAVILY_READ_CALLS - READ_RESERVE },
@@ -183,8 +188,16 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
   }
   const keep = (c: Candidate, r: CompanyResult, source: 'corpus' | 'web') => {
     if (r.evidence_status === 'unconfirmed') return not_shown.push({ name: c.name, source, why: `Unconfirmed: ${failedChecks(r)}` });
+    // A web company's name: its own name as its pages write it, not one guessed from its web address or a page title
+    // (Hala, 18 Nov 2026: eshq.coffee was "Coffee"; its pages say "عشق القهوة"). Both spellings are kept, so the card
+    // can show the one in the founder's language (lib/competitor-policy.ts, displayName).
+    const own = source === 'web' ? [r.page_names?.en, r.page_names?.ar].filter((n): n is string => !!n) : [];
+    const name = own[0] ?? c.name;
+    const name_aliases = [...new Set([...own.slice(1), c.name, ...c.name_aliases])].filter((n) => n !== name);
     companies.push({
       ...c,
+      name,
+      name_aliases,
       description: c.description ?? r.description ?? null, // a web company: the AI's sentence from its own page
       validation: { real_entity: r.real_entity, real_offering: r.real_offering, active: r.active, saudi_reach: r.saudi_reach, evidence_status: r.evidence_status, checked_at: r.checked_at },
       evidence_status: r.evidence_status,
@@ -207,6 +220,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
   let web: SearchWebOutput | null = null;
   const searchCalls = TAVILY_CALLS_PER_IDEA - calls - READ_RESERVE;
   if (searchTheWeb && searchCalls > 0) {
+    progress('searching_web');
     web = await searchWeb(
       {
         profile_text: corpus.idea_profile_text,
@@ -232,6 +246,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
       return !w;
     });
     if (newOnes.length) {
+      progress('checking_companies');
       const checked = await validateCompanies(
         newOnes.map((c) => ({
           name: c.name,

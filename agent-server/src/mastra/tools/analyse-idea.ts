@@ -13,6 +13,9 @@ import { findCompetitorsAgentTool } from './find-competitors';
 import { finalizeResultTool } from './finalize-result';
 import { judgeCandidatesTool } from './judge-candidates';
 import { understandIdeaTool } from './understand-idea';
+import { reportProgress } from '../lib/progress';
+import { Handoff } from '../schemas/competitor';
+import { HANDOFF_KEY } from './finalize-result';
 
 export const analyseIdeaTool = createTool({
   id: 'analyse_idea',
@@ -20,16 +23,22 @@ export const analyseIdeaTool = createTool({
   inputSchema: z.object({}),
   execute: async (_input, context) => {
     const run = <T>(tool: { execute?: (input: never, context: never) => Promise<T> }) => tool.execute!({} as never, context as never);
+    // What Darb is doing now, for the founder's screen (lib/progress.ts); find_competitors reports its own steps.
+    const handoff = Handoff.safeParse((context as { requestContext?: { get: (k: string) => unknown } } | undefined)?.requestContext?.get(HANDOFF_KEY));
+    const progress = (step: Parameters<typeof reportProgress>[1]) => reportProgress(handoff.success ? handoff.data.assessment_id : null, step);
+    progress('understanding');
     const understood = (await run(understandIdeaTool)) as { ready?: boolean };
     // Only an idea that is ready is searched; otherwise finalize_result returns the question, the limit or the failure.
     if (understood?.ready) {
       try {
         await run(findCompetitorsAgentTool);
+        progress('comparing');
         await run(judgeCandidatesTool);
       } catch (error) {
         console.error('The competitor search failed:', error);
       }
     }
+    progress('finishing');
     return run(finalizeResultTool);
   },
 });

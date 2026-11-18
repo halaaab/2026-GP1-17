@@ -84,7 +84,7 @@ describe('the judge prompt', () => {
     expect(text).toContain('- offering (inferred): An ordering app');
     expect(text).toContain('- market (unknown): unknown');
     expect(text).toContain('- references: Talabat');
-    expect(text).toContain('Write the notes, the reason and the difference in Arabic.');
+    expect(text).toContain('Write the notes, the reason, the difference and the description in Arabic.');
     expect(text.length).toBeLessThan(MAX_EVIDENCE_CHARS + 1200);
   });
 });

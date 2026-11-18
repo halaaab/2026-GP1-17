@@ -6,6 +6,7 @@
 //     Nothing is searched when understand_idea asked a clarification question, failed, or the founder is at their limit.
 //   - In Studio's Tools tab, it can be run alone with an idea (and web "off" or "always" for TC-11.14).
 import { createTool } from '@mastra/core/tools';
+import { reportProgress } from '../lib/progress';
 import { z } from 'zod';
 import { getRunState } from '../lib/competitor-run';
 import { addToRunState, findCompetitors, type FindDeps, type FindInput, type FindOutput } from '../lib/find-competitors';
@@ -74,6 +75,7 @@ async function runInAgent(ctx: RequestContextLike, handoff: Handoff) {
       idea_profile: state.profile, // understand_idea's profile: the idea is read once (design §4)
       founder_startup: handoff.founder_startup,
       references: handoff.references,
+      onProgress: (step) => reportProgress(handoff.assessment_id, step),
     },
     liveDeps(false),
   );

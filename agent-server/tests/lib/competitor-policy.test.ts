@@ -14,8 +14,18 @@ import {
   normalizeName,
   rankCompetitors,
   similarityScore,
+  displayName,
   type Judged,
 } from '../../src/mastra/lib/competitor-policy';
+
+describe('displayName (18 Nov 2026)', () => {
+  it('shows the name in the founder\'s language when the company has one, else its main name', () => {
+    expect(displayName({ name: 'Mrsool', name_aliases: ['مرسول'] }, 'ar')).toBe('مرسول');
+    expect(displayName({ name: 'Mrsool', name_aliases: ['مرسول'] }, 'en')).toBe('Mrsool');
+    expect(displayName({ name: 'عشق القهوة', name_aliases: ['Eshq Coffee'] }, 'en')).toBe('Eshq Coffee');
+    expect(displayName({ name: 'Foodics', name_aliases: [] }, 'ar')).toBe('Foodics');
+  });
+});
 import { Handoff, Result, type Candidate, type IdeaProfile, type JudgeOutput } from '../../src/mastra/schemas/competitor';
 
 const NOW = '2026-11-11T10:00:00+03:00';

@@ -2,6 +2,7 @@
 // steps, and only to a signed-in founder. The agent is a fake that streams like Mastra's: nothing is paid for.
 import { describe, expect, it } from 'vitest';
 import { chatRoute } from '../../src/mastra/server/chat-route';
+import { reportProgress } from '../../src/mastra/lib/progress';
 
 type Chunk = { type: string; payload?: Record<string, unknown> };
 
@@ -15,8 +16,9 @@ function fakeContext(userId: string | undefined, body: unknown, chunks: Chunk[])
       return { fullStream: (async function* () { yield* chunks; })() };
     },
   };
+  const mastra = { getAgent: () => agent };
   const context = {
-    get: (k: string) => (k === 'requestContext' ? requestContext : k === 'mastra' ? { getAgent: () => agent } : undefined),
+    get: (k: string) => (k === 'requestContext' ? requestContext : k === 'mastra' ? mastra : undefined),
     req: { json: async () => body },
     json: (data: unknown, status: number) => new Response(JSON.stringify(data), { status }),
   };
@@ -55,6 +57,33 @@ describe('POST /chat', () => {
     const { context } = fakeContext('founder-1', body, [{ type: 'error', payload: { error: 'model down' } }]);
     const raw = await (await run(context)).text();
     expect(raw).toBe('data: {"type":"error","payload":{"message":"The agent stopped with an error"}}\n\ndata: [DONE]\n\n');
+  });
+
+  it('passes on what Darb is doing for this conversation only, while the reply is being made (18 Nov 2026)', async () => {
+    const { context } = fakeContext('founder-1', body, [
+      { type: 'tool-call', payload: { toolName: 'competitorAgent' } },
+      { type: 'text-delta', payload: { text: 'Done.' } },
+    ]);
+    // The fake agent's steps report progress while it streams, like the real Competitor Agent's tools.
+    const original = (context.get('mastra') as any).getAgent();
+    const stream = original.stream;
+    original.stream = async (...args: unknown[]) => {
+      const out = await stream(...args);
+      return {
+        fullStream: (async function* () {
+          reportProgress('assessment-1', 'searching_web');
+          reportProgress('another-conversation', 'comparing'); // someone else's run: never shown here
+          yield* out.fullStream;
+        })(),
+      };
+    };
+    const raw = await (await run(context)).text();
+    expect(raw).toBe(
+      'data: {"type":"status","payload":{"step":"searching_web"}}\n\n' +
+        'data: {"type":"text-delta","payload":{"text":"Done."}}\n\n' +
+        'data: [DONE]\n\n',
+    );
+    reportProgress('assessment-1', 'finishing'); // after the reply: nobody listening, nothing happens
   });
 
   it('refuses a caller who is not signed in, and a message without its conversation', async () => {

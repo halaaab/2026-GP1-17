@@ -201,6 +201,8 @@ export const JudgeOutput = z
     reason: z.string().trim().min(1), // one founder-facing sentence
     // One sentence on how the idea differs from this candidate, or "none" (competitive opportunities, explainer §6).
     difference: z.string().trim().min(1).optional(),
+    // The card's one-line description in the founder's language (18 Nov 2026: Arabic chats showed English cards).
+    description: z.string().trim().min(1).optional(),
   })
   .strict();
 export type JudgeOutput = z.infer<typeof JudgeOutput>;

@@ -8,7 +8,7 @@ const fake = (name: string, answer: () => unknown) => ({ execute: vi.fn(async ()
 vi.mock('../../src/mastra/tools/understand-idea', () => ({ understandIdeaTool: fake('understand_idea', () => ({ ready })) }));
 vi.mock('../../src/mastra/tools/find-competitors', () => ({ findCompetitorsAgentTool: fake('find_competitors', () => ({ searched: true })) }));
 vi.mock('../../src/mastra/tools/judge-candidates', () => ({ judgeCandidatesTool: fake('judge_candidates', () => ({ judged: [] })) }));
-vi.mock('../../src/mastra/tools/finalize-result', () => ({ finalizeResultTool: fake('finalize_result', () => ({ status: 'complete' })) }));
+vi.mock('../../src/mastra/tools/finalize-result', () => ({ HANDOFF_KEY: 'competitorHandoff', finalizeResultTool: fake('finalize_result', () => ({ status: 'complete' })) }));
 
 const { analyseIdeaTool } = await import('../../src/mastra/tools/analyse-idea');
 const analyse = () => analyseIdeaTool.execute!({}, {} as never);
