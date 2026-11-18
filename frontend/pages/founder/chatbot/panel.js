@@ -66,7 +66,12 @@ function showTab(tab, withoutAnimation = false) {
 }
 
 function drawPanel() {
-  const facts = ['sector', 'city'].map((field) => safe(label(assessment[field]))).join(' · ');
+  // the sector and city under the title; the ones not known yet are left out,
+  // and when neither is known a short note says so instead of a lonely "·"
+  const known = ['sector', 'city'].filter((field) => assessment[field]);
+  const facts = known.length
+    ? known.map((field) => safe(label(assessment[field]))).join(' · ')
+    : t('assess.factsEmpty');
 
   panel.innerHTML = `
     <div class="assess-head">
