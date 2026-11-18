@@ -1223,6 +1223,13 @@ body.assess-open #header-actions {
 [dir="rtl"] .competitor-basis summary svg { transform: scaleX(-1); }
 .competitor-basis[open] summary svg,
 [dir="rtl"] .competitor-basis[open] summary svg { transform: rotate(90deg); }
+.basis-about {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text-2);
+}
+.competitor-basis .competitor-opp { margin-top: 10px; }
 .basis-row {
   display: flex;
   align-items: flex-start;
@@ -1245,12 +1252,13 @@ body.assess-open #header-actions {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  margin-top: 4px;
+  margin-top: 12px;
   font-size: 12.5px;
 }
 .basis-source svg { width: 12px; height: 12px; }
 .basis-note {
-  margin: 4px 0 0;
+  margin: 10px 0 0;
+  line-height: 1.6;
   font-size: 12px;
 }
 
