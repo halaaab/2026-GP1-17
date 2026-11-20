@@ -184,13 +184,14 @@ describe('delegation: a what-if', () => {
     expect(calls.some((c) => c.op === 'insert')).toBe(false);
   });
 
-  it('runs on a new assessment linked to this one, and compares it with the original', async () => {
+  it('runs on a new assessment of the same idea, and compares it with the original', async () => {
     db.original = { analysed_at: NOW, iss: 64, market_level: 'open' };
     const ctx = start(whatIf);
     expect((await onCompetitorDelegationStart(ctx))?.proceed).toBe(true);
 
     const insert = calls.find((c) => c.op === 'insert');
-    expect(insert?.values).toMatchObject({ idea_id: IDEA, confirmed_inputs: { idea_text: whatIf.idea_text, what_if_of: ASSESSMENT, what_if_label: 'Jeddah instead of Riyadh' } });
+    expect(insert?.values).toMatchObject({ idea_id: IDEA, confirmed_inputs: { idea_text: whatIf.idea_text, what_if_label: 'Jeddah instead of Riyadh' } });
+    expect((insert?.values as { confirmed_inputs: object }).confirmed_inputs).not.toHaveProperty('what_if_of'); // no stored link (migration 0043)
     expect(insert?.values).not.toHaveProperty('parent_assessment_id'); // no new relation
     expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({ mode: 'what_if', assessment_id: WHAT_IF, idea_id: IDEA });
 
@@ -209,7 +210,7 @@ describe('delegation: a what-if', () => {
     await new Promise((r) => setTimeout(r, 0));
     const removed = calls.find((c) => c.op === 'delete');
     expect(removed?.filters).toContainEqual(['eq', 'assessment_id', WHAT_IF]);
-    expect(removed?.filters).toContainEqual(['not', 'confirmed_inputs->>what_if_of', 'is', null]); // never an original
+    expect(removed?.filters).toContainEqual(['not', 'confirmed_inputs->>what_if_label', 'is', null]); // never an original
   });
 
   it('counts towards the limits, and creates nothing when the founder has none left', async () => {

@@ -1,6 +1,6 @@
 // What-if analyses (design §4, explainer §8): "what if I targeted Jeddah?" Each what-if is a new assessment of the
-// same idea, so the original never changes. Its link to the original and its short name are kept in its
-// confirmed_inputs ({ idea_text, what_if_of, what_if_label }): the team chose this over a new relation.
+// same idea, so the original never changes. Its short name is kept in its confirmed_inputs ({ idea_text, what_if_label }).
+// No link to the original assessment is stored (migration 0043): the comparison is made while the chat runs.
 // Decided in code, never by a model:
 //   askedBeforeLatestReply  a what-if runs only after Darb asked the founder to confirm it and the founder answered
 //   createWhatIf / removeWhatIf  the new assessment, and removing it again when nothing was saved for it
@@ -40,7 +40,7 @@ export function askedBeforeLatestReply(messages: readonly MessageLike[] | undefi
   return false;
 }
 
-// The new assessment of the same idea, linked to the one it changes. Returns its id.
+// The new assessment of the same idea as the one it changes. Returns its id.
 export async function createWhatIf(
   parent: { assessment_id: string; idea_id: string; language: Language },
   label: string,
@@ -52,7 +52,7 @@ export async function createWhatIf(
       idea_id: parent.idea_id,
       language: parent.language,
       status: 'in_progress',
-      confirmed_inputs: { idea_text: ideaText, what_if_of: parent.assessment_id, what_if_label: label },
+      confirmed_inputs: { idea_text: ideaText, what_if_label: label },
     })
     .select('assessment_id')
     .single();
@@ -63,8 +63,8 @@ export async function createWhatIf(
 // Removes a what-if that ended with nothing saved (a question to the founder, a limit, or a failed run),
 // so History never shows an empty what-if.
 export async function removeWhatIf(assessmentId: string): Promise<void> {
-  // only ever a what-if: an original has no what_if_of
-  const { error } = await getSupabase().from('assessments').delete().eq('assessment_id', assessmentId).not('confirmed_inputs->>what_if_of', 'is', null);
+  // only ever a what-if: an original has no what_if_label
+  const { error } = await getSupabase().from('assessments').delete().eq('assessment_id', assessmentId).not('confirmed_inputs->>what_if_label', 'is', null);
   if (error) throw error;
 }
 

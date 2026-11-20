@@ -7,8 +7,8 @@ import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, allValues, detailsLink, fillFilter, dateText, logoOf, logoHtml,
-  SECTORS, STAGES, REGIONS, MARKETS,
+  loadStartups, saveStartupLists, listOf, listText, label, allValues, detailsLink, fillFilter, dateText, logoOf, logoHtml,
+  SECTORS, STAGES, REGIONS,
 } from '../../../shared/startups.js';
 import '../../../shared/guard.js';
 
@@ -29,13 +29,13 @@ const deleteConfirm = document.querySelector('#delete-confirm');
 
 // The text columns the form edits: each one has an input with id "f-<column>"
 const TEXT_COLUMNS = [
-  'startup_name', 'startup_name_ar', 'logo', 'startup_description', 'startup_description_ar', 'country', 'products_services', 'tags',
+  'startup_name', 'startup_name_ar', 'logo', 'startup_description', 'startup_description_ar', 'country', 'tags',
   'website', 'ecosystemsa_profile_url', 'description_source',
 ];
 
 // The columns chosen with check boxes, and the fixed list of choices for each
-const CHOICE_COLUMNS = { sector: SECTORS, stage: STAGES, region: REGIONS, target_market: MARKETS };
-const KINDS = { sector: 'sector', stage: 'stage', region: 'region', target_market: 'market' };
+const CHOICE_COLUMNS = { sector: SECTORS, stage: STAGES, region: REGIONS };
+const KINDS = { sector: 'sector', stage: 'stage', region: 'region' };
 
 const URL_COLUMNS = ['logo', 'website', 'ecosystemsa_profile_url', 'description_source'];
 
@@ -92,7 +92,6 @@ function showRows() {
       </td>
       <td class="hide-small text-2 sm-sector"></td>
       <td class="hide-small"><span class="chip chip-teal sm-stage"></span></td>
-      <td class="hide-small text-2 sm-market"></td>
       <td class="hide-small text-2">${dateText(row.updated_at || row.created_at)}</td>
       <td>
         <div class="sm-actions">
@@ -113,7 +112,6 @@ function showRows() {
     tr.querySelector('.sm-sector').textContent = listText(row, 'sector', ', ') || '—';
     tr.querySelector('.sm-stage').textContent = stage;
     tr.querySelector('.sm-stage').hidden = !stage;
-    tr.querySelector('.sm-market').textContent = listText(row, 'target_market', ', ') || '—';
   });
 
   document.querySelector('#count').textContent = t('startupAdmin.showing')
@@ -232,10 +230,6 @@ form.addEventListener('submit', async (event) => {
   });
   Object.keys(CHOICE_COLUMNS).forEach((column) => { values[column] = tickedText(column) || null; });
 
-  // products: one per line or separated by ";", saved separated by ";"
-  if (values.products_services) {
-    values.products_services = values.products_services.split(/[;\n]/).map((item) => item.trim()).filter(Boolean).join('; ');
-  }
 
   // check the answers here first, so the admin sees each problem next to its field
   clearErrors();
@@ -248,23 +242,29 @@ form.addEventListener('submit', async (event) => {
   problems.forEach(([column, key]) => showFieldError(column, key));
   if (problems.length) return;
 
+  // the sectors and tags are saved in their own tables after the startup (saveStartupLists)
+  const { sector: sectorText, tags: tagsText, ...columns } = values;
+
   saveButton.classList.add('is-loading');
   let result;
   if (editingId) {
-    result = await supabase.from('startups').update(values).eq('startup_id', editingId).select().single();
+    result = await supabase.from('startups').update(columns).eq('startup_id', editingId).select().single();
   } else {
     // the database remembers which admin added it (startup_maintenance, migration 0024)
     result = await supabase.from('startups')
-      .insert({ ...values, startup_id: nextId() })
+      .insert({ ...columns, startup_id: nextId() })
       .select().single();
   }
+  const listError = result.error ? null : await saveStartupLists(result.data.startup_id, sectorText, tagsText);
   saveButton.classList.remove('is-loading');
 
-  if (result.error) {
-    console.error('startups:', result.error.message);
+  if (result.error || listError) {
+    console.error('startups:', (result.error || listError).message);
     showToast(t('founders.actionError'), 'risk');
     return;
   }
+  result.data.sector = sectorText;
+  result.data.tags = tagsText;
 
   if (editingId) {
     Object.assign(findStartup(editingId), result.data);

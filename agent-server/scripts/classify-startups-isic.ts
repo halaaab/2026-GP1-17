@@ -79,13 +79,21 @@ async function main() {
   const supabase = getSupabase();
   let query = supabase
     .from('startups')
-    .select('startup_id, startup_name, startup_description, tags, target_market, sector')
+    // sectors and tags are kept one per row (migration 0043)
+    .select('startup_id, startup_name, startup_description, target_market, startup_sectors (sector), startup_tags (tag)')
     .order('startup_id');
   if (!dryRun) query = query.is('isic_division', null);
   if (limit) query = query.limit(limit);
   const { data, error } = await query;
   if (error) throw error;
-  const startups = data as Startup[];
+  const startups: Startup[] = (data ?? []).map((row) => ({
+    startup_id: row.startup_id,
+    startup_name: row.startup_name,
+    startup_description: row.startup_description,
+    target_market: row.target_market,
+    sector: (row.startup_sectors as { sector: string }[]).map((item) => item.sector).join('; ') || null,
+    tags: (row.startup_tags as { tag: string }[]).map((item) => item.tag).join(', ') || null,
+  }));
   console.log(`${startups.length} startups to classify${dryRun ? ' (dry run: nothing is saved)' : ''}.`);
 
   const rows: string[] = ['startup_id,name,section,division,division_name,confidence,old_sector'];
@@ -119,7 +127,7 @@ async function main() {
         } else {
           const { error: updateError } = await supabase
             .from('startups')
-            .update({ isic_section: result.section, isic_division: result.division })
+            .update({ isic_division: result.division }) // the section follows from the division (migration 0043)
             .eq('startup_id', startup.startup_id);
           if (updateError) throw updateError;
         }

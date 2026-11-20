@@ -23,8 +23,7 @@
        score:   72,                   // empty until the analysis has run
        iss:     64,                   // Idea Similarity Score 0–100; empty when no competitors were found
        issBasis, marketLevel, competitorNotes, analysedAt:   the competitor analysis (empty until it ran)
-       parentId, whatIf:   a what-if: the assessment it changes, and its short name ("Jeddah instead of Riyadh"),
-                           kept in its confirmed_inputs (what_if_of, what_if_label)
+       whatIf:             a what-if's short name ("Jeddah instead of Riyadh"), kept in its confirmed_inputs (what_if_label)
        factors: [14, 12, -3, -1],     // what moved the score up or down from 50
        roadmapShown: false,           // did the founder ask for the roadmap in the chat?
        extra:   [{ from: 'user', text: '...' }, { from: 'agent' }],   // follow-up messages after the result
@@ -165,6 +164,23 @@ function shareOf(part, whole) {
   return Math.round((part / whole) * 10000) / 100;
 }
 
+/* The names of the economic activities the market data covers, by their ISIC Rev. 4 code
+   (GASTAT's classification, as Monsha'at publishes them). Two-digit codes are divisions, letters are sections. */
+const ACTIVITY_NAMES = {
+  10: { en: 'Manufacture of food products', ar: 'صنع المنتجات الغذائية' },
+  11: { en: 'Manufacture of beverages', ar: 'صنع المشروبات' },
+  13: { en: 'Manufacture of textiles', ar: 'صنع المنسوجات' },
+  14: { en: 'Manufacture of wearing apparel', ar: 'صنع الملبوسات' },
+  15: { en: 'Manufacture of leather and related products', ar: 'صُنع المنتجات الجلدية والمنتجات ذات الصلة' },
+  31: { en: 'Manufacture of furniture', ar: 'صنع الأثاث' },
+  56: { en: 'Food and beverage service activities', ar: 'أنشطة خدمات الأطعمة والمشروبات' },
+  58: { en: 'Publishing activities (includes software publishing, 582)', ar: 'أنشطة المنشورات' },
+  62: { en: 'Computer programming, consultancy and related activities', ar: 'أنشطة البرمجة الحاسوبية والخبرة الاستشارية وما يتصل بها من أنشطة' },
+  63: { en: 'Information service activities', ar: 'أنشطة خدمات المعلومات' },
+  C: { en: 'Manufacturing', ar: 'الصناعة التحويلية' },
+  J: { en: 'Information and communication', ar: 'المعلومات والاتصالات' },
+};
+
 async function loadMarket(assessment) {
   const code = MAIN_ACTIVITY[assessment.sector];
   if (!code) return null;
@@ -185,7 +201,8 @@ async function loadMarket(assessment) {
   if (!row) return null;
 
   return {
-    activity: { en: row.economic_activity_name_en, ar: row.economic_activity_name_ar || row.economic_activity_name_en },
+    // the activity's name comes from its code (migration 0043 keeps only the code in the database)
+    activity: ACTIVITY_NAMES[row.economic_activity_code] || { en: row.economic_activity_code, ar: row.economic_activity_code },
     year: row.year,
     sourceUrl: row.source_url || '',
     enterprises: row.total_enterprises,
@@ -245,12 +262,20 @@ async function loadRoadmap(assessment) {
     }));
 }
 
+/* An assessment with its competitor note codes, which are kept one per row in their own table (migration 0042) */
+const ASSESSMENT_COLUMNS = '*, assessment_competitor_notes (note_code)';
+
+/* The note codes of an assessment as a simple list: ['customer_unknown', 'fewer_than_three'] */
+function notesOf(row) {
+  return (row.assessment_competitor_notes || []).map((note) => note.note_code);
+}
+
 /* After a reply in the chat: was a new competitor analysis just saved for this assessment?
    If so, its numbers and competitors are loaded onto it and true is returned, so the chat can
    show the competitor cards. A what-if is saved on its own assessment, so it never counts here. */
 export async function refreshAnalysis(assessment) {
   if (!assessment || !assessment.isSaved) return false;
-  const { data, error } = await supabase.from('assessments').select('*').eq('assessment_id', assessment.id).maybeSingle();
+  const { data, error } = await supabase.from('assessments').select(ASSESSMENT_COLUMNS).eq('assessment_id', assessment.id).maybeSingle();
   if (error) {
     report('check for a new competitor analysis', error);
     return false;
@@ -261,7 +286,7 @@ export async function refreshAnalysis(assessment) {
   assessment.iss = data.iss === null || data.iss === undefined ? null : Math.round(Number(data.iss));
   assessment.issBasis = data.iss_basis || '';
   assessment.marketLevel = data.market_level || '';
-  assessment.competitorNotes = data.competitor_notes || [];
+  assessment.competitorNotes = notesOf(data);
   // the idea as Darb understood it, written beside the analysis (startup_ideas.idea_summary, migration 0040)
   const idea = await supabase.from('startup_ideas').select('idea_summary').eq('idea_id', assessment.ideaId).maybeSingle();
   if (idea.data && idea.data.idea_summary) assessment.ideaSummary = idea.data.idea_summary;
@@ -319,10 +344,9 @@ function fromRows(idea, assessment, messages) {
     iss: assessment.iss === null || assessment.iss === undefined ? null : Math.round(Number(assessment.iss)),
     issBasis: assessment.iss_basis || '',
     marketLevel: assessment.market_level || '',
-    competitorNotes: assessment.competitor_notes || [],
+    competitorNotes: notesOf(assessment),
     analysedAt: assessment.analysed_at || '',
     // a what-if is a new assessment of the same idea; its link and name are in its confirmed_inputs
-    parentId: (assessment.confirmed_inputs && assessment.confirmed_inputs.what_if_of) || '',
     whatIf: (assessment.confirmed_inputs && assessment.confirmed_inputs.what_if_label) || '',
     factors: assessment.explanation ? assessment.explanation.factors : [],
     roadmapShown: Boolean(assessment.roadmap_generated_at),
@@ -348,7 +372,7 @@ export let assessmentsFailed = false;
    The database's security rules return only this founder's rows. */
 export async function getAssessments() {
   const ideas = await supabase.from('startup_ideas').select('*');
-  const assessments = await supabase.from('assessments').select('*');
+  const assessments = await supabase.from('assessments').select(ASSESSMENT_COLUMNS);
   const messages = await supabase.from('messages').select('assessment_id, sender_role, content').order('message_id');
 
   const failed = ideas.error || assessments.error || messages.error;
@@ -439,8 +463,6 @@ export async function saveAssessment(assessment) {
     status: assessment.score ? 'complete' : 'in_progress',
     model_input: { revenue_model: assessment.model, hiring: assessment.hiring, noted: assessment.noted },
     fis_score: assessment.score,
-    band: assessment.score ? { good: 'higher', warn: 'moderate', risk: 'lower' }[scoreBand(assessment.score)] : null,
-    risk_level: assessment.score ? { good: 'low', warn: 'moderate', risk: 'high' }[scoreBand(assessment.score)] : null,
     explanation: assessment.score ? { factors: assessment.factors } : null,
     roadmap_generated_at: assessment.roadmapAt || null,
     completed_at: assessment.completedAt || null,

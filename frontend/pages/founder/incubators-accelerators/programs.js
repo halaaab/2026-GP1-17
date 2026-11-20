@@ -205,22 +205,78 @@ function report(action, error) {
   console.error(`Programs: could not ${action}:`, error.code, error.message);
 }
 
+/* A program's sectors and services are kept one per row, in English with their Arabic, in their own
+   tables (migration 0043). This asks for them together with the program. */
+const PROGRAM_COLUMNS = '*, organization_sectors (sector, sector_ar, display_order), organization_services (service, service_ar, display_order)';
+
+/* Puts the two lists back on the row as text, as the pages read them:
+   sector 'Logistics, GeoAI' (sector_ar with "،") and services_support 'Mentorship; Workshops' (services_support_ar with "؛") */
+function withLists(row) {
+  if (!row) return row;
+  const { organization_sectors: sectors = [], organization_services: services = [], ...rest } = row;
+  const inOrder = (items) => [...items].sort((a, b) => a.display_order - b.display_order);
+  const join = (items, column, separator) => items.map((item) => item[column]).filter(Boolean).join(separator) || null;
+  return {
+    ...rest,
+    sector: join(inOrder(sectors), 'sector', ', '),
+    sector_ar: join(inOrder(sectors), 'sector_ar', '، '),
+    services_support: join(inOrder(services), 'service', '; '),
+    services_support_ar: join(inOrder(services), 'service_ar', '؛ '),
+  };
+}
+
+/* The parts of a list typed by an admin. Sectors: separated by "," ";" or "/". Services: by ";" when there
+   is one (a service can contain a comma), otherwise by "," outside brackets. Arabic uses "،" and "؛" too. */
+function partsOf(text, kind) {
+  const cell = clean(text);
+  if (!cell) return [];
+  const parts = kind === 'sector'
+    ? cell.split(/[,;/،؛]/)
+    : /[;؛]/.test(cell) ? cell.split(/[;؛]/) : cell.split(/[,،](?![^(]*\))/);
+  return parts.map((part) => part.trim().replace(/^and\s+/i, '').replace(/\.$/, '')).filter(Boolean);
+}
+
+/* Saves a program's sectors and services, each English part with the Arabic part in the same place.
+   Returns 'mismatch' when the English and Arabic lists do not have the same number of parts,
+   the database error when saving failed, or null when it worked. */
+export async function saveProgramLists(programId, values) {
+  const lists = [
+    { table: 'organization_sectors', column: 'sector', en: partsOf(values.sector, 'sector'), ar: partsOf(values.sector_ar, 'sector') },
+    { table: 'organization_services', column: 'service', en: partsOf(values.services_support, 'service'), ar: partsOf(values.services_support_ar, 'service') },
+  ];
+  if (lists.some((list) => list.ar.length && list.ar.length !== list.en.length)) return 'mismatch';
+
+  for (const list of lists) {
+    const removed = await supabase.from(list.table).delete().eq('support_org_id', programId);
+    if (removed.error) return removed.error;
+    const seen = new Set();
+    const rows = list.en
+      .map((value, index) => ({ support_org_id: programId, [list.column]: value, [`${list.column}_ar`]: list.ar[index] || null, display_order: index + 1 }))
+      .filter((row) => !seen.has(row[list.column]) && seen.add(row[list.column]));
+    if (rows.length) {
+      const added = await supabase.from(list.table).insert(rows);
+      if (added.error) return added.error;
+    }
+  }
+  return null;
+}
+
 /* Every program, A to Z. Returns null when the database could not be reached. */
 export async function getPrograms() {
-  const { data, error } = await supabase.from('support_organizations').select('*').order('name');
+  const { data, error } = await supabase.from('support_organizations').select(PROGRAM_COLUMNS).order('name');
   if (error) {
     report('load the programs', error);
     return null;
   }
-  return data;
+  return data.map(withLists);
 }
 
 /* One program, or null */
 export async function getProgram(id) {
-  const { data, error } = await supabase.from('support_organizations').select('*').eq('support_org_id', id).maybeSingle();
+  const { data, error } = await supabase.from('support_organizations').select(PROGRAM_COLUMNS).eq('support_org_id', id).maybeSingle();
   if (error) {
     report('load the program', error);
     return null;
   }
-  return data;
+  return withLists(data);
 }
