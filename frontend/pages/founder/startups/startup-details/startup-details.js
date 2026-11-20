@@ -46,7 +46,6 @@ function show() {
   const sectors = listOf(row, 'sector');
   const stage = listText(row, 'stage');
   const region = listText(row, 'region', comma);
-  const market = listText(row, 'target_market', comma);
 
   document.title = `${nameOf(row)} · Darb`;
 
@@ -64,23 +63,14 @@ function show() {
     ...sectors.slice(0, 3).map((sector) => `<span class="std-tag">${safe(label('sector', sector))}</span>`),
   ].join('');
 
-  // Sectors and market: each line only when the dataset has it
+  // Sectors: the line only when the dataset has them
   const lines = [
     sectors.length ? t('startups.sectorsLine').replace('{list}', listText(row, 'sector', comma)) : '',
-    market ? t('startups.marketLine').replace('{market}', market) : '',
   ].filter(Boolean);
   document.querySelector('#market-section').hidden = lines.length === 0;
   document.querySelector('#market').innerHTML = lines.map((line) => `<li>${icon('checkCircle')}<span>${safe(line)}</span></li>`).join('');
 
   document.querySelector('#about').textContent = descriptionOf(row) || t('startups.noDescription');
-
-  // Products and services: numbered rows
-  const products = listOf(row, 'products_services');
-  document.querySelector('#products-section').hidden = products.length === 0;
-  document.querySelector('#products-count').textContent = t('startups.productsCount').replace('{n}', products.length);
-  document.querySelector('#products').innerHTML = products
-    .map((product, index) => `<li><span class="std-step-number">${index + 1}</span><span>${safe(product)}</span></li>`)
-    .join('');
 
   const tags = tagsOf(row);
   document.querySelector('#tags-section').hidden = tags.length === 0;
@@ -92,7 +82,6 @@ function show() {
     ['flag', 3, 'startups.stage', stage],
     ['map', 7, 'startups.region', region],
     ['globe', 12, 'startups.country', countryName(row.country)],
-    ['users', 14, 'startups.targetMarket', market],
   ].filter(([, , , value]) => value);
   document.querySelector('#facts').innerHTML = facts.map((item) => fact(...item)).join('');
   document.querySelector('#facts').hidden = facts.length === 0;

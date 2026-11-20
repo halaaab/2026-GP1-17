@@ -45,7 +45,6 @@
             <th data-i18n="startupAdmin.startup"></th>
             <th class="hide-small" data-i18n="startups.sector"></th>
             <th class="hide-small" data-i18n="startups.stage"></th>
-            <th class="hide-small" data-i18n="startups.targetMarket"></th>
             <th class="hide-small" data-i18n="regAdmin.updated"></th>
             <th data-i18n-aria-label="founders.actions"></th>
           </tr>
@@ -105,7 +104,7 @@
 
         <fieldset class="field sm-choices">
           <legend class="label is-required" data-i18n="startups.sector"></legend>
-          <!-- startup-management.js adds one checkbox for each sector, stage, region and market -->
+          <!-- startup-management.js adds one checkbox for each sector, stage and region -->
           <div class="sm-choice-list" id="f-sector"></div>
           <p class="field-error" id="f-sector-error" hidden></p>
         </fieldset>
@@ -120,10 +119,6 @@
           <div class="sm-choice-list" id="f-region"></div>
         </fieldset>
 
-        <fieldset class="field sm-choices">
-          <legend class="label" data-i18n="startups.targetMarket"></legend>
-          <div class="sm-choice-list" id="f-target_market"></div>
-        </fieldset>
 
         <div class="field">
           <label class="label" for="f-country" data-i18n="startupAdmin.country"></label>
@@ -132,11 +127,6 @@
           <p class="field-hint" data-i18n="startupAdmin.countryHint"></p>
         </div>
 
-        <div class="field">
-          <label class="label" for="f-products_services" data-i18n="startups.products"></label>
-          <textarea class="input" id="f-products_services" dir="auto"></textarea>
-          <p class="field-hint" data-i18n="startupAdmin.productsHint"></p>
-        </div>
 
         <div class="field">
           <label class="label" for="f-tags" data-i18n="startups.tags"></label>

@@ -36,7 +36,7 @@ function safe(text) {
 
 function matches(row, ignoreStage = false) {
   const words = search.value.trim().toLowerCase();
-  const searchable = [row.startup_name, row.startup_name_ar, row.startup_description, row.startup_description_ar, row.tags, row.products_services, listText(row, 'sector')]
+  const searchable = [row.startup_name, row.startup_name_ar, row.startup_description, row.startup_description_ar, row.tags, listText(row, 'sector')]
     .join(' ').toLowerCase();
 
   return (!words || searchable.includes(words))

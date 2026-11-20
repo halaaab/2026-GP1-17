@@ -12,7 +12,7 @@ import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 import {
-  getPrograms, programType, sectorList, isOpenToAll, regionOf, clean, detailsLink,
+  getPrograms, saveProgramLists, programType, sectorList, isOpenToAll, regionOf, clean, detailsLink,
   text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
 } from '../../founder/incubators-accelerators/programs.js?v=3';
 import { SAUDI_REGIONS, label } from '../../../shared/startups.js?v=4';
@@ -555,16 +555,26 @@ saveButton.addEventListener('click', async () => {
     return;
   }
 
+  // the sectors and services are saved in their own tables after the program (saveProgramLists)
+  const { sector, sector_ar, services_support, services_support_ar, ...columns } = values;
+  const lists = { sector, sector_ar, services_support, services_support_ar };
+
   let result;
   if (selectedId) {
-    result = await supabase.from('support_organizations').update(values).eq('support_org_id', selectedId).select().single();
+    result = await supabase.from('support_organizations').update(columns).eq('support_org_id', selectedId).select().single();
   } else {
     // the database remembers which admin added it (organization_maintenance, migration 0024)
     result = await supabase.from('support_organizations')
-      .insert({ ...values, support_org_id: programId }).select().single();
+      .insert({ ...columns, support_org_id: programId }).select().single();
   }
+  const listResult = result.error ? null : await saveProgramLists(programId, lists);
   saveButton.classList.remove('is-loading');
 
+  if (listResult === 'mismatch') {
+    showToast(t('programsAdmin.listsMismatch'), 'risk');
+    return;
+  }
+  if (!result.error && listResult) result.error = listResult;
   if (result.error) {
     console.error('save program:', result.error.message);
     if (uploaded) removeLogoFile(uploaded.path);
@@ -573,6 +583,8 @@ saveButton.addEventListener('click', async () => {
     showToast(t(needsUpdate ? 'programsAdmin.f.logoNotSaved' : 'programsAdmin.saveError'), 'risk');
     return;
   }
+
+  Object.assign(result.data, lists);
 
   // the old picture is no longer used
   if ((uploaded || logo.removed) && oldLogoPath) removeLogoFile(oldLogoPath);

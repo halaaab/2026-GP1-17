@@ -46,7 +46,12 @@ export function liveValidateDeps(maxCalls?: number): ValidateDeps {
     read: (urls, options) => extractPages(urls, extract, new Date(), options),
     askAi: openAiSignals(),
     save: async (startupId, row) => {
-      const { error } = await getSupabase().from('startups').update(row).eq('startup_id', startupId);
+      // One attribute in the database (migration 0042): a pass is saved as the kind of pass, confirmed or likely.
+      const validation_status = row.validation_status === 'pass' ? (row.evidence_status ?? 'likely') : row.validation_status;
+      const { error } = await getSupabase()
+        .from('startups')
+        .update({ validation_status, validated_at: row.validated_at })
+        .eq('startup_id', startupId);
       if (error) throw error;
     },
     maxCalls,
