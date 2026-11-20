@@ -16,18 +16,30 @@
 import type { MastraDBMessage } from '@mastra/core/memory';
 import type { Processor } from '@mastra/core/processors';
 import type { Language } from '../schemas/competitor';
-import { detectLanguage } from './founder-text';
+import { conversationLanguage, detectLanguage } from './founder-text';
 
 export const REPLY_RULES_KEY = 'darbReplyRules';
 
 // noteSent is kept here, not in the processor's state, because a reply can stream in several parts (steps).
-export type ReplyRules = { sentences: string[]; language: Language | null; codeWritesReply: boolean; noteSent?: boolean };
+// emitted and closed: the model's own text so far, and whether the rest of its text is dropped (memory leak guard).
+export type ReplyRules = { sentences: string[]; language: Language | null; codeWritesReply: boolean; noteSent?: boolean; emitted?: string; closed?: boolean };
 export const emptyReplyRules = (): ReplyRules => ({ sentences: [], language: null, codeWritesReply: false });
 
 const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 // Headings and labels from the working memory template: they must never reach the founder.
-const MEMORY_LEAK = /Founder's idea \(their own words\)|#\s*Competitor analysis|Stated\W{0,3}(problem|customer|offering|market)|Last status|working memory/i;
+const MEMORY_LEAK = /Founder's idea \(their own words\)|#\s*Competitor analysis|Stated\W{0,3}(problem|customer|offering|market)|Last status|Offered to the founder|working memory/i;
+
+// The start of private notes in a reply: the template's headings, or the model announcing what it stored or updated
+// (persona eval, 18 Nov 2026: after saving its memory, the model printed the whole note to the founder).
+const MEMORY_START =
+  /Here(’|')?s what I (have )?(stored|saved|noted)|I(’|')?ll update my (working )?memory|#\s*Founder's idea|#\s*Competitor analysis|-\s*Stated (problem|customer|offering|market)|سأقوم بتحديث|تم تحديث المعلومات|في ذاكرتي/i;
+
+// The model's text up to the first sign of private notes, or null when there is none.
+export function cutAtMemory(text: string): string | null {
+  const match = MEMORY_START.exec(text);
+  return match ? text.slice(0, match.index).trimEnd() : null;
+}
 
 // What is wrong with a reply. Empty when the reply is fine. Used by the live test, and later by Member 2's checks.
 export function replyProblems(text: string, rules: Pick<ReplyRules, 'sentences' | 'language'>): string[] {
@@ -64,9 +76,12 @@ export const replyGuard = {
   // 1. A fresh, empty box for every founder message, and the founder's language for the agent's instructions.
   processInput({ messages, systemMessages, requestContext }) {
     requestContext?.set(REPLY_RULES_KEY, emptyReplyRules());
-    const latest = [...messages].reverse().find((m) => m.role === 'user');
-    const said = (latest?.content.parts ?? []).map((p) => (p.type === 'text' ? p.text : '')).join(' ');
-    const language = detectLanguage(said);
+    // The conversation's language: a short reply or a name keeps it; a clear message in the other language switches it.
+    const said = messages
+      .filter((m) => m.role === 'user')
+      .map((m) => (m.content.parts ?? []).map((p) => (p.type === 'text' ? p.text : '')).join(' '))
+      .filter((t) => t.trim());
+    const language = conversationLanguage(said);
     if (!language) return messages;
     const name = language === 'ar' ? 'Arabic' : 'English';
     return {
@@ -76,17 +91,40 @@ export const replyGuard = {
   },
 
   // 3. While the reply streams: when code writes the reply, the founder gets exactly the note sentences.
+  //    Otherwise the model's text passes, until it starts showing private notes, or it keeps writing after saving its
+  //    working memory once its reply was already sent: from there on, its text is dropped.
   async processOutputStream({ part, requestContext }) {
     const rules = rulesOf(requestContext);
-    if (!rules?.codeWritesReply || part.type !== 'text-delta') return part;
-    if (rules.noteSent) return null; // the model's own words are dropped, in every part of the reply
-    rules.noteSent = true;
-    return { ...part, payload: { ...part.payload, text: rules.sentences.join('\n') } };
+    if (!rules) return part;
+    if (part.type === 'tool-call' && part.payload.toolName === 'updateWorkingMemory' && rules.emitted?.trim()) {
+      rules.closed = true;
+      return part;
+    }
+    if (part.type !== 'text-delta') return part;
+    if (rules.codeWritesReply) {
+      if (rules.noteSent) return null; // the model's own words are dropped, in every part of the reply
+      rules.noteSent = true;
+      return { ...part, payload: { ...part.payload, text: rules.sentences.join('\n') } };
+    }
+    if (rules.closed) return null;
+    const before = rules.emitted ?? '';
+    const next = before + part.payload.text;
+    const kept = cutAtMemory(next);
+    if (kept === null) {
+      rules.emitted = next;
+      return part;
+    }
+    rules.closed = true;
+    const rest = kept.length > before.length ? kept.slice(before.length) : '';
+    rules.emitted = before + rest;
+    return rest ? { ...part, payload: { ...part.payload, text: rest } } : null;
   },
 
   // The saved copy of the reply (memory and chat history) matches what the founder saw.
   processOutputResult({ messages, requestContext }) {
     const rules = rulesOf(requestContext);
-    return rules?.codeWritesReply ? withReplyText(messages, rules.sentences.join('\n')) : messages;
+    if (rules?.codeWritesReply) return withReplyText(messages, rules.sentences.join('\n'));
+    if (rules?.closed) return withReplyText(messages, (rules.emitted ?? '').trim());
+    return messages;
   },
 } satisfies Processor;

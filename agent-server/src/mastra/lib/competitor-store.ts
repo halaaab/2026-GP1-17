@@ -174,6 +174,18 @@ async function analysesSince(userId: string, since: string): Promise<number> {
   return count ?? 0;
 }
 
+// When this assessment's analysis was saved, or null when it has none yet.
+export async function analysedAt(assessmentId: string): Promise<string | null> {
+  try {
+    const { data, error } = await getSupabase().from('assessments').select('analysed_at').eq('assessment_id', assessmentId).maybeSingle();
+    if (error) throw error;
+    return (data?.analysed_at as string | null) ?? null;
+  } catch (error) {
+    console.error('Reading analysed_at failed:', error);
+    return null;
+  }
+}
+
 // The limit note when this founder may not start another analysis, else null. Re-running an assessment already
 // analysed today is free; a what-if is always a new analysis (assessmentId null). If the count cannot be read,
 // the analysis is allowed (the dashboards' spending caps remain).

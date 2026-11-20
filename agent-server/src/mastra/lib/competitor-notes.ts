@@ -143,9 +143,11 @@ export function noteSentences(notes: readonly NoteCode[], language: Language): s
 // The one sentence above the competitor cards (Hala, 16 Nov 2026). Code writes the whole reply when cards are shown,
 // so the model can never list the competitors again in its own words (it did in every analysis of the Sprint 2 test).
 export function cardsSentence(count: number, language: Language): string {
+  // In Darb's voice (config/darb-persona.ts, Hala, 18 Nov 2026), with the real count.
   if (language === 'ar') {
-    const found = count === 1 ? 'منافساً واحداً' : count === 2 ? 'منافسَين' : `${count} منافسين`;
-    return `وجدتُ ${found} لفكرتك. تعرض البطاقات أدناه كل منافس مع أدلته.`;
+    const found = count === 1 ? 'منافسًا واحدًا مرتبطًا' : count === 2 ? 'منافسَين مرتبطَين' : `${count} منافسين مرتبطين`;
+    return `اكتمل التحليل! ✅ وجدتُ ${found} بفكرة مشروعك. تعرض البطاقات أدناه كل منافس مع أدلته، وتجد بعدها أبرز الفرص المحتملة لتميّز مشروعك.`;
   }
-  return `I found ${count} competitor${count === 1 ? '' : 's'} for your idea. The cards below show each one with its evidence.`;
+  const found = count === 1 ? 'one relevant competitor' : count === 2 ? 'two relevant competitors' : `${count} relevant competitors`;
+  return `Your analysis is ready! ✅ I identified ${found}. The cards below show each one with its evidence, followed by potential opportunities for your business.`;
 }

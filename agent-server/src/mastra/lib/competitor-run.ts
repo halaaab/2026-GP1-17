@@ -18,6 +18,9 @@ export type RunState = {
   clarification: Clarification | null;
   // Set by the delegation hook when the founder has used their analyses: nothing is searched (design §12).
   limitNote: NoteCode | null;
+  // The profile a "check" run already built for this same idea text (lib/analysis-consent.ts), so the analysis the
+  // founder agreed to does not read the idea again. null when there is none.
+  reusedProfile: { profile: IdeaProfile; embedding: number[] | null } | null;
   candidates: Map<string, Candidate>; // by candidate_key
   judged: Map<string, JudgeOutput>; // by candidate_key
   judgeCalls: number;
@@ -32,6 +35,7 @@ export function newRunState(): RunState {
     ideaEmbedding: null,
     clarification: null,
     limitNote: null,
+    reusedProfile: null,
     candidates: new Map(),
     judged: new Map(),
     judgeCalls: 0,
