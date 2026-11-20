@@ -13,7 +13,7 @@
      initials('Foodics')                      // "FO"
 
    The names and descriptions are written by the startups, in English, and
-   are shown as they are. Fixed lists (sector, stage, region, target market)
+   are shown as they are. Fixed lists (sector, stage, region)
    are translated with startup.<kind>.<value> keys in the translation files.
    A value with no key (for example a new one typed by an admin) is shown as it is.
    ========================================================== */
@@ -58,7 +58,43 @@ export const SAUDI_REGIONS = [
   'Hail', 'Northern Borders', 'Jazan', 'Najran', 'Al Baha', 'Al Jouf',
 ];
 
-export const MARKETS = ['B2B', 'B2C', 'B2G', 'B2B2C'];
+
+/* A startup's sectors and tags are kept one per row in their own tables (migration 0043).
+   This asks for them together with the startup. */
+const STARTUP_COLUMNS = '*, startup_sectors (sector, display_order), startup_tags (tag, display_order)';
+
+/* Puts the two lists back on the row as text, as the pages read them:
+   row.sector = 'Technology; Retail & E-commerce' and row.tags = 'SaaS, ERP' */
+function withLists(row) {
+  if (!row) return row;
+  const { startup_sectors: sectors = [], startup_tags: tags = [], ...rest } = row;
+  const inOrder = (items) => [...items].sort((a, b) => a.display_order - b.display_order);
+  return {
+    ...rest,
+    sector: inOrder(sectors).map((item) => item.sector).join('; ') || null,
+    tags: inOrder(tags).map((item) => item.tag).join(', ') || null,
+  };
+}
+
+/* Saves a startup's sectors ("A; B") and tags ("x, y"): the old rows are replaced by the new ones.
+   Returns the error, or null when it worked. */
+export async function saveStartupLists(startupId, sectorText, tagsText) {
+  const split = (text, separator) => [...new Set((text || '').split(separator).map((item) => item.trim()).filter(Boolean))];
+  const lists = [
+    { table: 'startup_sectors', column: 'sector', values: split(sectorText, ';') },
+    { table: 'startup_tags', column: 'tag', values: split(tagsText, ',') },
+  ];
+  for (const list of lists) {
+    const removed = await supabase.from(list.table).delete().eq('startup_id', startupId);
+    if (removed.error) return removed.error;
+    const rows = list.values.map((value, index) => ({ startup_id: startupId, [list.column]: value, display_order: index + 1 }));
+    if (rows.length) {
+      const added = await supabase.from(list.table).insert(rows);
+      if (added.error) return added.error;
+    }
+  }
+  return null;
+}
 
 /* Every startup, sorted by name. Returns null when loading failed.
    Supabase sends at most 1,000 rows per request, so they are read in pages. */
@@ -67,13 +103,13 @@ export async function loadStartups() {
   const all = [];
 
   for (let from = 0; ; from += PAGE) {
-    const { data, error } = await supabase.from('startups').select('*')
+    const { data, error } = await supabase.from('startups').select(STARTUP_COLUMNS)
       .order('startup_name').order('startup_id').range(from, from + PAGE - 1);
     if (error) {
       console.error('startups:', error.message);
       return null;
     }
-    all.push(...data);
+    all.push(...data.map(withLists));
     if (data.length < PAGE) return all;
   }
 }
@@ -81,12 +117,12 @@ export async function loadStartups() {
 /* One startup: { startup, failed }.
    startup is null when there is no startup with this id; failed is true when it could not load. */
 export async function loadStartup(id) {
-  const { data, error } = await supabase.from('startups').select('*').eq('startup_id', id).maybeSingle();
+  const { data, error } = await supabase.from('startups').select(STARTUP_COLUMNS).eq('startup_id', id).maybeSingle();
   if (error) console.error('startups:', error.message);
-  return { startup: data || null, failed: Boolean(error) };
+  return { startup: withLists(data) || null, failed: Boolean(error) };
 }
 
-/* "Seed; Series A" → ['Seed', 'Series A'] (sector, stage, region, target_market, products_services) */
+/* "Seed; Series A" → ['Seed', 'Series A'] (sector, stage, region) */
 export function listOf(row, column) {
   return (row[column] || '').split(';').map((item) => item.trim()).filter(Boolean);
 }
@@ -190,7 +226,7 @@ function keyOf(value) {
 }
 
 // The translation kind of each column
-const KINDS = { sector: 'sector', stage: 'stage', region: 'region', target_market: 'market' };
+const KINDS = { sector: 'sector', stage: 'stage', region: 'region' };
 
 /* The words for a fixed value: label('sector', 'Fashion'), label('stage', 'Seed'),
    label('region', 'MENA'), label('market', 'B2B') */

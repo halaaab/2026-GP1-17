@@ -105,11 +105,19 @@ export async function saveResult(assessmentId: string, result: Result): Promise<
       iss: result.iss,
       iss_basis: result.iss_basis,
       market_level: result.market_level,
-      competitor_notes: result.notes, // shown on the result screen, History and the report (migration 0038)
       analysed_at: new Date().toISOString(),
     })
     .eq('assessment_id', assessmentId);
   if (updated.error) throw updated.error;
+
+  // The note codes, one row each (migration 0042), shown on the result screen, History and the report.
+  const removedNotes = await supabase.from('assessment_competitor_notes').delete().eq('assessment_id', assessmentId);
+  if (removedNotes.error) throw removedNotes.error;
+  const notes = [...new Set(result.notes)].map((note_code) => ({ assessment_id: assessmentId, note_code }));
+  if (notes.length) {
+    const added = await supabase.from('assessment_competitor_notes').insert(notes);
+    if (added.error) throw added.error;
+  }
 }
 
 export type StoredCompetitor = Omit<ResultCompetitor, 'startup_id'> & { startup_id: string | null };
