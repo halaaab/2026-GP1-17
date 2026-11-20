@@ -3,7 +3,8 @@
   HISTORY
   Every project the founder has discussed with Darb: finished assessments and
   conversations that are not finished yet. At the top, four numbers about them.
-  Each card opens its conversation, its score, its roadmap or its report.
+  Each card opens its conversation, its score, its roadmap or its report,
+  and has a trash button that deletes the chat after a confirmation.
   The rows come from shared/assessments.js.
 -->
 <html lang="en" dir="ltr">
@@ -55,9 +56,20 @@
       <span class="chip chip-dot chip-warn">40–69 · <span data-i18n="score.band.warn"></span></span>
       <span class="chip chip-dot chip-risk">0–39 · <span data-i18n="score.band.risk"></span></span>
     </div>
+    <!-- asks before a chat is deleted for good (history.js opens it) -->
+    <dialog class="modal" id="delete-modal">
+      <span class="empty-icon history-delete-icon" id="delete-icon"></span>
+      <h3 class="modal-title" data-i18n="history.deleteTitle"></h3>
+      <p class="text-2" id="delete-text"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" data-modal-close data-i18n="history.cancel"></button>
+        <button type="button" class="btn btn-danger" id="delete-confirm" data-i18n="history.delete"></button>
+      </div>
+    </dialog>
   </main>
 
   <script type="module" src="../../../shared/layout.js"></script>
+  <script type="module" src="../../../shared/ui.js"></script>
   <script type="module" src="../../../shared/guard.js"></script>
   <script type="module" src="history.js"></script>
 </body>
