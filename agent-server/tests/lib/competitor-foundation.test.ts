@@ -108,7 +108,8 @@ describe('delegation: before the Competitor Agent runs', () => {
     const decision = await onCompetitorDelegationStart(ctx);
     expect(decision?.proceed).toBe(true);
     const handoff = ctx.requestContext.get(HANDOFF_KEY) as Record<string, unknown>;
-    expect(handoff).toMatchObject({ ...written, assessment_id: ASSESSMENT, idea_id: IDEA });
+    // No founder consent in this context (no chat at all), so code turns the new analysis into a check (consent).
+    expect(handoff).toMatchObject({ ...written, mode: 'check', assessment_id: ASSESSMENT, idea_id: IDEA });
     expect(decision?.modifiedPrompt).toContain(IDEA);
   });
 

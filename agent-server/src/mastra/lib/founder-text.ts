@@ -1,5 +1,7 @@
 // Small text checks done in code, so they never depend on a model:
 //   detectLanguage   is this text Arabic or English?
+//   conversationLanguage  the language Darb keeps: a message changes it only when it is clearly written in the other
+//                    language, so a city, a company name or "ok" never switches the reply
 //   keepStatedFacts  keeps only the known_facts the founder really said (design §4: stated facts only).
 import type { Handoff, Language } from '../schemas/competitor';
 
@@ -9,6 +11,29 @@ export function detectLanguage(text: string): Language | null {
   const latin = (text.match(/[A-Za-z]/g) ?? []).length;
   if (arabic === 0 && latin === 0) return null;
   return arabic >= latin ? 'ar' : 'en';
+}
+
+// The language a message is clearly written in, or null when it is too short or only names (Hala, 18 Nov 2026):
+//   Arabic   at least 2 Arabic words, so an Arabic message with English terms ("SaaS", "POS") stays Arabic
+//   English  at least 3 English words and at most one Arabic word
+//   null     anything shorter: "Jeddah", "ok", "STC", "نعم"
+export function clearLanguage(text: string): Language | null {
+  const words = text.split(/[^A-Za-z؀-ۿ]+/).filter(Boolean);
+  const arabic = words.filter((w) => /[؀-ۿ]/.test(w)).length;
+  const latin = words.filter((w) => /^[A-Za-z]+$/.test(w)).length;
+  if (arabic >= 2) return 'ar';
+  if (latin >= 3 && arabic <= 1) return 'en';
+  return null;
+}
+
+// The conversation's language from the founder's messages, oldest first: the latest message that is clearly in one
+// language decides. When none is, the latest message's letters decide, as before.
+export function conversationLanguage(founderMessages: readonly string[]): Language | null {
+  for (let i = founderMessages.length - 1; i >= 0; i--) {
+    const language = clearLanguage(founderMessages[i]);
+    if (language) return language;
+  }
+  return detectLanguage(founderMessages.at(-1) ?? '');
 }
 
 // Common words that say nothing about the idea, so they are not counted.

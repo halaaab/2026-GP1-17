@@ -67,7 +67,16 @@ describe('Conversational Agent', () => {
 
   it('never asks the founder to fill in a form before delegating (design §4)', async () => {
     const text = await instructionsOf(conversationalAgent);
-    expect(text).toContain('Only check that the message is an idea');
+    expect(text).toContain('Do not judge yourself whether the idea is too vague, and never ask your own questions about the idea');
     expect(text).not.toContain('ISIC4 divisions (code');
+  });
+});
+
+describe('Conversational Agent personality', () => {
+  it('puts the personality first, then the operational rules, which win', async () => {
+    const text = await instructionsOf(conversationalAgent);
+    expect(text.indexOf('You are Darb')).toBeLessThan(text.indexOf('Operational rules'));
+    expect(text).toContain('They always win over the style guide');
+    expect(text).toContain('mode "check"');
   });
 });
