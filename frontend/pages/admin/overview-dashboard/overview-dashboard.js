@@ -115,7 +115,7 @@ async function load() {
   const results = await Promise.all([
     readAll('founder_profiles', 'user_id, full_name, user_type, region, status, locale, created_at'),
     readAll('startup_ideas', 'idea_id, founder_id, idea_name, sector, created_at'),
-    readAll('assessments', 'assessment_id, idea_id, status, fis_score, risk_level, started_at, completed_at, roadmap_generated_at'),
+    readAll('assessments', 'assessment_id, idea_id, status, fis_score, started_at, completed_at, roadmap_generated_at'),
     readAll('startups', 'startup_id, sector, startup_description'),
     readAll('support_organizations', '*'),
     readAll('regulatory_requirements', 'requirement_id, last_verified'),
@@ -364,8 +364,10 @@ function showScores() {
     band, count: scores.filter((score) => scoreBand(score) === band).length,
   }));
 
+  // the risk level is the inverse of the score's band, worked out from the score (migration 0043 stores only the score)
+  const riskOf = (score) => ({ good: 'low', warn: 'moderate', risk: 'high' })[scoreBand(score)];
   const risks = ['low', 'moderate', 'high'].map((level) => ({
-    level, count: data.assessments.filter((item) => item.risk_level === level).length,
+    level, count: data.assessments.filter((item) => item.fis_score !== null && item.fis_score !== undefined && riskOf(item.fis_score) === level).length,
   })).filter((risk) => risk.count > 0);
 
   box.innerHTML = `
