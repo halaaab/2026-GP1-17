@@ -8,6 +8,8 @@ ml/data/
 ml/**/*.csv
 ml/**/*.xlsx
 ml/**/*.parquet
+# Except the counts-only reports (counts and names of categories, no business records)
+!ml/reports/*.csv
 
 # Private partner data: never uploaded
 datasets/**/zid*
