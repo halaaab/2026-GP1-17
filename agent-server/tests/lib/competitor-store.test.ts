@@ -323,7 +323,7 @@ describe('delegation: the clarification question', () => {
     await onCompetitorDelegationStart(shown.ctx);
     await onCompetitorDelegationComplete(complete(shown.ctx.toolCallId, result()));
     expect(shown.rules.codeWritesReply).toBe(true);
-    expect(shown.rules.sentences[0]).toMatch(/^I found \d+ competitors? for your idea 🔍 You will find each one in the cards below, with its evidence\.$/);
+    expect(shown.rules.sentences[0]).toMatch(/^Your analysis is ready! ✅ I identified (one|two|\d+) relevant competitors?\. The cards below show each one with its evidence, and the full analysis shows potential opportunities for your business\.$/);
 
     const none = start(written);
     await onCompetitorDelegationStart(none.ctx);
@@ -450,5 +450,119 @@ describe('the customer-partly rule (explainer §6, rule 2)', async () => {
     expect(opportunitySentences({ competitors }, 'en')).toEqual([
       `Possible difference (Co 1): ${OPPORTUNITY_TEXT.possible_customer_difference.text!.en} Next step: Interview your target customers.`,
     ]);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Analysis consent (persona enhancement, 18 Nov 2026): a search runs only with the founder's consent.
+// ---------------------------------------------------------------------------
+
+describe('analysis consent: no search without the founder agreeing', () => {
+  const idea = { mode: 'new', language: 'en', idea_text: 'An AI platform that helps small restaurants in Saudi Arabia forecast demand' };
+  const asked = (darb: string, founder: string) => [
+    { role: 'user', content: idea.idea_text },
+    { role: 'assistant', content: darb },
+    { role: 'user', content: founder },
+  ];
+  const startWith = async (prompt: object, messages: { role: string; content: string }[]) => {
+    const { ctx, rules } = start(prompt);
+    (ctx as unknown as { messages: unknown }).messages = messages;
+    const decision = await onCompetitorDelegationStart(ctx);
+    return { ctx, rules, decision, handoff: ctx.requestContext.get(HANDOFF_KEY) as { mode: string } | undefined };
+  };
+  const understood = (): ResultT => ({ ...result([]), status: 'understood', notes: [] });
+
+  beforeEach(async () => {
+    const consent = await import('../../src/mastra/lib/analysis-consent');
+    consent.understoodIdeas.clear();
+    consent.agreedAnalyses.clear();
+    pendingQuestions.clear();
+    calls.length = 0;
+  });
+
+  it('turns a new analysis into a check when the founder only described the idea', async () => {
+    const { decision, handoff } = await startWith(idea, [{ role: 'user', content: idea.idea_text }]);
+    expect(decision?.proceed).toBe(true);
+    expect(handoff?.mode).toBe('check');
+  });
+
+  it('a check finds the idea ready: nothing is saved, no analysis is used, and Darb writes the offer itself', async () => {
+    const { ctx, rules } = await startWith({ ...idea, mode: 'check' }, [{ role: 'user', content: idea.idea_text }]);
+    const reply = await onCompetitorDelegationComplete(complete(ctx.toolCallId, understood()));
+    // the supervisor sees only the idea, never an empty competitor list it could read as "none found"
+    expect(JSON.parse(reply!.resultText)).toMatchObject({ status: 'understood', searched: false });
+    expect(reply!.resultText).not.toContain('competitors"');
+    expect(rules).toMatchObject({ sentences: [], codeWritesReply: false });
+    expect(calls.some((c) => c.op === 'update' || c.op === 'insert')).toBe(false);
+    const { understoodIdeas } = await import('../../src/mastra/lib/analysis-consent');
+    expect(understoodIdeas.has(ASSESSMENT)).toBe(true);
+  });
+
+  it('runs the analysis after the founder says yes to the offer, reusing the check’s profile', async () => {
+    const check = await startWith({ ...idea, mode: 'check' }, [{ role: 'user', content: idea.idea_text }]);
+    await onCompetitorDelegationComplete(complete(check.ctx.toolCallId, understood()));
+    const yes = await startWith(idea, asked('Would you like to start with a competitor analysis?', 'Yes, let’s get started.'));
+    expect(yes.handoff?.mode).toBe('new');
+    const state = yes.ctx.requestContext.get(RUN_STATE_KEY) as { reusedProfile: unknown };
+    expect(state.reusedProfile).not.toBeNull();
+  });
+
+  it('does not run the analysis when Darb’s last question was not the offer', async () => {
+    const check = await startWith({ ...idea, mode: 'check' }, [{ role: 'user', content: idea.idea_text }]);
+    await onCompetitorDelegationComplete(complete(check.ctx.toolCallId, understood()));
+    const other = await startWith(idea, asked('Is there anything else you would like to share?', 'yes'));
+    expect(other.handoff?.mode).toBe('check');
+  });
+
+  it('rejects a clear no, so nothing runs at all', async () => {
+    const check = await startWith({ ...idea, mode: 'check' }, [{ role: 'user', content: idea.idea_text }]);
+    await onCompetitorDelegationComplete(complete(check.ctx.toolCallId, understood()));
+    const no = await startWith(idea, asked('Would you like to start with a competitor analysis?', 'No, not now'));
+    expect(no.decision?.proceed).toBe(false);
+    expect(no.decision?.rejectionReason).toMatch(/declined/);
+  });
+
+  it('counts an explicit request as consent, without asking again', async () => {
+    const { handoff } = await startWith(idea, [{ role: 'user', content: 'Find my competitors for an AI demand forecasting platform for restaurants' }]);
+    expect(handoff?.mode).toBe('new');
+    const ar = await startWith({ ...idea, language: 'ar' }, [{ role: 'user', content: 'حلل المنافسين لفكرتي: منصة لتوقع الطلب للمطاعم' }]);
+    expect(ar.handoff?.mode).toBe('new');
+  });
+
+  it('does not ask for consent again after the founder answers the analysis’s one question', async () => {
+    const first = await startWith(idea, [{ role: 'user', content: 'Analyse the competitors of my food idea' }]);
+    expect(first.handoff?.mode).toBe('new');
+    await onCompetitorDelegationComplete(complete(first.ctx.toolCallId, clarifying(CLARIFY_QUESTIONS.offering.en)));
+    const answer = await startWith(idea, asked(CLARIFY_QUESTIONS.offering.en, 'Healthy lunch boxes for office employees in Riyadh'));
+    expect(answer.handoff?.mode).toBe('new');
+  });
+
+  it('never replaces a saved analysis with a "new" one: a change is a what-if, a correction a rerun', async () => {
+    db.analysedAt = NOW;
+    const { decision } = await startWith(idea, [{ role: 'user', content: 'Find my competitors again for teachers' }]);
+    expect(decision?.proceed).toBe(false);
+    expect(decision?.rejectionReason).toMatch(/what_if/);
+    const rerun = await startWith({ ...idea, mode: 'rerun' }, asked('Would you like me to run the competitor analysis again with this?', 'yes'));
+    expect(rerun.handoff?.mode).toBe('rerun');
+    db.analysedAt = null;
+  });
+
+  it('runs a what-if only when the founder says yes to Darb’s confirmation question, not after any question', async () => {
+    const what = { ...idea, mode: 'what_if', scenario_label: 'Teachers' };
+    const notYes = await startWith(what, asked('Is there any aspect you would like to explore?', 'What if I targeted teachers instead of students?'));
+    expect(notYes.decision?.proceed).toBe(false);
+    expect(notYes.decision?.rejectionReason).toMatch(/Confirm the what-if first/);
+  });
+
+  it('leaves a what-if to its own confirmation rule', async () => {
+    db.assessmentRow = null;
+    const { handoff, decision } = await startWith(
+      { ...idea, mode: 'what_if', scenario_label: 'Jeddah' },
+      asked('Same idea, but in Jeddah. Shall I run it?', 'yes'),
+    );
+    // The fake database cannot create the what-if's assessment, so the run stops there: it was never turned into a check
+    // and never rejected as a decline. The what-if rule itself is tested in tests/lib/what-if.test.ts.
+    expect(decision?.rejectionReason ?? '').toMatch(/what-if could not be started/);
+    expect(handoff?.mode ?? 'what_if').toBe('what_if');
   });
 });

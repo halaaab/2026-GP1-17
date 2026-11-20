@@ -19,7 +19,8 @@ export const competitorAgent = new Agent({
   description: `Finds the real competitors of a founder's startup idea in Saudi Arabia and returns a checked result. Call it with exactly one argument, "prompt", whose value is one JSON object written as text, for example
 prompt: "{\"mode\":\"new\",\"language\":\"en\",\"idea_text\":\"...\"}"
 Never pass mode, language or the other fields as separate arguments. The JSON object has these fields:
-- mode (required): "new" for a new idea, "what_if" for a changed version, "rerun" for the same idea again
+- mode (required): "check" to only read an idea before the founder agreed to an analysis (no search, nothing saved),
+  "new" for the analysis the founder agreed to, "what_if" for a changed version, "rerun" for the same idea again
 - language (required): "ar" or "en", the founder's language
 - idea_text (required): the full idea in the founder's own words, combined from all their messages
 - known_facts (optional): { problem, customer, offering, market }, only what the founder stated, never your guesses

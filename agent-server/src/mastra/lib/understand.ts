@@ -10,18 +10,19 @@ type MissingField = 'problem' | 'offering';
 export type Clarification = { question: string; missing_field: MissingField };
 
 // One question per case. When both are missing, one question asks for both (the product first, as PBI 34 says).
+// Written in Darb's voice (config/darb-persona.ts, Hala, 18 Nov 2026).
 export const CLARIFY_QUESTIONS: Record<MissingField | 'both', Record<Language, string>> = {
   problem: {
-    en: 'Thank you for sharing your idea 😊 Could you tell me what problem it solves, and for whom?',
-    ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي المشكلة التي تحلّها، ولمن؟',
+    en: 'Thanks for sharing! What problem does your idea solve, and who is it for?',
+    ar: 'جميل! ممكن توضح لي أكثر: ما المشكلة التي تحلّها فكرتك، ولمن؟',
   },
   offering: {
-    en: 'Thank you for sharing your idea 😊 Could you tell me what exactly your product or service will offer its customers?',
-    ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي ما الذي سيقدّمه منتجك أو خدمتك لعملائك بالتحديد؟',
+    en: 'Thanks for sharing! What exactly will your product or service do for its customers?',
+    ar: 'جميل! ممكن توضح لي أكثر: ماذا سيقدّم منتجك أو خدمتك لعملائك بالتحديد؟',
   },
   both: {
-    en: 'I would be glad to help 😊 Could you tell me a bit more: what will your product offer, and what problem does it solve?',
-    ar: 'يسعدني مساعدتك 😊 هل يمكنك أن توضّح لي أكثر: ماذا سيقدّم منتجك، وما المشكلة التي يحلّها؟',
+    en: "I'd love to hear more about your idea! 💡 What will your product do, and what problem does it solve?",
+    ar: 'ممكن توضح لي أكثر عن الفكرة؟ 💡 ماذا سيقدّم منتجك، وما المشكلة التي يحلّها؟',
   },
 };
 

@@ -16,6 +16,7 @@
     "profile:startups": "tsx scripts/profile-startups.ts",
     "recheck:startups": "tsx scripts/recheck-startups.ts",
     "test:live": "tsx scripts/test-live.ts",
+    "eval:persona": "tsx scripts/eval-persona.ts",
     "test:coverage": "vitest run --coverage --coverage.include=src/** --coverage.exclude=src/**/*.test.ts --coverage.reporter=text-summary"
   },
   "keywords": [],

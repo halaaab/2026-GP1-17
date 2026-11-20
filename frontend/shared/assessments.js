@@ -490,6 +490,27 @@ export async function saveMessage(assessment, from, content) {
   if (error) report('save a message', error);
 }
 
+/* Deletes one chat for good (migration 0041 lets a founder delete only their own).
+   Its messages and competitor results are removed with it by the database.
+   When it was the last chat of its idea, the idea is deleted too.
+   Returns true when it worked. */
+export async function deleteAssessment(assessment) {
+  // .select() returns the deleted rows, so we can tell "deleted" from "nothing was allowed"
+  const { data, error } = await supabase.from('assessments').delete().eq('assessment_id', assessment.id).select('assessment_id');
+  if (error || data.length === 0) {
+    report('delete the chat', error || { code: '', message: 'no row was deleted' });
+    return false;
+  }
+
+  // the idea stays while another chat (a what-if) still uses it
+  const others = await supabase.from('assessments').select('assessment_id').eq('idea_id', assessment.ideaId);
+  if (!others.error && others.data.length === 0) {
+    const idea = await supabase.from('startup_ideas').delete().eq('idea_id', assessment.ideaId);
+    if (idea.error) report('delete the idea', idea.error);   // the chat is gone anyway
+  }
+  return true;
+}
+
 /* ---------- The list of past assessments in the sidebar ---------- */
 
 /* Fills the sidebar list (layout.js made the empty box). guard.js calls this on

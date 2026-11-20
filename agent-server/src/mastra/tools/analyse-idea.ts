@@ -10,12 +10,11 @@
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { findCompetitorsAgentTool } from './find-competitors';
-import { finalizeResultTool } from './finalize-result';
+import { finalizeResultTool, HANDOFF_KEY } from './finalize-result';
 import { judgeCandidatesTool } from './judge-candidates';
 import { understandIdeaTool } from './understand-idea';
 import { reportProgress } from '../lib/progress';
 import { Handoff } from '../schemas/competitor';
-import { HANDOFF_KEY } from './finalize-result';
 
 export const analyseIdeaTool = createTool({
   id: 'analyse_idea',
@@ -29,7 +28,10 @@ export const analyseIdeaTool = createTool({
     progress('understanding');
     const understood = (await run(understandIdeaTool)) as { ready?: boolean };
     // Only an idea that is ready is searched; otherwise finalize_result returns the question, the limit or the failure.
-    if (understood?.ready) {
+    // A "check" run never searches: the founder has not agreed to a competitor analysis yet (lib/analysis-consent.ts).
+    const raw = (context as { requestContext?: { get: (key: string) => unknown } } | undefined)?.requestContext?.get(HANDOFF_KEY) as { mode?: string } | undefined;
+    const checkOnly = raw?.mode === 'check';
+    if (understood?.ready && !checkOnly) {
       try {
         await run(findCompetitorsAgentTool);
         progress('comparing');
