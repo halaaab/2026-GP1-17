@@ -1,16 +1,22 @@
-/* Profile: the signed-in founder's details, language, logout and account deletion. */
+/* Profile: the signed-in founder's details, language, a new password, logout and
+   account deletion. Laid out like the admin's Profile: a hero card on top, the
+   details with Discard and Save (active only after a change), and the side cards. */
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon, setSidebarUser } from '../../../shared/layout.js';
 import { showToast } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
-import { getAccount, getCurrentUser, logOut } from '../../../shared/auth.js';
+import {
+  getAccount, getCurrentUser, logOut, updatePassword, PASSWORD_RULES, isGoodPassword,
+} from '../../../shared/auth.js';
+import { getAssessments, hasIdea } from '../../../shared/assessments.js';
 import { dateText } from '../../../shared/regulatory.js?v=3';
 
 const ROOT = new URL('../../../', import.meta.url).href;
 
 const form = document.querySelector('#profile-form');
 const saveButton = document.querySelector('#save');
+const resetButton = document.querySelector('#details-reset');
 const fields = {
   fullName: document.querySelector('#full-name'),
   email: document.querySelector('#email'),
@@ -63,24 +69,65 @@ function showProfile() {
   fields.email.value = email;
   fields.phone.value = (profile.phone || '').replace(/^\+966/, '');
   fields.region.value = profile.region || '';
+  Object.keys(fields).forEach((name) => showFieldError(name, ''));
   showReadOnly();
+  checkChanges();
+}
+
+/* ---------- Discard and Save: active only after something changed ---------- */
+
+function hasChanges() {
+  return fields.fullName.value.trim() !== (profile.full_name || '')
+    || fields.email.value.trim().toLowerCase() !== email
+    || fields.phone.value.replace(/\s/g, '').replace(/^0/, '') !== (profile.phone || '').replace(/^\+966/, '')
+    || fields.region.value !== (profile.region || '');
+}
+
+function checkChanges() {
+  const changed = hasChanges();
+  saveButton.disabled = !changed;
+  resetButton.disabled = !changed;
+  document.querySelector('#details-status').textContent = changed ? t('adminProfile.unsaved') : '';
+}
+
+Object.values(fields).forEach((field) => {
+  field.addEventListener('input', checkChanges);
+  field.addEventListener('change', checkChanges);
+});
+
+// only digits in the phone box
+fields.phone.addEventListener('input', () => {
+  fields.phone.value = fields.phone.value.replace(/\D/g, '').slice(0, 9);
+  checkChanges();
+});
+
+resetButton.addEventListener('click', showProfile);
+
+// The region's name in the current language, for the hero card
+function regionName() {
+  return profile.region ? t(`signup.region.${profile.region}`) : '';
 }
 
 // The parts that are only shown, in the current language
 function showReadOnly() {
+  // the hero card: initials, name, and "email · region"
+  document.querySelector('#hero-avatar').textContent = initials(profile.full_name);
+  document.querySelector('#hero-name').textContent = profile.full_name || '';
+  document.querySelector('#hero-line').textContent = [email, regionName()].filter(Boolean).join(' · ');
+
   document.querySelector('#email-hint').textContent = newEmail
     ? t('profile.emailSent').replace('{email}', newEmail)
     : t('profile.emailHint');
-  document.querySelector('#avatar').textContent = initials(profile.full_name);
   document.querySelector('#member-since').textContent = dateText(profile.created_at);
   // no type = just a founder (migration 0022)
   document.querySelector('#user-type').textContent = t(TYPE_LABELS[profile.user_type] || 'founders.justFounder');
 }
 
-// The number of assessments: the security rules return only the founder's own
+// The number of ideas, counted like History: a chat that only said "hi" is not an idea.
+// The security rules return only the founder's own.
 async function showAssessmentCount() {
-  const { count, error } = await supabase.from('assessments').select('assessment_id', { count: 'exact', head: true });
-  document.querySelector('#assessments').textContent = error ? '—' : count;
+  const assessments = await getAssessments();
+  document.querySelector('#assessments').textContent = assessments.filter(hasIdea).length;
 }
 
 /* ---------- Saving the personal details ---------- */
@@ -137,12 +184,14 @@ form.addEventListener('submit', async (event) => {
     showFieldError('email', taken ? 'error.emailTaken' : 'profile.emailNotChanged');
     fields.email.value = email;
     showReadOnly();
+    checkChanges();
     return;
   }
 
   fields.email.value = email;   // the old email stays the login until the link is clicked
   if (emailResult) newEmail = typedEmail;
   showReadOnly();
+  checkChanges();
   showToast(t(emailResult ? 'profile.emailSentToast' : 'founders.saved'), 'good');
 });
 
@@ -165,9 +214,53 @@ document.querySelector('.pf-language').addEventListener('click', async (event) =
 
 document.addEventListener('darb:language', () => {
   showCountry();
-  if (profile) showReadOnly();
+  if (profile) {
+    showReadOnly();
+    checkChanges();
+  }
   // the field errors are shown again in the new language when the form is saved
   Object.keys(fields).forEach((name) => showFieldError(name, ''));
+});
+
+/* ---------- Password (the same as on the admin's Profile) ---------- */
+
+const passwordForm = document.querySelector('#password-form');
+const newPassword = document.querySelector('#new-password');
+const confirmPassword = document.querySelector('#confirm-password');
+const passwordButton = document.querySelector('#password-save');
+
+function checkPassword() {
+  const password = newPassword.value;
+  document.querySelectorAll('#password-rules [data-rule]').forEach((rule) => {
+    rule.classList.toggle('is-met', PASSWORD_RULES[rule.dataset.rule](password));
+  });
+
+  const differ = Boolean(confirmPassword.value) && confirmPassword.value !== password;
+  document.querySelector('#confirm-error').hidden = !differ;
+  confirmPassword.classList.toggle('is-error', differ);
+
+  passwordButton.disabled = !isGoodPassword(password) || confirmPassword.value !== password;
+}
+
+newPassword.addEventListener('input', checkPassword);
+confirmPassword.addEventListener('input', checkPassword);
+
+passwordForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (passwordButton.disabled) return;
+
+  passwordButton.classList.add('is-loading');
+  const result = await updatePassword(newPassword.value);
+  passwordButton.classList.remove('is-loading');
+
+  if (!result.ok) {
+    showToast(t(result.error), 'risk');
+    return;
+  }
+
+  passwordForm.reset();
+  checkPassword();
+  showToast(t('adminProfile.passwordSaved'), 'good');
 });
 
 /* ---------- Delete the account ---------- */
@@ -193,7 +286,9 @@ deleteConfirm.addEventListener('click', async () => {
 
 /* ---------- Start ---------- */
 
-document.querySelector('#logout-icon').innerHTML = icon('logout');
+document.querySelectorAll('[data-password-toggle]').forEach((button) => {
+  button.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>';
+});
 document.querySelector('#delete-icon').innerHTML = icon('trash');
 
 const account = await getAccount();
