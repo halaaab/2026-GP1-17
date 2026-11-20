@@ -161,6 +161,18 @@
   color: var(--teal-text);
 }
 
+/* the delete button: red when the mouse is on it */
+.project-actions .btn-icon.is-delete:hover {
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+/* the red trash at the top of the "Delete this chat?" pop-up */
+.history-delete-icon {
+  margin-bottom: 14px;
+  background: var(--risk-tint);
+  color: var(--risk-text);
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;

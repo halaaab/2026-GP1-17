@@ -176,7 +176,8 @@ export async function isUsernameFree(username) {
 }
 
 /* For people who signed in with Google: they have an account but no row in
-   the users table yet. This creates the row from their answers. */
+   the founders table yet. This creates the row from their answers.
+   The row can also exist already but be empty (see getAccount): then it is filled in. */
 export async function completeProfile({ fullName, username, userType, details }) {
   const user = await getCurrentUser();
   if (!user) {
@@ -184,19 +185,25 @@ export async function completeProfile({ fullName, username, userType, details })
   }
 
   const { common, own } = splitDetails(details);
-
-  const { error } = await supabase.from('founders').insert({
-    user_id: user.id,
+  const answers = {
     full_name: fullName,
     username: username,
     locale: document.documentElement.lang === 'en' ? 'en' : 'ar',
     ...common,
-  });
+  };
 
-  // then the row in the type's own table ("none" has no table)
+  const existing = await supabase.from('founder_profiles').select('user_type').eq('user_id', user.id).maybeSingle();
+  const { error } = existing.data
+    ? await supabase.from('founders').update(answers).eq('user_id', user.id)
+    : await supabase.from('founders').insert({ user_id: user.id, ...answers });
+
+  // then the row in the type's own table ("none" has no table).
+  // An empty row of the same type may already be there from the first sign-up.
   const table = FOUNDER_TABLES[userType];
   if (!error && table) {
-    const typeRow = await supabase.from(table).insert({ user_id: user.id, ...own });
+    const typeRow = existing.data && existing.data.user_type === userType
+      ? await supabase.from(table).update(own).eq('user_id', user.id)
+      : await supabase.from(table).insert({ user_id: user.id, ...own });
     if (typeRow.error) {
       console.error('Could not save the type answers:', typeRow.error.code, typeRow.error.message);
       return { ok: false, error: 'error.generic' };
@@ -366,7 +373,8 @@ export async function getCurrentUser() {
 /* Returns what kind of account is logged in:
      { role: 'admin',   profile }   a row in the admins table
      { role: 'founder', profile }   a row in the users table
-     { role: 'new' }                logged in (for example with Google) but no profile yet
+     { role: 'new' }                logged in (for example with Google) but no profile yet,
+                                    or a profile row whose answers were never saved (see below)
      { role: 'none' }               nobody is logged in */
 export async function getAccount() {
   if (!(await getCurrentUser())) {
@@ -396,6 +404,15 @@ export async function getAccount() {
   // founder_profiles = the users row plus the type and its answers (migration 0022)
   const founder = await supabase.from('founder_profiles').select('*').eq('user_id', user.id).maybeSingle();
   if (founder.data) {
+    // Someone who signs up by email, then comes in with Google before confirming the email,
+    // loses the answers that were waiting in the account (Supabase clears them when Google
+    // takes over an unconfirmed account). Their row exists but is empty. Every finished
+    // sign-up has a region, so no region and no answers waiting = the profile is not finished.
+    const answersWaiting = user.user_metadata && user.user_metadata.pending_profile;
+    const notFinished = !founder.data.region && !answersWaiting && founder.data.status === 'active';
+    if (notFinished) {
+      return { role: 'new', profile: founder.data };
+    }
     return { role: 'founder', profile: founder.data };
   }
 

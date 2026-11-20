@@ -145,3 +145,39 @@ describe('RunLog', () => {
     expect(RunLog.safeParse({ ...log, tavily_calls: 16 }).success).toBe(false);
   });
 });
+
+describe('reply guard: private notes never reach the founder', () => {
+  async function streamed(parts: { type: string; payload: Record<string, unknown> }[]) {
+    const requestContext = new RequestContext();
+    const rules: ReplyRules = { sentences: [], language: 'en', codeWritesReply: false };
+    requestContext.set(REPLY_RULES_KEY, rules);
+    let shown = '';
+    for (const part of parts) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const out = (await replyGuard.processOutputStream!({ part, requestContext } as any)) as { type: string; payload: { text?: string } } | null;
+      if (out?.type === 'text-delta') shown += out.payload.text ?? '';
+    }
+    return { shown, rules };
+  }
+  const text = (t: string) => ({ type: 'text-delta', payload: { text: t } });
+
+  it('cuts the reply where the working memory starts', async () => {
+    const { shown } = await streamed([text('Would you like to start?\n\n'), text("Here’s what I have stored about your idea:\n# Founder's idea"), text('\n- Idea: x')]);
+    expect(shown.trim()).toBe('Would you like to start?');
+  });
+
+  it('drops text written after saving the working memory, once the reply was sent', async () => {
+    const { shown, rules } = await streamed([
+      text('الله يعافيك! 🤍'),
+      { type: 'tool-call', payload: { toolName: 'updateWorkingMemory' } },
+      text('سأقوم بتحديث المعلومات في ذاكرتي.'),
+    ]);
+    expect(shown).toBe('الله يعافيك! 🤍');
+    expect(rules.closed).toBe(true);
+  });
+
+  it('lets a normal reply through untouched, and saving memory before replying is fine', async () => {
+    const { shown } = await streamed([{ type: 'tool-call', payload: { toolName: 'updateWorkingMemory' } }, text('Hello, and '), text('welcome to Darb! 👋')]);
+    expect(shown).toBe('Hello, and welcome to Darb! 👋');
+  });
+});

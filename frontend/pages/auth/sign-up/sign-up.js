@@ -49,8 +49,18 @@ if (account.role === 'founder' || account.role === 'admin') {
   detailsNext.dataset.i18n = 'signup.finish';
 
   // Google already knows their name, so fill it in for them
-  form.elements.fullName.value = user.user_metadata.full_name || user.user_metadata.name || '';
-  form.elements.username.value = user.email.split('@')[0].replace(/[^A-Za-z0-9_]/g, '_').slice(0, 20);
+  // (or the row from an earlier sign-up does: see getAccount in auth.js)
+  const earlier = account.profile;
+  form.elements.fullName.value = earlier?.full_name || user.user_metadata.full_name || user.user_metadata.name || '';
+  form.elements.username.value = earlier?.username || user.email.split('@')[0].replace(/[^A-Za-z0-9_]/g, '_').slice(0, 20);
+
+  // the earlier sign-up already chose a type: keep it, the database has its row
+  if (earlier?.user_type) {
+    form.querySelectorAll('input[name="userType"]').forEach((radio) => {
+      radio.checked = radio.value === earlier.user_type;
+      radio.disabled = radio.value !== earlier.user_type;
+    });
+  }
 }
 
 /* ---------- The list of countries ----------
@@ -318,8 +328,10 @@ function readDetails() {
 async function goForward() {
   if (!checkStep(currentStep)) return;
 
-  // the username must not belong to someone else
-  if (currentStep === STEP_NAME && !(await isUsernameFree(form.elements.username.value))) {
+  // the username must not belong to someone else (their own earlier one is fine)
+  const ownUsername = account.profile?.username;
+  if (currentStep === STEP_NAME && form.elements.username.value !== ownUsername
+      && !(await isUsernameFree(form.elements.username.value))) {
     showError('username', 'error.usernameTaken');
     form.elements.username.focus();
     return;

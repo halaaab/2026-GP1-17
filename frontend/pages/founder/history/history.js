@@ -1,11 +1,14 @@
-/* History: four numbers, then one card for each of the founder's projects, with a filter and a search box. */
+/* History: four numbers, then one card for each of the founder's projects, with a filter and a search box.
+   Each card has a trash button that deletes the chat after a confirmation pop-up. */
 
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import '../../../shared/guard.js';
 import { showErrorPage } from '../../../shared/errors.js';
+import { showToast } from '../../../shared/ui.js';
 import {
-  say, label, scoreBand, whenText, chatLink, getAssessments, assessmentsFailed, isListed,
+  say, label, scoreBand, whenText, chatLink, getAssessments, assessmentsFailed, isListed, hasIdea,
+  deleteAssessment, showSidebarHistory,
 } from '../../../shared/assessments.js';
 
 const rows = document.querySelector('#rows');
@@ -56,7 +59,7 @@ function showRows() {
     const openLink = isWhatIf ? chatLink(assessment.id, 'similar') : chatLink(assessment.id);
 
     return `
-      <article class="project">
+      <article class="project" data-id="${assessment.id}">
         ${ring}
         <div class="project-main">
           <a class="project-title" href="${openLink}"></a>
@@ -72,6 +75,7 @@ function showRows() {
             <a class="btn-icon" href="${chatLink(assessment.id, 'roadmap')}" aria-label="${t('history.viewRoadmapFull')}" title="${t('history.viewRoadmapFull')}">${icon('map')}</a>
             <a class="btn-icon" href="${chatLink(assessment.id, 'report')}" aria-label="${t('history.report')}" title="${t('history.report')}">${icon('download')}</a>` : ''}
           <a class="btn ${isAssessed || isWhatIf ? 'btn-secondary' : 'btn-primary'} btn-sm" href="${openLink}">${t(isAssessed || isWhatIf ? 'history.open' : 'history.continue')}</a>
+          <button type="button" class="btn-icon is-delete" data-action="delete" aria-label="${t('history.delete')}" title="${t('history.delete')}">${icon('trash')}</button>
         </div>
       </article>`;
   }).join('');
@@ -94,6 +98,52 @@ function showRows() {
   empty.textContent = t(assessments.length === 0 ? 'history.none' : 'history.empty');
 }
 
+/* ---------- Delete a chat ---------- */
+
+const deleteModal = document.querySelector('#delete-modal');
+const deleteConfirm = document.querySelector('#delete-confirm');
+let deleteId = null;   // the chat the pop-up is asking about
+
+// "Delete “{name}”? ..." with the chat's title in the current language
+function deleteText() {
+  const assessment = assessments.find((item) => item.id === deleteId);
+  return t('history.deleteText').replace('{name}', assessment ? say(assessment.title) : '');
+}
+
+// the trash button on a card opens the pop-up
+rows.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-action="delete"]');
+  if (!button) return;
+
+  deleteId = button.closest('.project').dataset.id;
+  document.querySelector('#delete-text').textContent = deleteText();   // the title is the founder's text
+  deleteModal.showModal();
+});
+
+deleteConfirm.addEventListener('click', async () => {
+  const assessment = assessments.find((item) => item.id === deleteId);
+  if (!assessment) return;
+
+  deleteConfirm.classList.add('is-loading');
+  const deleted = await deleteAssessment(assessment);
+  deleteConfirm.classList.remove('is-loading');
+  deleteModal.close();
+
+  if (!deleted) {
+    showToast(t('history.deleteError'), 'risk');
+    return;
+  }
+
+  // gone at once: from the list, the four numbers and the sidebar
+  assessments = assessments.filter((item) => item.id !== assessment.id);
+  showStats();
+  showRows();
+  showSidebarHistory();
+  showToast(t('history.deleted'), 'good');
+});
+
+document.querySelector('#delete-icon').innerHTML = icon('trash');
+
 document.querySelector('#filter').addEventListener('click', (event) => {
   const button = event.target.closest('[data-filter]');
   if (!button) return;
@@ -109,6 +159,7 @@ search.addEventListener('input', showRows);
 document.addEventListener('darb:language', () => {
   showRows();
   showStats();
+  if (deleteModal.open) document.querySelector('#delete-text').textContent = deleteText();
 });
 
 document.querySelector('#search-icon').innerHTML = icon('search');

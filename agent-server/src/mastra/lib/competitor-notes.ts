@@ -45,8 +45,8 @@ export const NOTE_TEXT: Record<NoteCode, Record<Language, string>> = {
     ar: 'نعتذر منك، لم يكتمل تحليل المنافسين هذه المرة. يسعدنا أن تحاول مرة أخرى.',
   },
   daily_limit_reached: {
-    en: 'You have used all of today’s competitor analyses. You are welcome to run a new one tomorrow (after midnight, Saudi time) 🌙',
-    ar: 'لقد استخدمت جميع تحليلات المنافسين المتاحة لك اليوم. يسعدنا أن تُجري تحليلاً جديدًا غدًا (بعد منتصف الليل بتوقيت السعودية) 🌙',
+    en: 'You have used all of today’s competitor analyses. You are welcome to run a new one tomorrow (after midnight, Saudi time).',
+    ar: 'لقد استخدمت جميع تحليلات المنافسين المتاحة لك اليوم. يسعدنا أن تُجري تحليلاً جديدًا غدًا (بعد منتصف الليل بتوقيت السعودية).',
   },
   monthly_limit_reached: {
     en: 'You have used all of this month’s competitor analyses. You are welcome to run a new one next month.',
@@ -143,9 +143,11 @@ export function noteSentences(notes: readonly NoteCode[], language: Language): s
 // The one sentence above the competitor cards (Hala, 16 Nov 2026). Code writes the whole reply when cards are shown,
 // so the model can never list the competitors again in its own words (it did in every analysis of the Sprint 2 test).
 export function cardsSentence(count: number, language: Language): string {
+  // In Darb's voice (config/darb-persona.ts, Hala, 18 Nov 2026), with the real count.
   if (language === 'ar') {
-    const found = count === 1 ? 'منافساً واحداً' : count === 2 ? 'منافسَين' : `${count} منافسين`;
-    return `وجدتُ لك ${found} لفكرتك 🔍 تجد كل منافس في البطاقات أدناه مع أدلته.`;
+    const found = count === 1 ? 'منافسًا واحدًا مرتبطًا' : count === 2 ? 'منافسَين مرتبطَين' : `${count} منافسين مرتبطين`;
+    return `اكتمل التحليل! ✅ وجدتُ ${found} بفكرة مشروعك. تعرض البطاقات أدناه كل منافس مع أدلته، وتجد الفرص المحتملة لتميّز مشروعك في التحليل الكامل.`;
   }
-  return `I found ${count} competitor${count === 1 ? '' : 's'} for your idea 🔍 You will find each one in the cards below, with its evidence.`;
+  const found = count === 1 ? 'one relevant competitor' : count === 2 ? 'two relevant competitors' : `${count} relevant competitors`;
+  return `Your analysis is ready! ✅ I identified ${found}. The cards below show each one with its evidence, and the full analysis shows potential opportunities for your business.`;
 }
