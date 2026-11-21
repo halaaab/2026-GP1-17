@@ -55,6 +55,12 @@ const showsNoAccess = document.body.dataset.denied === '403';
 // The page's content stays hidden until we know the person may see it (see shared.css)
 document.body.classList.add('is-guarded');
 
+// The browser's Back button can show a page from its memory without running this check again
+// (for example after signing out). Loading it again makes the check run.
+window.addEventListener('pageshow', (event) => {
+  if (event.persisted) window.location.reload();
+});
+
 function sendTo(page) {
   window.location.replace(ROOT + page);
 }

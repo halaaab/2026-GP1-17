@@ -81,7 +81,7 @@ export const OPPORTUNITY_TEXT: Record<OpportunityKind, { title: Record<Language,
     next: { en: 'Interview your target customers.', ar: 'قابل عملاءك المستهدفين.' },
   },
   possible_customer_difference: {
-    title: { en: 'Possible difference', ar: 'اختلاف محتمل' },
+    title: { en: 'Possible customer difference', ar: 'اختلاف محتمل في العملاء' },
     text: { en: 'You focus on a narrower group of customers than this competitor.', ar: 'تركّز على فئة أضيق من العملاء مقارنة بهذا المنافس.' },
     next: { en: 'Interview your target customers.', ar: 'قابل عملاءك المستهدفين.' },
   },
