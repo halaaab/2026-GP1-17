@@ -59,7 +59,6 @@ function showRows() {
       <td class="text-2">${t('role.admin')}</td>
       <td class="hide-small text-2">${dateText(admin.created_at)}</td>
       <td class="hide-small text-2">${dateTimeText(admin.last_sign_in_at)}</td>
-      <td><span class="chip chip-good chip-dot">${t('admins.active')}</span></td>
     </tr>`).join('');
 
   // names and emails are added as text

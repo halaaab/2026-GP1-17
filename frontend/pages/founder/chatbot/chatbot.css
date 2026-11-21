@@ -818,6 +818,14 @@ body.assess-open #header-actions {
   font-weight: 800;
   color: var(--teal-bright);
 }
+/* one line under the score's name saying what the score is */
+.fis-about {
+  max-width: 380px;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  opacity: 0.75;
+}
 .fis-sentence {
   max-width: 380px;
   margin-top: 12px;

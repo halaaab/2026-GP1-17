@@ -565,12 +565,10 @@ function showPeople() {
 
 function showHealth() {
   const now = Date.now();
-  const currentYear = new Date().getFullYear();
 
   const stale = data.requirements.filter((rule) => !rule.last_verified || now - new Date(rule.last_verified) > STALE_DAYS * DAY).length;
   const incompletePrograms = data.programs.filter((program) => completeness(program) < 100).length;
   const noDescription = data.startups.filter((startup) => !(startup.startup_description || '').trim()).length;
-  const latestYear = data.market.reduce((year, row) => Math.max(year, row.year || 0), 0);
   const stalled = data.assessments.filter((item) => item.status === 'in_progress' && !item.completed_at
     && now - new Date(item.started_at) > STALLED_DAYS * DAY).length;
   const deactivated = data.users.filter((user) => user.status === 'deactivated').length;
@@ -596,14 +594,10 @@ function showHealth() {
       link: PAGES.startups,
     },
     {
-      ok: latestYear >= currentYear - 1,
-      title: t('overview.hMarket'),
-      detail: latestYear ? fill('overview.hMarketDetail', { year: latestYear, n: number(data.market.length) }) : t('overview.hEmptyTable'),
-    },
-    {
       ok: stalled === 0,
       title: t('overview.hStalled'),
       detail: fill('overview.hStalledDetail', { n: number(stalled), days: STALLED_DAYS }),
+      link: PAGES.founders,
     },
     {
       ok: true,

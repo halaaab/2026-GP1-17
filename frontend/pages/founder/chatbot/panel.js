@@ -129,6 +129,7 @@ function scoreHero() {
       </div>
       <div class="score-verdict">
         <p class="fis-label">${t('score.title')}</p>
+        <p class="fis-about">${t('score.about')}</p>
         <h3>${t(`score.band.${band}`)}</h3>
         <p class="fis-sentence">${t(`score.sentence.${band}`)}</p>
       </div>
