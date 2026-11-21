@@ -533,6 +533,8 @@
   "tab.roadmap": "Roadmap",
   "tab.report": "Report",
   "score.title": "Founder Intelligence Score",
+  "score.notYet": "Not available yet",
+  "score.notYetSentence": "The survival prediction is not available yet.",
   "score.about": "Your idea's chance of staying in business through its first year, from 0 to 100, predicted from Saudi commercial registration records and your sector's market conditions.",
   "score.band.good": "Higher survival potential",
   "score.band.warn": "Moderate survival potential",
