@@ -148,6 +148,8 @@ describe('saving a result', () => {
       'similar_startup_results:insert',
       'result_sources:insert',
       'assessments:update',
+      'assessment_competitor_notes:delete',
+      'assessment_competitor_notes:insert',
     ]);
     expect(calls[1].filters).toContainEqual(['in', 'result_id', ['old1']]);
 
@@ -162,13 +164,14 @@ describe('saving a result', () => {
       { result_id: 'r2', url: 'https://co2.sa/about', source_type: 'official_site', accessed_at: NOW },
     ]);
     expect(calls[5].values).toMatchObject({ iss: 90, iss_basis: 'full', market_level: 'open' });
-    expect(calls[5].values).toMatchObject({ competitor_notes: ['fewer_than_three'] }); // migration 0038
+    expect(calls[5].values).not.toHaveProperty('competitor_notes');
+    expect(calls[7].values).toEqual([{ assessment_id: ASSESSMENT, note_code: 'fewer_than_three' }]); // migration 0042
     expect((calls[5].values as { analysed_at: string }).analysed_at).toBeTruthy();
   });
 
   it('saves "none found" without rows, and throws when the database fails', async () => {
     await store.saveResult(ASSESSMENT, result([]));
-    expect(calls.map((c) => `${c.table}:${c.op}`)).toEqual(['similar_startup_results:select', 'assessments:update']);
+    expect(calls.map((c) => `${c.table}:${c.op}`)).toEqual(['similar_startup_results:select', 'assessments:update', 'assessment_competitor_notes:delete', 'assessment_competitor_notes:insert']);
     db.fail = true;
     await expect(store.saveResult(ASSESSMENT, result())).rejects.toThrow('db down');
   });

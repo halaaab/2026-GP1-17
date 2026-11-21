@@ -558,7 +558,7 @@ export type ValidateDeps = {
   askAi: AskAi;
   checkCr?: (number: string) => CrCheck;
   // Saves the outcome for a startup from Darb's list: pass, fail, or null when nothing definite was found (Task 9).
-  // evidence_status (migration 0039): Confirmed or Likely when the check passed, so a stored pass keeps which one it was.
+  // evidence_status: Confirmed or Likely when the check passed; the database keeps it as validation_status (migration 0042).
   save?: (startupId: string, row: { validation_status: 'pass' | 'fail' | null; evidence_status: 'confirmed' | 'likely' | null; validated_at: string }) => Promise<void>;
   maxCalls?: number; // Tavily reading calls this run may use (default 5, config/limits.ts)
   crNames?: CrNames | null; // the company-name list (tests pass their own); default: the one loaded at server start

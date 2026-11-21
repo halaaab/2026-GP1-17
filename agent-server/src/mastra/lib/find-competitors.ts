@@ -76,7 +76,7 @@ export type FindDeps = {
   web: SearchWebDeps;
   validate: ValidateDeps;
   // The stored checks of startups from Darb's list (Task 9).
-  // evidence_status: Confirmed or Likely, saved with a pass since migration 0039 (empty before it: shown as Likely).
+  // evidence_status: Confirmed or Likely, read from validation_status (confirmed / likely / fail, migration 0042).
   storedChecks: (ids: string[]) => Promise<Map<string, { validation_status: 'pass' | 'fail' | null; evidence_status?: 'confirmed' | 'likely' | null; validated_at: string | null }>>;
 };
 

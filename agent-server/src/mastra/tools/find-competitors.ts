@@ -52,9 +52,15 @@ function liveDeps(dryRun: boolean): FindDeps {
     web: liveWebDeps(),
     validate: dryRun ? { ...liveValidateDeps(), save: undefined } : liveValidateDeps(),
     storedChecks: async (ids) => {
-      const { data, error } = await db.from('startups').select('startup_id, validation_status, evidence_status, validated_at').in('startup_id', ids);
+      const { data, error } = await db.from('startups').select('startup_id, validation_status, validated_at').in('startup_id', ids);
       if (error) throw error;
-      return new Map(data.map((r) => [r.startup_id, { validation_status: r.validation_status, evidence_status: r.evidence_status, validated_at: r.validated_at }]));
+      // validation_status is confirmed, likely or fail (migration 0042): confirmed and likely are both a pass
+      return new Map(
+        data.map((r) => {
+          const passed = r.validation_status === 'confirmed' || r.validation_status === 'likely';
+          return [r.startup_id, { validation_status: passed ? 'pass' : r.validation_status, evidence_status: passed ? r.validation_status : null, validated_at: r.validated_at }];
+        }),
+      );
     },
   };
 }
