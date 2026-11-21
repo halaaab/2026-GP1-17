@@ -52,9 +52,7 @@ export const understandIdeaTool = createTool({
 
     let profile;
     try {
-      // The check run before the founder's consent already read this same idea: its profile is used again.
-      const reused = state.reusedProfile?.profile;
-      profile = reused ?? withStatedFacts(await buildIdeaProfile(understandText(handoff.data), { founderIdea: true }), handoff.data);
+      profile = withStatedFacts(await buildIdeaProfile(understandText(handoff.data), { founderIdea: true }), handoff.data);
     } catch {
       // OpenAI failed: keep only what the founder stated, and let finalize_result say the analysis did not finish.
       state.profile = profileFromKnownFacts(handoff.data);
@@ -65,17 +63,13 @@ export const understandIdeaTool = createTool({
 
     const clarification = clarificationFor(profile, handoff.data);
     state.clarification = clarification;
-    if (!clarification) {
-      state.ideaEmbedding = state.reusedProfile?.embedding ?? (await saveEmbedding(handoff.data.idea_id, profileText(profile)));
-    }
+    if (!clarification) state.ideaEmbedding = await saveEmbedding(handoff.data.idea_id, profileText(profile));
 
     logStep(state, {
       capability: 'understand',
       outcome: 'ok',
       duration_ms: Date.now() - started,
-      detail: clarification
-        ? `needs_${clarification.missing_field}`
-        : `${state.ideaEmbedding ? 'ready' : 'ready_embedding_failed'}${state.reusedProfile ? '_reused' : ''}`,
+      detail: clarification ? `needs_${clarification.missing_field}` : state.ideaEmbedding ? 'ready' : 'ready_embedding_failed',
     });
 
     return {

@@ -17,9 +17,10 @@
 //                  to send their answer on the next call, the hook adds it from the question it remembers (§4)
 //   what-if        runs only after the founder answered Darb's confirmation question; it becomes a new assessment
 //                  linked to this one, and the founder gets an exact before → after comparison (lib/what-if.ts)
-//   consent        a new analysis or a rerun searches only with the founder's consent (lib/analysis-consent.ts);
-//                  without it, the run becomes a "check": the idea is read, nothing is searched or saved, and no
-//                  analysis is used. A clear "no" is rejected, so nothing runs at all.
+//   no "new" twice a conversation's analysis is never replaced by a "new" one: a changed idea is a what-if and a
+//                  correction is a rerun.
+// There is no consent step: an idea, or a question about who already does it, is analysed right away. Whether the
+// founder's message is that is read by the Conversational Agent, never by a word list (Hala, 22 Nov 2026).
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
 import { Handoff, Result, RunLog } from '../schemas/competitor';
@@ -31,8 +32,7 @@ import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
 import { analysedAt, analysisLimit, loadStoredResult, type StoredResult } from './competitor-store';
 import { askedBeforeLatestReply, compareResults, comparisonSentences, createWhatIf, removeWhatIf } from './what-if';
 import { cardsSentence, noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
-import { agreedAnalyses, consentFor, failedAnalyses, isAffirmative, isDecline, sameIdeaText, understoodIdeas, type Consent } from './analysis-consent';
-import { conversationLanguage, keepStatedFacts } from './founder-text';
+import { conversationLanguage, isAffirmative, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
 export const COMPETITOR_AGENT_ID = 'competitor-agent';
@@ -60,7 +60,6 @@ type Running = {
   replyRules?: ReplyRules;
   state: RunState;
   conversationAssessmentId: string; // the assessment of the chat; a what-if's own assessment is handoff.assessment_id
-  consent: Consent; // why a search was allowed; null for a check or a what-if
   whatIf?: { original: StoredResult | null; created: boolean };
 };
 
@@ -157,43 +156,17 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     );
   }
 
-  // Consent: a new analysis or a rerun searches only when the founder agreed (lib/analysis-consent.ts). Without
-  // consent it becomes a check run; a clear "no" stops here. The founder's decision is respected in code.
-  let mode = written.data.mode;
-  let consent: Consent = null;
+  const mode = written.data.mode;
   // A conversation's original analysis is never replaced by a "new" one: a changed idea is a what-if (kept beside it),
   // and a correction is a rerun (persona eval, 18 Nov 2026: a confirmed what-if was sent as "new").
-  const analysedBefore = mode === 'new' || mode === 'rerun' ? Boolean(await analysedAt(assessment.assessment_id)) : false;
-  if (mode === 'new' && analysedBefore) {
+  if (mode === 'new' && (await analysedAt(assessment.assessment_id))) {
     return reject(
       'This conversation already has an analysis. For a changed version of the idea ("what if…"), delegate with mode "what_if" and scenario_label. For a correction of the idea, delegate with mode "rerun". For a question about the results, use get_competitor_result.',
     );
   }
-  if (mode === 'new' || mode === 'rerun') {
-    const latest = said.at(-1) ?? '';
-    if (isDecline(latest) && !asked) {
-      return reject(
-        'The founder declined the competitor analysis: do not run it. Respect their decision, tell them they can come back to it any time, and offer to help with another part of their idea.',
-      );
-    }
-    consent = consentFor({
-      latest,
-      messages: ctx.messages as ModelMessageLike[],
-      // a rerun of an idea already analysed needs no new check before Darb offers it
-      understood: understoodIdeas.has(assessment.assessment_id) || (mode === 'rerun' && analysedBefore),
-      agreedBefore: agreedAnalyses.has(assessment.assessment_id) && Boolean(asked),
-      failedBefore: failedAnalyses.has(assessment.assessment_id),
-    });
-    if (!consent) mode = 'check';
-  }
 
   const state = newRunState();
   state.limitNote = await analysisLimit(userId, isWhatIf ? null : assessment.assessment_id);
-  // The analysis the founder agreed to uses the profile the check run already built for this same idea.
-  const understood = understoodIdeas.get(assessment.assessment_id);
-  if (consent && understood && !clarification && sameIdeaText(understood.ideaText, written.data.idea_text)) {
-    state.reusedProfile = { profile: understood.profile, embedding: understood.embedding };
-  }
 
   // The what-if's own assessment, linked to this one (not created when the founder has no analyses left).
   let runAssessmentId = assessment.assessment_id;
@@ -211,7 +184,6 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
 
   const handoff = Handoff.parse({
     ...written.data,
-    mode,
     ...(clarification ? { clarification } : {}),
     language,
     known_facts: facts.kept,
@@ -229,7 +201,6 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     replyRules,
     state,
     conversationAssessmentId: assessment.assessment_id,
-    consent,
     whatIf,
   });
   ctx.requestContext.set(HANDOFF_KEY, handoff);
@@ -306,18 +277,6 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
   if (question) pendingQuestions.set(started.conversationAssessmentId, question);
   else pendingQuestions.delete(started.conversationAssessmentId);
 
-  // Consent memory (lib/analysis-consent.ts): an idea a check found ready can be analysed when the founder agrees;
-  // a founder who agreed and was asked one question does not have to agree again after answering it.
-  const conversation = started.conversationAssessmentId;
-  if (started.handoff.mode === 'check' && result.status === 'understood') {
-    understoodIdeas.set(conversation, { ideaText: started.handoff.idea_text, profile: result.idea_profile, embedding: started.state.ideaEmbedding });
-  }
-  if (started.consent && question) agreedAnalyses.add(conversation);
-  else if (started.consent) agreedAnalyses.delete(conversation);
-  const failed = result.competitors.length === 0 && result.notes.some((n) => n === 'analysis_incomplete' || n === 'temporarily_unavailable');
-  if (started.consent && failed) failedAnalyses.add(conversation);
-  else if (started.consent) failedAnalyses.delete(conversation);
-
   // A what-if whose result was not saved (a question, a limit or a failed run) is removed, so History never
   // shows an empty what-if. When it was saved, the founder gets the exact comparison with the original.
   const saved = started.state.steps.some((s) => s.capability === 'guardrails' && s.outcome === 'ok' && /\bsaved\b/.test(s.detail ?? ''));
@@ -355,20 +314,6 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
   console.info(JSON.stringify(runLog(started, result, checked.success)));
 
   const language = started.handoff.language;
-  // A check that understood the idea: nothing was searched, so the supervisor sees only the idea, never an empty list
-  // of competitors it could read as "none found" (persona eval, 18 Nov 2026).
-  if (result.status === 'understood') {
-    const { problem, customer, offering, market } = result.idea_profile;
-    const said = (f: { value: string | null }) => f.value ?? undefined;
-    return {
-      resultText: JSON.stringify({
-        status: 'understood',
-        searched: false,
-        idea: { problem: said(problem), customer: said(customer), offering: said(offering), market: said(market) },
-        next_step: 'Restate the idea in one or two sentences and ask whether to start the competitor analysis. No search has run yet: say nothing about competitors found or not found.',
-      }),
-    };
-  }
   const reply: DelegationReply = {
     result,
     note_sentences: sentences,
