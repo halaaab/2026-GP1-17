@@ -1233,6 +1233,40 @@ html[dir="rtl"] .panel.is-open {
   color: var(--text-3);
 }
 
+/* The founder's Explore group: a light blue box under "New conversation" */
+.sidebar-explore {
+  margin: 12px 0 4px;
+  padding: 2px 6px 6px;
+  border: 1px solid #DDE6F3;
+  border-radius: 14px;
+  background: var(--navy-tint);
+}
+.sidebar-explore .sidebar-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 6px 6px;
+  font-size: 12.5px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.sidebar-explore .nav-item {
+  color: var(--text);
+}
+.sidebar-explore .nav-item svg {
+  color: var(--navy);
+}
+.sidebar-explore .nav-item:hover {
+  background: var(--bg);
+}
+
+/* A thin line between parts of the sidebar */
+.sidebar-divider {
+  height: 1px;
+  margin: 8px 10px;
+  background: var(--border);
+}
+
 .nav-item {
   display: flex;
   align-items: center;

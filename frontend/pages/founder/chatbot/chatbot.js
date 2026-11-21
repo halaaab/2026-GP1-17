@@ -20,6 +20,7 @@ import {
   showSidebarHistory, assessmentsFailed, hasIdea, isListed, titleFrom, newAnalysis,
 } from '../../../shared/assessments.js';
 import { askDarb } from '../../../shared/agent.js';
+import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import { showToast } from '../../../shared/ui.js';
 import { openPanel, closePanel, roadmapList, logoOf } from './panel.js';
@@ -423,12 +424,47 @@ function showGreeting() {
   document.querySelector('#greeting').textContent = firstName ? greeting : greeting.replace(/[,،]\s*$/, '');
 }
 
+/* ---------- The explorer cards on the home state ----------
+   Three cards under the greeting that open the explorers, each with how many
+   rows its table has. The same icons and order as the sidebar's Explore box. */
+const EXPLORERS = [
+  { table: 'startups',                name: 'nav.startups',     count: 'chat.browse.startups',     icon: 'store',  href: '../startups/startup-explorer/startup-explorer.html' },
+  { table: 'support_organizations',   name: 'nav.incubators',   count: 'chat.browse.incubators',   icon: 'rocket', href: '../incubators-accelerators/incubators-accelerators-explorer/incubators-accelerators-explorer.html' },
+  { table: 'regulatory_requirements', name: 'nav.requirements', count: 'chat.browse.requirements', icon: 'shield', href: '../regulatory-requirements/requirements-explorer/requirements-explorer.html' },
+];
+const explorerCounts = {};   // table name -> number of rows, read once
+
+function showExploreCards() {
+  document.querySelector('#explore-cards').innerHTML = EXPLORERS.map((explorer) => {
+    const count = explorerCounts[explorer.table];
+    const countText = count === undefined ? '' : t(explorer.count).replace('{n}', count.toLocaleString(document.documentElement.lang));
+    return `
+      <a class="explore-card" href="${explorer.href}">
+        <span class="explore-card-icon">${icon(explorer.icon)}</span>
+        <strong>${t(explorer.name)}</strong>
+        <span class="explore-card-count"><span>${countText}</span><span class="explore-card-arrow">${icon('chevron')}</span></span>
+      </a>`;
+  }).join('');
+}
+
+// Reads the three counts from the database, then draws the cards again with them.
+// If a count fails, its card simply shows no number.
+async function loadExplorerCounts() {
+  await Promise.all(EXPLORERS.map(async (explorer) => {
+    const { count, error } = await supabase.from(explorer.table).select('*', { count: 'exact', head: true });
+    if (!error && count !== null) explorerCounts[explorer.table] = count;
+  }));
+  if (!current) showExploreCards();
+}
+
 /* The home state: the greeting, and short example chips above the box.
    A chip shows a short name; clicking it puts the full example in the box.
    Past ideas are in the sidebar (the menu button on the phone), not here. */
 function showHome() {
   showGreeting();
   showHeader();
+  showExploreCards();
+  if (Object.keys(explorerCounts).length === 0) loadExplorerCounts();
 
   document.querySelector('#examples').innerHTML = [0, 1, 2]
     .map((number) => `<button type="button" class="pill" data-example="${number}">${t(`chat.exampleLabel.${number}`)}</button>`)

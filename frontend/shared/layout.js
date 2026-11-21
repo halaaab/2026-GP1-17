@@ -29,6 +29,7 @@ const ROOT = new URL('..', import.meta.url).href;
 const FOUNDER_MENU = [
   {
     label: 'nav.explore',
+    icon: 'pin',   // shown next to the group's title (a map marker)
     items: [
       { id: 'startups',     label: 'nav.startups',     icon: 'store',  href: 'pages/founder/startups/startup-explorer/startup-explorer.html' },
       { id: 'incubators',   label: 'nav.incubators',   icon: 'rocket', href: 'pages/founder/incubators-accelerators/incubators-accelerators-explorer/incubators-accelerators-explorer.html' },
@@ -175,7 +176,7 @@ function languageSwitch() {
 function menuGroups(menu, activePage) {
   return menu
     .map((group) => `
-      ${group.label ? `<div class="sidebar-label" data-i18n="${group.label}"></div>` : ''}
+      ${group.label ? `<div class="sidebar-label">${group.icon ? icon(group.icon) : ''}<span data-i18n="${group.label}"></span></div>` : ''}
       ${group.items.map((item) => `
         <a class="nav-item ${item.id === activePage ? 'is-active' : ''}" href="${ROOT}${item.href}">
           ${icon(item.icon)}
@@ -203,12 +204,16 @@ function founderSidebar(activePage) {
       <span data-i18n="nav.newAssessment"></span>
     </a>
 
+    <!-- The three explorers, in their own blue box so founders notice them -->
+    <div class="sidebar-explore">
+      ${menuGroups(FOUNDER_MENU, activePage)}
+    </div>
+    <div class="sidebar-divider"></div>
+
     <a class="nav-item ${activePage === 'history' ? 'is-active' : ''}" href="${ROOT}${PAGES.history}">
       ${icon('clock')}
       <span data-i18n="nav.history"></span>
     </a>
-
-    ${menuGroups(FOUNDER_MENU, activePage)}
 
     <!-- Past assessments. shared/assessments.js fills this list. -->
     <div class="sidebar-scroll" id="sidebar-history">

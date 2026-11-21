@@ -220,6 +220,93 @@ body[data-page="chatbot"] .app-header {
   height: 20px;
 }
 
+/* The explorer cards under the greeting (home only) */
+.explore-cards {
+  width: 100%;
+  max-width: 640px;
+  margin: 26px auto 0;
+}
+.explore-cards-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text-3);
+}
+/* a thin line on each side of the label */
+.explore-cards-label::before,
+.explore-cards-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.explore-cards-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.explore-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  color: var(--text);
+  text-align: start;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--dur-fast), box-shadow var(--dur-fast), border-color var(--dur-fast);
+}
+.explore-card:hover {
+  transform: translateY(-2px);
+  border-color: #DDE6F3;
+  box-shadow: 0 10px 24px -14px rgba(15, 36, 56, 0.35);
+}
+.explore-card-icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--navy-tint);
+  color: var(--navy);
+}
+.explore-card strong {
+  font-size: 13.5px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+.explore-card-count {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 16px;
+  font-size: 12px;
+  color: var(--text-3);
+}
+/* the arrow points the other way in Arabic */
+[dir="rtl"] .explore-card-arrow svg {
+  transform: scaleX(-1);
+}
+/* phone: one row, the icon and the name only */
+@media (max-width: 640px) {
+  .explore-card {
+    align-items: center;
+    padding: 10px;
+    text-align: center;
+  }
+  .explore-card strong {
+    font-size: 12px;
+  }
+  .explore-card-count {
+    display: none;
+  }
+}
+
 /* Darb: a small avatar and plain text */
 .msg-agent {
   display: flex;
