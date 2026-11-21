@@ -221,10 +221,10 @@ function founderSidebar(activePage) {
     </div>
 
     <div class="sidebar-bottom">
-      <!-- Settings opens the founder's profile page, like Settings in the admin sidebar -->
+      <!-- Profile opens the founder's profile page -->
       <a class="nav-item ${activePage === 'profile' ? 'is-active' : ''}" href="${ROOT}${PAGES.profile}">
-        ${icon('settings')}
-        <span data-i18n="nav.settings"></span>
+        ${icon('user')}
+        <span data-i18n="nav.profile"></span>
       </a>
       <div class="user-card">
         <!-- the name opens the profile page -->
