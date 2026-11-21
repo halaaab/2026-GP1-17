@@ -9,7 +9,7 @@ import { showErrorPage } from '../../../../shared/errors.js';
 import {
   getPrograms, programType, sectorList, sectorName, isOpenToAll, cityOf, regionOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
 } from '../programs.js?v=4';
-import { SAUDI_REGIONS, SECTORS, label } from '../../../../shared/startups.js?v=4';
+import { SAUDI_REGIONS, ISIC_CODES, label } from '../../../../shared/startups.js?v=4';
 
 const PAGE_SIZE = 12;   // four rows of three cards
 
@@ -89,7 +89,7 @@ function showTotals() {
 function showCounts() {
   const dropdowns = [
     { select: typeFilter, filter: 'type', fits: fitsType, words: (option) => t(option.dataset.label) },
-    { select: sectorFilter, filter: 'sector', fits: fitsSector, words: (option) => (option.value ? label('sector', option.value) : t('programs.allSectors')) },
+    { select: sectorFilter, filter: 'sector', fits: fitsSector, words: (option) => (option.value ? sectorName({}, option.value) : t('programs.allSectors')) },
     { select: regionFilter, filter: 'region', fits: fitsRegion, words: (option) => (option.value ? label('region', option.value) : t('programs.allRegions')) },
   ];
   dropdowns.forEach(({ select, filter, fits, words }) => {
@@ -168,8 +168,8 @@ function show() {
   rememberFilters();
 }
 
-/* The sector dropdown lists the same sectors as the Startup Explorer (SECTORS in
-   shared/startups.js), the most common first, then any other sector a program has.
+/* The sector dropdown lists the same sectors as the Startup Explorer: the 20 ISIC4 sections
+   of GASTAT's classification, A to U, then any other sector word a program still has.
    The region dropdown lists the Saudi regions that have a program, in the
    order of the 13 regions (a region shows up once a program in it is added).
    Both start with "All". The values are English words, so a choice stays chosen when
@@ -178,9 +178,8 @@ function fillDropdowns() {
   const chosenSector = sectorFilter.value;
   const chosenRegion = regionFilter.value;
 
-  const inSector = (sector) => programs.filter((program) => fitsSector(program, sector)).length;
-  const others = [...new Set(programs.flatMap(sectorList))].filter((sector) => !SECTORS.includes(sector));
-  const sectors = [...SECTORS, ...others].sort((a, b) => inSector(b) - inSector(a) || a.localeCompare(b));
+  const others = [...new Set(programs.flatMap(sectorList))].filter((sector) => !ISIC_CODES.includes(sector)).sort();
+  const sectors = [...ISIC_CODES, ...others];
   const regions = SAUDI_REGIONS.filter((region) => programs.some((program) => regionOf(program) === region));
 
   sectorFilter.innerHTML = '<option value=""></option>'

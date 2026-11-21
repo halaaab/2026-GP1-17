@@ -15,7 +15,7 @@ import {
   getPrograms, saveProgramLists, listsMismatch, programType, sectorList, sectorName, isOpenToAll, regionOf, clean, detailsLink,
   text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
 } from '../../founder/incubators-accelerators/programs.js?v=4';
-import { SAUDI_REGIONS, SECTORS, label } from '../../../shared/startups.js?v=4';
+import { SAUDI_REGIONS, ISIC_CODES, label } from '../../../shared/startups.js?v=4';
 
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;   // what an admin may pick; it is shrunk before upload
@@ -41,7 +41,7 @@ const deleteModal = document.querySelector('#delete-modal');
 const deleteConfirm = document.querySelector('#delete-confirm');
 const sectorChoices = document.querySelector('#sector-choices');
 
-// The sector of a program open to every sector (the other sectors are SECTORS, the startups' list)
+// The sector of a program open to every sector (the other sectors are the 20 ISIC4 sections, ISIC_CODES)
 const OPEN_TO_ALL = 'All sectors';
 
 // The form's fields, named like the table's columns
@@ -112,8 +112,8 @@ function regionText(program) {
 function fillDropdowns() {
   const keep = sectorFilter.value;
   const sectors = [...new Set(programs.flatMap(sectorList))]
-    .map((sector) => [sector, label('sector', sector)])
-    .sort((a, b) => a[1].localeCompare(b[1]));
+    .sort((a, b) => (ISIC_CODES.indexOf(a) + 1 || 99) - (ISIC_CODES.indexOf(b) + 1 || 99) || a.localeCompare(b))
+    .map((sector) => [sector, sectorName({}, sector)]);
 
   sectorFilter.querySelectorAll('option:not(:first-child)').forEach((option) => option.remove());
   sectorFilter.insertAdjacentHTML('beforeend', sectors.map(([value, words]) => `<option value="${safe(value)}">${safe(words)}</option>`).join(''));
@@ -222,8 +222,8 @@ function locationOf(region, program) {
 }
 
 /* ---------- The sectors of a program ----------
-   The form asks the admin to tick sectors from the startups' list (SECTORS), so the
-   two explorers use the same sectors. "All sectors" is for a program open to every sector. */
+   The form asks the admin to tick ISIC4 sections (the same sectors as the Startup Explorer),
+   from what the program's own website says it supports. "All sectors" is for a program open to every sector. */
 
 // The ticked sectors, as kept in the hidden sector box: "Gaming; AI & Deep Tech" → ['Gaming', 'AI & Deep Tech']
 function tickedSectors() {
@@ -234,9 +234,9 @@ function tickedSectors() {
 // other sector the program already has, so editing a program never loses one
 function fillSectorChoices() {
   const ticked = tickedSectors();
-  const values = [...new Set([OPEN_TO_ALL, ...SECTORS, ...ticked])];
+  const values = [...new Set([OPEN_TO_ALL, ...ISIC_CODES, ...ticked])];
   sectorChoices.innerHTML = values.map((value) => `
-    <label class="check"><input type="checkbox" value="${safe(value)}"> ${safe(value === OPEN_TO_ALL ? t('programs.allSectors') : label('sector', value))}</label>`).join('');
+    <label class="check"><input type="checkbox" value="${safe(value)}"> ${safe(value === OPEN_TO_ALL ? t('isic.all') : sectorName({}, value))}</label>`).join('');
   sectorChoices.querySelectorAll('input').forEach((box) => { box.checked = ticked.includes(box.value); });
 }
 
@@ -247,10 +247,11 @@ sectorChoices.addEventListener('change', () => {
   if (ticked.length) showError(form.elements.sector, '');
 });
 
-// The Arabic of a sector, the same words as the Startup Explorer (startup.sector.* in ar.json).
-// A sector with no translation keeps the program's own Arabic, or the English.
+// The Arabic of a sector, the same words as the explorers: an ISIC4 section's plain name
+// (reg.isic.* in ar.json). A sector with no translation keeps the program's own Arabic, or the English.
 function sectorArabic(sector) {
   if (sector === OPEN_TO_ALL) return 'جميع القطاعات';
+  if (arabicWords[`reg.isic.${sector}`]) return arabicWords[`reg.isic.${sector}`];
   // "Food & Beverages" → "food_beverages", as label() in shared/startups.js makes the key
   const key = sector.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
   const saved = (findProgram(selectedId)?.sectors || []).find((item) => item.sector === sector);
