@@ -90,7 +90,7 @@ function drawPanel() {
 
     <div class="assess-body">
       ${TAB_CONTENT[currentTab]()}
-      <p class="assess-note">${t('panel.sample')}</p>
+      <p class="assess-note">${t('panel.sample')}${assessment.result && assessment.result.sampleSector ? ` ${t('panel.sampleSector')}` : ''}</p>
     </div>`;
 }
 

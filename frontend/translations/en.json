@@ -531,6 +531,7 @@
   "panel.updated": "Updated {when}",
   "panel.export": "Export PDF",
   "panel.sample": "The score is a sample until the prediction model is connected.",
+  "panel.sampleSector": "Market and roadmap show a sample sector (software) until Darb knows your idea's sector.",
   "tab.score": "Score",
   "tab.similar": "Competitor analysis",
   "tab.market": "Market",
