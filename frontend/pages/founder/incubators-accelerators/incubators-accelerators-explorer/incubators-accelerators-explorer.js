@@ -7,9 +7,9 @@ import { icon } from '../../../../shared/layout.js';
 import '../../../../shared/guard.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  getPrograms, programType, sectorList, isOpenToAll, cityOf, regionOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
-} from '../programs.js?v=3';
-import { SAUDI_REGIONS, label } from '../../../../shared/startups.js?v=4';
+  getPrograms, programType, sectorList, sectorName, isOpenToAll, cityOf, regionOf, clean, text, arabicOf, detailsLink, logoOf, colorOf, TYPE_ICON,
+} from '../programs.js?v=4';
+import { SAUDI_REGIONS, SECTORS, label } from '../../../../shared/startups.js?v=4';
 
 const PAGE_SIZE = 12;   // four rows of three cards
 
@@ -39,20 +39,33 @@ function typeLabel(program) {
 
 /* ---------- Filtering ---------- */
 
-function matches(program, ignoreType = false) {
+// Does the program fit one choice of each filter? ('' or 'all' means no choice)
+function fitsType(program, kind) {
+  return kind === 'all' || programType(program) === kind || programType(program) === 'both';
+}
+// a program open to every sector fits any sector filter
+function fitsSector(program, sector) {
+  return !sector || sectorList(program).includes(sector) || isOpenToAll(program);
+}
+// a program for all of Saudi Arabia fits any region filter
+function fitsRegion(program, region) {
+  return !region || regionOf(program) === region || regionOf(program) === 'saudi';
+}
+
+/* Does the program fit the search and the filters?
+   ignore: one filter to leave out ('type', 'sector' or 'region'), so a dropdown can
+   count its own choices among the programs the other filters leave. */
+function matches(program, ignore = '') {
   const words = search.value.trim().toLowerCase();
   const fields = ['name', 'sector', 'location', 'description', 'target_stage'];
   const searchable = fields.flatMap((field) => [clean(program[field]), arabicOf(program, field)])
+    .concat(sectorList(program).map((sector) => sectorName(program, sector)))
     .join(' ').toLowerCase();
 
-  const fitsSearch = !words || searchable.includes(words);
-  const fitsType = ignoreType || type === 'all' || programType(program) === type || programType(program) === 'both';
-  // a program open to every sector fits any sector filter
-  const fitsSector = !sectorFilter.value || sectorList(program).includes(sectorFilter.value) || isOpenToAll(program);
-  // a program for all of Saudi Arabia fits any region filter
-  const fitsRegion = !regionFilter.value || regionOf(program) === regionFilter.value || regionOf(program) === 'saudi';
-
-  return fitsSearch && fitsType && fitsSector && fitsRegion;
+  return (!words || searchable.includes(words))
+    && (ignore === 'type' || fitsType(program, type))
+    && (ignore === 'sector' || fitsSector(program, sectorFilter.value))
+    && (ignore === 'region' || fitsRegion(program, regionFilter.value));
 }
 
 /* ---------- Drawing ---------- */
@@ -69,12 +82,22 @@ function showTotals() {
     + total(count('accelerator'), t('programs.accelerators'), TYPE_ICON.accelerator);
 }
 
-// The type dropdown says how many programs each type has; the numbers follow the other filters
-function showTypeCounts() {
-  const fitting = programs.filter((program) => matches(program, true));
-  const count = (kind) => fitting.filter((program) => kind === 'all' || programType(program) === kind || programType(program) === 'both').length;
-  typeFilter.querySelectorAll('option').forEach((option) => {
-    option.textContent = `${t(option.dataset.label)} (${count(option.value)})`;
+/* Each dropdown says how many programs each choice has, the same way as the Startup Explorer.
+   The numbers follow the search and the OTHER filters: "All sectors (N)" is how many programs
+   fit the other filters, and each sector is how many of those fit that sector too
+   (a program open to all sectors counts in every sector). A choice with none shows (0). */
+function showCounts() {
+  const dropdowns = [
+    { select: typeFilter, filter: 'type', fits: fitsType, words: (option) => t(option.dataset.label) },
+    { select: sectorFilter, filter: 'sector', fits: fitsSector, words: (option) => (option.value ? label('sector', option.value) : t('programs.allSectors')) },
+    { select: regionFilter, filter: 'region', fits: fitsRegion, words: (option) => (option.value ? label('region', option.value) : t('programs.allRegions')) },
+  ];
+  dropdowns.forEach(({ select, filter, fits, words }) => {
+    const fitting = programs.filter((program) => matches(program, filter));
+    select.querySelectorAll('option').forEach((option) => {
+      const count = fitting.filter((program) => fits(program, option.value)).length;
+      option.textContent = `${words(option)} (${count})`;
+    });
   });
 }
 
@@ -82,7 +105,7 @@ function showTypeCounts() {
 function sectorChips(program) {
   if (isOpenToAll(program)) return `<span class="programs-chip">${t('programs.openToAll')}</span>`;
   const sectors = sectorList(program);
-  return sectors.slice(0, 2).map((sector) => `<span class="programs-chip">${safe(sector)}</span>`).join('')
+  return sectors.slice(0, 2).map((sector) => `<span class="programs-chip">${safe(sectorName(program, sector))}</span>`).join('')
     + (sectors.length > 2 ? `<span class="programs-chip">+${sectors.length - 2}</span>` : '');
 }
 
@@ -107,7 +130,7 @@ function cardHtml(program, index) {
         <div class="programs-card-chips">${sectorChips(program)}</div>
       </div>
       <div class="programs-card-foot">
-        <span class="programs-card-city">${icon('map')}<span>${safe(cityOf(program) || '—')}</span></span>
+        <span class="programs-card-city">${icon('pin')}<span>${safe(cityOf(program) || '—')}</span></span>
         <span class="programs-card-arrow" aria-label="${t('programs.viewDetails')}">${icon('chevron')}</span>
       </div>
     </a>`;
@@ -123,7 +146,7 @@ function show() {
   cards.innerHTML = onThisPage.map(cardHtml).join('');
 
   document.querySelector('#found').innerHTML = t('programs.found').replace('{n}', `<strong>${visible.length}</strong>`);
-  showTypeCounts();
+  showCounts();
 
   // Nothing to show: the database failed, it is empty, or the filters found nothing
   empty.hidden = visible.length > 0;
@@ -145,28 +168,25 @@ function show() {
   rememberFilters();
 }
 
-/* The sector dropdown lists what the programs really have, most common first, in the
-   site's language. The region dropdown lists the Saudi regions that have a program, in the
-   order of the 13 regions (a region shows up once a program in it is added); a program
-   for all of Saudi Arabia counts in every region. Both start with "All". They are filled again when
-   the language changes; the region values are English words, so a chosen region stays chosen. */
+/* The sector dropdown lists the same sectors as the Startup Explorer (SECTORS in
+   shared/startups.js), the most common first, then any other sector a program has.
+   The region dropdown lists the Saudi regions that have a program, in the
+   order of the 13 regions (a region shows up once a program in it is added).
+   Both start with "All". The values are English words, so a choice stays chosen when
+   the language changes; only the words are redrawn. The numbers are written by showCounts(). */
 function fillDropdowns() {
   const chosenSector = sectorFilter.value;
   const chosenRegion = regionFilter.value;
 
-  const tally = (values) => {
-    const counts = new Map();
-    values.forEach((value) => counts.set(value, (counts.get(value) || 0) + 1));
-    return [...counts].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-  };
+  const inSector = (sector) => programs.filter((program) => fitsSector(program, sector)).length;
+  const others = [...new Set(programs.flatMap(sectorList))].filter((sector) => !SECTORS.includes(sector));
+  const sectors = [...SECTORS, ...others].sort((a, b) => inSector(b) - inSector(a) || a.localeCompare(b));
+  const regions = SAUDI_REGIONS.filter((region) => programs.some((program) => regionOf(program) === region));
 
-  const sectors = tally(programs.flatMap(sectorList));
-  const inRegion = (region) => programs.filter((program) => [region, 'saudi'].includes(regionOf(program))).length;
-
-  sectorFilter.innerHTML = `<option value="">${t('programs.allSectors')} (${programs.length})</option>`
-    + sectors.map(([name, count]) => `<option value="${safe(name)}">${safe(name)} (${count})</option>`).join('');
-  regionFilter.innerHTML = `<option value="">${t('programs.allRegions')} (${programs.length})</option>`
-    + SAUDI_REGIONS.filter((region) => programs.some((program) => regionOf(program) === region)).map((region) => `<option value="${safe(region)}">${safe(label('region', region))} (${inRegion(region)})</option>`).join('');
+  sectorFilter.innerHTML = '<option value=""></option>'
+    + sectors.map((sector) => `<option value="${safe(sector)}"></option>`).join('');
+  regionFilter.innerHTML = '<option value=""></option>'
+    + regions.map((region) => `<option value="${safe(region)}"></option>`).join('');
 
   sectorFilter.value = chosenSector;
   regionFilter.value = chosenRegion;
@@ -238,16 +258,8 @@ document.querySelector('#next').addEventListener('click', () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 });
 
-// labels and program text are in the current language, so draw them again when it changes.
-// A chosen sector is in the old language, so that filter starts over (the region stays: its value is an English word).
-let shownLanguage = null;
+// labels and program text are in the current language, so draw them again when it changes (the choices stay)
 document.addEventListener('darb:language', () => {
-  const language = document.documentElement.lang;
-  if (shownLanguage && language !== shownLanguage) {
-    sectorFilter.value = '';
-    page = 0;
-  }
-  shownLanguage = language;
   fillDropdowns();
   showTotals();
   show();
@@ -265,6 +277,5 @@ programs = data || [];
 
 fillDropdowns();
 readFilters();
-shownLanguage = document.documentElement.lang;
 showTotals();
 show();

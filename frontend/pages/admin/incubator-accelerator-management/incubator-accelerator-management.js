@@ -12,10 +12,10 @@ import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 import {
-  getPrograms, saveProgramLists, programType, sectorList, isOpenToAll, regionOf, clean, detailsLink,
+  getPrograms, saveProgramLists, listsMismatch, programType, sectorList, sectorName, isOpenToAll, regionOf, clean, detailsLink,
   text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
-} from '../../founder/incubators-accelerators/programs.js?v=3';
-import { SAUDI_REGIONS, label } from '../../../shared/startups.js?v=4';
+} from '../../founder/incubators-accelerators/programs.js?v=4';
+import { SAUDI_REGIONS, SECTORS, label } from '../../../shared/startups.js?v=4';
 
 const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const LOGO_MAX_BYTES = 5 * 1024 * 1024;   // what an admin may pick; it is shrunk before upload
@@ -39,6 +39,10 @@ const typeSelect = document.querySelector('#f-type');
 const saveButton = document.querySelector('#save-button');
 const deleteModal = document.querySelector('#delete-modal');
 const deleteConfirm = document.querySelector('#delete-confirm');
+const sectorChoices = document.querySelector('#sector-choices');
+
+// The sector of a program open to every sector (the other sectors are SECTORS, the startups' list)
+const OPEN_TO_ALL = 'All sectors';
 
 // The form's fields, named like the table's columns
 const FIELDS = ['name', 'type', 'location', 'sector', 'description', 'target_stage', 'program_duration', 'services_support', 'funding_investment', 'eligibility', 'website'];
@@ -48,8 +52,9 @@ const OPTIONAL = ['program_duration', 'funding_investment'];
 const REQUIRED = FIELDS.filter((field) => !OPTIONAL.includes(field));
 
 // The Arabic twins of the text fields (migration 0012).
-// location_ar has no box of its own: it is written from the chosen region (see locationOf).
-const ARABIC = ARABIC_FIELDS.map((field) => `${field}_ar`).filter((field) => field !== 'location_ar');
+// location_ar and sector_ar have no box of their own: they are written from the chosen
+// region (see locationOf) and the ticked sectors (see sectorArabic).
+const ARABIC = ARABIC_FIELDS.map((field) => `${field}_ar`).filter((field) => field !== 'location_ar' && field !== 'sector_ar');
 // An Arabic field is required when its English twin is (duration and funding stay optional)
 const REQUIRED_ARABIC = ARABIC.filter((field) => !OPTIONAL.includes(field.replace(/_ar$/, '')));
 let hasArabic = false;   // true once the table has the Arabic columns
@@ -62,6 +67,9 @@ let deleteId = null;     // the program the delete question is about
 const logo = { current: '', file: null, preview: '', removed: false };
 
 let loadFailed = false;
+
+// The Arabic translation file, read once at the start, for the Arabic words of the sectors
+let arabicWords = {};
 
 /* ---------- Small helpers ---------- */
 
@@ -84,7 +92,7 @@ function findProgram(id) {
 // "Open to all sectors", or the program's sectors as one line
 function appliesTo(program) {
   if (isOpenToAll(program)) return t('programs.openToAll');
-  return sectorList(program).join(t('programs.listComma')) || '—';
+  return sectorList(program).map((sector) => sectorName(program, sector)).join(t('programs.listComma')) || '—';
 }
 
 /* ---------- Filters ---------- */
@@ -97,15 +105,18 @@ function regionText(program) {
   return region ? label('region', region) : '';
 }
 
-// The sector dropdown lists the sectors the programs really have, A to Z, in the page's language.
+// The sector dropdown lists the sectors the programs really have, A to Z, in the page's language
+// (the same words as the Startup Explorer). The values are English words, so a choice stays
+// chosen when the language changes.
 // The region dropdown lists the Saudi regions that have a program, in the order of the 13 regions.
 function fillDropdowns() {
   const keep = sectorFilter.value;
-  const sorted = (values) => [...new Set(values)].sort((a, b) => a.localeCompare(b));
-  const options = (values) => values.map((value) => `<option value="${safe(value)}">${safe(value)}</option>`).join('');
+  const sectors = [...new Set(programs.flatMap(sectorList))]
+    .map((sector) => [sector, label('sector', sector)])
+    .sort((a, b) => a[1].localeCompare(b[1]));
 
   sectorFilter.querySelectorAll('option:not(:first-child)').forEach((option) => option.remove());
-  sectorFilter.insertAdjacentHTML('beforeend', options(sorted(programs.flatMap(sectorList))));
+  sectorFilter.insertAdjacentHTML('beforeend', sectors.map(([value, words]) => `<option value="${safe(value)}">${safe(words)}</option>`).join(''));
 
   sectorFilter.value = keep;
 
@@ -210,6 +221,42 @@ function locationOf(region, program) {
   return { location: `${english}, Saudi Arabia`, location_ar: `${arabic}، المملكة العربية السعودية` };
 }
 
+/* ---------- The sectors of a program ----------
+   The form asks the admin to tick sectors from the startups' list (SECTORS), so the
+   two explorers use the same sectors. "All sectors" is for a program open to every sector. */
+
+// The ticked sectors, as kept in the hidden sector box: "Gaming; AI & Deep Tech" → ['Gaming', 'AI & Deep Tech']
+function tickedSectors() {
+  return form.elements.sector.value.split(';').map((sector) => sector.trim()).filter(Boolean);
+}
+
+// The check boxes, in the page's language: "All sectors", the startups' sectors, then any
+// other sector the program already has, so editing a program never loses one
+function fillSectorChoices() {
+  const ticked = tickedSectors();
+  const values = [...new Set([OPEN_TO_ALL, ...SECTORS, ...ticked])];
+  sectorChoices.innerHTML = values.map((value) => `
+    <label class="check"><input type="checkbox" value="${safe(value)}"> ${safe(value === OPEN_TO_ALL ? t('programs.allSectors') : label('sector', value))}</label>`).join('');
+  sectorChoices.querySelectorAll('input').forEach((box) => { box.checked = ticked.includes(box.value); });
+}
+
+// A box ticked or unticked: the hidden sector box keeps the ticked ones, in the list's order
+sectorChoices.addEventListener('change', () => {
+  const ticked = [...sectorChoices.querySelectorAll('input:checked')].map((box) => box.value);
+  form.elements.sector.value = ticked.join('; ');
+  if (ticked.length) showError(form.elements.sector, '');
+});
+
+// The Arabic of a sector, the same words as the Startup Explorer (startup.sector.* in ar.json).
+// A sector with no translation keeps the program's own Arabic, or the English.
+function sectorArabic(sector) {
+  if (sector === OPEN_TO_ALL) return 'جميع القطاعات';
+  // "Food & Beverages" → "food_beverages", as label() in shared/startups.js makes the key
+  const key = sector.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+  const saved = (findProgram(selectedId)?.sectors || []).find((item) => item.sector === sector);
+  return arabicWords[`startup.sector.${key}`] || clean(saved?.sector_ar) || sector;
+}
+
 /* ---------- The side panel ---------- */
 
 function fillForm(program) {
@@ -229,6 +276,8 @@ function fillForm(program) {
     form.elements[field].value = program ? arabicOf(program, field.replace(/_ar$/, '')) : '';
   });
   if (!program) typeSelect.value = 'Incubator';
+  // the sector boxes are ticked from the hidden sector box filled above
+  fillSectorChoices();
   // the location box is a region choice: its value is the program's region
   fillRegionChoices();
   form.elements.location.value = program ? regionOf(program) : '';
@@ -428,6 +477,10 @@ function formValues() {
       values[field] = form.elements[field].value.trim() || null;
     });
   }
+  // the ticked sectors get their Arabic, in the same order
+  if (hasArabic) {
+    values.sector_ar = tickedSectors().map(sectorArabic).join('؛ ') || null;
+  }
   // the chosen region becomes the location (and its Arabic twin)
   if (values.location) {
     const place = locationOf(values.location, selectedId ? findProgram(selectedId) : null);
@@ -491,7 +544,8 @@ function checkForm(values) {
     if (!values[field]) key = 'programsAdmin.required';
     else if (field === 'website' && !isValidWebsite(values.website)) key = 'programsAdmin.badWebsite';
     showError(input, key);
-    if (key && !first) first = input;
+    // the sector box is hidden: the first check box is the one to go to
+    if (key && !first) first = field === 'sector' ? sectorChoices.querySelector('input') : input;
   });
 
   // the Arabic version, when the database has its columns
@@ -539,6 +593,13 @@ saveButton.addEventListener('click', async () => {
   // A new program gets its id here, so its logo can be uploaded under it first
   const programId = selectedId || crypto.randomUUID();
   const oldLogoPath = logoPath(logo.current);
+  // an Arabic list must have as many items as its English list; checked before anything is saved
+  if (listsMismatch(values)) {
+    saveButton.classList.remove('is-loading');
+    showToast(t('programsAdmin.listsMismatch'), 'risk');
+    return;
+  }
+
   let uploaded = null;
 
   try {
@@ -639,7 +700,7 @@ function showAddButton() {
 // dates and labels are text in the current language, so draw them again when it changes
 document.addEventListener('darb:language', () => {
   if (deleteModal.open) document.querySelector('#delete-text').textContent = deleteText();
-  sectorFilter.value = '';
+  fillSectorChoices();
   fillRegionChoices();
   fillDropdowns();
   showAddButton();
@@ -658,6 +719,11 @@ const data = await getPrograms();
 loadFailed = data === null;
 if (loadFailed) showErrorPage(500);   // the programs could not be loaded: the 500 page offers "Try again"
 programs = data || [];
+
+// the Arabic words of the sectors, so sector_ar is written even when the page is in English
+arabicWords = await fetch(new URL('../../../translations/ar.json', import.meta.url))
+  .then((response) => response.json())
+  .catch(() => ({}));
 
 // After migration 0012 every row has the Arabic columns: show the Arabic part of the form
 hasArabic = programs.some((program) => 'name_ar' in program);

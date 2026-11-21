@@ -116,11 +116,14 @@
               <select class="input" id="f-location" name="location"></select>
             </div>
           </div>
-          <div class="field">
-            <label class="label is-required" for="f-sector" data-i18n="programs.sectors"></label>
-            <input class="input" id="f-sector" name="sector" type="text" data-i18n-placeholder="programsAdmin.f.sectorHint">
-            <p class="field-hint" data-i18n="programsAdmin.f.commaHint"></p>
-          </div>
+          <fieldset class="field manage-choices">
+            <legend class="label is-required" data-i18n="programs.sectors"></legend>
+            <!-- the same sectors as the startups, plus "All sectors": incubator-accelerator-management.js
+                 adds one checkbox for each and keeps the ticked ones in the hidden box ("A; B").
+                 The Arabic (sector_ar) is written from them, so it has no box of its own. -->
+            <div class="manage-choice-list" id="sector-choices"></div>
+            <input id="f-sector" name="sector" type="hidden">
+          </fieldset>
           <div class="field">
             <label class="label is-required" for="f-description" data-i18n="programs.about"></label>
             <textarea class="input manage-textarea" id="f-description" name="description" rows="4"></textarea>
@@ -162,10 +165,6 @@
             <div class="field">
               <label class="label is-required" for="f-name-ar" data-i18n="programsAdmin.f.name"></label>
               <input class="input" id="f-name-ar" name="name_ar" type="text" dir="rtl" lang="ar">
-            </div>
-            <div class="field">
-              <label class="label is-required" for="f-sector-ar" data-i18n="programs.sectors"></label>
-              <input class="input" id="f-sector-ar" name="sector_ar" type="text" dir="rtl" lang="ar">
             </div>
             <div class="field">
               <label class="label is-required" for="f-description-ar" data-i18n="programs.about"></label>
@@ -215,6 +214,6 @@
   <script type="module" src="../../../shared/layout.js"></script>
   <script type="module" src="../../../shared/guard.js"></script>
   <script type="module" src="../../../shared/ui.js"></script>
-  <script type="module" src="incubator-accelerator-management.js?v=4"></script>
+  <script type="module" src="incubator-accelerator-management.js?v=5"></script>
 </body>
 </html>

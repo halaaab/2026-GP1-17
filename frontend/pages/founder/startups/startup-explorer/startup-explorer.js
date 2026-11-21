@@ -34,22 +34,26 @@ function safe(text) {
 
 /* ---------- Filtering ---------- */
 
-function matches(row, ignoreStage = false) {
+/* Does the startup fit the search and the filters?
+   ignore: one filter to leave out ('sector', 'region' or 'stage'), so a dropdown can
+   count its own choices among the startups the other filters leave. */
+function matches(row, ignore = '') {
   const words = search.value.trim().toLowerCase();
   const searchable = [row.startup_name, row.startup_name_ar, row.startup_description, row.startup_description_ar, row.tags, listText(row, 'sector')]
     .join(' ').toLowerCase();
 
   return (!words || searchable.includes(words))
-    && (!sectorFilter.value || listOf(row, 'sector').includes(sectorFilter.value))
-    && (!regionFilter.value || listOf(row, 'region').includes(regionFilter.value))
-    && (ignoreStage || !stageFilter.value || listOf(row, 'stage').includes(stageFilter.value));
+    && (ignore === 'sector' || !sectorFilter.value || listOf(row, 'sector').includes(sectorFilter.value))
+    && (ignore === 'region' || !regionFilter.value || listOf(row, 'region').includes(regionFilter.value))
+    && (ignore === 'stage' || !stageFilter.value || listOf(row, 'stage').includes(stageFilter.value));
 }
 
 /* ---------- Drawing ---------- */
 
 function showTotals() {
   const sectors = new Set(startups.flatMap((row) => listOf(row, 'sector')));
-  const saudi = startups.filter((row) => listOf(row, 'region').some((region) => SAUDI_REGIONS.includes(region)));
+  // how many of the 13 Saudi regions have at least one startup
+  const regions = new Set(startups.flatMap((row) => listOf(row, 'region')).filter((region) => SAUDI_REGIONS.includes(region)));
   const total = (value, words, iconName) => `
     <div class="st-total">
       <span class="st-total-icon">${icon(iconName)}</span>
@@ -57,14 +61,15 @@ function showTotals() {
     </div>`;
   document.querySelector('#totals').innerHTML = total(startups.length, t('startups.statStartups'), 'store')
     + total(sectors.size, t('startups.statSectors'), 'grid')
-    + total(saudi.length, t('startups.statSaudi'), 'map');
+    + total(regions.size, t('startups.statRegions'), 'pin');
 }
 
-/* The sector dropdown lists what the startups really have, most common first, with how
-   many each has. The region dropdown lists the Saudi regions that have startups, in the
-   order of the 13 regions (then any other place a startup has); a region shows up once
-   a startup in it is added. Both start with "All". The values are the database's English words, so a
-   choice stays chosen when the language changes; only the words are redrawn. */
+/* The sector dropdown lists what the startups really have, most common first. The region
+   dropdown lists the Saudi regions that have startups, in the order of the 13 regions (then
+   any other place a startup has); a region shows up once a startup in it is added. The stage
+   dropdown goes from the earliest stage to the latest. Each starts with "All".
+   The values are the database's English words, so a choice stays chosen when the language
+   changes; only the words are redrawn. The numbers are written by showCounts(). */
 function fillDropdowns() {
   const counts = (column) => {
     const found = new Map();
@@ -72,36 +77,40 @@ function fillDropdowns() {
     return found;
   };
 
-  const fill = (select, allKey, kind, pairs) => {
+  const fill = (select, values) => {
     const chosen = select.value;
-    select.innerHTML = `<option value="">${t(allKey)} (${startups.length})</option>`
-      + pairs.map(([value, count]) => `<option value="${safe(value)}">${safe(label(kind, value))} (${count})</option>`).join('');
+    select.innerHTML = '<option value=""></option>'
+      + values.map((value) => `<option value="${safe(value)}"></option>`).join('');
     select.value = chosen;
   };
 
-  const sectors = [...counts('sector')].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  const sectors = [...counts('sector')].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([sector]) => sector);
   const regions = counts('region');
   const otherPlaces = [...regions.keys()].filter((region) => !SAUDI_REGIONS.includes(region)).sort();
-  const regionPairs = [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces].map((region) => [region, regions.get(region)]);
+  const stages = STAGES.filter((stage) => startups.some((row) => listOf(row, 'stage').includes(stage)));
 
-  fill(sectorFilter, 'startups.allSectors', 'sector', sectors);
-  fill(regionFilter, 'startups.allRegions', 'region', regionPairs);
-
-  // the stages go from the earliest to the latest
-  const chosen = stageFilter.value;
-  stageFilter.innerHTML = `<option value="">${t('startups.allStages')}</option>`
-    + STAGES.filter((stage) => startups.some((row) => listOf(row, 'stage').includes(stage)))
-      .map((stage) => `<option value="${safe(stage)}">${safe(label('stage', stage))}</option>`).join('');
-  stageFilter.value = chosen;
+  fill(sectorFilter, sectors);
+  fill(regionFilter, [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces]);
+  fill(stageFilter, stages);
 }
 
-// The stage dropdown says how many startups each stage has; the numbers follow the other filters
-function showStageCounts() {
-  const fitting = startups.filter((row) => matches(row, true));
-  stageFilter.querySelectorAll('option').forEach((option) => {
-    const count = option.value ? fitting.filter((row) => listOf(row, 'stage').includes(option.value)).length : fitting.length;
-    const words = option.value ? label('stage', option.value) : t('startups.allStages');
-    option.textContent = `${words} (${count})`;
+/* Each dropdown says how many startups each choice has. The numbers follow the search and
+   the OTHER filters: "All regions (N)" is how many startups fit the other filters, and each
+   region is how many of those are in that region. A choice with none shows (0). */
+const DROPDOWNS = [
+  { select: sectorFilter, column: 'sector', allKey: 'startups.allSectors' },
+  { select: regionFilter, column: 'region', allKey: 'startups.allRegions' },
+  { select: stageFilter, column: 'stage', allKey: 'startups.allStages' },
+];
+
+function showCounts() {
+  DROPDOWNS.forEach(({ select, column, allKey }) => {
+    const fitting = startups.filter((row) => matches(row, column));
+    select.querySelectorAll('option').forEach((option) => {
+      const count = option.value ? fitting.filter((row) => listOf(row, column).includes(option.value)).length : fitting.length;
+      const words = option.value ? label(column, option.value) : t(allKey);
+      option.textContent = `${words} (${count})`;
+    });
   });
 }
 
@@ -130,7 +139,7 @@ function cardHtml(row, index) {
         <div class="st-card-chips">${sectorChips(row)}</div>
       </div>
       <div class="st-card-foot">
-        <span class="st-card-region">${icon('map')}<span>${safe(listText(row, 'region', ', ') || '—')}</span></span>
+        <span class="st-card-region">${icon('pin')}<span>${safe(listText(row, 'region', ', ') || '—')}</span></span>
         <span class="st-card-arrow" aria-label="${t('startups.viewDetails')}">${icon('chevron')}</span>
       </div>
     </a>`;
@@ -148,7 +157,7 @@ function show() {
   cards.innerHTML = onThisPage.map(cardHtml).join('');
 
   document.querySelector('#found').innerHTML = t('startups.found').replace('{n}', `<strong>${visible.length}</strong>`);
-  showStageCounts();
+  showCounts();
 
   // Nothing matches: say so, with a button that clears the filters
   empty.hidden = visible.length > 0;

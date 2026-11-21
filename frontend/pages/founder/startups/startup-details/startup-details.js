@@ -80,7 +80,7 @@ function show() {
   const facts = [
     // icon colors: shades of blue (sky, aqua, indigo, steel)
     ['flag', 3, 'startups.stage', stage],
-    ['map', 7, 'startups.region', region],
+    ['pin', 7, 'startups.region', region],
     ['globe', 12, 'startups.country', countryName(row.country)],
   ].filter(([, , , value]) => value);
   document.querySelector('#facts').innerHTML = facts.map((item) => fact(...item)).join('');

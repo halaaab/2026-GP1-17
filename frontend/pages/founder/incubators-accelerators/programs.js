@@ -18,6 +18,7 @@
 import { supabase } from '../../../shared/supabase.js';
 import { getLanguage } from '../../../shared/language.js';
 import { PROGRAMS_AR } from './programs-ar.js';
+import { label } from '../../../shared/startups.js?v=4';
 
 // Address of the frontend/ folder, so links work from any page depth
 const ROOT = new URL('../../../', import.meta.url).href;
@@ -81,11 +82,26 @@ export function colorOf(program) {
   return [...clean(program.name)].reduce((sum, character) => sum + character.charCodeAt(0), 0) % 6;
 }
 
-/* "Technology / Deep Technology" → ['Technology', 'Deep Technology'].
-   Words like "All sectors" are left out: isOpenToAll() answers that instead. */
+/* The program's sectors as the database writes them, in English:
+   ['AI & Deep Tech', 'Education, Research & Talent'] (the same sector list as the startups,
+   migration 0045). "All sectors" is left out: isOpenToAll() answers that instead.
+   The English words are the filter values, so a chosen sector stays chosen when the language changes;
+   sectorName() gives the words to show. */
 export function sectorList(program) {
-  const parts = text(program, 'sector').split(/[,;/،؛]/).map((part) => part.trim()).filter(Boolean);
-  return [...new Set(parts)].filter((part) => !ALL_SECTORS.test(part));
+  const parts = program.sectors
+    ? program.sectors.map((item) => clean(item.sector))
+    : clean(program.sector).split(';').map((part) => part.trim());
+  return [...new Set(parts.filter(Boolean))].filter((part) => !ALL_SECTORS.test(part));
+}
+
+/* A sector in the page's language, with the same words as the Startup Explorer
+   (label('sector', ...) from shared/startups.js). A sector with no translation shows
+   the program's own Arabic (sector_ar) in Arabic, or the English as it is. */
+export function sectorName(program, sector) {
+  const words = label('sector', sector);
+  if (words !== sector || getLanguage() !== 'ar') return words;
+  const row = (program.sectors || []).find((item) => item.sector === sector);
+  return clean(row?.sector_ar) || sector;
 }
 
 /* Is the program open to every sector? */
@@ -210,7 +226,9 @@ function report(action, error) {
 const PROGRAM_COLUMNS = '*, organization_sectors (sector, sector_ar, display_order), organization_services (service, service_ar, display_order)';
 
 /* Puts the two lists back on the row as text, as the pages read them:
-   sector 'Logistics, GeoAI' (sector_ar with "،") and services_support 'Mentorship; Workshops' (services_support_ar with "؛") */
+   sector 'Gaming; Education, Research & Talent' (sector_ar with "؛") and services_support 'Mentorship; Workshops'
+   (services_support_ar with "؛"). Sectors are joined with ";" because a sector name can have a comma in it.
+   The sector rows are kept too (row.sectors), for sectorList() and sectorName(). */
 function withLists(row) {
   if (!row) return row;
   const { organization_sectors: sectors = [], organization_services: services = [], ...rest } = row;
@@ -218,20 +236,22 @@ function withLists(row) {
   const join = (items, column, separator) => items.map((item) => item[column]).filter(Boolean).join(separator) || null;
   return {
     ...rest,
-    sector: join(inOrder(sectors), 'sector', ', '),
-    sector_ar: join(inOrder(sectors), 'sector_ar', '، '),
+    sectors: inOrder(sectors),
+    sector: join(inOrder(sectors), 'sector', '; '),
+    sector_ar: join(inOrder(sectors), 'sector_ar', '؛ '),
     services_support: join(inOrder(services), 'service', '; '),
     services_support_ar: join(inOrder(services), 'service_ar', '؛ '),
   };
 }
 
-/* The parts of a list typed by an admin. Sectors: separated by "," ";" or "/". Services: by ";" when there
+/* The parts of a list from the admin form. Sectors: separated by ";" (the form joins the chosen
+   sectors with it; a sector name can have a comma in it). Services: by ";" when there
    is one (a service can contain a comma), otherwise by "," outside brackets. Arabic uses "،" and "؛" too. */
 function partsOf(text, kind) {
   const cell = clean(text);
   if (!cell) return [];
   const parts = kind === 'sector'
-    ? cell.split(/[,;/،؛]/)
+    ? cell.split(/[;؛]/)
     : /[;؛]/.test(cell) ? cell.split(/[;؛]/) : cell.split(/[,،](?![^(]*\))/);
   return parts.map((part) => part.trim().replace(/^and\s+/i, '').replace(/\.$/, '')).filter(Boolean);
 }
@@ -239,6 +259,16 @@ function partsOf(text, kind) {
 /* Saves a program's sectors and services, each English part with the Arabic part in the same place.
    Returns 'mismatch' when the English and Arabic lists do not have the same number of parts,
    the database error when saving failed, or null when it worked. */
+/* True when an Arabic list has a different number of items than its English list.
+   Checked before anything is saved, so a wrong form never leaves a half-saved program. */
+export function listsMismatch(values) {
+  return [['sector', 'sector_ar', 'sector'], ['services_support', 'services_support_ar', 'service']]
+    .some(([en, ar, kind]) => {
+      const arabic = partsOf(values[ar], kind);
+      return arabic.length > 0 && arabic.length !== partsOf(values[en], kind).length;
+    });
+}
+
 export async function saveProgramLists(programId, values) {
   const lists = [
     { table: 'organization_sectors', column: 'sector', en: partsOf(values.sector, 'sector'), ar: partsOf(values.sector_ar, 'sector') },
