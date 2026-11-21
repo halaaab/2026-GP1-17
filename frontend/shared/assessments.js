@@ -307,11 +307,17 @@ export async function newAnalysis(assessment) {
 
 /* Loads the competitors, the market numbers and the roadmap of one assessment
    and keeps them on it as assessment.result, so the pages can show them. */
+/* Until Darb asks for the idea's sector (not built yet), Market and Roadmap use this sample
+   sector, so the founder sees them as they will look. The note under the tabs says so.
+   Only used to show the tabs: the assessment's own sector stays empty and nothing is saved. */
+const SAMPLE_SECTOR = 'ai';   // software and information technology (ISIC 62)
+
 export async function loadResult(assessment) {
+  const shown = assessment.sector ? assessment : { ...assessment, sector: SAMPLE_SECTOR };
   const [competitors, market, roadmap] = await Promise.all([
-    loadCompetitors(assessment), loadMarket(assessment), loadRoadmap(assessment),
+    loadCompetitors(assessment), loadMarket(shown), loadRoadmap(shown),
   ]);
-  assessment.result = { competitors, market, roadmap };
+  assessment.result = { competitors, market, roadmap, sampleSector: !assessment.sector };
 }
 
 /* ---------- Reading and saving (Supabase) ---------- */
