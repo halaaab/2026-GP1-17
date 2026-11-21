@@ -102,17 +102,20 @@ function drawPanel() {
    The arc, its knob and the number start at 0; playScore() moves them to the score. */
 const DIAL_LENGTH = 282.7;   // the length of the arc drawn below (half a circle of radius 90)
 
-/* The assessment's score, or null when it has none yet (the prediction model is not
-   connected). Without a score the page says "not available yet": it never shows a number
-   Darb did not calculate, and never "NaN". */
-function scoreOrNull() {
-  const score = Number(assessment.score);
-  return assessment.score === null || assessment.score === undefined || !Number.isFinite(score) ? null : score;
+/* Until the prediction model is connected an assessment has no score. The panel then shows
+   this sample (the same example as in shared/assessments.js), and the note under the tabs
+   says the score is a sample. It is only shown here: it is never saved as the assessment's score. */
+const SAMPLE_SCORE = { score: 72, factors: [14, 12, -3, -1] };
+
+function hasScore() {
+  return assessment.score !== null && assessment.score !== undefined && Number.isFinite(Number(assessment.score));
 }
+function shownScore()   { return hasScore() ? Number(assessment.score) : SAMPLE_SCORE.score; }
+function shownFactors() { return hasScore() ? assessment.factors : SAMPLE_SCORE.factors; }
 
 function scoreHero() {
-  const score = scoreOrNull();
-  const band = score === null ? 'none' : scoreBand(score);
+  const score = shownScore();
+  const band = scoreBand(score);
 
   return `
     <div class="score-hero is-${band}">
@@ -125,17 +128,15 @@ function scoreHero() {
           </defs>
           <path class="dial-track" d="M20 110 A90 90 0 0 1 200 110"/>
           <path class="dial-arc" data-dial-arc d="M20 110 A90 90 0 0 1 200 110" stroke="url(#dial-colors)" stroke-dasharray="${DIAL_LENGTH}" stroke-dashoffset="${DIAL_LENGTH}"/>
-          ${score === null ? '' : '<circle class="dial-knob" data-dial-knob cx="20" cy="110" r="9"/>'}
+          <circle class="dial-knob" data-dial-knob cx="20" cy="110" r="9"/>
         </svg>
-        ${score === null
-          ? '<p class="dial-number"><strong>—</strong></p>'
-          : `<p class="dial-number"><strong data-score="${score}">0</strong><span>/ 100</span></p>`}
+        <p class="dial-number"><strong data-score="${score}">0</strong><span>/ 100</span></p>
       </div>
       <div class="score-verdict">
         <p class="fis-label">${t('score.title')}</p>
         <p class="fis-about">${t('score.about')}</p>
-        <h3>${t(score === null ? 'score.notYet' : `score.band.${band}`)}</h3>
-        <p class="fis-sentence">${t(score === null ? 'score.notYetSentence' : `score.sentence.${band}`)}</p>
+        <h3>${t(`score.band.${band}`)}</h3>
+        <p class="fis-sentence">${t(`score.sentence.${band}`)}</p>
       </div>
     </div>`;
 }
@@ -212,20 +213,15 @@ function riseIn(still) {
 /* Survival potential, risk level and sector viability: three tinted tiles
    that sit over the bottom edge of the picture */
 function readings() {
-  const score = scoreOrNull();
-  const band = score === null ? null : scoreBand(score);
+  const band = scoreBand(shownScore());
   const riskLevel = { good: 'low', warn: 'medium', risk: 'high' }[band];
-  const sectorIsGood = assessment.factors[3] >= -1;
+  const sectorIsGood = shownFactors()[3] >= -1;
 
   const tiles = [
     { icon: 'sprout', name: 'score.survival', value: t(`survival.${band}`), color: band },
     { icon: 'shield', name: 'score.risk',     value: t(`level.${riskLevel}`), color: band },
     { icon: 'store',  name: 'score.sector',   value: t(sectorIsGood ? 'sector.favourable' : 'sector.challenging'), color: sectorIsGood ? 'good' : 'warn' },
   ];
-  // without a score, each tile says "not available yet" in a neutral color
-  if (score === null) {
-    tiles.forEach((tile) => { tile.value = t('score.notYet'); tile.color = 'none'; });
-  }
 
   return `
     <div class="readings">
@@ -252,9 +248,9 @@ function sectionTitle(title, sub = '') {
 /* One box of factors: the ones that push the score up, or the ones that pull it down.
    Each has a small bar, so the biggest influence is easy to spot. */
 function factorList(title, wanted) {
-  const biggest = Math.max(...assessment.factors.map((change) => Math.abs(change)), 1);
+  const biggest = Math.max(...shownFactors().map((change) => Math.abs(change)), 1);
 
-  const rows = assessment.factors
+  const rows = shownFactors()
     .map((change, index) => ({ change, name: SCORE_FACTORS[index] }))
     .filter((factor) => (wanted === 'up' ? factor.change >= 0 : factor.change < 0))
     .sort((a, b) => Math.abs(b.change) - Math.abs(a.change));
