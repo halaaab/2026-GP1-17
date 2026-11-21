@@ -78,11 +78,18 @@
             <p class="field-error" id="full-name-error" hidden></p>
           </div>
 
-          <div class="field">
-            <label class="label is-required" for="email" data-i18n="founders.email"></label>
-            <input class="input" id="email" type="email" autocomplete="email" dir="ltr">
-            <p class="field-hint" id="email-hint" data-i18n="profile.emailHint"></p>
-            <p class="field-error" id="email-error" hidden></p>
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="username" data-i18n="founders.username"></label>
+              <!-- the username is chosen at sign-up and identifies the founder, so it is only shown -->
+              <input class="input" id="username" type="text" readonly dir="ltr">
+            </div>
+            <div class="field">
+              <label class="label" for="email" data-i18n="founders.email"></label>
+              <!-- the email is the founder's login, so it is only shown (team decision) -->
+              <input class="input" id="email" type="email" readonly dir="ltr">
+              <p class="field-hint" data-i18n="profile.emailLocked"></p>
+            </div>
           </div>
 
           <div class="form-row">
@@ -149,6 +156,26 @@
 
       </div>
     </div>
+
+    <!-- Background: the answers the founder gave at sign-up for their type (student, entrepreneur,
+         business owner or investor). profile.js builds the fields; hidden for "none of these". -->
+    <section class="card profile-card fade-up" style="--i: 3" id="background-card" hidden>
+      <div class="profile-card-head">
+        <div>
+          <h3 class="section-title" data-i18n="profile.background"></h3>
+          <p class="text-3" data-i18n="profile.backgroundSub"></p>
+        </div>
+      </div>
+
+      <form class="form" id="background-form" novalidate>
+        <div class="form-row background-fields" id="background-fields"></div>
+        <div class="profile-form-foot">
+          <span class="text-3" id="background-status"></span>
+          <button type="button" class="btn btn-secondary" id="background-reset" data-i18n="adminProfile.discard" disabled></button>
+          <button type="submit" class="btn btn-primary" id="background-save" data-i18n="adminProfile.save" disabled></button>
+        </div>
+      </form>
+    </section>
 
     <!-- Security: a new password (the same as the admin's Profile, without the two-step sign-in) -->
     <section class="card profile-card fade-up" style="--i: 4">
