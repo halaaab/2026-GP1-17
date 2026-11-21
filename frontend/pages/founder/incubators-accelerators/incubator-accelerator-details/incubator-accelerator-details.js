@@ -9,9 +9,9 @@ import { showToast } from '../../../../shared/ui.js';
 import '../../../../shared/guard.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  getProgram, getPrograms, programType, sectorList, isOpenToAll, text,
+  getProgram, getPrograms, programType, sectorList, sectorName, isOpenToAll, text,
   listItems, websiteOf, logoHtml, colorOf, TYPE_ICON,
-} from '../programs.js?v=3';
+} from '../programs.js?v=4';
 
 const id = new URLSearchParams(window.location.search).get('id');
 let program = null;
@@ -52,7 +52,8 @@ function dateText(date) {
 
 function show() {
   const kind = programType(program);
-  const sectors = sectorList(program);
+  // the sectors in the page's language, with the same words as the Startup Explorer
+  const sectors = sectorList(program).map((sector) => sectorName(program, sector));
   const website = websiteOf(program);
   const name = text(program, 'name');
 
@@ -94,7 +95,7 @@ function show() {
   const updated = program.updated_at || program.created_at;
   document.querySelector('#facts').innerHTML = [
     fact(icon(TYPE_ICON[kind]), 1, t('programs.type'), t(`programs.type.${kind}`)),
-    fact(icon('map'), 7, t('programs.location'), text(program, 'location')),
+    fact(icon('pin'), 7, t('programs.location'), text(program, 'location')),
     fact(icon('flag'), 6, t('programs.stage'), text(program, 'target_stage')),
     fact(icon('clock'), 3, t('programs.duration'), text(program, 'program_duration')),
     fact(COINS, 2, t('programs.funding'), text(program, 'funding_investment')),
