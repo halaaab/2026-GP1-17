@@ -102,8 +102,15 @@ function drawPanel() {
    The arc, its knob and the number start at 0; playScore() moves them to the score. */
 const DIAL_LENGTH = 282.7;   // the length of the arc drawn below (half a circle of radius 90)
 
+/* The number on the dial. An assessment without a score yet (the prediction model is
+   not connected) shows 100, so the dial never shows "NaN". */
+function dialScore() {
+  const score = Number(assessment.score);
+  return assessment.score === null || assessment.score === undefined || !Number.isFinite(score) ? 100 : score;
+}
+
 function scoreHero() {
-  const band = scoreBand(assessment.score);
+  const band = scoreBand(dialScore());
 
   return `
     <div class="score-hero is-${band}">
@@ -118,7 +125,7 @@ function scoreHero() {
           <path class="dial-arc" data-dial-arc d="M20 110 A90 90 0 0 1 200 110" stroke="url(#dial-colors)" stroke-dasharray="${DIAL_LENGTH}" stroke-dashoffset="${DIAL_LENGTH}"/>
           <circle class="dial-knob" data-dial-knob cx="20" cy="110" r="9"/>
         </svg>
-        <p class="dial-number"><strong data-score="${assessment.score}">0</strong><span>/ 100</span></p>
+        <p class="dial-number"><strong data-score="${dialScore()}">0</strong><span>/ 100</span></p>
       </div>
       <div class="score-verdict">
         <p class="fis-label">${t('score.title')}</p>
@@ -200,9 +207,11 @@ function riseIn(still) {
 /* Survival potential, risk level and sector viability: three tinted tiles
    that sit over the bottom edge of the picture */
 function readings() {
-  const band = scoreBand(assessment.score);
+  const band = scoreBand(dialScore());
   const riskLevel = { good: 'low', warn: 'medium', risk: 'high' }[band];
-  const sectorIsGood = assessment.factors[3] >= -1;
+  // without a score there is no sector factor yet, so the sector shows as favourable, like the dial's 100
+  const sectorFactor = assessment.factors[3];
+  const sectorIsGood = sectorFactor === undefined || sectorFactor >= -1;
 
   const tiles = [
     { icon: 'sprout', name: 'score.survival', value: t(`survival.${band}`), color: band },
