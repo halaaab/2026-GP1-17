@@ -8,7 +8,7 @@ import { t } from '../../../../shared/language.js';
 import { icon } from '../../../../shared/layout.js';
 import { showErrorPage } from '../../../../shared/errors.js';
 import {
-  loadStartups, listOf, listText, label, colorOf, detailsLink, descriptionOf, nameOf, logoOf, logoHtml, STAGES, SAUDI_REGIONS,
+  loadStartups, listOf, listText, label, colorOf, detailsLink, descriptionOf, nameOf, logoOf, logoHtml, STAGES, SAUDI_REGIONS, ISIC_CODES,
 } from '../../../../shared/startups.js?v=4';
 
 const PAGE_SIZE = 12;   // four rows of three cards
@@ -35,15 +35,15 @@ function safe(text) {
 /* ---------- Filtering ---------- */
 
 /* Does the startup fit the search and the filters?
-   ignore: one filter to leave out ('sector', 'region' or 'stage'), so a dropdown can
+   ignore: one filter to leave out ('isic', 'region' or 'stage'), so a dropdown can
    count its own choices among the startups the other filters leave. */
 function matches(row, ignore = '') {
   const words = search.value.trim().toLowerCase();
-  const searchable = [row.startup_name, row.startup_name_ar, row.startup_description, row.startup_description_ar, row.tags, listText(row, 'sector')]
+  const searchable = [row.startup_name, row.startup_name_ar, row.startup_description, row.startup_description_ar, row.tags, listText(row, 'isic'), listText(row, 'sector')]
     .join(' ').toLowerCase();
 
   return (!words || searchable.includes(words))
-    && (ignore === 'sector' || !sectorFilter.value || listOf(row, 'sector').includes(sectorFilter.value))
+    && (ignore === 'isic' || !sectorFilter.value || listOf(row, 'isic').includes(sectorFilter.value))
     && (ignore === 'region' || !regionFilter.value || listOf(row, 'region').includes(regionFilter.value))
     && (ignore === 'stage' || !stageFilter.value || listOf(row, 'stage').includes(stageFilter.value));
 }
@@ -51,7 +51,7 @@ function matches(row, ignore = '') {
 /* ---------- Drawing ---------- */
 
 function showTotals() {
-  const sectors = new Set(startups.flatMap((row) => listOf(row, 'sector')));
+  const sectors = new Set(startups.flatMap((row) => listOf(row, 'isic')));
   // how many of the 13 Saudi regions have at least one startup
   const regions = new Set(startups.flatMap((row) => listOf(row, 'region')).filter((region) => SAUDI_REGIONS.includes(region)));
   const total = (value, words, iconName) => `
@@ -64,7 +64,7 @@ function showTotals() {
     + total(regions.size, t('startups.statRegions'), 'pin');
 }
 
-/* The sector dropdown lists what the startups really have, most common first. The region
+/* The sector dropdown lists the 20 ISIC4 sections, A to U (GASTAT's classification). The region
    dropdown lists the Saudi regions that have startups, in the order of the 13 regions (then
    any other place a startup has); a region shows up once a startup in it is added. The stage
    dropdown goes from the earliest stage to the latest. Each starts with "All".
@@ -84,12 +84,12 @@ function fillDropdowns() {
     select.value = chosen;
   };
 
-  const sectors = [...counts('sector')].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])).map(([sector]) => sector);
   const regions = counts('region');
   const otherPlaces = [...regions.keys()].filter((region) => !SAUDI_REGIONS.includes(region)).sort();
   const stages = STAGES.filter((stage) => startups.some((row) => listOf(row, 'stage').includes(stage)));
 
-  fill(sectorFilter, sectors);
+  // the sectors are the 20 ISIC4 sections of GASTAT's classification, A to U, each with its count
+  fill(sectorFilter, ISIC_CODES);
   fill(regionFilter, [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces]);
   fill(stageFilter, stages);
 }
@@ -98,7 +98,7 @@ function fillDropdowns() {
    the OTHER filters: "All regions (N)" is how many startups fit the other filters, and each
    region is how many of those are in that region. A choice with none shows (0). */
 const DROPDOWNS = [
-  { select: sectorFilter, column: 'sector', allKey: 'startups.allSectors' },
+  { select: sectorFilter, column: 'isic', allKey: 'startups.allSectors' },
   { select: regionFilter, column: 'region', allKey: 'startups.allRegions' },
   { select: stageFilter, column: 'stage', allKey: 'startups.allStages' },
 ];
@@ -116,9 +116,8 @@ function showCounts() {
 
 /* The sectors as small chips: the first two, then "+N" */
 function sectorChips(row) {
-  const sectors = listOf(row, 'sector');
-  return sectors.slice(0, 2).map((sector) => `<span class="st-chip">${safe(label('sector', sector))}</span>`).join('')
-    + (sectors.length > 2 ? `<span class="st-chip">+${sectors.length - 2}</span>` : '');
+  const sectors = listOf(row, 'isic');
+  return sectors.map((sector) => `<span class="st-chip">${safe(label('isic', sector))}</span>`).join('');
 }
 
 /* One card: a colored band with the funding stage and a big tilted square with

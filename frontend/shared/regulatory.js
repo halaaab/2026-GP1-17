@@ -37,6 +37,19 @@ export const ISIC_SECTIONS = [
   { code: 'Q', ar: 'ف' }, { code: 'R', ar: 'ص' }, { code: 'S', ar: 'ق' }, { code: 'U', ar: 'ش' },
 ];
 
+/* The ISIC4 section of a 2-digit division, by the ranges of ISIC Rev.4: '62' → 'J'.
+   '' when the division is empty or unknown. */
+const SECTION_RANGES = [
+  ['A', 1, 3], ['B', 5, 9], ['C', 10, 33], ['D', 35, 35], ['E', 36, 39], ['F', 41, 43], ['G', 45, 47],
+  ['H', 49, 53], ['I', 55, 56], ['J', 58, 63], ['K', 64, 66], ['L', 68, 68], ['M', 69, 75], ['N', 77, 82],
+  ['O', 84, 84], ['P', 85, 85], ['Q', 86, 88], ['R', 90, 93], ['S', 94, 96], ['U', 99, 99],
+];
+export function sectionOfDivision(division) {
+  const number = Number.parseInt(division, 10);
+  const found = SECTION_RANGES.find(([, from, to]) => number >= from && number <= to);
+  return found ? found[0] : '';
+}
+
 /* The ISIC4 sections of a requirement: ['C', 'G'], or ['ALL'] when it applies to every business */
 export function isicOf(row) {
   return Array.isArray(row.isic_sections) ? row.isic_sections : [];

@@ -43,7 +43,7 @@ function setLink(link, address) {
 function show() {
   const row = startup;
   const comma = getLanguage() === 'ar' ? '، ' : ', ';
-  const sectors = listOf(row, 'sector');
+  const sectors = listOf(row, 'isic');   // its ISIC4 section, the same sectors as the explorer
   const stage = listText(row, 'stage');
   const region = listText(row, 'region', comma);
 
@@ -60,12 +60,12 @@ function show() {
   // Tags: the funding stage (with its icon), then up to three sectors
   document.querySelector('#tags').innerHTML = [
     stage ? `<span class="std-tag is-strong">${icon('flag')}${safe(stage)}</span>` : '',
-    ...sectors.slice(0, 3).map((sector) => `<span class="std-tag">${safe(label('sector', sector))}</span>`),
+    ...sectors.map((sector) => `<span class="std-tag">${safe(label('isic', sector))}</span>`),
   ].join('');
 
   // Sectors: the line only when the dataset has them
   const lines = [
-    sectors.length ? t('startups.sectorsLine').replace('{list}', listText(row, 'sector', comma)) : '',
+    sectors.length ? t('startups.sectorsLine').replace('{list}', listText(row, 'isic', comma)) : '',
   ].filter(Boolean);
   document.querySelector('#market-section').hidden = lines.length === 0;
   document.querySelector('#market').innerHTML = lines.map((line) => `<li>${icon('checkCircle')}<span>${safe(line)}</span></li>`).join('');

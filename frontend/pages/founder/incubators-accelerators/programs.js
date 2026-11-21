@@ -98,6 +98,8 @@ export function sectorList(program) {
    (label('sector', ...) from shared/startups.js). A sector with no translation shows
    the program's own Arabic (sector_ar) in Arabic, or the English as it is. */
 export function sectorName(program, sector) {
+  // an ISIC4 section ('J'): its plain name, the same words as the Startup Explorer
+  if (/^[A-U]$/.test(sector)) return label('isic', sector);
   const words = label('sector', sector);
   if (words !== sector || getLanguage() !== 'ar') return words;
   const row = (program.sectors || []).find((item) => item.sector === sector);

@@ -20,6 +20,10 @@
 
 import { supabase } from './supabase.js';
 import { getLanguage, t } from './language.js';
+import { ISIC_SECTIONS, sectionOfDivision } from './regulatory.js?v=3';
+
+/* The 20 ISIC4 sections of GASTAT's classification (SSIC), A to U: the sectors of both explorers */
+export const ISIC_CODES = ISIC_SECTIONS.map((section) => section.code);
 
 // The same small helpers the regulatory pages use
 export { fillFilter, siteName, dateText } from './regulatory.js';
@@ -72,6 +76,8 @@ function withLists(row) {
   return {
     ...rest,
     sector: inOrder(sectors).map((item) => item.sector).join('; ') || null,
+    // the ISIC4 section of its economic activity ('62' → 'J'), the sector the explorers filter by
+    isic: sectionOfDivision(rest.isic_division) || null,
     tags: inOrder(tags).map((item) => item.tag).join(', ') || null,
   };
 }
@@ -226,11 +232,13 @@ function keyOf(value) {
 }
 
 // The translation kind of each column
-const KINDS = { sector: 'sector', stage: 'stage', region: 'region' };
+const KINDS = { sector: 'sector', stage: 'stage', region: 'region', isic: 'isic' };
 
 /* The words for a fixed value: label('sector', 'Fashion'), label('stage', 'Seed'),
    label('region', 'MENA'), label('market', 'B2B') */
 export function label(kind, value) {
+  // an ISIC4 section ('J'): its plain name, the same words as the Regulatory Explorer (reg.isic.*)
+  if (kind === 'isic') return value === 'All sectors' ? t('isic.all') : t(`reg.isic.${value}`);
   const key = `startup.${kind}.${keyOf(value)}`;
   return t(key) === key ? value : t(key);
 }
