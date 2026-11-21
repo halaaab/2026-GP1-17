@@ -25,7 +25,7 @@ const divisionLines = Object.entries(ISIC_DIVISIONS)
   .map(([code, d]) => `${code} (section ${d.section}): ${d.en}`)
   .join('\n');
 
-type Startup = { startup_id: string; startup_name: string; startup_description: string | null; tags: string | null; target_market: string | null; sector: string | null };
+type Startup = { startup_id: string; startup_name: string; startup_description: string | null; tags: string | null; sector: string | null };
 type Result = { section: string; division: string; confidence: 'high' | 'medium' | 'low' };
 
 async function suggest(startup: Startup): Promise<Result> {
@@ -46,7 +46,6 @@ async function suggest(startup: Startup): Promise<Result> {
           content: [
             `Description: ${startup.startup_description ?? ''}`,
             startup.tags ? `Tags: ${startup.tags}` : '',
-            startup.target_market ? `Target market: ${startup.target_market}` : '',
             startup.sector ? `Old sector labels: ${startup.sector}` : '',
           ].filter(Boolean).join('\n'),
         },
@@ -79,8 +78,8 @@ async function main() {
   const supabase = getSupabase();
   let query = supabase
     .from('startups')
-    // sectors and tags are kept one per row (migration 0043)
-    .select('startup_id, startup_name, startup_description, target_market, startup_sectors (sector), startup_tags (tag)')
+    // sectors and tags are kept one per row (migration 0043); target_market was removed (0044)
+    .select('startup_id, startup_name, startup_description, startup_sectors (sector), startup_tags (tag)')
     .order('startup_id');
   if (!dryRun) query = query.is('isic_division', null);
   if (limit) query = query.limit(limit);
@@ -90,7 +89,6 @@ async function main() {
     startup_id: row.startup_id,
     startup_name: row.startup_name,
     startup_description: row.startup_description,
-    target_market: row.target_market,
     sector: (row.startup_sectors as { sector: string }[]).map((item) => item.sector).join('; ') || null,
     tags: (row.startup_tags as { tag: string }[]).map((item) => item.tag).join(', ') || null,
   }));
