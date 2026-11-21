@@ -102,8 +102,17 @@ function drawPanel() {
    The arc, its knob and the number start at 0; playScore() moves them to the score. */
 const DIAL_LENGTH = 282.7;   // the length of the arc drawn below (half a circle of radius 90)
 
+/* The assessment's score, or null when it has none yet (the prediction model is not
+   connected). Without a score the page says "not available yet": it never shows a number
+   Darb did not calculate, and never "NaN". */
+function scoreOrNull() {
+  const score = Number(assessment.score);
+  return assessment.score === null || assessment.score === undefined || !Number.isFinite(score) ? null : score;
+}
+
 function scoreHero() {
-  const band = scoreBand(assessment.score);
+  const score = scoreOrNull();
+  const band = score === null ? 'none' : scoreBand(score);
 
   return `
     <div class="score-hero is-${band}">
@@ -116,14 +125,16 @@ function scoreHero() {
           </defs>
           <path class="dial-track" d="M20 110 A90 90 0 0 1 200 110"/>
           <path class="dial-arc" data-dial-arc d="M20 110 A90 90 0 0 1 200 110" stroke="url(#dial-colors)" stroke-dasharray="${DIAL_LENGTH}" stroke-dashoffset="${DIAL_LENGTH}"/>
-          <circle class="dial-knob" data-dial-knob cx="20" cy="110" r="9"/>
+          ${score === null ? '' : '<circle class="dial-knob" data-dial-knob cx="20" cy="110" r="9"/>'}
         </svg>
-        <p class="dial-number"><strong data-score="${assessment.score}">0</strong><span>/ 100</span></p>
+        ${score === null
+          ? '<p class="dial-number"><strong>—</strong></p>'
+          : `<p class="dial-number"><strong data-score="${score}">0</strong><span>/ 100</span></p>`}
       </div>
       <div class="score-verdict">
         <p class="fis-label">${t('score.title')}</p>
-        <h3>${t(`score.band.${band}`)}</h3>
-        <p class="fis-sentence">${t(`score.sentence.${band}`)}</p>
+        <h3>${t(score === null ? 'score.notYet' : `score.band.${band}`)}</h3>
+        <p class="fis-sentence">${t(score === null ? 'score.notYetSentence' : `score.sentence.${band}`)}</p>
       </div>
     </div>`;
 }
@@ -200,7 +211,8 @@ function riseIn(still) {
 /* Survival potential, risk level and sector viability: three tinted tiles
    that sit over the bottom edge of the picture */
 function readings() {
-  const band = scoreBand(assessment.score);
+  const score = scoreOrNull();
+  const band = score === null ? null : scoreBand(score);
   const riskLevel = { good: 'low', warn: 'medium', risk: 'high' }[band];
   const sectorIsGood = assessment.factors[3] >= -1;
 
@@ -209,6 +221,10 @@ function readings() {
     { icon: 'shield', name: 'score.risk',     value: t(`level.${riskLevel}`), color: band },
     { icon: 'store',  name: 'score.sector',   value: t(sectorIsGood ? 'sector.favourable' : 'sector.challenging'), color: sectorIsGood ? 'good' : 'warn' },
   ];
+  // without a score, each tile says "not available yet" in a neutral color
+  if (score === null) {
+    tiles.forEach((tile) => { tile.value = t('score.notYet'); tile.color = 'none'; });
+  }
 
   return `
     <div class="readings">

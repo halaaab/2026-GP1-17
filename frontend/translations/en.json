@@ -531,6 +531,8 @@
   "tab.roadmap": "Roadmap",
   "tab.report": "Report",
   "score.title": "Survival Score",
+  "score.notYet": "Not available yet",
+  "score.notYetSentence": "The survival prediction is not available yet.",
   "score.about": "Based on your idea and its market, compared with an average starting point of 50.",
   "score.band.good": "Higher survival potential",
   "score.band.warn": "Moderate survival potential",
