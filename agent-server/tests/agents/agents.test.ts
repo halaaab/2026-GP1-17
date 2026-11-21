@@ -77,6 +77,7 @@ describe('Conversational Agent personality', () => {
     const text = await instructionsOf(conversationalAgent);
     expect(text.indexOf('You are Darb')).toBeLessThan(text.indexOf('Operational rules'));
     expect(text).toContain('They always win over the style guide');
-    expect(text).toContain('mode "check"');
+    expect(text).toContain('Never ask whether they want the competitor analysis');
+    expect(text).not.toContain('mode "check"');
   });
 });

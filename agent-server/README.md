@@ -81,9 +81,9 @@ How facts stay true (`src/mastra/lib/competitor-delegation.ts`, Mastra's delegat
 Decided in code, never by a model:
 - The conversation's language (`lib/founder-text.ts`): a message switches it only when it is clearly in the other
   language (2+ Arabic words, or 3+ English words); a city, a company name or "ok" keeps it.
-- Analysis consent (`lib/analysis-consent.ts`): describing an idea runs a `check` (Understand only: nothing searched or
-  saved, no analysis used). Darb restates the idea and offers the analysis; the search runs only after the founder
-  agrees or asks for it explicitly. Without consent a `new` or `rerun` handoff becomes a `check`; a clear "no" is rejected.
+- No consent step: an idea, or a question about who already does it (in any words), is analysed right away; Darb never
+  asks "would you like a competitor analysis?". The Conversational Agent reads what the founder means, not a word list.
+  Only a what-if still waits for the founder's yes, because it uses a new analysis.
 - Stated facts only: a known fact the founder never said is dropped before the Competitor Agent sees it (`lib/founder-text.ts`).
 - When the idea lacks the problem or the offering, the founder gets exactly one question, written in code (`lib/understand.ts`).
   If the supervisor forgets to pass the founder's answer on the next call, the hook adds it.
@@ -149,7 +149,7 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 | `npm test` | Runs the automated tests with fake databases and fake AI (no keys, no cost, a few seconds). |
 | `npm run test:coverage` | The same tests, plus how much of the code they cover. |
 | `npm run test:live -- <username>` | A real chat with the real agents, OpenAI and Supabase: English, Arabic, streamed like the website, a vague idea and a what-if (15 checks, about 2 minutes, a fraction of a cent). Deletes its test data at the end. Run it before a demo. |
-| `npm run eval:persona -- <username> [report.md]` | The live persona evaluation: the 19 reference situations in Arabic and English, unseen variations and the multi-turn flows (consent, decline, follow-ups, correction, what-if, language switch, empty result, error and retry). Code checks the tools, modes, language, exact sentences and emojis; a judge model scores the language and tone. Runs up to 5 real analyses (use a founder with none today), about 10 minutes. Deletes its test data. |
+| `npm run eval:persona -- <username> [report.md]` | The live persona evaluation: the 19 reference situations in Arabic and English, unseen variations and the multi-turn flows (asking who already does the idea in any words, decline, follow-ups, correction, what-if, language switch, empty result, error and retry). Code checks the tools, modes, language, exact sentences and emojis; a judge model scores the language and tone. Each conversation's test data is deleted when it ends (use a founder with none today), about 10 minutes. Deletes its test data. |
 | `npm run classify:startups` | Gives each startup its ISIC4 section and division (only startups without one). Add `-- --dry-run --limit 20` to preview without saving. |
 | `npm run test:assessment -- <username>` | Creates a test idea and assessment for that founder, and prints the request context to paste into Studio. |
 
@@ -159,7 +159,6 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 |---|---|
 | An agent or its instructions | `src/mastra/agents/` |
 | Darb's personality (identity, Arabic and English style, behaviour, reference replies) | `src/mastra/config/darb-persona.ts` |
-| Analysis consent rules | `src/mastra/lib/analysis-consent.ts` |
 | A tool's code | `src/mastra/tools/`, one file per tool |
 | Tavily search | `src/mastra/tools/web-search.ts` |
 | Approved websites | `src/mastra/config/approved-domains.ts` |

@@ -327,12 +327,6 @@ export function clarificationResult(profile: IdeaProfile, clarification: Clarifi
   });
 }
 
-// A "check" run: the idea has enough to search, but nothing was searched or saved, because the founder has not
-// agreed to a competitor analysis yet (lib/analysis-consent.ts). Darb restates the idea and offers the analysis.
-export function understoodResult(profile: IdeaProfile, usage: Result['usage']): Result {
-  return Result.parse({ status: 'understood', idea_profile: profile, competitors: [], iss: null, iss_basis: null, market_level: null, notes: [], usage });
-}
-
 // The checked Result: up to 3 competitors, the ISS and its basis, the market level and the notes.
 export function buildResult({ handoff, profile, judged, runNotes, usage }: BuildInput): Result {
   const valid = rankCompetitors(judged, handoff);

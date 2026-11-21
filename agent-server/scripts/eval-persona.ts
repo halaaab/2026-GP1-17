@@ -1,4 +1,4 @@
-// Live evaluation of Darb's personality and analysis consent: real chats with the real agents, OpenAI, Tavily and Supabase.
+// Live evaluation of Darb's personality and when it runs the analysis: real chats with the real agents, OpenAI, Tavily and Supabase.
 // Run with: npm run eval:persona -- <username of a test founder> [report.md]
 //
 // Two kinds of checks, kept apart:
@@ -9,7 +9,8 @@
 //                  professionalism, naturalness, personality, intent handling, no unsupported validation). These are
 //                  opinions to review with the team, not pass/fail proof.
 // It creates one test idea per conversation and deletes all of it at the end (the founder's analyses count goes back).
-// It runs up to 5 real analyses (the daily limit), so use a founder with none today. It takes about 10 minutes.
+// Each conversation's test data is deleted when it ends, so at most a few analyses are counted at once (the daily limit
+// is 5): use a founder with none today. It takes about 10 minutes.
 import { writeFileSync } from 'node:fs';
 import { RequestContext } from '@mastra/core/request-context';
 import { AVOIDED_PHRASES } from '../src/mastra/config/darb-persona';
@@ -28,11 +29,12 @@ type Turn = {
   say: string;
   lang: Language; // the language Darb must reply in
   expect?: {
-    delegates?: false | 'check' | 'new' | 'what_if' | 'rerun' | 'search'; // search: new or rerun or what_if
+    delegates?: false | 'new' | 'what_if' | 'rerun' | 'search'; // search: a run that searched (not only a question)
     tools?: string[]; // tools that must be called
     exact?: string[]; // sentences that must appear exactly
     question?: boolean; // the reply asks something
-    offer?: boolean; // the reply offers the competitor analysis
+    noOffer?: boolean; // the reply never asks whether to run the analysis
+    searchedBy?: boolean; // by the end of this turn a search ran in this conversation (in this turn or an earlier one)
     noValidation?: boolean; // never says the idea is unique, new, will succeed…
   };
   fail?: boolean; // make the idea reading fail in this turn (a technical error)
@@ -51,22 +53,22 @@ const C: Conversation[] = [
   { id: 'S01-en-v', title: 'Welcome, unseen variation', turns: [{ say: 'Hey there, what can you do for me?', lang: 'en', expect: { delegates: false } }] },
   { id: 'S02-ar', title: 'No idea yet', turns: [{ say: 'ودي أبدأ مشروع بس ما عندي فكرة', lang: 'ar', expect: { delegates: false, question: true } }] },
   { id: 'S02-en', title: 'No idea yet', turns: [{ say: "I'd love to start a business, but I don't have an idea yet.", lang: 'en', expect: { delegates: false, question: true } }] },
-  { id: 'S03-ar', title: 'Incomplete idea', turns: [{ say: 'أفكر أسوي تطبيق بالذكاء الاصطناعي للتعليم', lang: 'ar', expect: { delegates: 'check', question: true } }] },
-  { id: 'S03-en', title: 'Incomplete idea', turns: [{ say: "I'm thinking of building an AI app for education.", lang: 'en', expect: { delegates: 'check', question: true } }] },
+  { id: 'S03-ar', title: 'Incomplete idea', turns: [{ say: 'أفكر أسوي تطبيق بالذكاء الاصطناعي للتعليم', lang: 'ar', expect: { delegates: 'new', question: true } }] },
+  { id: 'S03-en', title: 'Incomplete idea', turns: [{ say: "I'm thinking of building an AI app for education.", lang: 'en', expect: { delegates: 'new', question: true } }] },
   {
     id: 'S04-ar',
-    title: 'Complete idea, no approval yet',
-    turns: [{ say: 'أبي أبني منصة تساعد المطاعم الصغيرة في السعودية على توقع الطلب وإدارة المخزون بالذكاء الاصطناعي', lang: 'ar', expect: { delegates: 'check', offer: true } }],
+    title: 'Complete idea: analysed right away',
+    turns: [{ say: 'أبي أبني منصة تساعد المطاعم الصغيرة في السعودية على توقع الطلب وإدارة المخزون بالذكاء الاصطناعي', lang: 'ar', expect: { delegates: 'search', noOffer: true } }],
   },
   {
     id: 'S04-en',
-    title: 'Complete idea, no approval yet',
-    turns: [{ say: 'I want to build an AI platform that helps small restaurants in Saudi Arabia forecast demand and manage inventory.', lang: 'en', expect: { delegates: 'check', offer: true } }],
+    title: 'Complete idea: analysed right away',
+    turns: [{ say: 'I want to build an AI platform that helps small restaurants in Saudi Arabia forecast demand and manage inventory.', lang: 'en', expect: { delegates: 'search', noOffer: true } }],
   },
   {
     id: 'S04-en-v',
     title: 'C-16 Not flattering: complete idea with a request for praise',
-    turns: [{ say: 'My idea is amazing, right? An app for booking padel courts in Riyadh', lang: 'en', expect: { delegates: 'check', offer: true, noValidation: true } }],
+    turns: [{ say: 'My idea is amazing, right? An app for booking padel courts in Riyadh', lang: 'en', expect: { delegates: 'search', noOffer: true, noValidation: true } }],
   },
   { id: 'S12-ar', title: 'Out of scope', turns: [{ say: 'كم سعر الذهب اليوم؟', lang: 'ar', expect: { delegates: false } }] },
   { id: 'S12-en', title: 'Out of scope', turns: [{ say: "What's the weather in Riyadh today?", lang: 'en', expect: { delegates: false } }] },
@@ -88,16 +90,15 @@ const C: Conversation[] = [
   // ----- Multi-turn flows -----
   {
     id: 'F1-ar',
-    title: 'Flow 1 + 4 + 5 + 6 (Arabic): greeting → incomplete idea → clarification → approval → follow-ups → correction → survival → what-if',
+    title: 'Flow 1 + 4 + 5 + 6 (Arabic): greeting → incomplete idea → clarification → analysis → follow-ups → correction → survival → what-if',
     turns: [
       { say: 'السلام عليكم', lang: 'ar', expect: { delegates: false } },
-      { say: 'أفكر أسوي تطبيق بالذكاء الاصطناعي للتعليم', lang: 'ar', expect: { delegates: 'check', question: true } },
-      { say: 'يستهدف طلاب الثانوي في السعودية، ويسوي لهم خطة مذاكرة شخصية لاختبارات القدرات والتحصيلي', lang: 'ar', expect: { delegates: 'check', offer: true } },
-      { say: 'إيه، ابدأ', lang: 'ar', expect: { delegates: 'new' } },
+      { say: 'أفكر أسوي تطبيق بالذكاء الاصطناعي للتعليم', lang: 'ar', expect: { delegates: 'new', question: true } },
+      { say: 'يستهدف طلاب الثانوي في السعودية، ويسوي لهم خطة مذاكرة شخصية لاختبارات القدرات والتحصيلي', lang: 'ar', expect: { delegates: 'search', noOffer: true } },
       { say: 'وش أقوى منافس؟', lang: 'ar', expect: { delegates: false, tools: ['get_competitor_result'] } },
       { say: 'ما أشوف إن المنافس الأول يعتبر منافس لي', lang: 'ar', expect: { delegates: false } },
       { say: 'يعني خلاص ما فيه فرصة لمشروعي؟', lang: 'ar', expect: { delegates: false, noValidation: true } },
-      { say: 'لا، أنا أقصد طلاب الجامعات مو الثانوي', lang: 'ar', expect: { delegates: false } },
+      { say: 'لا، أنا أقصد طلاب الجامعات مو الثانوي', lang: 'ar', expect: { delegates: 'rerun', noOffer: true } },
       { say: 'وش احتمال استمرار مشروعي؟', lang: 'ar', expect: { delegates: false, exact: [SURVIVAL.ar] } },
       { say: 'طيب لو استهدفت المعلمين بدال الطلاب؟', lang: 'ar', expect: { delegates: false, question: true } },
       { say: 'إيه شغّله', lang: 'ar', expect: { delegates: 'what_if' } },
@@ -106,10 +107,9 @@ const C: Conversation[] = [
   },
   {
     id: 'F2-en',
-    title: 'Flow 2 + 3 + 8 (English): complete idea → declined → opinion → explicit request → follow-ups → switch to Arabic',
+    title: 'Flow 2 + 3 + 8 (English): idea, but no analysis yet → opinion → asks for competitors → follow-ups → switch to Arabic',
     turns: [
-      { say: 'I want to build an app that lets people in Riyadh book home car-wash services, paying per wash.', lang: 'en', expect: { delegates: 'check', offer: true } },
-      { say: 'No, not right now.', lang: 'en', expect: { delegates: false } },
+      { say: "Don't analyse anything yet, I just want to talk it through: an app that lets people in Riyadh book home car-wash services, paying per wash.", lang: 'en', expect: { delegates: false, noOffer: true } },
       { say: 'What do you think of my idea?', lang: 'en', expect: { delegates: false, noValidation: true } },
       { say: "Actually, let's do it. Can you find my competitors?", lang: 'en', expect: { delegates: 'new' } },
       { say: 'Tell me more about the second one', lang: 'en', expect: { delegates: false, tools: ['get_competitor_result'] } },
@@ -121,9 +121,9 @@ const C: Conversation[] = [
   },
   {
     id: 'F7-ar',
-    title: 'Flow 7 (Arabic with English terms): idea → short English reply → postpone',
+    title: 'Flow 7 (Arabic with English terms): idea → short English reply → a no',
     turns: [
-      { say: 'أبي أسوي SaaS للـ POS في الكافيهات، يربط الـ inventory مع الـ sales reports', lang: 'ar', expect: { delegates: 'check' } },
+      { say: 'أبي أسوي SaaS للـ POS في الكافيهات، يربط الـ inventory مع الـ sales reports', lang: 'ar', expect: { delegates: 'new', noOffer: true } },
       { say: 'Riyadh', lang: 'ar' },
       { say: 'لا، مو الحين', lang: 'ar', expect: { delegates: false } },
     ],
@@ -148,6 +148,31 @@ const C: Conversation[] = [
       },
       { say: 'Please try again.', lang: 'en', expect: { delegates: 'new' } },
     ],
+  },
+
+  // ----- Asking who already does the idea, in words that never say "competitor" (Hala, 22 Nov 2026) -----
+  {
+    id: 'K1-en',
+    title: 'Idea and "is anyone already doing this?" in one message',
+    turns: [{ say: 'I want to build an app for booking padel courts in Riyadh. Is anyone already doing this?', lang: 'en', expect: { delegates: 'search', noOffer: true } }],
+  },
+  {
+    id: 'K1-ar',
+    title: 'Idea and "has anyone done this before?" in one message (Arabic)',
+    turns: [{ say: 'أبي أسوي تطبيق لحجز ملاعب البادل في الرياض، فيه أحد سوا هالفكرة قبل؟', lang: 'ar', expect: { delegates: 'search', noOffer: true } }],
+  },
+  {
+    id: 'K2-en',
+    title: 'Complete idea, then "are there businesses that did this idea?"',
+    turns: [
+      { say: 'I want to build a platform that connects small restaurants in Jeddah with local food suppliers.', lang: 'en', expect: { noOffer: true } },
+      { say: 'Are there any ideas or businesses that did this idea?', lang: 'en', expect: { searchedBy: true, noOffer: true } },
+    ],
+  },
+  {
+    id: 'K3-ar',
+    title: 'Asking for a market analysis (Arabic)',
+    turns: [{ say: 'ابي تحليل للسوق لفكرتي: خدمة اشتراك شهري لغسيل السيارات في المنازل بالرياض', lang: 'ar', expect: { delegates: 'search', noOffer: true } }],
   },
 ];
 
@@ -253,23 +278,23 @@ async function main() {
         add(`replies in ${turn.lang === 'ar' ? 'Arabic' : 'English'}`, replyLang === turn.lang, `detected ${replyLang}`);
         if (e.delegates === false) add('no Competitor Agent run', runs.length === 0, runs.map((r) => r.mode).join(','));
         if (typeof e.delegates === 'string') {
-          const searched = runs.filter((r) => r.mode !== 'check');
+          const searched = runs.filter((r) => r.status !== 'needs_clarification');
           const ok = e.delegates === 'search' ? searched.length > 0 : runs.some((r) => r.mode === e.delegates);
           add(`Competitor Agent mode ${e.delegates}`, ok, runs.map((r) => `${r.mode}/${r.status}`).join(',') || 'no run');
-        }
-        // Consent: a turn that is not an approval never searches.
-        if (e.delegates !== 'new' && e.delegates !== 'what_if' && e.delegates !== 'rerun' && e.delegates !== 'search') {
-          add('no search without consent', runs.every((r) => r.mode === 'check' || r.status === 'needs_clarification'), runs.map((r) => `${r.mode}/${r.status}`).join(','));
         }
         for (const tool of e.tools ?? []) add(`calls ${tool}`, tools.includes(tool), tools.join(','));
         for (const sentence of e.exact ?? []) add('exact protected sentence', reply.includes(sentence), sentence);
         if (e.question) add('asks a question', /[?؟]/.test(reply));
-        if (e.offer) add('offers the competitor analysis', OFFER.test(reply) && /[?؟]/.test(reply));
+        if (e.noOffer) add('never asks whether to run the analysis', !(OFFER.test(reply) && /[?؟]/.test(reply)), reply.match(OFFER)?.[0]);
+        if (e.searchedBy) {
+          const searchedRun = (r: RunLine) => r.status !== 'needs_clarification';
+          add('a search ran by this turn', [...turns.flatMap((t) => t.runs), ...runs].some(searchedRun), runs.map((r) => `${r.mode}/${r.status}`).join(',') || 'no run');
+        }
         if (e.noValidation) add('no unsupported validation', !VALIDATION.test(reply), reply.match(VALIDATION)?.[0]);
         add('no avoided phrase', avoided(reply).length === 0, avoided(reply).join(', '));
         add('at most two emojis', emojiCount(reply) <= 2, String(emojiCount(reply)));
         // Honesty: nothing about competitors found or not found before any search ran in this conversation.
-        const searchedSoFar = turns.some((t) => t.runs.some((r) => r.mode !== 'check' && r.status !== 'needs_clarification')) || runs.some((r) => r.mode !== 'check');
+        const searchedSoFar = [...turns.flatMap((t) => t.runs), ...runs].some((r) => r.status !== 'needs_clarification');
         if (!searchedSoFar) {
           const claim = /لم (أجد|نجد) (أي )?منافس|وجدت(ُ)? .{0,15}منافس|no (verified |confirmed )?competitors (were )?found|I (found|identified|couldn't identify)/i;
           add('no result claimed before any search', !claim.test(reply), reply.match(claim)?.[0]);
@@ -282,6 +307,9 @@ async function main() {
       // The qualitative scores, one per Darb reply, read in the context of the conversation so far.
       for (let i = 0; i < turns.length; i++) turns[i].scores = await judge(turns.slice(0, i + 1), conversation.turns[i].lang);
       records.push({ conversation, turns });
+      // Deleted now, not at the end, so the founder's analyses count goes back before the next conversation.
+      await supabase.from('startup_ideas').delete().eq('idea_id', idea.idea_id);
+      ideas.splice(ideas.indexOf(idea.idea_id), 1);
     }
   } finally {
     understandIdeaTool.execute = realExecute;

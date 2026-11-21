@@ -3,6 +3,7 @@
 //   conversationLanguage  the language Darb keeps: a message changes it only when it is clearly written in the other
 //                    language, so a city, a company name or "ok" never switches the reply
 //   keepStatedFacts  keeps only the known_facts the founder really said (design §4: stated facts only).
+//   isDecline, isAffirmative  a clear "no / not now", and a clear yes to Darb's what-if question
 import type { Handoff, Language } from '../schemas/competitor';
 
 // Arabic when it has at least as many Arabic letters as Latin ones. null when there are no letters at all.
@@ -79,4 +80,39 @@ export function keepStatedFacts(facts: KnownFacts | undefined, founderText: stri
     else dropped.push(name);
   }
   return { kept: Object.keys(kept).length ? kept : undefined, dropped };
+}
+
+// ---------------------------------------------------------------------------
+// The founder's short answers.
+
+// Arabic letter forms unified and diacritics removed, so "حلّل" and "حلل" match the same pattern.
+const plain = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/[ً-ْـ]/g, '')
+    .replace(/[أإآ]/g, 'ا')
+    .replace(/ى/g, 'ي')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+// A clear "no" or "not now": the founder does not want the analysis (or the what-if) now.
+const DECLINE_EN = /^(no|nope|nah|not now|not yet|later|maybe later|no thanks|no thank you)\b|\b(not now|not yet|maybe later|don't (run|start|analy[sz]e)|do not (run|start|analy[sz]e))\b/;
+const DECLINE_AR = /^(لا|لأ|لاء|لا شكرا|مو الحين|مو الان|ليس الان|بعدين|لاحقا|خلها بعدين|ما ابي|ما ابغي|ما ابغا)(\s|$|[،,.!؟?])|(مو الحين|مو الان|ليس الان|بعدين|لاحقا|ما ابي تحليل|لا تبدا|لا تحلل)/;
+
+export function isDecline(text: string): boolean {
+  const t = plain(text);
+  return DECLINE_EN.test(t) || DECLINE_AR.test(t);
+}
+
+// A clear yes to Darb's what-if question: a short agreement or "start / go ahead" (persona eval, 18 Nov 2026).
+const YES_EN = /^(yes|yeah|yep|yup|sure|ok|okay|of course|definitely|absolutely|please|go ahead|go for it|let'?s|start|do it|sounds good|why not|alright|all right)\b|\b(go ahead|let'?s (do it|start|go|begin|get started)|start (it|the analysis)|run it|do it|yes please)\b/;
+const YES_AR = /^(اي|ايه|ايوه|ايوا|اكيد|نعم|اجل|تمام|طيب|يلا|ابدا|ابدء|موافق|ماشي|حلو|زين|اوكي|اوك|بالتاكيد|طبعا|ياليت|يا ليت|ليش لا|شغل|شغله|حلل|خلنا نبدا|نبدا)(\s|$|[،,.!؟?])|(ابدا|ابدء|يلا نبدا|خلنا نبدا|شغله|شغل التحليل|حلل المنافسين)/;
+
+export function isAffirmative(text: string): boolean {
+  const t = plain(text);
+  if (isDecline(t)) return false;
+  // A starting "yes"/"طيب" counts only in a short answer: "طيب لو استهدفت المعلمين؟" is a new question, not a yes.
+  const short = t.split(' ').length <= 5;
+  const anywhere = /\b(go ahead|let'?s (do it|start|go|begin|get started)|start (it|the analysis)|run it|yes please)\b|(ابدا|ابدء|يلا نبدا|خلنا نبدا|شغله|شغل التحليل|حلل المنافسين)/;
+  return anywhere.test(t) || (short && (YES_EN.test(t) || YES_AR.test(t)));
 }

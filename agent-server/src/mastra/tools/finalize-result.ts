@@ -7,7 +7,7 @@
 // (not built yet), it returns the "capability_pending" result.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
-import { applyPolicy, buildResult, clarificationResult, limitResult, understoodResult, type Judged } from '../lib/competitor-policy';
+import { applyPolicy, buildResult, clarificationResult, limitResult, type Judged } from '../lib/competitor-policy';
 import { fallbackResult, pendingResult, profileFromKnownFacts } from '../lib/competitor-result';
 import { getRunState, logStep } from '../lib/competitor-run';
 import { saveResult } from '../lib/competitor-store';
@@ -50,8 +50,6 @@ export const finalizeResultTool = createTool({
     if (state.steps.some((s) => s.capability === 'understand' && s.outcome === 'failed')) return fallbackResult(handoff.data, run);
     // The idea lacks the problem or the offering: ask the one question Understand chose (design §4, PBI 34).
     if (state.clarification && state.profile) return clarificationResult(state.profile, state.clarification, usage());
-    // A check run only reads the idea: nothing is searched or saved, and no analysis is used.
-    if (handoff.data.mode === 'check' && state.profile) return understoodResult(state.profile, usage());
 
     // No search has run (Discover is not built yet): saying "no competitors found" would not be true.
     if (!state.steps.some((s) => s.capability === 'discover')) {

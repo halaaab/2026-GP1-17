@@ -28,10 +28,7 @@ export const analyseIdeaTool = createTool({
     progress('understanding');
     const understood = (await run(understandIdeaTool)) as { ready?: boolean };
     // Only an idea that is ready is searched; otherwise finalize_result returns the question, the limit or the failure.
-    // A "check" run never searches: the founder has not agreed to a competitor analysis yet (lib/analysis-consent.ts).
-    const raw = (context as { requestContext?: { get: (key: string) => unknown } } | undefined)?.requestContext?.get(HANDOFF_KEY) as { mode?: string } | undefined;
-    const checkOnly = raw?.mode === 'check';
-    if (understood?.ready && !checkOnly) {
+    if (understood?.ready) {
       try {
         await run(findCompetitorsAgentTool);
         progress('comparing');
