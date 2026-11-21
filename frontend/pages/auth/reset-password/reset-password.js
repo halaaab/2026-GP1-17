@@ -2,6 +2,7 @@
 
 import { t } from '../../../shared/language.js';
 import { getCurrentUser, updatePassword, goToHomePage, PASSWORD_RULES, isGoodPassword, passwordProblem } from '../../../shared/auth.js';
+import { supabase } from '../../../shared/supabase.js';
 
 const form = document.querySelector('#reset-form');
 const submitButton = document.querySelector('#submit-button');
@@ -15,10 +16,28 @@ function showScreen(name) {
 }
 
 /* ---------- Does the link still work? ----------
-   A good link signs the person in for a moment, just so they can change the password.
-   A link that is too old, or was already used, signs nobody in. */
+   The decision comes from the link itself (saved by reset-password.html before Supabase reads it):
+   - a good link carries "type=recovery" (or a one-time "code") and signs the person in for a moment
+   - a link that is too old, or was already used, carries an error
+   - opening the page without a link is treated like an expired link
+   So someone who is already signed in can never change their password from an old link. */
 
-const user = await getCurrentUser();
+const link = window.resetLink || '';
+const isRecoveryLink = /type=recovery|[?&#]code=/.test(link) && !/error/.test(link);
+
+/* The reset email links here with a one-time token (token_hash). The token is only used when this
+   page runs, so an email program that opens the link to check it cannot use it up first. */
+async function signInFromLink() {
+  const tokenHash = new URLSearchParams(window.location.search).get('token_hash');
+  if (tokenHash) {
+    const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' });
+    window.history.replaceState(null, '', window.location.pathname);   // the token works once: remove it from the address
+    if (error) return null;
+  }
+  return getCurrentUser();
+}
+
+const user = isRecoveryLink ? await signInFromLink() : null;
 showScreen(user ? 'form' : 'expired');
 
 // the page was hidden while we checked (see reset-password.html)
