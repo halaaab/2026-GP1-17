@@ -53,9 +53,7 @@ export const understandIdeaTool = createTool({
 
     let profile;
     try {
-      // The check run before the founder's consent already read this same idea: its profile is used again.
-      const reused = state.reusedProfile?.profile;
-      profile = reused ?? withStatedFacts(await buildIdeaProfile(understandText(handoff.data), { founderIdea: true }), handoff.data);
+      profile = withStatedFacts(await buildIdeaProfile(understandText(handoff.data), { founderIdea: true }), handoff.data);
     } catch {
       // OpenAI failed: keep only what the founder stated, and let finalize_result say the analysis did not finish.
       state.profile = profileFromKnownFacts(handoff.data);
@@ -69,17 +67,15 @@ export const understandIdeaTool = createTool({
     if (!clarification) {
       // the conversation's formal name and the idea in the founder's language, written beside the search (not awaited:
       // the founder never waits for it). A what-if keeps the name of the analysis it varies.
-      if (handoff.data.mode !== 'what_if' && !state.reusedProfile) void nameIdea(handoff.data.idea_id, profile, handoff.data.language);
-      state.ideaEmbedding = state.reusedProfile?.embedding ?? (await saveEmbedding(handoff.data.idea_id, profileText(profile)));
+      if (handoff.data.mode !== 'what_if') void nameIdea(handoff.data.idea_id, profile, handoff.data.language);
+      state.ideaEmbedding = await saveEmbedding(handoff.data.idea_id, profileText(profile));
     }
 
     logStep(state, {
       capability: 'understand',
       outcome: 'ok',
       duration_ms: Date.now() - started,
-      detail: clarification
-        ? `needs_${clarification.missing_field}`
-        : `${state.ideaEmbedding ? 'ready' : 'ready_embedding_failed'}${state.reusedProfile ? '_reused' : ''}`,
+      detail: clarification ? `needs_${clarification.missing_field}` : state.ideaEmbedding ? 'ready' : 'ready_embedding_failed',
     });
 
     return {

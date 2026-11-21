@@ -16,9 +16,7 @@ export const Language = z.enum(['ar', 'en']);
 export type Language = z.infer<typeof Language>;
 
 // new: a new idea. what_if: a changed version (a new assessment). rerun: the same assessment again.
-// check: only read the idea (Understand), with no search, nothing saved and no analysis used. Darb uses it to
-// understand an idea before the founder agrees to a competitor analysis (consent, lib/analysis-consent.ts).
-export const HandoffMode = z.enum(['new', 'what_if', 'rerun', 'check']);
+export const HandoffMode = z.enum(['new', 'what_if', 'rerun']);
 export type HandoffMode = z.infer<typeof HandoffMode>;
 
 // The four core parts of an idea. The supervisor may only pass what the founder stated.
@@ -213,8 +211,7 @@ export type JudgeOutput = z.infer<typeof JudgeOutput>;
 // e) Result: Competitor Agent → Conversational Agent (design §10, §11)
 // ---------------------------------------------------------------------------
 
-// understood: a "check" run read the idea and it has enough to search; nothing was searched or saved.
-export const ResultStatus = z.enum(['complete', 'partial', 'needs_clarification', 'understood']);
+export const ResultStatus = z.enum(['complete', 'partial', 'needs_clarification']);
 export type ResultStatus = z.infer<typeof ResultStatus>;
 
 // Notes are codes, never sentences: the supervisor turns them into Arabic or English (lib/competitor-notes.ts).
@@ -310,10 +307,6 @@ export const Result = z
     // No ISS when nothing is found; the ISS and its basis always come together.
     if (r.competitors.length === 0 && r.iss !== null) issue('iss must be null when no competitors are found', ['iss']);
     if ((r.iss === null) !== (r.iss_basis === null)) issue('iss and iss_basis must both be set or both be null', ['iss_basis']);
-    // An understood idea was only read: it has no competitors and no score.
-    if (r.status === 'understood' && (r.competitors.length > 0 || r.iss !== null || r.market_level !== null)) {
-      issue('an understood result has no competitors, ISS or market level', ['status']);
-    }
     // The same note never twice.
     if (new Set(r.notes).size !== r.notes.length) issue('a note code appears twice', ['notes']);
   });

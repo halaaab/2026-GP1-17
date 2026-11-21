@@ -27,13 +27,6 @@ describe('analyse_idea', () => {
     expect(ran).toEqual(['understand_idea', 'find_competitors', 'judge_candidates', 'finalize_result']);
   });
 
-  it('never searches in a check run, even when the idea is ready (no consent yet)', async () => {
-    ready = true;
-    const requestContext = { get: (key: string) => (key === 'competitorHandoff' ? { mode: 'check' } : undefined) };
-    await analyseIdeaTool.execute!({}, { requestContext } as never);
-    expect(ran).toEqual(['understand_idea', 'finalize_result']);
-  });
-
   it('never searches an idea that needs a question: straight to finalize_result', async () => {
     ready = false;
     await analyse();
