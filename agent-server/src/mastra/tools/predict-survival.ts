@@ -8,6 +8,16 @@ import { API_TIMEOUT_MS } from '../config/limits';
 // What the ML service must send back from POST {ML_SERVICE_URL}/predict.
 const ServiceReply = z.object({ survival_probability: z.number().min(0).max(1) });
 
+// The fixed text the founder reads, so the wording never depends on the agent.
+// It never says how the model was made or what it was trained on.
+export function replyText(probability: number) {
+  const percent = Math.round(probability * 100);
+  return {
+    en: `Darb estimates the chance that your business is still operating one year after it starts at ${percent}%. This is an estimate, not a guarantee.`,
+    ar: `يقدّر درب احتمال استمرار مشروعك بعد سنة من بدايته بنسبة ${percent}%. هذا تقدير وليس ضمانًا.`,
+  };
+}
+
 export const predictSurvivalTool = createTool({
   id: 'predict_survival',
   description:
@@ -21,6 +31,8 @@ export const predictSurvivalTool = createTool({
   outputSchema: z.object({
     status: z.enum(['ok', 'model_not_connected', 'error']),
     survival_probability: z.number().nullable(),
+    // The text the agent copies word for word, in the founder's language.
+    reply_text: z.object({ en: z.string(), ar: z.string() }).optional(),
   }),
   execute: async (input) => {
     const baseUrl = process.env.ML_SERVICE_URL;
@@ -35,7 +47,8 @@ export const predictSurvivalTool = createTool({
       if (!response.ok) return { status: 'error' as const, survival_probability: null };
       const reply = ServiceReply.safeParse(await response.json());
       if (!reply.success) return { status: 'error' as const, survival_probability: null };
-      return { status: 'ok' as const, survival_probability: reply.data.survival_probability };
+      const { survival_probability } = reply.data;
+      return { status: 'ok' as const, survival_probability, reply_text: replyText(survival_probability) };
     } catch {
       return { status: 'error' as const, survival_probability: null };
     }

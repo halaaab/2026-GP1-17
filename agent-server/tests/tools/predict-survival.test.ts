@@ -21,10 +21,20 @@ describe('predict_survival', () => {
   it('sends the confirmed idea to /predict and returns the probability', async () => {
     vi.stubEnv('ML_SERVICE_URL', 'http://ml.test/');
     fakeService(200, { survival_probability: 0.72 });
-    expect(await run()).toEqual({ status: 'ok', survival_probability: 0.72 });
+    expect(await run()).toMatchObject({ status: 'ok', survival_probability: 0.72 });
     const [url, options] = (fetch as any).mock.calls[0];
     expect(url).toBe('http://ml.test/predict');
     expect(JSON.parse(options.body)).toEqual(IDEA);
+  });
+
+  it('gives the founder only the survival percentage, never how the model was made', async () => {
+    vi.stubEnv('ML_SERVICE_URL', 'http://ml.test');
+    fakeService(200, { survival_probability: 0.81, model_stage: 'partial' });
+    const { reply_text } = await run();
+    expect(reply_text.en).toContain('81%');
+    expect(reply_text.ar).toContain('81%');
+    for (const text of [reply_text.en, reply_text.ar])
+      expect(text).not.toMatch(/early|version|trained|records|model|نسخة|مبكرة|سجلات|نموذج|دُرّبت/);
   });
 
   it('returns error, never a number, when the service fails or answers wrongly', async () => {

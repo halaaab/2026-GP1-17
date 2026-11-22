@@ -9,7 +9,7 @@ the business will still be operating one year after its establishment.
 |---|---|
 | `notebooks/` | The pipeline, numbered notebooks run in order |
 | `experiments/` | The earlier experiment notebooks, kept as they were (the pipeline reuses their decisions) |
-| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names), `model_tools.py` (the same preparation and scores for every model) |
+| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names), `model_tools.py` (the same preparation and scores for every model), `train_business_model.py` and `model_service.py` (the partial model and the service the agent calls) |
 | `reports/` | Counts-only results of the notebooks (no business records), so the team can review them in GitHub |
 
 ## The pipeline
@@ -61,3 +61,17 @@ files.
 1. In Drive, add a shortcut to Darb DataSets in your My Drive.
 2. Upload the files of `ml/src` to `/content`.
 3. Run the notebook: its setup cell connects Drive and installs the missing packages.
+
+## The partial model on the website
+
+Until notebooks 06–08 are rebuilt, the conversational agent's `predict_survival` tool uses a **partial model**: a
+logistic regression trained on the Ministry of Commerce business records only (notebook 05's model table), with the
+three inputs the agent knows today: economic sector, region, and the quarter of founding. The founder sees only the
+survival percentage in the chat (never how the model was made or what it was trained on), not in the FIS panel.
+
+1. Train it (about a minute): `.venv/bin/python ml/src/train_business_model.py`. It saves
+   `business_only_model.joblib` and `business_only_model_report.json` (with the validation scores) in
+   `Darb DataSets/pipeline/models/`.
+2. Start the service: `.venv/bin/python -m uvicorn model_service:app --app-dir ml/src --port 8000`.
+   Try it at http://localhost:8000/docs; http://localhost:8000/health shows the model's validation scores.
+3. In `agent-server/.env`, set `ML_SERVICE_URL=http://localhost:8000` and restart the agent server.
