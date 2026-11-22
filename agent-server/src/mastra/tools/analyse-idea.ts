@@ -7,6 +7,8 @@
 // them in this order anyway, and each turn cost a few seconds; it also sometimes skipped finalize_result or called
 // find_competitors twice (Sprint 2 website test). The Result it returns is finalize_result's, checked by the
 // delegation hook like before.
+// Each step is also its own row in Studio's trace view, under analyse_idea, with its own time (observability only).
+import { SpanType, type TracingContext } from '@mastra/core/observability';
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { findCompetitorsAgentTool } from './find-competitors';
@@ -16,17 +18,37 @@ import { understandIdeaTool } from './understand-idea';
 import { reportProgress } from '../lib/progress';
 import { Handoff } from '../schemas/competitor';
 
+type Step = { id: string; execute?: (input: never, context: never) => Promise<unknown> };
+
+// Runs one step inside its own trace span, a child of analyse_idea's span. Nothing about the run changes: the step
+// gets the same context (only the span it reports under is its own), and an error is passed on as before.
+// The span's output is only whether the idea was ready, never the founder's idea text (as in the run log).
+async function runStep<T>(step: Step, context: unknown): Promise<T> {
+  const parent = (context as { tracingContext?: TracingContext } | undefined)?.tracingContext?.currentSpan;
+  const span = parent?.createChildSpan({ type: SpanType.GENERIC, name: step.id });
+  const stepContext = span ? { ...(context as object), tracingContext: { currentSpan: span } } : context;
+  try {
+    const result = (await step.execute!({} as never, stepContext as never)) as T;
+    const ready = (result as { ready?: unknown } | undefined)?.ready;
+    span?.end(typeof ready === 'boolean' ? { output: { ready } } : {});
+    return result;
+  } catch (error) {
+    span?.error({ error: error instanceof Error ? error : new Error(String(error)) });
+    throw error;
+  }
+}
+
 export const analyseIdeaTool = createTool({
   id: 'analyse_idea',
   description: "Runs the whole competitor analysis of the idea in this run and returns the checked result. Call it once, with an empty input.",
   inputSchema: z.object({}),
   execute: async (_input, context) => {
-    const run = <T>(tool: { execute?: (input: never, context: never) => Promise<T> }) => tool.execute!({} as never, context as never);
+    const run = <T>(step: Step) => runStep<T>(step, context);
     // What Darb is doing now, for the founder's screen (lib/progress.ts); find_competitors reports its own steps.
     const handoff = Handoff.safeParse((context as { requestContext?: { get: (k: string) => unknown } } | undefined)?.requestContext?.get(HANDOFF_KEY));
     const progress = (step: Parameters<typeof reportProgress>[1]) => reportProgress(handoff.success ? handoff.data.assessment_id : null, step);
     progress('understanding');
-    const understood = (await run(understandIdeaTool)) as { ready?: boolean };
+    const understood = await run<{ ready?: boolean }>(understandIdeaTool);
     // Only an idea that is ready is searched; otherwise finalize_result returns the question, the limit or the failure.
     if (understood?.ready) {
       try {
