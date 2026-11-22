@@ -74,13 +74,26 @@ export const chatRoute = registerApiRoute('/chat', {
         const stopListening = listenToProgress(assessmentId, (step) => send(line({ type: 'status', payload: { step } })));
         try {
           const output = await agent.stream(text, { requestContext, memory: { thread: threadId, resource: userId } });
-          for await (const chunk of output.fullStream as AsyncIterable<{ type: string; payload?: { text?: string; error?: unknown } }>) {
-            if (chunk.type === 'text-delta' && chunk.payload?.text) send(line({ type: 'text-delta', payload: { text: chunk.payload.text } }));
-            else if (chunk.type === 'error') {
+          // The model's words are held until it is clear whether it calls a tool (K3 of the Sprint 2 evaluation,
+          // 23 Nov 2026): before delegating it sometimes wrote "Please hold on…" or praised the idea, and that text
+          // reached the founder glued to the result sentence. Text written before a tool call is dropped; the answer
+          // after it (written by code for an analysis) is sent at once; a reply without any tool is sent at the end.
+          let pending = '';
+          let afterTool = false;
+          const sendText = (t: string) => send(line({ type: 'text-delta', payload: { text: t } }));
+          for await (const chunk of output.fullStream as AsyncIterable<{ type: string; payload?: { text?: string; error?: unknown; toolName?: string } }>) {
+            if (chunk.type === 'text-delta' && chunk.payload?.text) {
+              if (afterTool) sendText(chunk.payload.text);
+              else pending += chunk.payload.text;
+            } else if (chunk.type === 'tool-call' && chunk.payload?.toolName && chunk.payload.toolName !== 'updateWorkingMemory') {
+              pending = ''; // what it said before using the tool is not part of the answer
+              afterTool = true;
+            } else if (chunk.type === 'error') {
               console.error('Chat: the agent stopped with an error:', chunk.payload?.error);
               send(line({ type: 'error', payload: { message: 'The agent stopped with an error' } }));
             }
           }
+          if (pending) sendText(pending);
         } catch (error) {
           console.error('Chat: the agent could not answer:', error);
           send(line({ type: 'error', payload: { message: 'The agent could not answer' } }));

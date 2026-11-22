@@ -97,6 +97,47 @@ export function withoutEmptyFields(value: unknown): unknown {
   return kept;
 }
 
+// Analogy words in front of a reference ("like Mrsool", "مثل طلبات") are removed, so the name matches the company
+// (K3 of the Sprint 2 evaluation, 23 Nov 2026: "like Mrsool" never matched "Mrsool", which was then shown).
+const ANALOGY_WORDS = /^\s*(?:(?:just\s+)?(?:like|similar\s+to|same\s+as|such\s+as|as|a\s+version\s+of|مثل|زي|زيّ|شبه|على\s+غرار|نفس)\s+|كـ\s*)/i;
+export function referenceName(text: string): string {
+  return text.replace(ANALOGY_WORDS, '').replace(/^["'“”«»]+|["'“”«»]+$/g, '').trim();
+}
+
+// The names a founder compares the idea to: the words right after an analogy word, up to "but", a comma or the end.
+const ANALOGY_IN_TEXT = /(?:^|[^\p{L}])(?:like|similar to|same as|such as|مثل|زي|شبه|على غرار)\s+([^,،.;!?\n]+?)(?=\s+(?:but|except|only|for|with|بس|لكن|ولكن|غير)(?![\p{L}])|\s*[,،.;!?\n]|$)/giu;
+export function analogiesIn(text: string): string[] {
+  const names: string[] = [];
+  for (const m of text.matchAll(ANALOGY_IN_TEXT)) {
+    const name = m[1].trim().split(/\s+/).slice(0, 3).join(' ');
+    if (name) names.push(name);
+  }
+  return [...new Set(names)];
+}
+
+// The name lists of the supervisor's handoff, made safe before the check: a single name written as text becomes a list
+// (instead of rejecting the delegation and costing a retry), references lose their analogy words, and a company
+// the founder used as an analogy is never also checked as a named competitor (the analogy rule wins, design §6).
+export function withNamesCleaned(value: unknown, founderText = ''): unknown {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
+  const v = { ...(value as Record<string, unknown>) };
+  const list = (x: unknown) => (typeof x === 'string' ? [x] : x);
+  for (const key of ['named_competitors', 'references'] as const) if (key in v) v[key] = list(v[key]);
+  if (Array.isArray(v.references)) v.references = v.references.map((r) => (typeof r === 'string' ? referenceName(r) : r)).filter((r) => r !== '');
+  // The founder's own words decide what is an analogy, not the model's lists or its rewrite of the idea: every name the
+  // founder puts right after an analogy word ("like Mrsool but only for groceries", "مثل طلبات بس للصيدليات") is a
+  // reference. In the K3 re-runs the model sometimes listed Mrsool only as a named competitor, or rewrote the idea
+  // without it, so Mrsool was shown (23 Nov 2026).
+  const analogies = analogiesIn(founderText);
+  if (analogies.length) v.references = [...new Set([...(Array.isArray(v.references) ? v.references : []), ...analogies])];
+  const refs = new Set((Array.isArray(v.references) ? v.references : []).filter((r): r is string => typeof r === 'string').map((r) => r.toLowerCase()));
+  if (Array.isArray(v.named_competitors)) {
+    v.named_competitors = v.named_competitors.filter((n) => !(typeof n === 'string' && refs.has(referenceName(n).toLowerCase())));
+    if ((v.named_competitors as unknown[]).length === 0) delete v.named_competitors;
+  }
+  return v;
+}
+
 // The text of the founder's messages the supervisor saw, oldest first.
 type ModelMessageLike = { role: string; content: unknown };
 export function founderMessages(messages: readonly ModelMessageLike[] | undefined): string[] {
@@ -123,7 +164,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     return reject('No assessment has been started for this conversation, so the analysis cannot run.');
   }
 
-  const written = SupervisorHandoff.safeParse(withoutEmptyFields(jsonInside(ctx.prompt)));
+  const written = SupervisorHandoff.safeParse(withNamesCleaned(withoutEmptyFields(jsonInside(ctx.prompt)), founderMessages(ctx.messages as ModelMessageLike[]).join('\n')));
   if (!written.success) {
     return reject(
       `The handoff is not valid. Send one JSON object with mode, language, idea_text and only the optional fields that apply.\n${z.prettifyError(written.error)}`,
