@@ -19,7 +19,7 @@ For each, answer exactly one of:
   "different"   the evidence clearly shows it is different
   "unknown"     the evidence does not say, or the idea's part is unknown
   "conflicting" the evidence contradicts itself
-Give a short note (one plain sentence). For "same" or "partly", also give the source_url of the page in the evidence that supports it and quote: the exact sentence copied word for word from the evidence; otherwise null for both. Use only URLs listed in the candidate's sources. A "same" without a quote is treated as "unknown".
+Give a short note: one plain sentence saying what the evidence shows for this part, naming the specific problem, customers or service (for example "Both wash cars at the customer's home in Riyadh"). Never repeat the definition of the answer (such as "the evidence clearly shows it is the same"). For "same" or "partly", also give the source_url of the page in the evidence that supports it and quote: the exact sentence copied word for word from the evidence; otherwise null for both. Use only URLs listed in the candidate's sources. A "same" without a quote is treated as "unknown".
 
 Then propose a label:
 - "direct": same problem AND same customer.

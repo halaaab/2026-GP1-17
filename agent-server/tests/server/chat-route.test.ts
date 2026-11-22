@@ -106,4 +106,20 @@ describe('POST /chat', () => {
     expect(raw).toContain('Hello again!');
     expect(calls).toHaveLength(1);
   });
+
+  it('drops what the model writes before calling a tool, and sends a reply without tools in full (K3, 23 Nov 2026)', async () => {
+    const before = fakeContext('founder-1', body, [
+      { type: 'text-delta', payload: { text: 'Please hold on while I gather the information.' } },
+      { type: 'tool-call', payload: { toolName: 'agent-competitorAgent' } },
+      { type: 'text-delta', payload: { text: 'Your analysis is ready!' } },
+    ]);
+    expect(await (await run(before.context)).text()).toBe('data: {"type":"text-delta","payload":{"text":"Your analysis is ready!"}}\n\ndata: [DONE]\n\n');
+
+    const noTool = fakeContext('founder-1', { ...body, threadId: 'old-thread', text: 'What can Darb do?' }, [
+      { type: 'text-delta', payload: { text: 'Darb studies ' } },
+      { type: 'tool-call', payload: { toolName: 'updateWorkingMemory' } },
+      { type: 'text-delta', payload: { text: 'your idea.' } },
+    ]);
+    expect(await (await run(noTool.context)).text()).toBe('data: {"type":"text-delta","payload":{"text":"Darb studies your idea."}}\n\ndata: [DONE]\n\n');
+  });
 });
