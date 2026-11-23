@@ -105,18 +105,6 @@
   font-weight: 800;
 }
 
-.founder-reports {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.founder-reports-empty {
-  margin: 0;
-}
-
 /* the two buttons share the footer equally, as in the design */
 .founder-panel-foot .btn {
   flex: 1;

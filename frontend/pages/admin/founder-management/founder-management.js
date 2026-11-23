@@ -145,11 +145,6 @@ function showPanel() {
   status.classList.toggle('is-good', isActive);
   status.classList.toggle('is-risk', !isActive);
 
-  // PDF reports: no reports table yet, so the list is empty
-  document.querySelector('#panel-report-count').textContent = t('founders.reportCount').replace('{n}', 0);
-  document.querySelector('#panel-reports').innerHTML = '';
-  document.querySelector('#panel-reports-empty').hidden = false;
-
   statusButton.textContent = t(isActive ? 'founders.deactivate' : 'founders.activate');
 
   // view mode or edit mode

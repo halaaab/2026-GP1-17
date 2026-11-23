@@ -16,7 +16,7 @@ import { icon } from '../../../shared/layout.js';
 import { supabase } from '../../../shared/supabase.js';
 import { getAccount } from '../../../shared/auth.js';
 import { showErrorPage } from '../../../shared/errors.js';
-import { scoreBand, whenText } from '../../../shared/assessments.js';
+import { scoreBand } from '../../../shared/assessments.js';
 import { completeness } from '../../founder/incubators-accelerators/programs.js';
 import { TYPE_COLORS } from '../founder-management/founder-fields.js';
 import '../../../shared/guard.js';
@@ -85,10 +85,6 @@ function shortDate(date) {
   return new Date(date).toLocaleDateString(locale(), { day: 'numeric', month: 'short' });
 }
 
-function initials(name) {
-  return (name || '?').trim().split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
-}
-
 function isBetween(date, from, to) {
   if (!date) return false;
   const time = new Date(date).getTime();
@@ -114,7 +110,7 @@ async function readAll(table, columns) {
 async function load() {
   const results = await Promise.all([
     readAll('founder_profiles', 'user_id, full_name, user_type, region, status, locale, created_at'),
-    readAll('startup_ideas', 'idea_id, founder_id, idea_name, sector, created_at'),
+    readAll('startup_ideas', 'idea_id, founder_id, sector, created_at'),
     readAll('assessments', 'assessment_id, idea_id, status, fis_score, started_at, completed_at, roadmap_generated_at'),
     readAll('startups', 'startup_id, sector, startup_description'),
     readAll('support_organizations', '*'),
@@ -632,47 +628,6 @@ function showHealth() {
     </li>`).join('');
 }
 
-/* ---------- 6. Latest activity ---------- */
-
-function showFeed() {
-  const nameOf = (userId) => data.userById.get(userId)?.full_name || t('overview.aFounder');
-
-  const events = [
-    ...data.users.map((user) => ({
-      at: user.created_at, who: user.full_name, kind: 'joined',
-      text: fill('overview.eJoined', { name: `<strong>${safe(user.full_name)}</strong>` }),
-    })),
-    ...data.ideas.map((idea) => ({
-      at: idea.created_at, who: nameOf(idea.founder_id), kind: 'idea',
-      text: fill('overview.eIdea', { name: `<strong>${safe(nameOf(idea.founder_id))}</strong>`, idea: safe(idea.idea_name) }),
-    })),
-    ...data.assessments.filter((item) => item.completed_at && item.fis_score !== null).map((item) => {
-      const idea = data.ideaById.get(item.idea_id);
-      return {
-        at: item.completed_at, who: nameOf(idea?.founder_id), kind: 'score', score: item.fis_score,
-        text: fill('overview.eScore', { name: `<strong>${safe(nameOf(idea?.founder_id))}</strong>`, idea: safe(idea?.idea_name || '') }),
-      };
-    }),
-  ]
-    .filter((event) => event.at)
-    .sort((a, b) => new Date(b.at) - new Date(a.at))
-    .slice(0, 7);
-
-  document.querySelector('#feed').innerHTML = events.length === 0
-    ? `<li class="text-3">${t('overview.feedEmpty')}</li>`
-    : events.map((event) => `
-      <li class="ov-event">
-        <span class="avatar avatar-sm">${safe(initials(event.who))}</span>
-        <div class="ov-event-text">
-          <span>${event.text}</span>
-          <span class="text-3">${whenText(event.at)}</span>
-        </div>
-        ${event.kind === 'score'
-          ? `<span class="chip chip-${scoreBand(event.score)}">${event.score}</span>`
-          : `<span class="ov-event-kind">${icon(event.kind === 'joined' ? 'user' : 'spark')}</span>`}
-      </li>`).join('');
-}
-
 /* ---------- Drawing everything ---------- */
 
 function showAll() {
@@ -684,7 +639,6 @@ function showAll() {
   showRhythm();
   showPeople();
   showHealth();
-  showFeed();
   document.querySelector('#updated').textContent = fill('overview.updated', {
     time: loadedAt.toLocaleTimeString(locale(), { hour: '2-digit', minute: '2-digit' }),
   });
