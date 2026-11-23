@@ -1,4 +1,0 @@
-case,trace_id,span,file,duration_shown
-C2,53cfe90b3bb29cc0da4e1ee57129f1df,span tree,C2_tree.png,42.46s
-C2,53cfe90b3bb29cc0da4e1ee57129f1df,agent-competitorAgent,C2_agent-competitorAgent_input.png,25.05s
-C2,53cfe90b3bb29cc0da4e1ee57129f1df,agent-competitorAgent,C2_agent-competitorAgent_output.png,25.05s
