@@ -72,16 +72,15 @@ Chat messages go to the agent server. Everything else, such as sign-in, the expl
 ├── agent-server/ # AI agents (Mastra, TypeScript) — see agent-server/README.md
 ├── ml/           # Survival model code — see ml/README.md
 ├── datasets/     # Where the data lives — see datasets/README.md
-└── resources/    # Research papers + project docs (proposal, sprint reports & diagrams)
+└── resources/    # Research paper links and data reviews
 ```
 
 ## Documentation
 
+The project reports are submitted to the course separately and are not stored in this repository.
+
 | Document | Location |
 |---|---|
-| Proposal | [`resources/docs/proposal/`](resources/docs/proposal/) |
-| Sprint 0 report & design document | [`resources/docs/sprint-0/`](resources/docs/sprint-0/) |
-| Sprint 1–5 reports | [`sprint-1/`](resources/docs/sprint-1/) · [`sprint-2/`](resources/docs/sprint-2/) · [`sprint-3/`](resources/docs/sprint-3/) · [`sprint-4/`](resources/docs/sprint-4/) · [`sprint-5/`](resources/docs/sprint-5/) |
 | Datasets | [`datasets/README.md`](datasets/README.md) |
 | Research papers | [`resources/papers/`](resources/papers/) |
 
