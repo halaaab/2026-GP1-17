@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const ran: string[] = [];
 let ready = true;
-const fake = (name: string, answer: () => unknown) => ({ execute: vi.fn(async () => (ran.push(name), answer())) });
+const fake = (name: string, answer: () => unknown) => ({ id: name, execute: vi.fn(async () => (ran.push(name), answer())) });
 vi.mock('../../src/mastra/tools/understand-idea', () => ({ understandIdeaTool: fake('understand_idea', () => ({ ready })) }));
 vi.mock('../../src/mastra/tools/find-competitors', () => ({ findCompetitorsAgentTool: fake('find_competitors', () => ({ searched: true })) }));
 vi.mock('../../src/mastra/tools/judge-candidates', () => ({ judgeCandidatesTool: fake('judge_candidates', () => ({ judged: [] })) }));
@@ -31,5 +31,34 @@ describe('analyse_idea', () => {
     ready = false;
     await analyse();
     expect(ran).toEqual(['understand_idea', 'finalize_result']);
+  });
+
+  it('records each step as its own trace span under analyse_idea, and returns the same Result', async () => {
+    ready = true;
+    const spans: { name: string; input: unknown; ended: unknown }[] = [];
+    const parent = {
+      createChildSpan: ({ name, input }: { name: string; input: unknown }) => {
+        const span = { name, input, ended: undefined as unknown, end: (options: unknown) => (span.ended = options ?? {}), error: () => {} };
+        spans.push(span);
+        return span;
+      },
+    };
+    const result = await analyseIdeaTool.execute!({}, { tracingContext: { currentSpan: parent } } as never);
+    expect(result).toEqual({ status: 'complete' });
+    expect(spans.map((span) => span.name)).toEqual(['understand_idea', 'find_competitors', 'judge_candidates', 'finalize_result']);
+    expect(spans.every((span) => span.ended !== undefined)).toBe(true);
+    // each span shows what its step returned
+    expect(spans.map((span) => span.ended)).toEqual([
+      { output: { ready: true } },
+      { output: { searched: true } },
+      { output: { judged: [] } },
+      { output: { status: 'complete' } },
+    ]);
+  });
+
+  it('runs exactly the same when there is no trace (no span to report under)', async () => {
+    ready = true;
+    expect(await analyse()).toEqual({ status: 'complete' });
+    expect(ran).toEqual(['understand_idea', 'find_competitors', 'judge_candidates', 'finalize_result']);
   });
 });
