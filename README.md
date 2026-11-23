@@ -60,6 +60,7 @@ Chat messages go to the agent server. Everything else, such as sign-in, the expl
 | Web search | Tavily Search API, restricted to approved websites |
 | ML service | Python, FastAPI, LightGBM, XGBoost, SHAP |
 | Database and authentication | Supabase |
+| Hosting | Render (website and agent server) |
 | Model development | Python, Google Colab, Google Drive |
 | Tools | Visual Studio Code, GitHub, Jira, Confluence |
 
@@ -74,6 +75,36 @@ Chat messages go to the agent server. Everything else, such as sign-in, the expl
 ├── datasets/     # Where the data lives — see datasets/README.md
 └── resources/    # Research paper links and data reviews
 ```
+
+## Getting Started
+
+Each part of Darb runs on its own. Set them up in this order; the README file of each folder gives the details.
+
+**You need:** Node.js 22.13 or newer, Python 3.13, Visual Studio Code with the Live Server extension, and a Supabase project.
+
+1. **Database** (`backend/`)
+   In the Supabase SQL Editor, run the files of `backend/supabase/migrations/` in the order of their numbers, then the files of `backend/supabase/seed/`. This creates the tables, their Row Level Security policies and the starting data.
+
+2. **Agent server** (`agent-server/`, see [agent-server/README.md](agent-server/README.md))
+   ```bash
+   cd agent-server
+   npm install
+   cp .env.example .env
+   npm run dev
+   ```
+   Fill in the keys in `.env` before starting (each key has a comment explaining it). Open http://localhost:4111 to see the agents in Mastra Studio.
+
+3. **Website** (`frontend/`, see [frontend/README.md](frontend/README.md))
+   Set the Supabase project address and publishable key in `frontend/shared/config.js`, then open `frontend/index.html` in Visual Studio Code with **Open with Live Server**.
+
+4. **Model service** (`ml/`, see [ml/README.md](ml/README.md))
+   ```bash
+   pip install -r ml/requirements.txt
+   python -m uvicorn model_service:app --app-dir ml/src --port 8000
+   ```
+   It needs the model file from the Google Drive folder below. Then set `ML_SERVICE_URL=http://localhost:8000` in `agent-server/.env` and restart the agent server.
+
+**Data:** because of their size, the raw datasets and the trained model are kept in the project's Google Drive folder, [Darb DataSets](https://drive.google.com/drive/folders/1Y_TN68LIO1xkOmbi0Y8auEvB09Mh_1gc?usp=sharing). See [datasets/README.md](datasets/README.md) for what each file is.
 
 ## Documentation
 
