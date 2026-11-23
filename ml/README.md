@@ -9,7 +9,7 @@ the business will still be operating one year after its establishment.
 |---|---|
 | `notebooks/` | The pipeline, numbered notebooks run in order |
 | `experiments/` | The earlier experiment notebooks, kept as they were (the pipeline reuses their decisions) |
-| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names), `model_tools.py` (the same preparation and scores for every model), `model_service.py` (the service the agent calls, which serves the model saved by notebook 06) |
+| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names) |
 | `reports/` | Counts-only results of the notebooks (no business records), so the team can review them in GitHub |
 
 ## The pipeline
@@ -26,8 +26,6 @@ files.
 | 04 | `04_eda_clean` | Exploratory analysis of the preprocessed business records (Ministry of Commerce data only, training businesses only) | Done |
 | 05 | `05_moc_feature_extraction` | Time split; every feature that can be derived from the Ministry of Commerce records, studied on the training businesses only (no model trained, test set never opened) | Done, awaiting the decision on which features enter the model |
 | 05 | `05_features` | Feature engineering and time split with the business information only; association between the inputs and leakage checks | Done, awaiting the decisions listed in its summary |
-| 06 | `06_baseline` | Always the average and logistic regression on the sector and region; saves the model of Release 1 | Done |
-| 07–08 | `07_tuning`, `08_final_training` | Tuning, final training | Being rebuilt |
 
 ## Reports (`reports/`)
 
@@ -62,16 +60,3 @@ files.
 1. In Drive, add a shortcut to Darb DataSets in your My Drive.
 2. Upload the files of `ml/src` to `/content`.
 3. Run the notebook: its setup cell connects Drive and installs the missing packages.
-
-## The model of Release 1 on the website
-
-The conversational agent's `predict_survival` tool uses the **model of Release 1**: the logistic regression of
-notebook 06, trained on the Ministry of Commerce business records with the two inputs the agent confirms with the
-founder (economic sector and region). The founder sees only the survival percentage in the chat (never how the model
-was made or what it was trained on), not in the FIS panel.
-
-1. Train it: run notebooks 05_features and 06_baseline. Notebook 06 saves `release1_survival_model.joblib` and
-   `release1_survival_model_report.json` (with the validation scores) in `Darb DataSets/pipeline/models/`.
-2. Start the service: `.venv/bin/python -m uvicorn model_service:app --app-dir ml/src --port 8000`.
-   Try it at http://localhost:8000/docs; http://localhost:8000/health shows the model's validation scores.
-3. In `agent-server/.env`, set `ML_SERVICE_URL=http://localhost:8000` and restart the agent server.
