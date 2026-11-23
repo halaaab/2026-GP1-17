@@ -570,43 +570,6 @@ html[dir="rtl"] .ov-audience-note svg:last-child {
   flex-shrink: 0;
 }
 
-/* ---------- 6. Latest activity ---------- */
-
-.ov-feed {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.ov-event {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-}
-.ov-event-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  flex: 1;
-  min-width: 0;
-  font-size: 13px;
-  line-height: 1.45;
-  overflow-wrap: anywhere;
-}
-.ov-event-text .text-3 {
-  font-size: 12px;
-}
-.ov-event-kind {
-  display: inline-flex;
-  color: var(--text-3);
-}
-.ov-event-kind svg {
-  width: 15px;
-  height: 15px;
-}
-
 /* ---------- Tooltip ---------- */
 
 .ov-tip {
