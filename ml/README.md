@@ -9,25 +9,20 @@ the business will still be operating one year after its establishment.
 |---|---|
 | `notebooks/` | The pipeline, numbered notebooks run in order |
 | `experiments/` | The earlier experiment notebooks, kept as they were (the pipeline reuses their decisions) |
-| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names), `model_tools.py` (the same preparation and scores for every model), `model_service.py` (the service the agent calls, which serves the model saved by notebook 06) |
+| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names) |
 | `reports/` | Counts-only results of the notebooks (no business records), so the team can review them in GitHub |
 
 ## The pipeline
 
 Each notebook saves its results in `Darb DataSets/pipeline/`, and the next one loads them. Only `00` reads the raw
-files.
+files. The feature engineering, model training and evaluation notebooks are added in Release 2.
 
 | # | Notebook | What it does | Status |
 |---|---|---|---|
 | 00 | `00_download` | Introduction, research question and methodology; copies every raw file once in a fast-loading format | Done |
 | 01 | `01_eda_raw` | Exploratory analysis of the raw data | Done |
 | 02 | `02_preprocess_businesses` | One row per business: attributes at founding, presence in each quarter, survival target, conversions of sole proprietorships into companies, economic sector | Done |
-| 03 | `03_preprocess_economic` | Economic indicators (GDP, point-of-sale spending) before each founding quarter | Being rebuilt |
 | 04 | `04_eda_clean` | Exploratory analysis of the preprocessed business records (Ministry of Commerce data only, training businesses only) | Done |
-| 05 | `05_moc_feature_extraction` | Time split; every feature that can be derived from the Ministry of Commerce records, studied on the training businesses only (no model trained, test set never opened) | Done, awaiting the decision on which features enter the model |
-| 05 | `05_features` | Feature engineering and time split with the business information only; association between the inputs and leakage checks | Done, awaiting the decisions listed in its summary |
-| 06 | `06_baseline` | Always the average and logistic regression on the sector and region; saves the model of Release 1 | Done |
-| 07–08 | `07_tuning`, `08_final_training` | Tuning, final training | Being rebuilt |
 
 ## Reports (`reports/`)
 
@@ -39,11 +34,6 @@ files.
 | `02_city_mapping.csv` | 02 | Every locality recorded from 2025 Q2 and the city it is assigned to |
 | `02_sector_keywords.csv` | 02 | The keywords that give the sector from a business name, with their counts |
 | `02_sector_keywords_removed.csv` | the team | Keywords removed after review (optional; 02 excludes them) |
-| `05_feature_profile.csv` | 05 | Each numeric feature: availability, percentiles, area under the ROC curve alone, failure-rate range |
-| `05_feature_groups.csv` | 05 | Failure rate of each feature by group of values (training businesses) |
-| `05_feature_correlation.csv` | 05 | Spearman correlation between the numeric features |
-| `05_categorical_association.csv` | 05 | Cramér's V between the categorical features |
-| `05_business_input_association.csv` | 05 (features) | Cramér's V between the business inputs, and of each input with the outcome |
 
 ## Rules
 
@@ -54,24 +44,10 @@ files.
 ## Running the notebooks
 
 **On a laptop:** keep a copy of Darb DataSets in `~/darb-data` (or set `DARB_DATA` to its folder), install
-`requirements.txt`, and run the notebooks from `ml/notebooks/`. LightGBM and XGBoost on a Mac also need OpenMP:
-`brew install libomp`.
+`requirements.txt`, and run the notebooks from `ml/notebooks/`.
 
 **On Colab:** a Colab server cannot see the files on your laptop.
 
 1. In Drive, add a shortcut to Darb DataSets in your My Drive.
 2. Upload the files of `ml/src` to `/content`.
 3. Run the notebook: its setup cell connects Drive and installs the missing packages.
-
-## The model of Release 1 on the website
-
-The conversational agent's `predict_survival` tool uses the **model of Release 1**: the logistic regression of
-notebook 06, trained on the Ministry of Commerce business records with the two inputs the agent confirms with the
-founder (economic sector and region). The founder sees only the survival percentage in the chat (never how the model
-was made or what it was trained on), not in the FIS panel.
-
-1. Train it: run notebooks 05_features and 06_baseline. Notebook 06 saves `release1_survival_model.joblib` and
-   `release1_survival_model_report.json` (with the validation scores) in `Darb DataSets/pipeline/models/`.
-2. Start the service: `.venv/bin/python -m uvicorn model_service:app --app-dir ml/src --port 8000`.
-   Try it at http://localhost:8000/docs; http://localhost:8000/health shows the model's validation scores.
-3. In `agent-server/.env`, set `ML_SERVICE_URL=http://localhost:8000` and restart the agent server.

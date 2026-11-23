@@ -80,7 +80,7 @@ Chat messages go to the agent server. Everything else, such as sign-in, the expl
 
 Each part of Darb runs on its own. Set them up in this order; the README file of each folder gives the details.
 
-**You need:** Node.js 22.13 or newer, Python 3.13, Visual Studio Code with the Live Server extension, and a Supabase project.
+**You need:** Node.js 22.13 or newer, Python 3.13 (for the notebooks), Visual Studio Code with the Live Server extension, and a Supabase project.
 
 1. **Database** (`backend/`)
    In the Supabase SQL Editor, run the files of `backend/supabase/migrations/` in the order of their numbers, then the files of `backend/supabase/seed/`. This creates the tables, their Row Level Security policies and the starting data.
@@ -97,14 +97,7 @@ Each part of Darb runs on its own. Set them up in this order; the README file of
 3. **Website** (`frontend/`, see [frontend/README.md](frontend/README.md))
    Set the Supabase project address and publishable key in `frontend/shared/config.js`, then open `frontend/index.html` in Visual Studio Code with **Open with Live Server**.
 
-4. **Model service** (`ml/`, see [ml/README.md](ml/README.md))
-   ```bash
-   pip install -r ml/requirements.txt
-   python -m uvicorn model_service:app --app-dir ml/src --port 8000
-   ```
-   It needs the model file from the Google Drive folder below. Then set `ML_SERVICE_URL=http://localhost:8000` in `agent-server/.env` and restart the agent server.
-
-**Data:** because of their size, the raw datasets and the trained model are kept in the project's Google Drive folder, [Darb DataSets](https://drive.google.com/drive/folders/1Y_TN68LIO1xkOmbi0Y8auEvB09Mh_1gc?usp=sharing). See [datasets/README.md](datasets/README.md) for what each file is.
+**Survival model data:** the notebooks in `ml/notebooks/` prepare the data of the survival prediction model; [ml/README.md](ml/README.md) explains how to run them. Because of their size, the raw datasets are kept in the project's Google Drive folder, [Darb DataSets](https://drive.google.com/drive/folders/1Y_TN68LIO1xkOmbi0Y8auEvB09Mh_1gc?usp=sharing). See [datasets/README.md](datasets/README.md) for what each file is.
 
 ## Documentation
 
