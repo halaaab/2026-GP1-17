@@ -21,16 +21,16 @@ import { Handoff } from '../schemas/competitor';
 type Step = { id: string; execute?: (input: never, context: never) => Promise<unknown> };
 
 // Runs one step inside its own trace span, a child of analyse_idea's span. Nothing about the run changes: the step
-// gets the same context (only the span it reports under is its own), and an error is passed on as before.
-// The span's output is only whether the idea was ready, never the founder's idea text (as in the run log).
-async function runStep<T>(step: Step, context: unknown): Promise<T> {
+// gets the same context (only the span it reports under is its own), its result is returned as it is, and an error
+// is passed on as before. The span shows what the step read (the handoff) and what it returned, so Studio's trace view
+// has each step's input and output; Mastra's SensitiveDataFilter still runs on every span (index.ts).
+async function runStep<T>(step: Step, context: unknown, input: unknown): Promise<T> {
   const parent = (context as { tracingContext?: TracingContext } | undefined)?.tracingContext?.currentSpan;
-  const span = parent?.createChildSpan({ type: SpanType.GENERIC, name: step.id });
+  const span = parent?.createChildSpan({ type: SpanType.GENERIC, name: step.id, input });
   const stepContext = span ? { ...(context as object), tracingContext: { currentSpan: span } } : context;
   try {
     const result = (await step.execute!({} as never, stepContext as never)) as T;
-    const ready = (result as { ready?: unknown } | undefined)?.ready;
-    span?.end(typeof ready === 'boolean' ? { output: { ready } } : {});
+    span?.end({ output: result });
     return result;
   } catch (error) {
     span?.error({ error: error instanceof Error ? error : new Error(String(error)) });
@@ -43,9 +43,10 @@ export const analyseIdeaTool = createTool({
   description: "Runs the whole competitor analysis of the idea in this run and returns the checked result. Call it once, with an empty input.",
   inputSchema: z.object({}),
   execute: async (_input, context) => {
-    const run = <T>(step: Step) => runStep<T>(step, context);
     // What Darb is doing now, for the founder's screen (lib/progress.ts); find_competitors reports its own steps.
     const handoff = Handoff.safeParse((context as { requestContext?: { get: (k: string) => unknown } } | undefined)?.requestContext?.get(HANDOFF_KEY));
+    // Each step reads the handoff from the run's context: that is the input its span shows.
+    const run = <T>(step: Step) => runStep<T>(step, context, handoff.success ? { handoff: handoff.data } : {});
     const progress = (step: Parameters<typeof reportProgress>[1]) => reportProgress(handoff.success ? handoff.data.assessment_id : null, step);
     progress('understanding');
     const understood = await run<{ ready?: boolean }>(understandIdeaTool);

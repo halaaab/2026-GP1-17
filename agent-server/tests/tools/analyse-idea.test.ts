@@ -35,10 +35,10 @@ describe('analyse_idea', () => {
 
   it('records each step as its own trace span under analyse_idea, and returns the same Result', async () => {
     ready = true;
-    const spans: { name: string; ended: unknown }[] = [];
+    const spans: { name: string; input: unknown; ended: unknown }[] = [];
     const parent = {
-      createChildSpan: ({ name }: { name: string }) => {
-        const span = { name, ended: undefined as unknown, end: (options: unknown) => (span.ended = options ?? {}), error: () => {} };
+      createChildSpan: ({ name, input }: { name: string; input: unknown }) => {
+        const span = { name, input, ended: undefined as unknown, end: (options: unknown) => (span.ended = options ?? {}), error: () => {} };
         spans.push(span);
         return span;
       },
@@ -47,8 +47,13 @@ describe('analyse_idea', () => {
     expect(result).toEqual({ status: 'complete' });
     expect(spans.map((span) => span.name)).toEqual(['understand_idea', 'find_competitors', 'judge_candidates', 'finalize_result']);
     expect(spans.every((span) => span.ended !== undefined)).toBe(true);
-    // the span says only whether the idea was ready, never the founder's text
-    expect(spans[0].ended).toEqual({ output: { ready: true } });
+    // each span shows what its step returned
+    expect(spans.map((span) => span.ended)).toEqual([
+      { output: { ready: true } },
+      { output: { searched: true } },
+      { output: { judged: [] } },
+      { output: { status: 'complete' } },
+    ]);
   });
 
   it('runs exactly the same when there is no trace (no span to report under)', async () => {
