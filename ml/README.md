@@ -9,7 +9,7 @@ the business will still be operating one year after its establishment.
 |---|---|
 | `notebooks/` | The pipeline, numbered notebooks run in order |
 | `experiments/` | The earlier experiment notebooks, kept as they were (the pipeline reuses their decisions) |
-| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names), `model_tools.py` (the same preparation and scores for every model) |
+| `src/` | Shared code: `mc_files.py` (the Ministry of Commerce files and their attribute names), `isic_classifier.py` (sector rules for business names) |
 | `reports/` | Counts-only results of the notebooks (no business records), so the team can review them in GitHub |
 
 ## The pipeline
@@ -26,7 +26,6 @@ files.
 | 04 | `04_eda_clean` | Exploratory analysis of the preprocessed business records (Ministry of Commerce data only, training businesses only) | Done |
 | 05 | `05_moc_feature_extraction` | Time split; every feature that can be derived from the Ministry of Commerce records, studied on the training businesses only (no model trained, test set never opened) | Done, awaiting the decision on which features enter the model |
 | 05 | `05_features` | Feature engineering and time split with the business information only; association between the inputs and leakage checks | Done, awaiting the decisions listed in its summary |
-| 06–08 | `06_baseline`, `07_tuning`, `08_final_training` | Baselines, tuning, final training | Being rebuilt |
 
 ## Reports (`reports/`)
 
