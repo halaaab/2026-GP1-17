@@ -88,8 +88,9 @@
         </select>
       </span>
       <span class="programs-select-wrap">
-        <!-- the option text and its count are written by the script -->
+        <!-- the first option is the dropdown's name (no number); the other options' text and count are written by the script -->
         <select class="programs-select" id="type-filter" data-i18n-aria-label="programs.type">
+          <option value="all" hidden data-i18n="programs.type"></option>
           <option value="all" data-label="programs.all"></option>
           <option value="incubator" data-label="programs.incubators"></option>
           <option value="accelerator" data-label="programs.accelerators"></option>

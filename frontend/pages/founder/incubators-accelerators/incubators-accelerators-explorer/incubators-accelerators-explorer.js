@@ -85,7 +85,8 @@ function showTotals() {
 /* Each dropdown says how many programs each choice has, the same way as the Startup Explorer.
    The numbers follow the search and the OTHER filters: "All sectors (N)" is how many programs
    fit the other filters, and each sector is how many of those fit that sector too
-   (a program open to all sectors counts in every sector). A choice with none shows (0). */
+   (a program open to all sectors counts in every sector). A choice with none shows (0).
+   The dropdown's name (the first, hidden option) has no number. */
 function showCounts() {
   const dropdowns = [
     { select: typeFilter, filter: 'type', fits: fitsType, words: (option) => t(option.dataset.label) },
@@ -94,7 +95,7 @@ function showCounts() {
   ];
   dropdowns.forEach(({ select, filter, fits, words }) => {
     const fitting = programs.filter((program) => matches(program, filter));
-    select.querySelectorAll('option').forEach((option) => {
+    select.querySelectorAll('option:not([hidden])').forEach((option) => {
       const count = fitting.filter((program) => fits(program, option.value)).length;
       option.textContent = `${words(option)} (${count})`;
     });
@@ -172,23 +173,26 @@ function show() {
    of GASTAT's classification, A to U, then any other sector word a program still has.
    The region dropdown lists the Saudi regions that have a program, in the
    order of the 13 regions (a region shows up once a program in it is added).
-   Both start with "All". The values are English words, so a choice stays chosen when
+   Both start with their name, then "All". The values are English words, so a choice stays chosen when
    the language changes; only the words are redrawn. The numbers are written by showCounts(). */
 function fillDropdowns() {
-  const chosenSector = sectorFilter.value;
-  const chosenRegion = regionFilter.value;
-
   const others = [...new Set(programs.flatMap(sectorList))].filter((sector) => !ISIC_CODES.includes(sector)).sort();
   const sectors = [...ISIC_CODES, ...others];
   const regions = SAUDI_REGIONS.filter((region) => programs.some((program) => regionOf(program) === region));
 
-  sectorFilter.innerHTML = '<option value=""></option>'
-    + sectors.map((sector) => `<option value="${safe(sector)}"></option>`).join('');
-  regionFilter.innerHTML = '<option value=""></option>'
-    + regions.map((region) => `<option value="${safe(region)}"></option>`).join('');
+  fill(sectorFilter, 'programs.sector', sectors);
+  fill(regionFilter, 'programs.region', regions);
+}
 
-  sectorFilter.value = chosenSector;
-  regionFilter.value = chosenRegion;
+/* Fills a dropdown: its name ("Focus sector", no number) shows while nothing is chosen,
+   then "All …" and each choice, the same as the Regulatory Requirements Explorer */
+function fill(select, nameKey, values) {
+  const chosen = select.value;
+  const pickedAll = select.selectedIndex === 1;
+  select.innerHTML = `<option value="" hidden>${t(nameKey)}</option><option value=""></option>`
+    + values.map((value) => `<option value="${safe(value)}"></option>`).join('');
+  if (chosen && values.includes(chosen)) select.value = chosen;
+  else select.selectedIndex = pickedAll ? 1 : 0;
 }
 
 /* ---------- The address keeps the filters ---------- */
