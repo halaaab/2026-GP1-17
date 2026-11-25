@@ -77,11 +77,15 @@ function fillDropdowns() {
     return found;
   };
 
-  const fill = (select, values) => {
+  // the dropdown's name ("Sector", no number) shows while nothing is chosen, then "All …" and
+  // each choice, the same as the Regulatory Requirements Explorer
+  const fill = (select, nameKey, values) => {
     const chosen = select.value;
-    select.innerHTML = '<option value=""></option>'
+    const pickedAll = select.selectedIndex === 1;
+    select.innerHTML = `<option value="" hidden>${t(nameKey)}</option><option value=""></option>`
       + values.map((value) => `<option value="${safe(value)}"></option>`).join('');
-    select.value = chosen;
+    if (chosen && values.includes(chosen)) select.value = chosen;
+    else select.selectedIndex = pickedAll ? 1 : 0;
   };
 
   const regions = counts('region');
@@ -89,14 +93,15 @@ function fillDropdowns() {
   const stages = STAGES.filter((stage) => startups.some((row) => listOf(row, 'stage').includes(stage)));
 
   // the sectors are the 20 ISIC4 sections of GASTAT's classification, A to U, each with its count
-  fill(sectorFilter, ISIC_CODES);
-  fill(regionFilter, [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces]);
-  fill(stageFilter, stages);
+  fill(sectorFilter, 'startups.sector', ISIC_CODES);
+  fill(regionFilter, 'startups.region', [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces]);
+  fill(stageFilter, 'startups.stage', stages);
 }
 
 /* Each dropdown says how many startups each choice has. The numbers follow the search and
    the OTHER filters: "All regions (N)" is how many startups fit the other filters, and each
-   region is how many of those are in that region. A choice with none shows (0). */
+   region is how many of those are in that region. A choice with none shows (0).
+   The dropdown's name (the first, hidden option) has no number. */
 const DROPDOWNS = [
   { select: sectorFilter, column: 'isic', allKey: 'startups.allSectors' },
   { select: regionFilter, column: 'region', allKey: 'startups.allRegions' },
@@ -106,7 +111,7 @@ const DROPDOWNS = [
 function showCounts() {
   DROPDOWNS.forEach(({ select, column, allKey }) => {
     const fitting = startups.filter((row) => matches(row, column));
-    select.querySelectorAll('option').forEach((option) => {
+    select.querySelectorAll('option:not([hidden])').forEach((option) => {
       const count = option.value ? fitting.filter((row) => listOf(row, column).includes(option.value)).length : fitting.length;
       const words = option.value ? label(column, option.value) : t(allKey);
       option.textContent = `${words} (${count})`;
