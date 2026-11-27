@@ -1083,6 +1083,8 @@
   "form.search": "Search and choose",
   "form.searchSectors": "Search sectors",
   "form.searchRegions": "Search regions",
+  "form.logoLink": "or paste a link: https://…",
+  "form.logoNotSaved": "The logo could not be uploaded. Try again, or paste a link to it.",
   "form.basics": "Basics",
   "form.classification": "Classification",
   "form.description": "Description",

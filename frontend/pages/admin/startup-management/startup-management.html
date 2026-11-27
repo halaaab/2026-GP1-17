@@ -83,14 +83,21 @@
 
         <section class="form-section">
           <h4 class="form-section-title" data-i18n="form.basics"></h4>
+          <!-- The same logo row as the other panels: upload a picture (shared/logo-upload.js, migration 0049),
+               or paste a link to one already online -->
           <div class="field">
-            <label class="label" for="f-logo" data-i18n="startupAdmin.logo"></label>
-            <div class="logo-field">
+            <span class="label" id="logo-label" data-i18n="programsAdmin.f.logo"></span>
+            <div class="logo-field" id="logo-picker">
               <span class="logo-field-preview" id="logo-preview"></span>
               <div class="logo-field-body">
-                <input class="input" id="f-logo" type="url" dir="ltr" placeholder="https://">
-                <p class="field-hint" data-i18n="startupAdmin.logoHint"></p>
+                <div class="logo-picker-buttons">
+                  <button type="button" class="btn btn-secondary btn-sm" id="logo-choose" aria-describedby="logo-hint"></button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="logo-remove" data-i18n="programsAdmin.f.logoRemove"></button>
+                </div>
+                <p class="field-hint" id="logo-hint" data-i18n="programsAdmin.f.logoHint"></p>
+                <input class="input" id="f-logo" type="url" dir="ltr" data-i18n-placeholder="form.logoLink" aria-labelledby="logo-label">
               </div>
+              <input class="logo-input" id="f-logo-file" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="logo-label" tabindex="-1">
             </div>
             <p class="field-error" id="f-logo-error" hidden></p>
           </div>

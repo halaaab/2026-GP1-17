@@ -1083,6 +1083,8 @@
   "form.search": "ابحث واختر",
   "form.searchSectors": "ابحث عن قطاع",
   "form.searchRegions": "ابحث عن منطقة",
+  "form.logoLink": "أو ألصق رابطًا: https://…",
+  "form.logoNotSaved": "تعذّر رفع الشعار. حاول مرة أخرى، أو ألصق رابطًا له.",
   "form.basics": "الأساسيات",
   "form.classification": "التصنيف",
   "form.description": "الوصف",

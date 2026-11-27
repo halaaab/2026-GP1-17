@@ -4,6 +4,7 @@
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast, showFormSummary } from '../../../shared/ui.js';
+import { makeLogoUpload } from '../../../shared/logo-upload.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
@@ -158,25 +159,23 @@ function clearErrors() {
 // "2 fields need attention" above the form (shared.css .form-summary)
 const formProblems = (n) => (n === 1 ? t('form.oneProblem') : t('form.problems').replace('{n}', n));
 
-// The logo row's square: the picture at the address typed, or the startup's initials
-function showLogoPreview() {
-  const preview = document.querySelector('#logo-preview');
-  const address = input('logo').value.trim();
-  const name = input('startup_name').value.trim();
-  preview.textContent = '';
-  if (/^https?:\/\/\S+$/.test(address)) {
-    const picture = document.createElement('img');
-    picture.alt = '';
-    picture.src = address;
-    picture.onerror = () => { preview.textContent = initialsOf(name); };
-    preview.append(picture);
-  } else {
-    preview.textContent = initialsOf(name);
-  }
-}
+// The logo row: upload a picture (the "startup-logos" bucket, migration 0049) or paste a link (shared/logo-upload.js)
 const initialsOf = (name) => (name || '?').split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
-input('logo').addEventListener('input', showLogoPreview);
-input('startup_name').addEventListener('input', showLogoPreview);
+const logoUpload = makeLogoUpload({
+  bucket: 'startup-logos',
+  row: '#logo-picker',
+  preview: '#logo-preview',
+  choose: '#logo-choose',
+  remove: '#logo-remove',
+  file: '#f-logo-file',
+  error: '#f-logo-error',
+  initials: () => initialsOf(input('startup_name').value.trim()),
+  addressOf: (address) => (/^https?:\/\/\S+$/.test(address) ? address : ''),
+  // a new picture (or Remove) replaces the link
+  onChange: () => { input('logo').value = ''; },
+});
+input('logo').addEventListener('change', () => logoUpload.useAddress(input('logo').value.trim()));
+input('startup_name').addEventListener('input', () => logoUpload.show());
 
 // The boxes ticked in one group, as the database writes them: "Seed; Series A"
 function tickedText(column) {
@@ -213,7 +212,7 @@ function openForm(id) {
   });
   clearErrors();
   showFormWords();
-  showLogoPreview();
+  logoUpload.reset(row.logo || '');
 
   panel.querySelector('.panel-body').scrollTop = 0;
   panel.classList.add('is-open');
@@ -271,13 +270,25 @@ form.addEventListener('submit', async (event) => {
   const { sector: sectorText, tags: tagsText, ...columns } = values;
 
   saveButton.classList.add('is-loading');
+  // the id first, so an uploaded logo is kept under it; then the logo's address (new upload, removed, or the link)
+  const startupId = editingId || nextId();
+  if (logoUpload.hasNewPicture() || logoUpload.isRemoved()) {
+    try {
+      columns.logo = await logoUpload.save(startupId);
+    } catch (error) {
+      console.error('startup logo:', error.message);
+      saveButton.classList.remove('is-loading');
+      showToast(t('form.logoNotSaved'), 'risk');
+      return;
+    }
+  }
   let result;
   if (editingId) {
     result = await supabase.from('startups').update(columns).eq('startup_id', editingId).select().single();
   } else {
     // the database remembers which admin added it (startup_maintenance, migration 0024)
     result = await supabase.from('startups')
-      .insert({ ...columns, startup_id: nextId() })
+      .insert({ ...columns, startup_id: startupId })
       .select().single();
   }
   const listError = result.error ? null : await saveStartupLists(result.data.startup_id, sectorText, tagsText);

@@ -79,16 +79,23 @@
 
         <section class="form-section">
           <h4 class="form-section-title" data-i18n="form.basics"></h4>
+          <!-- The same logo row as the other panels: upload a picture (shared/logo-upload.js, migration 0049),
+               or pick a logo already used by an authority (picking an authority fills it) -->
           <div class="field">
-            <label class="label" for="f-authority_logo" data-i18n="regAdmin.logo"></label>
-            <div class="logo-field">
+            <span class="label" id="logo-label" data-i18n="regAdmin.logo"></span>
+            <div class="logo-field" id="logo-picker">
               <span class="logo-field-preview" id="logo-preview"></span>
               <div class="logo-field-body">
-                <!-- regulatory-management.js lists the logos already in use; picking an authority fills it -->
-                <select class="input" id="f-authority_logo"></select>
-                <p class="field-hint" data-i18n="regAdmin.logoHint"></p>
+                <div class="logo-picker-buttons">
+                  <button type="button" class="btn btn-secondary btn-sm" id="logo-choose" aria-describedby="logo-hint"></button>
+                  <button type="button" class="btn btn-ghost btn-sm" id="logo-remove" data-i18n="programsAdmin.f.logoRemove"></button>
+                </div>
+                <p class="field-hint" id="logo-hint" data-i18n="programsAdmin.f.logoHint"></p>
+                <select class="input" id="f-authority_logo" aria-labelledby="logo-label"></select>
               </div>
+              <input class="logo-input" id="f-logo-file" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="logo-label" tabindex="-1">
             </div>
+            <p class="field-error" id="logo-error" hidden></p>
           </div>
           <div class="form-row">
             <div class="field">

@@ -175,9 +175,12 @@ export function colorOf(row) {
   return (sum + (Number(id.replace(/\D/g, '')) || 0)) % 6;                          // plus the number: 1, 2, 3 …
 }
 
-/* The full address of the authority's logo (authority_logo, migration 0012), or '' when there is none */
+/* The full address of the authority's logo (authority_logo, migration 0012), or '' when there is none.
+   A logo in the project is a path (assets/images/authorities/…); one uploaded by an admin (migration 0049) is
+   already a full address. */
 export function logoUrl(row) {
-  return row.authority_logo ? `${ROOT}${row.authority_logo}` : '';
+  if (!row.authority_logo) return '';
+  return /^https?:\/\//.test(row.authority_logo) ? row.authority_logo : `${ROOT}${row.authority_logo}`;
 }
 
 /* The authority's short name from its brackets, or the first letters of its words:

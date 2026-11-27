@@ -5,6 +5,7 @@
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import { showToast, showFormSummary } from '../../../shared/ui.js';
+import { makeLogoUpload } from '../../../shared/logo-upload.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
@@ -215,7 +216,7 @@ function openForm(id) {
   input('divisions').value = divisionsOf(row).filter((code) => code !== 'ALL').join(', ');
   clearErrors();
   showFormWords();
-  showLogoPreview();
+  logoUpload.reset(row.authority_logo || '');
 
   panel.querySelector('.panel-body').scrollTop = 0;
   panel.classList.add('is-open');
@@ -232,16 +233,23 @@ function showFormWords() {
   saveButton.textContent = t(row ? 'founders.save' : 'regAdmin.add');
 }
 
-// The logo row's square: the chosen authority logo, or the authority's initials
-function showLogoPreview() {
-  const preview = document.querySelector('#logo-preview');
-  const path = input('authority_logo').value;
-  preview.innerHTML = path
-    ? `<img src="${logoUrl({ authority_logo: path })}" alt="">`
-    : initials(input('authority').value.trim() || '?');
-}
+// The logo row: upload a picture (the "authority-logos" bucket, migration 0049) or pick one already used
+const logoUpload = makeLogoUpload({
+  bucket: 'authority-logos',
+  row: '#logo-picker',
+  preview: '#logo-preview',
+  choose: '#logo-choose',
+  remove: '#logo-remove',
+  file: '#f-logo-file',
+  error: '#logo-error',
+  initials: () => initials(input('authority').value.trim() || '?'),
+  addressOf: (path) => (path ? logoUrl({ authority_logo: path }) : ''),
+  // a new picture (or Remove) replaces the logo picked from the list
+  onChange: () => { input('authority_logo').value = ''; },
+});
+const showLogoPreview = () => logoUpload.useAddress(input('authority_logo').value);
 input('authority_logo').addEventListener('change', showLogoPreview);
-input('authority').addEventListener('input', showLogoPreview);
+input('authority').addEventListener('input', () => logoUpload.show());
 
 function isWebAddress(value) {
   return !value || /^https?:\/\/\S+$/.test(value);
@@ -281,6 +289,17 @@ form.addEventListener('submit', async (event) => {
   const id = editingId || nextId(sections);
 
   saveButton.classList.add('is-loading');
+  // a new or removed logo: uploaded under the requirement's id first, then its address is saved
+  if (logoUpload.hasNewPicture() || logoUpload.isRemoved()) {
+    try {
+      values.authority_logo = await logoUpload.save(id);
+    } catch (error) {
+      console.error('authority logo:', error.message);
+      saveButton.classList.remove('is-loading');
+      showToast(t('form.logoNotSaved'), 'risk');
+      return;
+    }
+  }
   let result;
   if (editingId) {
     result = await supabase.from('regulatory_requirements').update(values).eq('requirement_id', id).select().single();
