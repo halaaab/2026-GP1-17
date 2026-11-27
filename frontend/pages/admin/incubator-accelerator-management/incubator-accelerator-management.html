@@ -20,39 +20,34 @@
 <body data-layout="admin" data-page="admin-incubators" data-title="admin.incubators" data-denied="403">
 
   <main>
-    <div class="page-head manage-head">
+    <!-- The same head, search, filters and table as the Startups and Regulatory requirements pages -->
+    <div class="page-head">
       <div>
-        <h2 class="page-title manage-title" data-i18n="programsAdmin.title"></h2>
+        <h2 class="page-title" data-i18n="programsAdmin.title"></h2>
         <p class="text-2" data-i18n="programsAdmin.sub"></p>
       </div>
-      <button type="button" class="btn btn-primary btn-lg manage-add" id="add-button"></button>
+      <button type="button" class="btn btn-primary" id="add-button"></button>
     </div>
 
-    <div class="manage-filters">
-      <label class="search manage-search">
+    <div class="toolbar">
+      <label class="search">
         <span id="search-icon"></span>
         <input type="search" id="search" data-i18n-placeholder="programsAdmin.search" data-i18n-aria-label="programsAdmin.search">
       </label>
-      <span class="manage-select-wrap">
-        <select class="manage-select" id="type-filter" data-i18n-aria-label="programs.type">
-          <option value="" data-i18n="programsAdmin.allTypes"></option>
-          <option value="incubator" data-i18n="programs.incubators"></option>
-          <option value="accelerator" data-i18n="programs.accelerators"></option>
-        </select>
-      </span>
-      <span class="manage-select-wrap">
-        <select class="manage-select" id="sector-filter" data-i18n-aria-label="programs.sector">
-          <option value="" data-i18n="programs.allSectors"></option>
-        </select>
-      </span>
-      <span class="manage-select-wrap">
-        <select class="manage-select" id="region-filter" data-i18n-aria-label="programs.region">
-          <option value="" data-i18n="programs.allRegions"></option>
-        </select>
-      </span>
+      <select class="pill" id="type-filter" data-i18n-aria-label="programs.type">
+        <option value="" data-i18n="programsAdmin.allTypes"></option>
+        <option value="incubator" data-i18n="programs.incubators"></option>
+        <option value="accelerator" data-i18n="programs.accelerators"></option>
+      </select>
+      <select class="pill" id="sector-filter" data-i18n-aria-label="programs.sector">
+        <option value="" data-i18n="programs.allSectors"></option>
+      </select>
+      <select class="pill" id="region-filter" data-i18n-aria-label="programs.region">
+        <option value="" data-i18n="programs.allRegions"></option>
+      </select>
     </div>
 
-    <div class="table-card manage-card">
+    <div class="table-card">
       <table class="table manage-table">
         <thead>
           <tr>

@@ -261,8 +261,8 @@ function adminSidebar(activePage) {
 
     <div class="sidebar-bottom">
       <a class="nav-item ${activePage === 'settings' ? 'is-active' : ''}" href="${ROOT}${PAGES.adminSettings}">
-        ${icon('settings')}
-        <span data-i18n="admin.settings"></span>
+        ${icon('user')}
+        <span data-i18n="nav.profile"></span>
       </a>
       <div class="user-card">
         <span class="avatar" id="sidebar-user-initial">${icon('user')}</span>

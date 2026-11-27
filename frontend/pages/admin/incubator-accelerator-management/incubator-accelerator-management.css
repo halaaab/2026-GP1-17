@@ -1,114 +1,19 @@
 /* Incubators & accelerators management only. The table card, chips, panel
    and modal come from shared/shared.css. */
 
-/* ---------- Head ---------- */
-
-.manage-head {
-  align-items: center;
-  margin-bottom: 24px;
-}
-.manage-title {
-  font-size: clamp(26px, 3.4vw, 34px);
-}
-.manage-head p {
-  margin-top: 6px;
-  font-size: 15px;
-}
-.manage-add {
-  border-radius: 14px;
-}
-
-/* ---------- Search and dropdown filters ---------- */
-
-.manage-filters {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.manage-search {
-  flex: 1 1 280px;
-  max-width: 400px;
-  height: 46px;
-  border-radius: 12px;
-}
-
-/* a pill with a chevron at its end (the chevron is drawn on the wrapper) */
-.manage-select-wrap {
-  position: relative;
-  display: inline-flex;
-  flex: 0 1 220px;
-  min-width: 150px;
-}
-.manage-select-wrap::after {
-  content: '';
-  position: absolute;
-  inset-inline-end: 20px;
-  top: 50%;
-  width: 7px;
-  height: 7px;
-  /* physical sides on purpose: the arrow points down in both languages */
-  border-right: 2px solid var(--text-2);
-  border-bottom: 2px solid var(--text-2);
-  transform: translateY(-70%) rotate(45deg);
-  pointer-events: none;
-}
-.manage-select {
-  width: 100%;
-  height: 44px;
-  padding-inline: 18px 42px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r-pill);
-  background: var(--bg);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
-  transition: border-color var(--dur-fast), box-shadow var(--dur-fast);
-}
-.manage-select:hover {
-  border-color: var(--teal);
-}
-.manage-select:focus-visible {
-  outline: none;
-  border-color: var(--teal);
-  box-shadow: 0 0 0 4px var(--teal-tint);
-}
+/* The head, search, filters and table spacing are the shared ones, as on the Startups and Regulatory
+   requirements pages (shared/shared.css: page-head, toolbar, search, select.pill, table). */
 
 /* ---------- Table ---------- */
 
-.manage-card {
-  border-radius: 16px;
-}
-.manage-table th {
-  padding-block: 16px;
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text-3);
-}
-.manage-table td {
-  padding-block: 18px;
-}
 .manage-table tbody tr.is-selected td {
   background: var(--bg-subtle);
 }
 
+/* long names wrap instead of making the table very wide; the text sizes are the shared table's */
 .manage-name {
   min-width: 200px;
   max-width: 290px;
-}
-.manage-name .cell-title {
-  font-size: 15px;
-  line-height: 1.4;
-}
-.manage-name .cell-detail {
-  margin-top: 2px;
-  font-size: 13px;
-  line-height: 1.5;
 }
 
 .manage-program {
@@ -311,15 +216,6 @@
   }
   .manage-table {
     min-width: 0;
-  }
-  .manage-search {
-    max-width: none;
-  }
-  .manage-select-wrap {
-    flex: 1 1 140px;
-  }
-  .manage-add {
-    width: 100%;
   }
 }
 
