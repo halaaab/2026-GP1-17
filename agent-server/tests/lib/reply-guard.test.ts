@@ -86,7 +86,7 @@ describe('the reply guard processor', () => {
 
   it('starts every founder message with empty rules and adds the founder’s language to the instructions', () => {
     const { out, rules } = start('فكرتي تطبيق للمطاعم');
-    expect(rules).toEqual({ sentences: [], language: null, codeWritesReply: false });
+    expect(rules).toEqual({ sentences: [], language: null, codeWritesReply: false, founderLanguage: 'ar' });
     expect(JSON.stringify(out)).toContain('Write your whole reply in Arabic');
   });
 

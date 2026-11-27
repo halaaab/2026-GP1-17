@@ -23,7 +23,8 @@ export const REPLY_RULES_KEY = 'darbReplyRules';
 
 // noteSent is kept here, not in the processor's state, because a reply can stream in several parts (steps).
 // emitted and closed: the model's own text so far, and whether the rest of its text is dropped (memory leak guard).
-export type ReplyRules = { sentences: string[]; language: Language | null; codeWritesReply: boolean; noteSent?: boolean; emitted?: string; closed?: boolean };
+// founderLanguage: the language of the founder's latest message (decided in code), for tools that write the reply.
+export type ReplyRules = { sentences: string[]; language: Language | null; codeWritesReply: boolean; founderLanguage?: Language; noteSent?: boolean; emitted?: string; closed?: boolean };
 export const emptyReplyRules = (): ReplyRules => ({ sentences: [], language: null, codeWritesReply: false });
 
 const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
@@ -76,7 +77,8 @@ export const replyGuard = {
 
   // 1. A fresh, empty box for every founder message, and the founder's language for the agent's instructions.
   processInput({ messages, systemMessages, requestContext }) {
-    requestContext?.set(REPLY_RULES_KEY, emptyReplyRules());
+    const fresh = emptyReplyRules();
+    requestContext?.set(REPLY_RULES_KEY, fresh);
     // The conversation's language: a short reply or a name keeps it; a clear message in the other language switches it.
     const said = messages
       .filter((m) => m.role === 'user')
@@ -84,6 +86,7 @@ export const replyGuard = {
       .filter((t) => t.trim());
     const language = conversationLanguage(said);
     if (!language) return messages;
+    fresh.founderLanguage = language;
     const name = language === 'ar' ? 'Arabic' : 'English';
     // The style guide in the founder's language only, so the model never copies a reference reply in the other one.
     const bothLanguages = personaInstructions();

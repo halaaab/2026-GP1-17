@@ -7,7 +7,6 @@ const { competitorAgent } = await import('../../src/mastra/agents/competitor-age
 const { conversationalAgent } = await import('../../src/mastra/agents/conversational-agent');
 const { COMPETITOR_MAX_STEPS, competitorDelegation } = await import('../../src/mastra/lib/competitor-delegation');
 const { RequestContext } = await import('@mastra/core/request-context');
-const { NEW_IDEA_TEXT } = await import('../../src/mastra/lib/competitor-notes');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
 const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|candidates|analysis|details|if|idea|profile|survival|result)\b/g;
@@ -54,11 +53,11 @@ describe('Conversational Agent', () => {
     expect(options.modelSettings).toMatchObject({ temperature: 0 });
   });
 
-  it('sends a different idea to a new conversation with the exact sentence, never replacing the analysis', async () => {
+  it('analyses a different idea in the same conversation, as its own idea', async () => {
     const instructions = await instructionsOf(conversationalAgent);
     expect(instructions).toContain('8. A different idea after an analysis');
-    expect(instructions).toContain(NEW_IDEA_TEXT.en);
-    expect(instructions).toContain(NEW_IDEA_TEXT.ar);
+    expect(instructions).toContain('A conversation can hold several ideas');
+    expect(instructions).toContain('never send the founder to another conversation');
   });
 
   it('delegates a vague idea that names only a sector', async () => {

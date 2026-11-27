@@ -3,14 +3,6 @@
 import { ISS_BANDS } from '../config/scoring';
 import type { Language, NoteCode, OpportunityKind, Result } from '../schemas/competitor';
 
-// A conversation analyses one idea. When the founder describes a different idea after its analysis, Darb gives this
-// sentence instead of analysing it there, so each idea keeps its own results and History entry. "New conversation"
-// is the name of the website's sidebar button (frontend translations, nav.newAssessment).
-export const NEW_IDEA_TEXT: Record<Language, string> = {
-  en: 'Each idea gets its own conversation in Darb. To analyse this new idea, open a New conversation from the sidebar and describe it there.',
-  ar: 'لكل فكرة محادثتها الخاصة في درب. لتحليل هذه الفكرة الجديدة، افتح «محادثة جديدة» من القائمة الجانبية واكتبها هناك.',
-};
-
 export const NOTE_TEXT: Record<NoteCode, Record<Language, string>> = {
   capability_pending: {
     en: "Darb's competitor search is still being built, so no competitors can be shown yet.",
@@ -154,8 +146,8 @@ export function cardsSentence(count: number, language: Language): string {
   // In Darb's voice (config/darb-persona.ts), with the real count.
   if (language === 'ar') {
     const found = count === 1 ? 'منافسًا واحدًا مرتبطًا' : count === 2 ? 'منافسَين مرتبطَين' : `${count} منافسين مرتبطين`;
-    return `اكتمل التحليل! ✅ وجدتُ ${found} بفكرة مشروعك. تعرض البطاقات أدناه كل منافس مع أدلته، وتجد الفرص المحتملة لتميّز مشروعك في التحليل الكامل.`;
+    return `اكتمل التحليل! وجدتُ ${found} بفكرة مشروعك. تعرض البطاقات أدناه كل منافس مع أدلته، وتجد الفرص المحتملة لتميّز مشروعك في التحليل الكامل.`;
   }
   const found = count === 1 ? 'one relevant competitor' : count === 2 ? 'two relevant competitors' : `${count} relevant competitors`;
-  return `Your analysis is ready! ✅ I identified ${found}. The cards below show each one with its evidence, and the full analysis shows potential opportunities for your business.`;
+  return `Your analysis is ready! I identified ${found}. The cards below show each one with its evidence, and the full analysis shows potential opportunities for your business.`;
 }

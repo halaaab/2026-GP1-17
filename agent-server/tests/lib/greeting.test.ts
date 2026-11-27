@@ -21,9 +21,9 @@ describe('greetingIn', () => {
 
 describe('greetingReply', () => {
   it('answers in the founder’s language, politely, and returns the salam', () => {
-    expect(greetingReply({ kind: 'salam', language: 'ar' })).toMatch(/^وعليكم السلام ورحمة الله وبركاته 👋 يسعدني مساعدتك/);
-    expect(greetingReply({ kind: 'greeting', language: 'ar' })).toMatch(/^أهلاً وسهلاً بك 👋/);
-    expect(greetingReply({ kind: 'greeting', language: 'en' })).toMatch(/^Welcome! 👋 I'd be glad to help/);
+    expect(greetingReply({ kind: 'salam', language: 'ar' })).toBe('وعليكم السلام ورحمة الله وبركاته، أهلاً بك في درب 👋 كيف يمكنني مساعدتك اليوم؟');
+    expect(greetingReply({ kind: 'greeting', language: 'ar' })).toBe('أهلاً بك في درب 👋 كيف يمكنني مساعدتك اليوم؟');
+    expect(greetingReply({ kind: 'greeting', language: 'en' })).toBe('Welcome to Darb! 👋 How can I help you today?');
     expect(greetingReply({ kind: 'greeting', language: 'ar' })).not.toMatch(/احك|قل لي/);
   });
 });

@@ -21,6 +21,8 @@ const db = {
   fail: false,
   rows: [] as Record<string, unknown>[],
   assessmentRow: null as Record<string, unknown> | null,
+  canCreate: false, // a new idea and assessment can be inserted (several ideas in one conversation)
+  later: [] as Record<string, unknown>[], // the conversation's later ideas (assessments with its thread_id)
 };
 
 function query(table: string) {
@@ -32,7 +34,10 @@ function query(table: string) {
     if (call.op === 'insert' && table === 'similar_startup_results') {
       return { data: (call.values as { rank: number }[]).map((v) => ({ result_id: `r${v.rank}`, rank: v.rank })), error: null };
     }
+    if (call.op === 'insert' && db.canCreate && table === 'startup_ideas') return { data: { idea_id: '55555555-5555-4555-8555-555555555555' }, error: null };
+    if (call.op === 'insert' && db.canCreate && table === 'assessments') return { data: { assessment_id: '44444444-4444-4444-8444-444444444444' }, error: null };
     if (call.op !== 'select') return { data: null, error: null };
+    if (call.filters.some(([op, column]) => op === 'eq' && column === 'thread_id')) return { data: db.later, error: null };
     if (table === 'similar_startup_results') return { data: db.rows, error: null };
     // analysisLimit counts today first, then this month
     if (call.filters.some(([op, column]) => op === 'gte' && column === 'analysed_at')) {
@@ -51,6 +56,7 @@ function query(table: string) {
     gte: (column: string, value: unknown) => (call.filters.push(['gte', column, value]), builder),
     order: () => builder,
     maybeSingle: async () => answer(),
+    single: async () => answer(),
     then: (resolve: (v: unknown) => unknown, reject?: (e: unknown) => unknown) => Promise.resolve(answer()).then(resolve, reject),
   };
   return builder;
@@ -71,7 +77,7 @@ const { RUN_STATE_KEY, newRunState } = await import('../../src/mastra/lib/compet
 const { finalizeResultTool, HANDOFF_KEY, STARTED_AT_KEY } = await import('../../src/mastra/tools/finalize-result');
 const { getCompetitorResultTool } = await import('../../src/mastra/tools/get-competitor-result');
 const { judgeCandidatesTool } = await import('../../src/mastra/tools/judge-candidates');
-const { NOTE_TEXT, NEW_IDEA_TEXT } = await import('../../src/mastra/lib/competitor-notes');
+const { NOTE_TEXT } = await import('../../src/mastra/lib/competitor-notes');
 const { CLARIFY_QUESTIONS } = await import('../../src/mastra/lib/understand');
 const { MAX_ANALYSES_PER_DAY, MAX_ANALYSES_PER_MONTH, RUN_TIME_LIMIT_MS } = await import('../../src/mastra/config/limits');
 const { Result } = await import('../../src/mastra/schemas/competitor');
@@ -80,7 +86,7 @@ type CandidateT = import('../../src/mastra/schemas/competitor').Candidate;
 
 beforeEach(() => {
   calls.length = 0;
-  Object.assign(db, { analysedAt: null, countToday: 0, countMonth: 0, fail: false, rows: [], assessmentRow: null });
+  Object.assign(db, { analysedAt: null, countToday: 0, countMonth: 0, fail: false, rows: [], assessmentRow: null, canCreate: false, later: [] });
   pendingQuestions.clear();
   vi.spyOn(console, 'error').mockImplementation(() => {});
   vi.spyOn(console, 'info').mockImplementation(() => {});
@@ -326,7 +332,7 @@ describe('delegation: the clarification question', () => {
     await onCompetitorDelegationStart(shown.ctx);
     await onCompetitorDelegationComplete(complete(shown.ctx.toolCallId, result()));
     expect(shown.rules.codeWritesReply).toBe(true);
-    expect(shown.rules.sentences[0]).toMatch(/^Your analysis is ready! ✅ I identified (one|two|\d+) relevant competitors?\. The cards below show each one with its evidence, and the full analysis shows potential opportunities for your business\.$/);
+    expect(shown.rules.sentences[0]).toMatch(/^Your analysis is ready! I identified (one|two|\d+) relevant competitors?\. The cards below show each one with its evidence, and the full analysis shows potential opportunities for your business\.$/);
 
     const none = start(written);
     await onCompetitorDelegationStart(none.ctx);
@@ -507,22 +513,36 @@ describe('an idea is analysed right away, without asking the founder first', () 
     expect(answer.handoff).toMatchObject({ mode: 'new', clarification: { question: CLARIFY_QUESTIONS.offering.en } });
   });
 
-  it('never replaces a saved analysis with a "new" one: a change is a what-if, a correction a rerun', async () => {
+  // Several ideas in one conversation: a different idea after an analysis gets its own idea and assessment
+  // (thread_id = the conversation), so the first analysis is never replaced (lib/conversation-ideas.ts).
+  it('runs a different idea after an analysis as its own idea in the same conversation', async () => {
     db.analysedAt = NOW;
-    const { decision } = await startWith(idea, [{ role: 'user', content: 'Find my competitors again for teachers' }]);
-    expect(decision?.proceed).toBe(false);
-    expect(decision?.rejectionReason).toMatch(/what_if/);
+    db.canCreate = true;
+    const { decision, ctx } = await startWith({ ...idea, idea_text: 'A car wash app in Jeddah' }, [{ role: 'user', content: 'I have another idea: a car wash app in Jeddah' }]);
+    expect(decision?.proceed).toBe(true);
+    expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({ mode: 'new', assessment_id: '44444444-4444-4444-8444-444444444444', idea_id: '55555555-5555-4555-8555-555555555555' });
+    const created = calls.find((c) => c.table === 'assessments' && c.op === 'insert');
+    expect(created?.values).toMatchObject({ idea_id: '55555555-5555-4555-8555-555555555555', thread_id: ASSESSMENT });
     db.analysedAt = null;
   });
 
-  // Live test, a different idea in the same conversation was run as a "rerun" and replaced the first
-  // idea's analysis. The rejection now names that case and the exact sentence that sends the founder to a new conversation.
-  it('tells the agent to send a different idea to a new conversation, in the founder’s words of both languages', async () => {
+  it('applies a correction to the latest idea of the conversation, never to an earlier one', async () => {
     db.analysedAt = NOW;
-    const { decision } = await startWith(idea, [{ role: 'user', content: 'I have another idea: a car wash app in Jeddah' }]);
-    expect(decision?.proceed).toBe(false);
-    expect(decision?.rejectionReason).toContain(NEW_IDEA_TEXT.en);
-    expect(decision?.rejectionReason).toContain(NEW_IDEA_TEXT.ar);
+    db.later = [{ assessment_id: '44444444-4444-4444-8444-444444444444', idea_id: '55555555-5555-4555-8555-555555555555', language: 'en', analysed_at: NOW }];
+    const { decision, ctx } = await startWith({ ...idea, mode: 'rerun' }, asked('Your analysis is ready!', 'I mean in Dammam, not Jeddah'));
+    expect(decision?.proceed).toBe(true);
+    expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({ mode: 'rerun', assessment_id: '44444444-4444-4444-8444-444444444444', idea_id: '55555555-5555-4555-8555-555555555555' });
+    expect(calls.some((c) => c.op === 'insert')).toBe(false);
+    db.analysedAt = null;
+  });
+
+  it('continues a later idea that is waiting for the founder’s answer, instead of starting another', async () => {
+    db.analysedAt = NOW;
+    db.canCreate = true;
+    db.later = [{ assessment_id: '44444444-4444-4444-8444-444444444444', idea_id: '55555555-5555-4555-8555-555555555555', language: 'en', analysed_at: null }];
+    const { ctx } = await startWith({ ...idea, idea_text: 'A car wash app, a mobile service at home' }, asked('What will you offer?', 'A mobile service at home'));
+    expect(ctx.requestContext.get(HANDOFF_KEY)).toMatchObject({ assessment_id: '44444444-4444-4444-8444-444444444444', idea_id: '55555555-5555-4555-8555-555555555555' });
+    expect(calls.some((c) => c.op === 'insert')).toBe(false);
     db.analysedAt = null;
   });
 

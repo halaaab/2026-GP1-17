@@ -17,9 +17,9 @@
 // to send their answer on the next call, the hook adds it from the question it remembers
 //   what-if        runs only after the founder answered Darb's confirmation question; it becomes a new assessment
 //                  linked to this one, and the founder gets an exact before → after comparison (lib/what-if.ts)
-//   no "new" twice a conversation's analysis is never replaced by a "new" one: a changed idea is a what-if, a
-//                  correction is a rerun, and a different idea is sent to a new conversation (NEW_IDEA_TEXT; live
-// test, a different idea was run as a "rerun" and replaced the first idea's analysis).
+//   several ideas  an analysis is never replaced by a "new" one: a different idea described later in the same
+//                  conversation gets its own idea and assessment (lib/conversation-ideas.ts), and a correction
+//                  ("rerun") or a what-if applies to the latest idea of the conversation.
 // There is no consent step: an idea, or a question about who already does it, is analysed right away. Whether the
 // founder's message is that is read by the Conversational Agent, never by a word list.
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
@@ -32,7 +32,8 @@ import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
 import { analysedAt, analysisLimit, loadStoredResult, type StoredResult } from './competitor-store';
 import { askedBeforeLatestReply, compareResults, comparisonSentences, createWhatIf, removeWhatIf } from './what-if';
-import { cardsSentence, NEW_IDEA_TEXT, noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
+import { cardsSentence, noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
+import { createLaterIdea, laterIdeas, latestIdea, removeLaterIdea } from './conversation-ideas';
 import { conversationLanguage, isAffirmative, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
@@ -62,6 +63,7 @@ type Running = {
   state: RunState;
   conversationAssessmentId: string; // the assessment of the chat; a what-if's own assessment is handoff.assessment_id
   whatIf?: { original: StoredResult | null; created: boolean };
+  laterIdea?: { idea_id: string }; // a different idea, created for this run (lib/conversation-ideas.ts)
 };
 
 // Handoffs of the delegations still running, by tool call id (both hooks receive it).
@@ -199,24 +201,41 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   }
 
   const mode = written.data.mode;
-  // A conversation's original analysis is never replaced by a "new" one: a changed idea is a what-if (kept beside it),
-  // and a correction is a rerun (a confirmed what-if was sent as "new").
-  if (mode === 'new' && (await analysedAt(assessment.assessment_id))) {
-    return reject(
-      `This conversation already has an analysis. For a changed version of the idea ("what if…"), delegate with mode "what_if" and scenario_label. For a correction of the idea, delegate with mode "rerun". For a question about the results, use get_competitor_result. If the founder described a different idea (a different product or business, not a change of the one already analysed), do not delegate again in any mode: reply with only this sentence in the founder's language, word for word: "${NEW_IDEA_TEXT.en}" / "${NEW_IDEA_TEXT.ar}"`,
-    );
+  // The idea the founder is talking about now: the conversation's latest idea (lib/conversation-ideas.ts).
+  let later: Awaited<ReturnType<typeof laterIdeas>> = [];
+  try {
+    later = await laterIdeas(assessment.assessment_id);
+  } catch (error) {
+    console.error('Reading the later ideas of the conversation failed:', error);
   }
+  const latest = latestIdea(assessment, later);
+  const latestAnalysed = later.length ? Boolean(later.at(-1)!.analysed_at) : Boolean(await analysedAt(assessment.assessment_id));
+  // A "new" idea after an analysis is a different idea: it gets its own idea and assessment, so no analysis is
+  // ever replaced. A latest idea still waiting for the founder's answer to its question is continued instead.
+  const anotherIdea = mode === 'new' && latestAnalysed;
 
   const state = newRunState();
-  state.limitNote = await analysisLimit(userId, isWhatIf ? null : assessment.assessment_id);
+  state.limitNote = await analysisLimit(userId, isWhatIf || anotherIdea ? null : latest.assessment_id);
 
-  // The what-if's own assessment, linked to this one (not created when the founder has no analyses left).
-  let runAssessmentId = assessment.assessment_id;
+  // The run's own assessment: the latest idea, a new idea, or a what-if of the latest idea
+  // (the new ones are not created when the founder has no analyses left).
+  let target = latest;
   let whatIf: Running['whatIf'];
+  let laterIdea: Running['laterIdea'];
+  if (anotherIdea && !state.limitNote) {
+    try {
+      target = await createLaterIdea(assessment.assessment_id, userId, latest.language, written.data.idea_text);
+      laterIdea = { idea_id: target.idea_id };
+    } catch (error) {
+      console.error('Starting the new idea failed:', error);
+      return reject('The new idea could not be started right now. Tell the founder and offer to try again.');
+    }
+  }
+  let runAssessmentId = target.assessment_id;
   if (isWhatIf && !state.limitNote) {
     try {
-      const original = await loadStoredResult(assessment.assessment_id);
-      runAssessmentId = await createWhatIf(assessment, written.data.scenario_label!, written.data.idea_text);
+      const original = await loadStoredResult(target.assessment_id);
+      runAssessmentId = await createWhatIf(target, written.data.scenario_label!, written.data.idea_text);
       whatIf = { original, created: true };
     } catch (error) {
       console.error('Starting the what-if failed:', error);
@@ -230,7 +249,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     language,
     known_facts: facts.kept,
     assessment_id: runAssessmentId,
-    idea_id: assessment.idea_id,
+    idea_id: target.idea_id,
   });
   const startedAt = Date.now();
   // The reply rules box of this run (set by the reply guard). The request context copy shares it with the parent run.
@@ -244,6 +263,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
     state,
     conversationAssessmentId: assessment.assessment_id,
     whatIf,
+    laterIdea,
   });
   ctx.requestContext.set(HANDOFF_KEY, handoff);
   ctx.requestContext.set(RUN_STATE_KEY, state);
@@ -323,6 +343,10 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
   // shows an empty what-if. When it was saved, the founder gets the exact comparison with the original.
   const saved = started.state.steps.some((s) => s.capability === 'guardrails' && s.outcome === 'ok' && /\bsaved\b/.test(s.detail ?? ''));
   let comparison: string[] | undefined;
+  // A new idea that ended with nothing saved and no question waiting (a limit or a failed run) is removed too.
+  if (started.laterIdea && !saved && !question) {
+    removeLaterIdea(started.laterIdea.idea_id, started.conversationAssessmentId).catch((error) => console.error('Removing an unsaved new idea failed:', error));
+  }
   if (started.whatIf?.created && !saved) {
     removeWhatIf(started.handoff.assessment_id).catch((error) => console.error('Removing an unsaved what-if failed:', error));
   } else if (started.whatIf?.created) {

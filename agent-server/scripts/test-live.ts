@@ -11,7 +11,6 @@
 // Different idea check: a different idea in a conversation that already has an analysis is not analysed there;
 // Darb tells the founder, in one exact sentence, to open a new conversation for it.
 import { RequestContext } from '@mastra/core/request-context';
-import { NEW_IDEA_TEXT } from '../src/mastra/lib/competitor-notes';
 import { REPLY_RULES_KEY, replyProblems, type ReplyRules } from '../src/mastra/lib/reply-guard';
 import { getSupabase } from '../src/mastra/lib/supabase';
 
@@ -101,12 +100,12 @@ async function main() {
     const english = await newChat('en');
     checkReply('English', await say(english, 'I want to build an app that lets restaurants in Riyadh order fresh vegetables directly from local farms.'), 'en');
 
-    // 3. Different idea in the same conversation: not analysed here; the founder is told to open a new conversation.
+    // 3. Different idea in the same conversation: analysed there as its own idea; the first analysis stays.
     const before = await analysedAt(english.assessmentId);
     const other = await say(english, 'I have another idea: a mobile app to book a car wash at home in Jeddah.');
     check('Different idea: the analysis was not replaced', before !== null && (await analysedAt(english.assessmentId)) === before, `${before}`);
-    check('Different idea: tells the founder to open a new conversation', other.text.includes(NEW_IDEA_TEXT.en), other.text);
-    check('Different idea: no what-if or correction question', !/what.?if|instead|change any|correct/i.test(other.text.replace(NEW_IDEA_TEXT.en, '')), other.text);
+    const { data: laterRows } = await supabase.from('assessments').select('analysed_at').eq('thread_id', english.assessmentId);
+    check('Different idea: analysed in the same conversation as its own idea', other.calls.some((c) => /competitor/i.test(c)) && (laterRows ?? []).some((r) => r.analysed_at), other.text);
 
     // 4. Arabic: the same kind of idea, in its own conversation.
     checkReply('Arabic', await say(await newChat('ar'), 'فكرتي تطبيق يساعد المطاعم في الرياض تطلب خضار طازجة من المزارع المحلية مباشرة.'), 'ar');
@@ -130,10 +129,14 @@ async function main() {
     const whatIf = await say(whatIfChat, 'What if I targeted Jeddah instead?');
     // The server's confirmation check may refuse a first what-if attempt; what matters is that none was run.
     check('What-if: asks the founder to confirm first, runs nothing yet', /[?؟]/.test(whatIf.text) && (await assessmentsOfIdea(whatIfChat.assessmentId)) === runsBefore, whatIf.text);
-    check('What-if: not mistaken for a different idea', !whatIf.text.includes(NEW_IDEA_TEXT.en), whatIf.text);
+    const { count: laterIdeas } = await supabase.from('assessments').select('assessment_id', { count: 'exact', head: true }).eq('thread_id', whatIfChat.assessmentId);
+    check('What-if: not mistaken for a different idea', !laterIdeas, whatIf.text);
   } finally {
     // 8. Clean up: deleting a test idea deletes its assessments (and any what-if) with it.
-    for (const ideaId of ideaIds) await supabase.from('startup_ideas').delete().eq('idea_id', ideaId);
+    // the ideas described later in a test conversation are their own ideas (lib/conversation-ideas.ts)
+    const { data: ours } = await supabase.from('assessments').select('assessment_id').in('idea_id', ideaIds);
+    const { data: later } = await supabase.from('assessments').select('idea_id').in('thread_id', (ours ?? []).map((a) => a.assessment_id));
+    for (const ideaId of [...ideaIds, ...(later ?? []).map((a) => a.idea_id)]) await supabase.from('startup_ideas').delete().eq('idea_id', ideaId);
     console.log('\nTest data deleted.');
   }
 

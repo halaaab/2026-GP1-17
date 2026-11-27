@@ -39,15 +39,15 @@ export function greetingIn(text: string): Greeting | null {
 }
 
 const WELCOME = {
-  ar: 'يسعدني مساعدتك في تقييم فكرة مشروعك ✨ تفضّل بمشاركتها معي: ما الفكرة، وما المشكلة التي تحلّها؟',
-  en: "I'd be glad to help you evaluate your startup idea ✨ Could you share it with me: what is the idea, and what problem does it solve?",
+  ar: 'كيف يمكنني مساعدتك اليوم؟',
+  en: 'How can I help you today?',
 } as const;
 
 export function greetingReply(greeting: Greeting): string {
   if (greeting.language === 'ar') {
-    const hello = greeting.kind === 'salam' ? 'وعليكم السلام ورحمة الله وبركاته 👋' : 'أهلاً وسهلاً بك 👋';
+    const hello = greeting.kind === 'salam' ? 'وعليكم السلام ورحمة الله وبركاته، أهلاً بك في درب 👋' : 'أهلاً بك في درب 👋';
     return `${hello} ${WELCOME.ar}`;
   }
-  const hello = greeting.kind === 'salam' ? 'Wa alaikum assalam, and welcome! 👋' : 'Welcome! 👋';
+  const hello = greeting.kind === 'salam' ? 'Wa alaikum assalam, welcome to Darb! 👋' : 'Welcome to Darb! 👋';
   return `${hello} ${WELCOME.en}`;
 }

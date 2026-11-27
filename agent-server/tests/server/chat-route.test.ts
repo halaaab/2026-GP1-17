@@ -95,7 +95,7 @@ describe('POST /chat', () => {
   it('welcomes a conversation that opens with a greeting at once, without the agent', async () => {
     const { context, calls } = fakeContext('founder-1', { ...body, text: 'السلام عليكم' }, []);
     const raw = await (await run(context)).text();
-    expect(raw).toMatch(/^data: \{"type":"text-delta","payload":\{"text":"وعليكم السلام ورحمة الله وبركاته 👋/);
+    expect(raw).toMatch(/^data: \{"type":"text-delta","payload":\{"text":"وعليكم السلام ورحمة الله وبركاته، أهلاً بك في درب 👋/);
     expect(raw.endsWith('data: [DONE]\n\n')).toBe(true);
     expect(calls).toHaveLength(0);
   });
