@@ -89,7 +89,7 @@ The folders follow the architecture above: one client, the agent server, the ML 
 └── resources/     # Research paper links and data reviews
 ```
 
-**Release 1** covers backlog items 1–38 and 40–42. Release 2 work that is in progress (the score, market insights, roadmap, report, history and what-if screens) is already in the website and is completed in Sprints 3–5. The admin founder and admin account pages are built and are tested and completed in Sprint 5.
+**Release 1** covers backlog items 1–38 and 40–42. Release 2 work that is in progress (the score, market insights, roadmap, report, history and what-if screens) is already in the website and is completed in Sprints 3–5. Release 2 pages not started yet (admin founder and admin account management) work on a local copy and show "Coming soon" on the hosted website.
 
 ## Getting Started
 

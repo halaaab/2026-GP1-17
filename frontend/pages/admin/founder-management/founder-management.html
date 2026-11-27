@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="../overview-dashboard/overview-dashboard.css">
   <link rel="stylesheet" href="founder-management.css">
 </head>
-<body data-layout="admin" data-page="founders" data-title="admin.founders" data-denied="403">
+<body data-soon data-layout="admin" data-page="founders" data-title="admin.founders" data-denied="403">
 
   <main>
     <div class="page-head">
@@ -195,6 +195,10 @@
   <script type="module" src="../../../shared/layout.js"></script>
   <script type="module" src="../../../shared/guard.js"></script>
   <script type="module" src="../../../shared/ui.js"></script>
-  <script type="module" src="founder-management.js"></script>
+  <!-- Release 2: the page runs on localhost only; layout.js shows "Coming soon" on the hosted website -->
+  <script type="module">
+    import { IS_LOCAL } from '../../../shared/config.js';
+    if (IS_LOCAL) import('./founder-management.js');
+  </script>
 </body>
 </html>

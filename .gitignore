@@ -36,3 +36,11 @@ Thumbs.db
 # Project documents and evaluation evidence: kept only on Hala's Mac, never on GitHub
 resources/docs/
 evaluation/
+
+# Logs and test output
+*.log
+npm-debug.log*
+coverage/
+
+# The agent server uses npm (package-lock.json); a pnpm lockfile is a local leftover
+agent-server/pnpm-lock.yaml
