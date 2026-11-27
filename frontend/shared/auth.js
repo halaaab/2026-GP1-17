@@ -241,7 +241,15 @@ export async function logIn(email, password) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return { ok: false, error: errorKey(error) };
+    const key = errorKey(error);
+    // Supabase says "invalid login credentials" for a wrong password and for an email with no account alike:
+    // ask the database which one it is (account_exists, migration 0048), so the founder is told the account does
+    // not exist (never made, or deleted). If the question fails, the usual message stays.
+    if (key === 'error.invalidLogin') {
+      const { data: exists, error: checkError } = await supabase.rpc('account_exists', { email });
+      if (!checkError && exists === false) return { ok: false, error: 'error.noAccount' };
+    }
+    return { ok: false, error: key };
   }
   return { ok: true };
 }

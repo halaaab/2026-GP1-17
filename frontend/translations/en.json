@@ -220,6 +220,7 @@
   "error.username": "Use 3 to 20 letters, numbers or underscores.",
   "error.password": "Use at least 8 characters with a lowercase letter, an uppercase letter, a number and a symbol.",
   "error.choose": "Choose one to continue.",
+  "error.noAccount": "This account doesn't exist.",
   "error.invalidLogin": "The email or password is not correct.",
   "error.emailTaken": "An account with this email already exists. Try signing in.",
   "error.notConfirmed": "Confirm your email first. Check your inbox for the link.",
