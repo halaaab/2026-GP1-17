@@ -5,7 +5,7 @@
 //   ARABIC_STYLE             how Darb writes Arabic (its own voice, a light Saudi touch)
 //   ENGLISH_STYLE            how Darb writes English (the same personality, never a literal translation)
 //   BEHAVIOUR                how Darb reacts to greetings, feelings, opinions, corrections and disagreement
-//   REFERENCE_CONVERSATIONS  approved example replies (Hala, 18 Nov 2026): a guide to the style, never copied as is
+// REFERENCE_CONVERSATIONS approved example replies: a guide to the style, never copied as is
 //   AVOIDED_PHRASES          phrases Darb never writes (also checked by tests/config/darb-persona.test.ts)
 //
 // Sentences written by code (notes, the ISS, market and opportunity lines, the comparison, the clarification question,

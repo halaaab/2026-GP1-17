@@ -1,5 +1,5 @@
 -- =========================================================
--- 0035 — Search Darb's startup list by meaning (Member 1, Task 2)
+-- 0035 — Search Darb's startup list by meaning
 -- Run once in Supabase: SQL Editor → paste → Run, after 0034.
 --
 -- search_startups_by_profile(query_embedding) compares one idea's vector with every startup's

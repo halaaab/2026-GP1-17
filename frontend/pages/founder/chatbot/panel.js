@@ -304,7 +304,7 @@ function safeUrl(url) {
 
 /* The competitor's logo: the one saved with Darb's list of startups (startups.logo), or, when it has none or the
    image does not load, the first letter of its name in a tinted circle. Companies found on the web have no logo yet
-   (guessing /favicon.ico showed Al Rajhi with its website builder's icon, 18 Nov 2026). */
+   (guessing /favicon.ico showed Al Rajhi with its website builder's icon). */
 export function logoOf(competitor) {
   const name = competitor.name || '';
   const tints = ['navy', 'teal', 'good', 'warn'];
@@ -340,7 +340,7 @@ function issBox() {
     </div>`;
 }
 
-/* "Source: App Store listing · checked 11 Nov 2026" */
+/* "Source: App Store listing ·" */
 function sourceLine(competitor) {
   const parts = [];
   if (competitor.sourceType) parts.push(t(`comp.source.${competitor.sourceType}`));
@@ -348,7 +348,7 @@ function sourceLine(competitor) {
   return parts.length ? `<p class="competitor-checked">${t('comp.source')}: ${parts.join(' · ')}</p>` : '';
 }
 
-/* Competitive opportunities (explainer §6): for each competitor, the rule that matched, what it means (the judge's own
+/* Competitive opportunities: for each competitor, the rule that matched, what it means (the judge's own
    sentence for a possible difference) and the fixed next step. Never "where you will win". Shown inside its card. */
 const OPPORTUNITIES = ['proven_difference', 'possible_customer_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'];
 
@@ -358,14 +358,14 @@ function notesList() {
   return `<ul class="comp-notes">${notes.map((code) => `<li>${icon('info')} ${t(`comp.note.${code}`)}</li>`).join('')}</ul>`;
 }
 
-/* The competitor analysis (Hala, 18 Nov 2026): everything about one competitor was spread over its card, a column of
+/* The competitor analysis: everything about one competitor was spread over its card, a column of
    the comparison table (with long notes in every cell, too wide for a phone) and a row of the opportunities box.
    Now an overview of answers at the top, and one complete card per competitor with its basis of classification. */
 const PARTS = ['problem', 'customer', 'offering'];
 const ANSWERS = ['same', 'partly', 'different', 'unknown', 'conflicting'];
 const answerOf = (part) => (part && ANSWERS.includes(part.answer) ? part.answer : 'unknown');
 
-/* The founder's idea as Darb understood it (Hala, 18 Nov 2026): the comparison below is against these parts, so the
+/* The founder's idea as Darb understood it: the comparison below is against these parts, so the
    founder can read "the same problem" knowing which problem. Shown only when the analysis wrote it. */
 function yourIdea() {
   const summary = assessment.ideaSummary;
@@ -384,7 +384,7 @@ function yourIdea() {
     </div>`;
 }
 
-/* The overview: each competitor's three answers in short words (Hala, 18 Nov 2026: marks alone needed a key to read),
+/* The overview: each competitor's three answers in short words (marks alone needed a key to read),
    with its kind of competition under its name. Short enough for a phone. */
 function overview(competitors) {
   return `
@@ -414,7 +414,7 @@ function opportunityLine(c) {
     </div>`;
 }
 
-/* One competitor (Hala, 18 Nov 2026): everything shows, in clear sections. What the company does, how close it is,
+/* One competitor: everything shows, in clear sections. What the company does, how close it is,
    then "Compared with your idea": the problem, the customer and the product, each with the judge's answer as a
    calm label (no red: the same as your idea is not an error) and its sentence on how it is the same or different.
    Then the opportunity and the formal note. */

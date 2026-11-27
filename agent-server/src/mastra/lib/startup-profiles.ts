@@ -1,8 +1,8 @@
 // Task 1: turns each startup's description into a structured profile and an embedding (its vector of meaning).
-// Logic approved by Hala on 13 Nov 2026; design: Darb_Competitor_Agent_Design §3 and §16.
+// Logic;.
 //
 //   1. The model reads the startup's English description only (no name, sector or tags).
-//   2. It writes the profile with the same prompt as a founder's idea (lib/idea-profile.ts, Member 2's file,
+// 2. It writes the profile with the same prompt as a founder's idea (lib/idea-profile.ts, the file,
 //      used unchanged), so a startup and an idea are described the same way and compared fairly.
 //   3. Code checks the profile has at least one English and one Arabic keyword (TC-1.4): one more try,
 //      then the startup is reported as failed and nothing is saved for it.

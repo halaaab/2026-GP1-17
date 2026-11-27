@@ -1,4 +1,4 @@
-// A company's page opened in a real browser on Darb's server (Hala, 15 Nov 2026), for sites built by JavaScript.
+// A company's page opened in a real browser on Darb's server, for sites built by JavaScript.
 // Some sites send an almost empty page and build everything in the visitor's browser: Aajil's footer
 // ("© 2026 Aajil") and its legal name are never in its HTML, and Tavily returns one sentence. Here Chromium
 // (Playwright) opens the page like a visitor, waits for it to load, and Darb reads the finished page's text.
@@ -17,7 +17,7 @@ const IDLE_MS = 60_000;
 let browser: Promise<Browser> | null = null;
 let idle: NodeJS.Timeout | null = null;
 // Why the browser could not start (e.g. Chromium not installed on the host), or null. Once set, pages are skipped
-// at once instead of trying to start it again for every page; the plain read is used for them (18 Nov 2026).
+// at once instead of trying to start it again for every page; the plain read is used for them.
 let unavailable: string | null = null;
 
 async function open(): Promise<Browser> {

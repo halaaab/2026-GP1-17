@@ -1,4 +1,4 @@
-// Task 9: re-checks the startups in Darb's list once a month (design §8: "monthly batch; stored check valid 90 days").
+// Task 9: re-checks the startups in Darb's list once a month ("monthly batch; stored check valid 90 days").
 // A startup that closes, or turns out not to serve Saudi Arabia, is saved as "fail", and the search (Task 2,
 // search_startups_by_profile) leaves it out from then on, so it never appears as a competitor again.
 //
@@ -9,7 +9,7 @@
 //   3. One startup failing to be read never stops the others.
 import { MAX_COMPANIES_PER_RUN, validateCompanies, type CompanyResult, type ValidateDeps } from './validate-candidate';
 
-// A stored check is valid for 90 days (design §8).
+// A stored check is valid for 90 days.
 export const CHECK_VALID_DAYS = 90;
 
 export type StartupToRecheck = {

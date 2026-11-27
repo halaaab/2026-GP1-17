@@ -82,7 +82,7 @@ describe('the app stores', () => {
   });
 });
 
-describe("the company's own app, when its site does not link one (16 Nov 2026)", () => {
+describe("the company's own app, when its site does not link one", () => {
   const search = (results: object[]) => fake({ 'https://itunes.apple.com/search?term=Jahez&country=sa&entity=software&limit=10': { status: 200, body: JSON.stringify({ results }) } });
   it('takes the app whose seller website is the company domain (Jahez)', async () => {
     const f = search([{ trackId: 1, sellerUrl: 'https://other.com' }, { trackId: 2, sellerUrl: 'https://www.jahez.net/ar' }]);

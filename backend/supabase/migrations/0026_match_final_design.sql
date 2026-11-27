@@ -9,10 +9,7 @@
 --     does not have, is DROPPED.
 --   * a column the code needs stays, and the design was updated to show it.
 --
--- Backups of everything that had data and is dropped here:
---   datasets/backups/market_indicators_before_0026.csv   (all 58 columns, 111 rows)
---   datasets/backups/startups_excluded_before_0026.csv   (70 rows)
--- The other dropped columns were empty.
+-- The data that is dropped here was backed up before this migration ran.
 -- =========================================================
 
 
@@ -124,7 +121,6 @@ alter table public.regulatory_requirements rename column what_darb_should_surfac
 alter table public.regulatory_requirements rename column what_darb_should_surface_ar to what_darb_surface_ar;
 
 -- founder_trigger_fields and notes are not in the design
--- (their 44 rows are in datasets/backups/regulatory_trigger_fields_notes_before_0026.csv)
 alter table public.regulatory_requirements
   drop column founder_trigger_fields,
   drop column notes;

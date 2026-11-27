@@ -66,7 +66,7 @@ Requests that only retrieve or store data, such as sign-in, the explorers, the p
 | Programming languages | TypeScript (agent server); JavaScript, HTML and CSS (website); Python 3.13 (survival model); SQL (database) |
 | Agent server | Mastra on Node.js 22 |
 | LLM and embeddings | OpenAI gpt-4o-mini and text-embedding-3-small |
-| Web search | Tavily Search and Extract, restricted to approved websites |
+| Web search | Tavily Search and Extract, preferring Saudi sources and excluding sites that forbid automated access, sit behind a login or paywall, or only list other businesses |
 | ML service | Python, FastAPI with Uvicorn; pandas, scikit-learn, LightGBM, XGBoost, SHAP |
 | Database and authentication | Supabase: PostgreSQL with pgvector, Supabase Authentication, Google sign-in |
 | Hosting | Render (website and agent server), Supabase cloud |

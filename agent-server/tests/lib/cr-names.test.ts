@@ -1,4 +1,4 @@
-// Tests for the legal-name check (Task 8, Hala 14 Nov 2026): Arabic cleaning, fingerprints, shared names, finding a
+// Tests for the legal-name check (Task 8): Arabic cleaning, fingerprints, shared names, finding a
 // legal name on a page. A tiny list made here: no Ministry file needed.
 import { describe, expect, it } from 'vitest';
 import { checkLegalName, csvCells, repairPdfArabic, findLegalNameMatch, legalNamesOn, nameFingerprint, normalizeLegalName, parseCrNamesFile } from '../../src/mastra/lib/cr-names';

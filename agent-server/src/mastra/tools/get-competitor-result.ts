@@ -1,4 +1,4 @@
-// Tool: the saved competitor analysis of this conversation's assessment, for follow-up questions (design §4, PBI 36).
+// Tool: the saved competitor analysis of this conversation's assessment, for follow-up questions (PBI 36).
 // Answers come from what was saved, never from a new search, so a follow-up can never add a competitor or change
 // a label, status or number. The assessment and the founder come from the server, never from the model.
 import { createTool } from '@mastra/core/tools';

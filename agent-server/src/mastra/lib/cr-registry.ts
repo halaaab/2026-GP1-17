@@ -1,7 +1,7 @@
 // The CR check (Task 3): is this CR number on the Ministry of Commerce list of active registrations?
-// Design: Darb_Competitor_Agent_Design §8 (CR lookup in server memory), approved logic of 13 Nov 2026.
+// The lookup is kept in the server's memory.
 //
-//   1. Once per quarter, prepareCrNumbersFile() reads the big CSV files on Hala's Mac and writes a small
+//   1. Once per quarter, prepareCrNumbersFile() reads the big CSV files locally and writes a small
 //      file with only the numbers (no names, no owners, no capital): scripts/prepare-cr-numbers.ts.
 //   2. When the server starts, loadCrRegistry() reads that small file into memory, as sorted number lists.
 //   3. checkCr() reads a number and answers "match" or "unknown", never "fail": a missing number does not
@@ -148,7 +148,7 @@ export function checkCr(raw: string | null | undefined, registry: CrRegistry | n
 }
 
 // ---------------------------------------------------------------------------
-// The quarterly preparation step (run on Hala's Mac, never on the hosted server)
+// The quarterly preparation step (run locally, never on the hosted server)
 // ---------------------------------------------------------------------------
 
 export type PrepareReport = { rows: number; unified: number; old: number; skipped_lines: number };

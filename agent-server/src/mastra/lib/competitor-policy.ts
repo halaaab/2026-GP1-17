@@ -1,8 +1,8 @@
-// The guardrails (design §9, §10): everything that decides what the founder sees is done here, in code.
+// The guardrails: everything that decides what the founder sees is done here, in code.
 //
 //   applyPolicy     the policy rules on one judge answer: citation check, Direct / Indirect / not a competitor,
 //                   the competitor's similarity score from the answers (the judge never writes numbers),
-//                   and its competitive opportunity (explainer §6)
+// and its competitive opportunity
 //   rankCompetitors the policy gate: only valid companies with evidence, one per company, never the founder's own
 //                   startup or a reference; the strongest overlap first, then Confirmed before Likely
 //   computeIss      the Idea Similarity Score from the top 3, the closest counting most
@@ -43,7 +43,7 @@ export type PolicyOutcome = {
   description: string | null; // the card's description in the founder's language, or null (then the candidate's own)
 };
 
-// The ISS uses the customer only when the founder's customer is known (design §10, "Customer unknown").
+// The ISS uses the customer only when the founder's customer is known ("Customer unknown").
 export function issBasis(profile: IdeaProfile): IssBasis {
   return profile.customer.origin === 'unknown' ? 'problem_offering_only' : 'full';
 }
@@ -73,7 +73,7 @@ export function quoteInEvidence(quote: string | undefined, evidence: string): bo
   return Boolean(quote && squash(quote).length >= 8 && squash(evidence).includes(squash(quote)));
 }
 
-// Competitive opportunities: four fixed rules on ONE competitor's answers (explainer §6), checked from top to
+// Competitive opportunities: four fixed rules on ONE competitor's answers, checked from top to
 // bottom; the first that matches wins, so a customer difference wins over an offering difference.
 //   customer different                      → proven difference
 //   customer partly the same                → possible difference about the customer (interview customers)
@@ -91,7 +91,7 @@ export function opportunityFor(judged: Record<'problem' | 'customer' | 'offering
   return 'not_enough_evidence';
 }
 
-// A competitor's similarity score, 0–100: same = full points, partly = half, the rest none (design §10).
+// A competitor's similarity score, 0–100: same = full points, partly = half, the rest none.
 export function similarityScore(answers: Record<'problem' | 'customer' | 'offering', Answer>, basis: IssBasis): number {
   const parts = basis === 'full' ? (['problem', 'customer', 'offering'] as const) : (['problem', 'offering'] as const);
   const total = parts.reduce((sum, p) => sum + ANSWER_WEIGHTS[p], 0);
@@ -99,7 +99,7 @@ export function similarityScore(answers: Record<'problem' | 'customer' | 'offeri
   return Math.round((100 * earned) / total);
 }
 
-// The policy rules on one judge answer (design §9).
+// The policy rules on one judge answer.
 export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: IdeaProfile): PolicyOutcome {
   // A "same" answer needs a source from this candidate and a quote that is really in its evidence; otherwise "unknown".
   const checked = (a: JudgeAnswer): JudgeAnswer =>
@@ -141,7 +141,7 @@ export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: I
 }
 
 // ---------------------------------------------------------------------------
-// Policy gate and ranking (design §10)
+// Policy gate and ranking
 // ---------------------------------------------------------------------------
 
 // Lowercase, no diacritics or punctuation, Arabic letter forms unified. A backstop only: the full Arabic and English
@@ -160,7 +160,7 @@ export type Judged = { candidate: Candidate; policy: PolicyOutcome };
 
 type Exclusions = Pick<Handoff, 'founder_startup' | 'references'>;
 
-// The founder's own startup and the references ("like Talabat") are never results (design §6, §13).
+// The founder's own startup and the references ("like Talabat") are never results.
 export function isExcluded(candidate: Candidate, exclude: Exclusions): boolean {
   const names = [candidate.name, ...candidate.name_aliases].map(normalizeName);
   const ownName = exclude.founder_startup?.name ? normalizeName(exclude.founder_startup.name) : null;
@@ -189,7 +189,7 @@ function companyKey(c: Candidate): string {
 }
 
 // The strongest overlap with the idea first, then Confirmed before Likely, then candidate_key keeps equal ones in a
-// fixed order (Hala, 18 Nov 2026: Confirmed first put Lugmety, fine dining, above Jahez for a food delivery app only
+// fixed order (Confirmed first put Lugmety, fine dining, above Jahez for a food delivery app only
 // because Jahez's registration was not matched; closeness to the idea is what the founder needs first).
 function compare(a: Judged, b: Judged): number {
   const rank = (j: Judged) => (j.candidate.validation?.evidence_status === 'confirmed' ? 0 : 1);
@@ -211,7 +211,7 @@ export function rankCompetitors(judged: readonly Judged[], exclude: Exclusions):
 }
 
 // ---------------------------------------------------------------------------
-// ISS and market level (design §10)
+// ISS and market level
 // ---------------------------------------------------------------------------
 
 // The top 3 combined, the closest counting most; Likely counts slightly less. null when nothing is found.
@@ -235,10 +235,10 @@ export function marketLevel(valid: readonly Judged[]): 'open' | 'competitive' | 
 }
 
 // ---------------------------------------------------------------------------
-// The Result (design §11)
+// The Result
 // ---------------------------------------------------------------------------
 
-// The name shown on the card, in the founder's language when the company has one (18 Nov 2026): an Arabic chat
+// The name shown on the card, in the founder's language when the company has one: an Arabic chat
 // shows "مرسول" and "عشق القهوة", an English chat "Mrsool" and "Eshq Coffee". Only names the company really uses:
 // Darb's list (its Arabic name) or its own pages; never a translation.
 const ARABIC = /[\u0600-\u06FF]/;
@@ -248,7 +248,7 @@ export function displayName(candidate: Pick<Candidate, 'name' | 'name_aliases'>,
   return wanted ?? candidate.name;
 }
 
-// The company's other names inside a sentence become the name on its card (Hala, 18 Nov 2026: an Arabic card said
+// The company's other names inside a sentence become the name on its card (an Arabic card said
 // "تتناول Lugmety ..." under the title "لقمتي"). Its own names only (Darb's list, its pages, its web address);
 // a name the company does not use is never made up, and the judge's wording is otherwise left as it is.
 export function withCardName(sentence: string, candidate: Pick<Candidate, 'name' | 'name_aliases' | 'domain'>, cardName: string): string {
@@ -274,7 +274,7 @@ function toCompetitor(j: Judged, rank: number, language: Language): ResultCompet
   const named = (sentence: string) => withCardName(sentence, c, name);
   // The proof sentence is kept only when it is really in this competitor's evidence and its link is the competitor's own.
   // Only for companies found on the web: the evidence of a startup from Darb's list is Darb's own summary of it
-  // ("Problem: ..."), not a sentence from the company's page (live check, 18 Nov 2026).
+  // ("Problem:..."), not a sentence from the company's page.
   const proven = (a: JudgeAnswer) =>
     c.source_type === 'web' &&
     (a.answer === 'same' || a.answer === 'partly') && a.quote && a.source_url && quoteInEvidence(a.quote, c.evidence_text) && citesCandidate(a.source_url, c);
@@ -312,7 +312,7 @@ export function limitResult(profile: IdeaProfile, note: NoteCode, usage: Result[
   return Result.parse({ status: 'complete', idea_profile: profile, competitors: [], iss: null, iss_basis: null, market_level: null, notes: [note], usage });
 }
 
-// The idea is too vague to search: one question, no competitors and no scores (design §4).
+// The idea is too vague to search: one question, no competitors and no scores.
 export function clarificationResult(profile: IdeaProfile, clarification: Clarification, usage: Result['usage']): Result {
   return Result.parse({
     status: 'needs_clarification',
@@ -341,7 +341,7 @@ export function buildResult({ handoff, profile, judged, runNotes, usage }: Build
   if (found && basis === 'problem_offering_only') notes.push('customer_unknown');
   notes.push(...runNotes);
 
-  // Partial when a part of the run failed (design §12); the result is still shown.
+  // Partial when a part of the run failed; the result is still shown.
   const failed = runNotes.some((n) => (['web_search_failed', 'judge_call_failed', 'temporarily_unavailable', 'time_limit_reached'] as NoteCode[]).includes(n));
 
   return Result.parse({

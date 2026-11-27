@@ -1,5 +1,5 @@
 // The Competitor Agent returns notes as codes. This table turns each code into one short sentence
-// in the founder's language, in code, so the wording never depends on a model (design §11).
+// in the founder's language, in code, so the wording never depends on a model.
 import { ISS_BANDS } from '../config/scoring';
 import type { Language, NoteCode, OpportunityKind, Result } from '../schemas/competitor';
 
@@ -59,7 +59,7 @@ export const NOTE_TEXT: Record<NoteCode, Record<Language, string>> = {
 };
 
 // ---------------------------------------------------------------------------
-// The summary and the competitive opportunities (explainer §6, §9), also written in code, never by a model.
+// The summary and the competitive opportunities, also written in code, never by a model.
 // ---------------------------------------------------------------------------
 
 const ISS_WORDS = {
@@ -129,7 +129,7 @@ export function opportunitySentences(result: Pick<Result, 'competitors'>, langua
     .filter((c) => c.opportunity)
     .map((c) => {
       const text = OPPORTUNITY_TEXT[c.opportunity!];
-      // only the offering rule uses the judge's own sentence; the others have a fixed message (explainer §6)
+      // only the offering rule uses the judge's own sentence; the others have a fixed message
       const meaning = c.opportunity === 'possible_difference' && c.difference ? c.difference : text.text![language];
       return `${text.title[language]} (${c.name}): ${meaning} ${NEXT_STEP[language]}: ${text.next[language]}`;
     });
@@ -140,10 +140,10 @@ export function noteSentences(notes: readonly NoteCode[], language: Language): s
   return notes.map((code) => NOTE_TEXT[code][language]);
 }
 
-// The one sentence above the competitor cards (Hala, 16 Nov 2026). Code writes the whole reply when cards are shown,
-// so the model can never list the competitors again in its own words (it did in every analysis of the Sprint 2 test).
+// The one sentence above the competitor cards. Code writes the whole reply when cards are shown,
+// so the model can never list the competitors again in its own words (it did in every analysis).
 export function cardsSentence(count: number, language: Language): string {
-  // In Darb's voice (config/darb-persona.ts, Hala, 18 Nov 2026), with the real count.
+  // In Darb's voice (config/darb-persona.ts), with the real count.
   if (language === 'ar') {
     const found = count === 1 ? 'منافسًا واحدًا مرتبطًا' : count === 2 ? 'منافسَين مرتبطَين' : `${count} منافسين مرتبطين`;
     return `اكتمل التحليل! ✅ وجدتُ ${found} بفكرة مشروعك. تعرض البطاقات أدناه كل منافس مع أدلته، وتجد الفرص المحتملة لتميّز مشروعك في التحليل الكامل.`;

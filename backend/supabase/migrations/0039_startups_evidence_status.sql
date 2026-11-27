@@ -1,5 +1,5 @@
 -- =========================================================
--- 0039 — A stored check keeps Confirmed or Likely (Member 1, Tasks 8, 9 and 11)
+-- 0039 — A stored check keeps Confirmed or Likely (Tasks 8, 9 and 11)
 -- Run once in Supabase: SQL Editor → paste → Run, after 0038. (Safe to run again.)
 --
 -- startups.validation_status says only pass / fail / null, so a stored pass is always shown as Likely,

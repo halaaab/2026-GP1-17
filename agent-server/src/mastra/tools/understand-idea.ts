@@ -1,6 +1,6 @@
-// Tool: the Understand capability (design §4). Turns the founder's idea into the structured idea profile, keeps the
+// Tool: the Understand capability. Turns the founder's idea into the structured idea profile, keeps the
 // facts they stated, and decides in code whether there is enough to search (problem and offering). When there is,
-// it embeds the profile once and saves it on the idea (startup_ideas.embedding, design §16) for the corpus search.
+// it embeds the profile once and saves it on the idea (startup_ideas.embedding) for the corpus search.
 // The agent sees only a short summary: whether it is ready, what is missing, and the search keywords.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';

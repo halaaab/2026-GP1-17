@@ -1,5 +1,5 @@
 // Config: the founder's sub-sector is an ISIC4 division (2 digits) inside their section.
-// The 85 divisions and their Arabic names come from GASTAT's SSIC file (15 Sep 2026, Darb DataSets › Gastat).
+// The 85 divisions and their Arabic names come from GASTAT's SSIC file (Darb DataSets › Gastat).
 // The English names are the matching UN ISIC Rev.4 division titles. The survival model's data and the roadmap use these codes.
 import type { IsicSection } from './sectors';
 

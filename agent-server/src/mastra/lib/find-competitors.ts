@@ -1,9 +1,9 @@
-// Task 11: Member 1's whole part in one step for the Competitor Agent: Discover (Darb's list, then the web when
+// Task 11: the whole part in one step for the Competitor Agent: Discover (Darb's list, then the web when
 // needed), Identify (a clean list of companies) and Validate (the four checks), within 15 Tavily calls per idea.
-// The result is the list of valid companies (Confirmed or Likely) the judge will read (Member 2, design §9);
+// The result is the list of valid companies (Confirmed or Likely) the judge will read;
 // until the judge is connected, the Competitor Agent returns the "capability_pending" note with it.
 //
-//   0. The idea needs at least its problem and its offering (design §4). If one is unknown, nothing is searched:
+// 0. The idea needs at least its problem and its offering. If one is unknown, nothing is searched:
 //      the status is needs_clarification with one question.
 //   1. Darb's list (Task 2): the 15 closest startups. The founder's own startup, their analogies and startups less
 //      close than MIN_SIMILARITY (0.55) are removed.
@@ -11,7 +11,7 @@
 //      empty is not shown. The top 6 without a recent check are checked now (Task 8) and the result is saved.
 //   3. The web (Task 5) is searched only when Darb's list gives fewer than 3 valid startups that are close to
 //      the idea. "Close" is a closeness (cosine similarity) of at least 0.75: a stand-in until the judge decides
-//      which startups really compete (design §5 "web only when the corpus results are weak"). With 0.75, D1 and
+// which startups really compete ("web only when the corpus results are weak"). With 0.75, D1 and
 //      N1 search the web and D5 does not (TC-11.1 to 11.3).
 //   4. The new web companies are checked (Task 8), with the news pages the search found (their dates count for
 //      Active). Up to 6 new web companies are checked. Only Confirmed and Likely companies are passed on.
@@ -33,11 +33,11 @@ export const CLOSE_SIMILARITY = 0.75;
 // The web is searched when Darb's list gives fewer valid, close startups than this (test plan TC-11.1).
 export const ENOUGH_VALID = 3;
 // Startups from Darb's list checked live in one run (one reading batch).
-// 6, not 10 (Hala, 16 Nov 2026): only 3 competitors are ever shown, and checking fewer startups and web companies cut
+// 6, not 10: only 3 competitors are ever shown, and checking fewer startups and web companies cut
 // a cold run from 125 to 54 s and from 173 to 84 s (with the 25 s page budget), with the same competitors found.
 const CORPUS_TO_CHECK = 6;
 const WEB_TO_CHECK = 6;
-// A startup from Darb's list less close to the idea than this is not checked or passed on (Hala, 16 Nov 2026).
+// A startup from Darb's list less close to the idea than this is not checked or passed on.
 // Checking far startups cost time and gave the judge junk: N1 (falcon photography) checked Unifonic, SDM and ZORY
 // at 0.40 to 0.45, and took 283 s. In the Task 10 and 11 runs, every relevant startup was above it (1pass 0.80,
 // OTO 0.79, Supermile 0.63, Bayut and 5050 0.87). It does not change the web rule (CLOSE_SIMILARITY).
@@ -82,7 +82,7 @@ export type FindDeps = {
   storedChecks: (ids: string[]) => Promise<Map<string, { validation_status: 'pass' | 'fail' | null; evidence_status?: 'confirmed' | 'likely' | null; validated_at: string | null }>>;
 };
 
-// Asked when the problem or the offering is unknown (design §4). Member 2 owns the wording of clarification questions.
+// Asked when the problem or the offering is unknown. owns the wording of clarification questions.
 const QUESTIONS = {
   problem: { en: 'Thank you for sharing your idea 😊 Could you tell me what problem it solves, and for whom?', ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي المشكلة التي تحلّها، ولمن؟' },
   offering: { en: 'Thank you for sharing your idea 😊 Could you tell me what you will offer: an app, a service or a product?', ar: 'شكرًا لمشاركتك فكرتك 😊 هل يمكنك أن توضّح لي ما ستقدّمه: تطبيق أم خدمة أم منتج؟' },
@@ -189,7 +189,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
   const keep = (c: Candidate, r: CompanyResult, source: 'corpus' | 'web') => {
     if (r.evidence_status === 'unconfirmed') return not_shown.push({ name: c.name, source, why: `Unconfirmed: ${failedChecks(r)}` });
     // A web company's name: its own name as its pages write it, not one guessed from its web address or a page title
-    // (Hala, 18 Nov 2026: eshq.coffee was "Coffee"; its pages say "عشق القهوة"). Both spellings are kept, so the card
+    // (eshq.coffee was "Coffee"; its pages say "عشق القهوة"). Both spellings are kept, so the card
     // can show the one in the founder's language (lib/competitor-policy.ts, displayName).
     const own = source === 'web' ? [r.page_names?.en, r.page_names?.ar].filter((n): n is string => !!n) : [];
     const name = own[0] ?? c.name;
@@ -237,8 +237,8 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
 
     // 4. The new web companies, with the news the search found.
     const news = web.evidence.filter((e) => e.kind === 'news').map((e) => ({ url: e.url, title: e.title, published_date: e.published_date ?? null }));
-    // A web company that is already in Darb's list is dropped by its name too, not only its website (Hala,
-    // 15 Nov 2026): "1Pass App" and "تطبيق 1Pass" came from App Store links, so their domain was not 1pass.app.
+    // A web company that is already in Darb's list is dropped by its name too, not only its website:
+    // "1Pass App" and "تطبيق 1Pass" came from App Store links, so their domain was not 1pass.app.
     const listNames = new Set(corpus.candidates.flatMap((c) => [c.name, ...c.name_aliases]).map(cleanName).filter(Boolean));
     const newOnes = web.candidates.filter((c) => {
       const w = isFounderOrReference(c, input) ?? ([c.name, ...c.name_aliases].map(cleanName).some((n) => listNames.has(n)) ? "already in Darb's list" : null);
@@ -277,7 +277,7 @@ export async function findCompetitors(input: FindInput, deps: FindDeps, now = ne
 }
 
 // In the Competitor Agent: hands what was found to the run state the other capabilities share (lib/competitor-run.ts,
-// Member 2's contract): the valid companies as candidates for the judge, the Tavily calls, the notes and a "discover"
+// the contract): the valid companies as candidates for the judge, the Tavily calls, the notes and a "discover"
 // step for the run log. Only the shared candidate fields are kept (the Candidate schema is strict).
 export function addToRunState(state: RunState, out: FindOutput, durationMs: number): void {
   for (const { evidence_status: _status, checked: _checked, similarity: _similarity, ...candidate } of out.companies) {

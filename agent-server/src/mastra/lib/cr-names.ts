@@ -1,4 +1,4 @@
-// The legal-name check (Hala, 14 Nov 2026): is the legal name a company writes on its own pages (its VAT certificate,
+// The legal-name check: is the legal name a company writes on its own pages (its VAT certificate,
 // its footer, its About page) exactly the name of one active company in the Ministry of Commerce list?
 // An exact match on the whole cleaned name counts like a CR number match: the company can be Confirmed.
 //
@@ -56,7 +56,7 @@ export function nameFingerprint(cleanName: string): number {
   return parseInt(createHash('sha256').update(cleanName).digest('hex').slice(0, 13), 16);
 }
 
-// Arabic read out of a PDF often comes in two broken ways (seen in 1pass's VAT certificate, 14 Nov 2026):
+// Arabic read out of a PDF often comes in two broken ways (in 1pass's VAT certificate):
 //   - "presentation forms", special letter shapes (ﺗﺎرﻳﺦ): NFKC turns them back into normal letters;
 //   - two letters that the font joins come out swapped: "رشكه" for "شركه", "رضيبة" for "ضريبة", "املعلومات" for
 //     "المعلومات", "يف" for "في", "الرئيسيس" for "الرئيسي".
@@ -156,7 +156,7 @@ const LEGAL_NAME = /(?:^|[^\p{L}])(شرك[ةه](?:\s+[\p{L}ً-ٟـ]+){1,10})/gu;
 
 // Every legal name written on the pages, as written. Each one is checked whole, then without its last words
 // one by one (the words after a name are often "ذات مسؤولية محدودة", "تحمل سجل…"), down to two words after "شركة".
-// Words that show a name is the company's own legal name (fix of 15 Nov 2026): a copyright line, a CR or VAT number,
+// Words that show a name is the company's own legal name: a copyright line, a CR or VAT number,
 // a certificate, "registered", "a trademark of". On Aajil's homepage, "شركة منصات الطاقة للمقاولات العامة" is a
 // customer in a testimonial ("الرئيس التنفيذي • شركة …"): a name with none of these words near it never counts.
 export const LEGAL_CONTEXT = /©|copyright|all rights|حقوق|محفوظ|سجل\s*تجاري|السجل\s*التجاري|رقم\s*السجل|الرقم\s*الضريبي|ضريب|الرقم\s*الموحد|شهاد[ةه]|المكلف|\bVAT\b|\btax\b|\bC\.?R\.?\b|commercial\s+registration|registered|trademark|trading\s+name|علام[ةه]\s*تجاري|مملوك[ةه]|تابع[ةه]\s*ل/i;
@@ -188,7 +188,7 @@ export function findLegalNameMatch(texts: string[], names: CrNames | null = curr
 }
 
 // ---------------------------------------------------------------------------
-// 4. The quarterly preparation step (run on Hala's Mac)
+// 4. The quarterly preparation step (run locally)
 // ---------------------------------------------------------------------------
 
 // One CSV line into its cells (names can contain commas inside quotes).
@@ -226,7 +226,7 @@ export async function prepareCrNamesFile(csvPaths: string[], outPath: string, de
       }
       const c = csvCells(line);
       const unified = readCrNumber(c[0]);
-      // Main registrations only (fix of 14 Nov 2026): a branch has its own unified number but always its company's
+      // Main registrations only: a branch has its own unified number but always its company's
       // name, so counting it made Bayut's name ("شركة بيوت ويب السعودية…", main 7015474393, branch 7041626651)
       // look shared by two companies.
       if (unified.type !== 'unified' || normalizeArabic(c[4] ?? '') !== 'شركه' || normalizeArabic(c[3] ?? '') !== 'رييسي' || !c[2]) {

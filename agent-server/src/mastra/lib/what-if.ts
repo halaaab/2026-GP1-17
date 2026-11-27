@@ -1,4 +1,4 @@
-// What-if analyses (design §4, explainer §8): "what if I targeted Jeddah?" Each what-if is a new assessment of the
+// What-if analyses: "what if I targeted Jeddah?" Each what-if is a new assessment of the
 // same idea, so the original never changes. Its short name is kept in its confirmed_inputs ({ idea_text, what_if_label }).
 // No link to the original assessment is stored (migration 0043): the comparison is made while the chat runs.
 // Decided in code, never by a model:

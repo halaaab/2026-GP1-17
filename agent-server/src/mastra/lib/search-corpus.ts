@@ -1,13 +1,12 @@
 // Task 2: finds the 15 startups in Darb's list closest to an idea (the shortlist the judge reads).
-// Logic approved by Hala on 13 Nov 2026; design: Darb_Competitor_Agent_Design §3 ("cosine similarity in
-// pgvector plus keyword search"). The shortlist only orders the list: it never decides who is a competitor.
+// Cosine similarity in pgvector plus keyword search. The shortlist only orders the list: it never decides who is a competitor.
 //
 //   1. The idea's profile becomes a vector, with the same model as the startups (Task 1).
 //   2. Two rankings: A. by meaning (cosine similarity, in Supabase); B. by keywords (English and Arabic).
 //   3. The two are combined fairly with Reciprocal Rank Fusion: near the top of either list moves a startup up,
 //      near the top of both moves it up most.
 //   4. The 15 closest are kept. Startups that failed the validity re-check (Task 9) never appear.
-//   5. Same idea, same result (design §4, §12): with an idea_id, the idea's profile and vector are saved the
+// 5. Same idea, same result: with an idea_id, the idea's profile and vector are saved the
 //      first time (startup_ideas.profile_text and .embedding, migration 0037) and reused every time after.
 import type { Candidate, IdeaProfile } from '../schemas/competitor';
 import { cleanLink, siteOf } from './identify-candidates';
@@ -147,7 +146,7 @@ export function corpusCandidate(row: CorpusRow, now: Date): Candidate {
     website,
     domain: website ? siteOf(website) : null,
     evidence_text: [row.profile_text, row.startup_description ? `Description: ${row.startup_description}` : ''].filter(Boolean).join('\n\n'),
-    // Shown on the competitor card: the first sentence of its description in Darb's list (Hala, 16 Nov 2026).
+    // Shown on the competitor card: the first sentence of its description in Darb's list.
     description: firstSentence(row.startup_description),
     sources,
   };

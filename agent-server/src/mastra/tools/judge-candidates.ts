@@ -1,4 +1,4 @@
-// Tool: the Judge capability (design §9). Judges the candidates found so far, one candidate per OpenAI call,
+// Tool: the Judge capability. Judges the candidates found so far, one candidate per OpenAI call,
 // and keeps the answers in the run state for finalize_result. The agent only sees a short summary, so it can decide
 // what to do next (search more, validate, or finish) without being able to change an answer.
 import { createTool } from '@mastra/core/tools';
@@ -43,12 +43,12 @@ export const judgeCandidatesTool = createTool({
         c.validation?.evidence_status !== 'unconfirmed', // never shown, so not worth a call
     );
 
-    // The per-run judge-call cap, enforced in code (design §12).
+    // The per-run judge-call cap, enforced in code.
     const room = Math.max(0, JUDGE_MAX_CALLS - state.judgeCalls);
     const toJudge = waiting.slice(0, room);
     let failed = 0;
 
-    // The run's overall time limit (design §12): no new judge calls start after it.
+    // The run's overall time limit: no new judge calls start after it.
     const runStarted = Number(requestContext?.get(STARTED_AT_KEY)) || started;
     let outOfTime = 0;
     for (let i = 0; i < toJudge.length; i += JUDGE_PARALLEL_CALLS) {
@@ -64,7 +64,7 @@ export const judgeCandidatesTool = createTool({
       );
       answers.forEach((a, j) => {
         if (a.status === 'fulfilled') state.judged.set(batch[j].candidate_key, a.value);
-        else failed += 1; // that candidate is skipped; the run continues (design §12)
+        else failed += 1; // that candidate is skipped; the run continues
       });
     }
     if (failed > 0) state.notes.add('judge_call_failed');

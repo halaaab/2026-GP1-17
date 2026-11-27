@@ -1,13 +1,12 @@
 // Task 5: searches the web for competitors outside Darb's list, with Tavily.
-// Logic approved by Hala on 13–14 Nov 2026; design: Darb_Competitor_Agent_Design §5 (discovery and source policy).
-// One mode only (Hala, 14 Nov 2026): the open web, Saudi Arabia, excluded sites never used, a few Saudi sources
-// preferred (boosted, not required). The earlier "restricted to approved sites" mode and its list were removed.
+// One mode only: the open web, Saudi Arabia, excluded sites never used, a few Saudi sources
+// preferred (boosted, not required).
 // The agent decides WHEN to search the web (fewer than 3 valid competitors, or none Direct); this only searches.
 //
-//   1. The AI writes the search queries (Hala's choice, 14 Nov 2026), from the idea's PROFILE only.
+// 1. The AI writes the search queries, from the idea's PROFILE only.
 //      Why the AI and not code: it writes more varied, natural queries from different angles (the problem, the
 //      customer, the offering) and in both languages, so more real competitors are found.
-//      The privacy rule (design §5: "queries use generic terms only, never the founder's full text") is kept in
+// The privacy rule ("queries use generic terms only, never the founder's full text") is kept in
 //      two ways: the AI never sees the founder's own sentence, only the profile; and code checks every query
 //      (short, no long run of the founder's words) before it is searched. A query that fails is dropped.
 //   2. Each query is one Tavily call: country Saudi Arabia, the excluded sites never searched (config/excluded-sources),
@@ -142,7 +141,7 @@ export function openAiQueryWriter(): SearchWebDeps['writeQueries'] {
 // 2. Tavily
 // ---------------------------------------------------------------------------
 
-// Saudi sources Tavily is asked to prefer (boosted, not required), Hala's list of 14 Nov 2026.
+// Saudi sources Tavily is asked to prefer (boosted, not required).
 // For the App Store only the Saudi store (/sa/) is kept afterwards (lib/identify-candidates.ts).
 export const PREFERRED_SITES = [
   'ecosystemsa.com',
@@ -175,7 +174,7 @@ export function tavilySearch(): SearchWebDeps['search'] {
 
 // The website's own name, from its address: "ksa.puregymarabia.com" → "puregymarabia", "optimo.com.sa" → "optimo",
 // "eshq.coffee" → "eshq". The last part is always the ending (.com, .sa, .coffee …), so the name is the part just
-// before the endings, not the longest part (fix of 18 Nov 2026: "eshq.coffee" gave "coffee").
+// before the endings, not the longest part ("eshq.coffee" gave "coffee").
 const ENDINGS = new Set(['com', 'sa', 'net', 'org', 'ae', 'io', 'co', 'app', 'ai', 'me', 'tech', 'info', 'biz', 'gov', 'edu']);
 const PREFIXES = new Set(['ksa', 'sa', 'en', 'ar', 'web', 'app', 'm', 'shop', 'store', 'my', 'go', 'get', 'try']);
 export function siteName(site: string): string {
@@ -187,7 +186,7 @@ export function siteName(site: string): string {
 
 const compact = (text: string) => text.toLowerCase().replace(/[^a-z0-9\u0600-\u06FF]/g, '');
 
-// A company name from a page title (approved 14 Nov 2026). A title is split at " | ", " - ", " – ", ":" and "·";
+// A company name from a page title. A title is split at " | ", " - ", " – ", ":" and "·";
 // on a company's own site, the part that matches the website's own name is the company's name
 // ("Memberships | Optimo | Saudi Arabia" on optimo.com.sa → "Optimo"); with no matching part, the website's own
 // name is used. On other sites (app stores), the first part is used.

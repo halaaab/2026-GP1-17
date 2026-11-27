@@ -1,6 +1,6 @@
 // Output check on the Conversational Agent's replies (a Mastra processor, input and output).
 // The founder must see every note sentence word for word, in their own language, and never the agent's
-// private working memory (design §11: the supervisor never changes facts).
+// private working memory (the supervisor never changes facts).
 //
 // How it works:
 //   1. When a founder message arrives, an empty "reply rules" box is put in the request context, and the
@@ -8,11 +8,11 @@
 //   2. When a delegation finishes, lib/competitor-delegation.ts fills the box: the note sentences, the language,
 //      and whether code writes the reply itself.
 //   3. Code writes the reply itself when the analysis has no competitors to show (and asks no question): the founder
-//      then sees exactly the note sentences (design §10, "nothing found"). The first streamed piece of the model's
+// then sees exactly the note sentences ("nothing found"). The first streamed piece of the model's
 //      text is replaced by them and the rest of its text is dropped, so a wrong reply never reaches the website.
 //
 // Why not ask the model to rewrite? In @mastra/core 1.80 a rejected reply has already streamed to the founder
-// by the time a rewrite is asked for (checked on 10 Nov 2026), so only changing the stream itself is reliable.
+// by the time a rewrite is asked for, so only changing the stream itself is reliable.
 import type { MastraDBMessage } from '@mastra/core/memory';
 import type { Processor } from '@mastra/core/processors';
 import type { Language } from '../schemas/competitor';
@@ -31,7 +31,7 @@ const squash = (text: string) => text.replace(/\s+/g, ' ').trim();
 const MEMORY_LEAK = /Founder's idea \(their own words\)|#\s*Competitor analysis|Stated\W{0,3}(problem|customer|offering|market)|Last status|Offered to the founder|working memory/i;
 
 // The start of private notes in a reply: the template's headings, or the model announcing what it stored or updated
-// (persona eval, 18 Nov 2026: after saving its memory, the model printed the whole note to the founder).
+// (saving its memory, the model printed the whole note to the founder).
 const MEMORY_START =
   /Here(’|')?s what I (have )?(stored|saved|noted)|I(’|')?ll update my (working )?memory|#\s*Founder's idea|#\s*Competitor analysis|-\s*Stated (problem|customer|offering|market)|سأقوم بتحديث|تم تحديث المعلومات|في ذاكرتي/i;
 
@@ -41,7 +41,7 @@ export function cutAtMemory(text: string): string | null {
   return match ? text.slice(0, match.index).trimEnd() : null;
 }
 
-// What is wrong with a reply. Empty when the reply is fine. Used by the live test, and later by Member 2's checks.
+// What is wrong with a reply. Empty when the reply is fine. Used by the live test, and later by the checks.
 export function replyProblems(text: string, rules: Pick<ReplyRules, 'sentences' | 'language'>): string[] {
   const problems: string[] = [];
   const reply = squash(text);

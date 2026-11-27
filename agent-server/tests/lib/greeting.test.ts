@@ -1,4 +1,4 @@
-// Tests for the instant welcome (18 Nov 2026): only a message that is nothing but a greeting is answered from code.
+// Tests for the instant welcome: only a message that is nothing but a greeting is answered from code.
 import { describe, expect, it } from 'vitest';
 import { greetingIn, greetingReply } from '../../src/mastra/lib/greeting';
 

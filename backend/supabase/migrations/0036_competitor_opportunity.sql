@@ -1,5 +1,5 @@
 -- =========================================================
--- 0036 — Each competitor's competitive opportunity (explainer §6)
+-- 0036 — Each competitor's competitive opportunity
 -- Run once in Supabase: SQL Editor → paste → Run, after 0035.
 -- Safe to run again: the column is added only if it is missing.
 --
@@ -19,4 +19,4 @@ alter table public.similar_startup_results
     check (opportunity in ('proven_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'));
 
 comment on column public.similar_startup_results.opportunity is
-  'Competitive opportunity: one of the four fixed results on the judge''s answers (explainer §6).';
+  'Competitive opportunity: one of the four fixed results on the judge''s answers.';
