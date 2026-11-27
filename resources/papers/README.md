@@ -38,6 +38,6 @@ PDFs are not uploaded (copyright). Each paper is linked below.
 
 | Paper | Year | Link | Relevance to Darb |
 |---|---|---|---|
-| | Hoberg et al. — *Using Representation Learning and Website Text to Identify Competitor Networks* | 2026 | [DOI](https://doi.org/10.1287/mnsc.2024.06516) | Finding candidate competitors |
+| Hoberg et al. — *Using Representation Learning and Website Text to Identify Competitor Networks* | 2026 | [DOI](https://doi.org/10.1287/mnsc.2024.06516) | Finding candidate competitors |
 | Zheng et al. — *Judging LLM-as-a-Judge*  | 2023  |  [arXiv](https://arxiv.org/abs/2306.05685) | LLM judgment of competitors |
 
