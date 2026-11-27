@@ -33,3 +33,11 @@ PDFs are not uploaded (copyright). Each paper is linked below.
 | Chen & Guestrin — *XGBoost* | 2016 | [DOI](https://doi.org/10.1145/2939672.2939785) | Candidate survival model |
 | Lundberg & Lee — *A Unified Approach to Interpreting Model Predictions* | 2017 | [NeurIPS](https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html) | SHAP for the Explainability Engine |
 | Wu et al. — *AutoGen* | 2023 | [arXiv](https://arxiv.org/abs/2308.08155) | Multi-agent framework background |
+
+## Competitor Identification and LLM-Based Judgment
+
+| Paper | Year | Link | Relevance to Darb |
+|---|---|---|---|
+| | Hoberg et al. — *Using Representation Learning and Website Text to Identify Competitor Networks* | 2026 | [DOI](https://doi.org/10.1287/mnsc.2024.06516) | Finding candidate competitors |
+| Zheng et al. — *Judging LLM-as-a-Judge*  | 2023  |  [arXiv](https://arxiv.org/abs/2306.05685) | LLM judgment of competitors |
+
