@@ -36,6 +36,23 @@ function safe(text) {
    as stars. Only bold, bullet and numbered lists and paragraphs are turned into HTML; everything else stays text,
    because the words are made safe first. Each block gets dir="auto", so Arabic and English lines both read right. */
 const READY = /^(Your analysis is ready!|اكتمل التحليل!)(.*)$/u;
+
+/* A line that starts with one of Darb's labels ("**Problem:** …", "**Next step:** …") gets the label's icon
+   (follow-up answers and "how can I stand out" answers, agent-server explain-difference.ts) */
+const LABEL_ICONS = [
+  [/^(Problem|المشكلة)\s*:?$/u, 'flag'],
+  [/^(Customer|Customers|العميل|العملاء)\s*:?$/u, 'users'],
+  [/^(Offering|Product|المنتج|العرض)\s*:?$/u, 'store'],
+  [/^(Evidence|Source|الدليل|المصدر)\s*:?$/u, 'file'],
+  [/^(Where you could stand out|أين يمكنك التميّز|أين يمكنك التميز)\s*:?$/u, 'spark'],
+  [/^(Next step|الخطوة التالية)\s*:?$/u, 'trendUp'],
+];
+function labelIcon(line) {
+  const label = line.match(/^\*\*([^*]{2,40}?)\*\*/);
+  if (!label) return null;
+  const found = LABEL_ICONS.find(([pattern]) => pattern.test(label[1].trim()));
+  return found ? found[1] : null;
+}
 function formatReply(text) {
   // **bold**, and [name](https://…) links (the evidence link in a follow-up answer) open in a new tab
   const bold = (line) => safe(line)
@@ -66,6 +83,8 @@ function formatReply(text) {
     // "Your analysis is ready!" gets a tick icon instead of an emoji (older saved replies still have the ✅)
     const ready = line.replace(/\s*✅/u, '').match(READY);
     if (ready) { blocks.push(`<p dir="auto" class="analysis-ready">${icon('checkCircle')}<span><strong>${safe(ready[1])}</strong>${bold(ready[2])}</span></p>`); continue; }
+    const labelled = labelIcon(line);
+    if (labelled) { blocks.push(`<p dir="auto" class="reply-point">${icon(labelled)}<span>${bold(line)}</span></p>`); continue; }
     if (line) blocks.push(`<p dir="auto">${bold(line.replace(/^#{1,6}\s+/, ''))}</p>`);
   }
   closeList();

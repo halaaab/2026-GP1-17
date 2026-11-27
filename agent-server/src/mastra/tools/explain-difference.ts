@@ -1,12 +1,12 @@
-// Tool: "how can I differ from Hungerstation?" answered from Darb's saved analysis only, written by code.
-// The model only decides that the founder asked this and names the competitor; code writes the whole reply
-// (lib/reply-guard.ts), so it can never add strategies or feature ideas of its own (it did with every prompt wording).
-// The reply: where the analysis found the competitor the same as the idea, its opportunity with the next step
-// (the same sentence as in the analysis), and that the differentiator is the founder's to choose (a what-if checks it).
+// Tool: "how can I differ from Hungerstation?" answered from Darb's saved analysis only.
+// It returns that competitor's saved facts (what it offers, the three comparison notes, the difference the judge
+// found and the opportunity's next step) and the exact shape of the answer. The Conversational Agent writes the answer
+// from these facts in Darb's voice: a template made of labels ("the same in the problem and the offering") told the
+// founder nothing, and the model's own strategies (its first answers) were not from Darb's sources.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { getUserId, loadOwnedAssessment } from '../lib/assessments';
-import { opportunitySentences } from '../lib/competitor-notes';
+import { OPPORTUNITY_TEXT } from '../lib/competitor-notes';
 import { normalizeName } from '../lib/competitor-policy';
 import { loadStoredResult, type StoredResult } from '../lib/competitor-store';
 import { laterIdeas } from '../lib/conversation-ideas';
@@ -14,48 +14,43 @@ import { REPLY_RULES_KEY, type ReplyRules } from '../lib/reply-guard';
 import { getSupabase } from '../lib/supabase';
 import type { Language } from '../schemas/competitor';
 
-type Part = 'problem' | 'customer' | 'offering';
-const PART_NAMES: Record<Language, Record<Part, string>> = {
-  en: { problem: 'the problem', customer: 'the customer', offering: 'the offering' },
-  ar: { problem: 'المشكلة', customer: 'العميل', offering: 'المنتج' },
+// The labels of the answer's lines; the chat page shows an icon beside each (frontend chatbot.js, formatReply).
+export const ANSWER_LABELS: Record<Language, { standOut: string; nextStep: string }> = {
+  en: { standOut: 'Where you could stand out:', nextStep: 'Next step:' },
+  ar: { standOut: 'أين يمكنك التميّز:', nextStep: 'الخطوة التالية:' },
 };
 
-function listOf(items: string[], language: Language): string {
-  if (items.length <= 1) return items.join('');
-  if (language === 'ar') return items.join(' و'); // المشكلة والعميل والمنتج
-  return items.length === 2 ? `${items[0]} and ${items[1]}` : `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
+// The shape of the answer, given to the model with the facts.
+export function answerShape(name: string, language: Language, differenceFound = true): string {
+  const label = ANSWER_LABELS[language];
+  return [
+    `Write the answer in ${language === 'ar' ? 'Arabic' : 'English'}, to the founder ("you", "your idea"), in exactly these four lines and nothing else:`,
+    `1. One sentence on what ${name} already shares with the founder's idea, from shares (what it is, the problem and the customers).`,
+    differenceFound
+      ? `2. "**${label.standOut}**" then one or two sentences from stand_out only: what ${name} does that the idea does not, or how the idea's focus is narrower, and why that focus can be the founder's difference.`
+      : `2. "**${label.standOut}**" then one sentence saying plainly that Darb's analysis found no clear difference yet: ${name} already offers the same core service. Do not suggest what the difference could be.`,
+    `3. "**${label.nextStep}**" then next_step, made specific to this idea's customers.`,
+    `4. One sentence inviting the founder to describe a feature they have in mind, so Darb can check it against ${name} and the other competitors.`,
+    'Use only these facts. Never add features, prices, partnerships, examples or any idea of your own. No emoji, no closing offer.',
+  ].join('\n');
 }
-
-// The first sentence: what the analysis found the same (and partly the same), from the judge's answers.
-export function samenessSentence(name: string, comparison: Partial<Record<Part, { answer?: string }>> | null, language: Language): string {
-  const parts: Part[] = ['problem', 'customer', 'offering'];
-  const same = parts.filter((p) => comparison?.[p]?.answer === 'same').map((p) => PART_NAMES[language][p]);
-  const partly = parts.filter((p) => comparison?.[p]?.answer === 'partly').map((p) => PART_NAMES[language][p]);
-  if (language === 'ar') {
-    if (!same.length && !partly.length) return `لم يجد تحليل درب أن ${name} يطابق فكرتك في أي جانب.`;
-    const a = same.length ? `يطابق فكرتك في ${listOf(same, 'ar')}` : '';
-    const b = partly.length ? `${a ? '، ويطابقها جزئيًا في ' : 'يطابق فكرتك جزئيًا في '}${listOf(partly, 'ar')}` : '';
-    return `وجد تحليل درب أن ${name} ${a}${b}.`;
-  }
-  if (!same.length && !partly.length) return `Darb's analysis did not find ${name} the same as your idea in any part.`;
-  const a = same.length ? `the same as your idea in ${listOf(same, 'en')}` : '';
-  const b = partly.length ? `${a ? ', and partly the same in ' : 'partly the same as your idea in '}${listOf(partly, 'en')}` : '';
-  return `Darb's analysis found ${name} ${a}${b}.`;
-}
-
-export const CHOOSE_SENTENCE: Record<Language, string> = {
-  en: 'The differentiator is yours to choose: describe it here, and Darb can check it against these competitors as a what-if.',
-  ar: 'اختيار ما يميّزك قرارك أنت: صِفه هنا، ويستطيع درب مقارنته بهؤلاء المنافسين في تحليل «ماذا لو».',
-};
 
 export const explainDifferenceTool = createTool({
   id: 'explain_difference',
   description:
-    'Only when the founder asks how to differ from, compete with or stand out from a competitor already shown in this conversation. Give the competitor\'s name as shown on its card. Darb shows the answer, written from the saved analysis, word for word: write nothing yourself.',
+    'Only when the founder asks how to differ from, compete with or stand out from a competitor already shown in this conversation. Give the competitor\'s name as shown on its card. It returns that competitor\'s saved facts and how_to_answer: write the answer exactly as how_to_answer says, from these facts only.',
   inputSchema: z.object({ competitor_name: z.string().min(1).describe('The competitor the founder asks about, as its name appears in the saved analysis') }),
   outputSchema: z.object({
     status: z.enum(['ok', 'not_found', 'not_analysed', 'no_assessment', 'error']),
-    sentences: z.array(z.string()).optional(),
+    competitor: z.string().optional(),
+    facts: z
+      .object({
+        shares: z.array(z.string()),
+        stand_out: z.array(z.string()),
+        next_step: z.string(),
+      })
+      .optional(),
+    how_to_answer: z.string().optional(),
     // when the name did not match: the competitors of this conversation, to call again with one of them
     competitor_names: z.array(z.string()).optional(),
   }),
@@ -97,14 +92,26 @@ export const explainDifferenceTool = createTool({
       // the name in the founder's language when Darb's list has it ("جاهز" in an Arabic reply)
       const arabicName = match.startup_id ? (otherNames.get(match.startup_id) ?? []).find((n) => /[\u0600-\u06FF]/.test(n)) : undefined;
       const shown = language === 'ar' && arabicName ? { ...match, name: arabicName } : match;
-      const [opportunity] = shown.opportunity ? opportunitySentences({ competitors: [shown as never] }, language) : [];
-      const sentences = [samenessSentence(shown.name, shown.comparison, language), ...(opportunity ? [opportunity] : []), CHOOSE_SENTENCE[language]];
-      if (rules) {
-        rules.language = language;
-        rules.sentences = sentences;
-        rules.codeWritesReply = true;
-      }
-      return { status: 'ok' as const, sentences };
+      // The facts, all from the saved analysis: what it is and what it shares, and where the idea differs.
+      const notes = shown.comparison ?? null;
+      const kind = shown.opportunity ?? 'no_clear_difference';
+      const opportunity = OPPORTUNITY_TEXT[kind];
+      const shares = [shown.description, shown.reason, notes?.problem?.answer === 'same' ? notes.problem.note : null, notes?.offering?.answer === 'same' ? notes.offering.note : null]
+        .filter((t): t is string => Boolean(t && t.trim()));
+      const standOut = [
+        shown.difference,
+        notes?.customer && notes.customer.answer !== 'same' ? notes.customer.note : null,
+        notes?.offering && notes.offering.answer !== 'same' ? notes.offering.note : null,
+        notes?.problem && notes.problem.answer !== 'same' ? notes.problem.note : null,
+        opportunity.text?.[language] ?? null,
+      ].filter((t): t is string => Boolean(t && t.trim()));
+      if (rules) rules.language = language;
+      return {
+        status: 'ok' as const,
+        competitor: shown.name,
+        facts: { shares, stand_out: [...new Set(standOut)], next_step: opportunity.next[language] },
+        how_to_answer: answerShape(shown.name, language, kind !== 'no_clear_difference' && kind !== 'not_enough_evidence'),
+      };
     } catch (error) {
       console.error('explain_difference failed:', error);
       return { status: 'error' as const };

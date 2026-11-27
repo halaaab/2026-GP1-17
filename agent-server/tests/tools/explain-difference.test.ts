@@ -1,22 +1,22 @@
-// "How can I differ from X?": the answer is written by code from the saved analysis (tools/explain-difference.ts).
+// "How can I differ from X?": the facts and the shape of the answer come from code (tools/explain-difference.ts).
 import { describe, expect, it } from 'vitest';
-import { CHOOSE_SENTENCE, samenessSentence } from '../../src/mastra/tools/explain-difference';
+import { ANSWER_LABELS, answerShape } from '../../src/mastra/tools/explain-difference';
 
 describe('explain_difference', () => {
-  it('says where the analysis found the competitor the same, in English and Arabic', () => {
-    const all = { problem: { answer: 'same' }, customer: { answer: 'same' }, offering: { answer: 'same' } };
-    expect(samenessSentence('Hungerstation', all, 'en')).toBe("Darb's analysis found Hungerstation the same as your idea in the problem, the customer, and the offering.");
-    expect(samenessSentence('جاهز', all, 'ar')).toBe('وجد تحليل درب أن جاهز يطابق فكرتك في المشكلة والعميل والمنتج.');
+  it('asks for four lines with the labels the chat page shows with icons, in the founder’s language', () => {
+    const en = answerShape('Hungerstation', 'en');
+    expect(en).toContain(`**${ANSWER_LABELS.en.standOut}**`);
+    expect(en).toContain(`**${ANSWER_LABELS.en.nextStep}**`);
+    expect(en).toContain('in English');
+    expect(answerShape('جاهز', 'ar')).toContain(`**${ANSWER_LABELS.ar.standOut}**`);
   });
 
-  it('names the parts that are only partly the same, and says so when none is', () => {
-    const mixed = { problem: { answer: 'same' }, customer: { answer: 'same' }, offering: { answer: 'partly' } };
-    expect(samenessSentence('Foodics', mixed, 'en')).toBe("Darb's analysis found Foodics the same as your idea in the problem and the customer, and partly the same in the offering.");
-    expect(samenessSentence('X', { problem: { answer: 'unknown' } }, 'en')).toBe("Darb's analysis did not find X the same as your idea in any part.");
+  it('says plainly that no difference was found, instead of guessing one', () => {
+    expect(answerShape('Foodics', 'en', false)).toMatch(/found no clear difference yet.*Do not suggest what the difference could be/s);
+    expect(answerShape('Foodics', 'en', true)).not.toMatch(/no clear difference/);
   });
 
-  it('ends with the founder choosing the differentiator, never with Darb’s own ideas', () => {
-    expect(CHOOSE_SENTENCE.en).toMatch(/yours to choose/);
-    expect(CHOOSE_SENTENCE.ar).toMatch(/قرارك أنت/);
+  it('never lets the model add ideas of its own', () => {
+    expect(answerShape('Foodics', 'en')).toMatch(/Use only these facts\. Never add features, prices, partnerships, examples or any idea of your own/);
   });
 });

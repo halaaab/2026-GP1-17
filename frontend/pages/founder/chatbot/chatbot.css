@@ -2148,6 +2148,20 @@ body.assess-open #header-actions {
   color: var(--text-2);
 }
 .agent-steps-head svg { color: var(--teal); }
+/* A labelled line in a reply ("Problem:", "Next step:"): the label's icon in a small teal circle */
+.reply-point { display: flex; align-items: flex-start; gap: 10px; }
+.reply-point svg {
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 6px;
+  margin-top: 1px;
+  border-radius: 50%;
+  background: var(--teal-tint);
+  color: var(--teal-text);
+}
+.reply-point strong { color: var(--navy); }
+
 /* "Your analysis is ready!": a tick icon before the sentence */
 .analysis-ready { display: flex; align-items: flex-start; gap: 8px; }
 .analysis-ready svg { flex: none; margin-top: 3px; color: var(--teal); }
