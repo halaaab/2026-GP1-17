@@ -454,35 +454,6 @@ html[dir="rtl"] .ov-check-link svg {
   background: var(--bar, var(--teal));
   transition: width 0.6s var(--ease);
 }
-/* "3 founders have no region" → the Founders page */
-.ov-audience-note {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: var(--warn-tint);
-  color: var(--warn-text);
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-}
-.ov-audience-note[hidden] {
-  display: none;
-}
-.ov-audience-note span {
-  flex: 1;
-}
-.ov-audience-note svg {
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-}
-html[dir="rtl"] .ov-audience-note svg:last-child {
-  transform: scaleX(-1);
-}
-
 /* ---------- 5. Data health ---------- */
 
 .ov-ring {

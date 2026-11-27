@@ -504,7 +504,6 @@ function showPeople() {
 
   if (total === 0) {
     document.querySelector('#people').innerHTML = `<tr><td colspan="5" class="text-3">${t('overview.peopleEmpty')}</td></tr>`;
-    document.querySelector('#people-note').hidden = true;
     return;
   }
 
@@ -550,13 +549,6 @@ function showPeople() {
         <td>${average === null ? '<span class="text-3">—</span>' : `<span class="chip chip-${scoreBand(average)}">${average}</span>`}</td>
       </tr>`;
   }).join('');
-
-  // founders without a region cannot be counted in any region: send the admin to fix them
-  const noRegion = data.users.filter((user) => !user.region).length;
-  const note = document.querySelector('#people-note');
-  note.hidden = noRegion === 0;
-  if (PAGES.founders) note.href = `${ROOT}${PAGES.founders}`;
-  note.innerHTML = `${icon('info')}<span>${fill('overview.noRegion', { n: number(noRegion) })}</span>${PAGES.founders ? icon('chevron') : ''}`;
 }
 
 /* ---------- 5. Data health ---------- */
