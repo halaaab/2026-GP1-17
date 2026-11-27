@@ -20,6 +20,7 @@
    ========================================================== */
 
 import { initLanguage, translatePage, t } from './language.js';
+import { IS_LOCAL } from './config.js';
 
 // Address of the frontend/ folder, so links work from any page depth
 const ROOT = new URL('..', import.meta.url).href;
@@ -47,9 +48,11 @@ const ADMIN_MENU = [
   },
   {
     label: 'admin.people',
+    // soon: Release 2 (backlog 59-61). Works on localhost; "Coming soon" on the hosted website until Sprint 5.
+    // When a page is ready, remove its soon: true here and its data-soon in its HTML.
     items: [
-      { id: 'founders', label: 'admin.founders', icon: 'users', href: 'pages/admin/founder-management/founder-management.html' },
-      { id: 'admins',   label: 'admin.admins',   icon: 'user',  href: 'pages/admin/admin-management/admin-management.html' },
+      { id: 'founders', label: 'admin.founders', icon: 'users', href: 'pages/admin/founder-management/founder-management.html', soon: true },
+      { id: 'admins',   label: 'admin.admins',   icon: 'user',  href: 'pages/admin/admin-management/admin-management.html', soon: true },
     ],
   },
   {
@@ -177,11 +180,16 @@ function menuGroups(menu, activePage) {
   return menu
     .map((group) => `
       ${group.label ? `<div class="sidebar-label">${group.icon ? icon(group.icon) : ''}<span data-i18n="${group.label}"></span></div>` : ''}
-      ${group.items.map((item) => `
+      ${group.items.map((item) => (item.soon && !IS_LOCAL ? `
+        <span class="nav-item is-soon" aria-disabled="true">
+          ${icon(item.icon)}
+          <span data-i18n="${item.label}"></span>
+          <span class="soon-badge" data-i18n="soon.badge"></span>
+        </span>` : `
         <a class="nav-item ${item.id === activePage ? 'is-active' : ''}" href="${ROOT}${item.href}">
           ${icon(item.icon)}
           <span data-i18n="${item.label}"></span>
-        </a>`).join('')}`)
+        </a>`)).join('')}`)
     .join('');
 }
 
@@ -671,6 +679,20 @@ function buildErrorLayout() {
   main.before(top);
 }
 
+/* ---------- Coming soon (Release 2 pages on the hosted website) ---------- */
+
+// A page with data-soon on its <body> shows this instead of its content on the hosted website
+function showComingSoon() {
+  const main = document.querySelector('main');
+  if (!main) return;
+  main.innerHTML = `
+    <div class="empty soon-page">
+      <span class="empty-icon">${icon('rocket')}</span>
+      <h2 class="section-title" data-i18n="soon.title"></h2>
+      <p class="text-2" data-i18n="soon.text"></p>
+    </div>`;
+}
+
 /* ---------- Start ---------- */
 
 async function startLayout() {
@@ -678,6 +700,7 @@ async function startLayout() {
 
   if (layout === 'founder' || layout === 'admin') {
     buildAppLayout(layout);
+    if ('soon' in document.body.dataset && !IS_LOCAL) showComingSoon();
   } else if (layout === 'public') {
     buildPublicLayout();
   } else if (layout === 'auth') {

@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="../../../shared/shared.css">
   <link rel="stylesheet" href="admin-management.css">
 </head>
-<body data-layout="admin" data-page="admins" data-title="admin.admins" data-denied="403">
+<body data-soon data-layout="admin" data-page="admins" data-title="admin.admins" data-denied="403">
 
   <main>
     <div class="page-head">
@@ -56,6 +56,10 @@
 
   <script type="module" src="../../../shared/layout.js"></script>
   <script type="module" src="../../../shared/guard.js"></script>
-  <script type="module" src="admin-management.js"></script>
+  <!-- Release 2: the page runs on localhost only; layout.js shows "Coming soon" on the hosted website -->
+  <script type="module">
+    import { IS_LOCAL } from '../../../shared/config.js';
+    if (IS_LOCAL) import('./admin-management.js');
+  </script>
 </body>
 </html>

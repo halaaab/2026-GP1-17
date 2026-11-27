@@ -20,6 +20,7 @@ import { scoreBand } from '../../../shared/assessments.js';
 import { completeness } from '../../founder/incubators-accelerators/programs.js';
 import { TYPE_COLORS } from '../founder-management/founder-fields.js';
 import '../../../shared/guard.js';
+import { IS_LOCAL } from '../../../shared/config.js';
 
 const ROOT = new URL('../../../', import.meta.url).href;
 const DAY = 24 * 60 * 60 * 1000;
@@ -28,7 +29,8 @@ const STALE_DAYS = 180;        // a requirement not checked for this long needs 
 const STALLED_DAYS = 7;        // a conversation left this long without a result is stalled
 
 const PAGES = {
-  founders:     'pages/admin/founder-management/founder-management.html',
+  // Release 2 (backlog 59-60): the Founders page is linked on localhost only; it is "Coming soon" on the hosted website
+  founders:     IS_LOCAL ? 'pages/admin/founder-management/founder-management.html' : null,
   startups:     'pages/admin/startup-management/startup-management.html',
   regulatory:   'pages/admin/regulatory-management/regulatory-management.html',
   programs:     'pages/admin/incubator-accelerator-management/incubator-accelerator-management.html',
@@ -539,7 +541,7 @@ function showPeople() {
     const color = peopleGroup === 'type' ? TYPE_COLORS[value] : null;
     return `
       <tr ${color ? `style="--bar: var(--pastel-${color}-text); --bar-tint: var(--pastel-${color}-tint);"` : ''}>
-        <td class="ov-audience-name">${peopleGroup === 'type' && value
+        <td class="ov-audience-name">${peopleGroup === 'type' && value && PAGES.founders
           ? `<a class="chip chip-pastel-${color}" href="${ROOT}${PAGES.founders}?tab=insights&type=${safe(value)}">${safe(groupName(peopleGroup, value))}</a>`
           : safe(groupName(peopleGroup, value))}</td>
         <td><strong>${number(founders.length)}</strong> <span class="text-3">${percent(founders.length, total)}%</span></td>
@@ -553,8 +555,8 @@ function showPeople() {
   const noRegion = data.users.filter((user) => !user.region).length;
   const note = document.querySelector('#people-note');
   note.hidden = noRegion === 0;
-  note.href = `${ROOT}${PAGES.founders}`;
-  note.innerHTML = `${icon('info')}<span>${fill('overview.noRegion', { n: number(noRegion) })}</span>${icon('chevron')}`;
+  if (PAGES.founders) note.href = `${ROOT}${PAGES.founders}`;
+  note.innerHTML = `${icon('info')}<span>${fill('overview.noRegion', { n: number(noRegion) })}</span>${PAGES.founders ? icon('chevron') : ''}`;
 }
 
 /* ---------- 5. Data health ---------- */
