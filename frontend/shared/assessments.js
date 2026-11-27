@@ -438,12 +438,24 @@ export async function newLaterAnalyses(conversation, shown) {
   const fresh = (data || []).filter((row) => !shown.has(row.assessment_id) || shown.get(row.assessment_id).analysedAt !== row.analysed_at);
   const loaded = [];
   for (const row of fresh) {
-    const one = await getAssessment(row.assessment_id);
+    const one = await loadOneAssessment(row.assessment_id);
     if (!one) continue;
     await loadResult(one);
     loaded.push(one);
   }
   return loaded;
+}
+
+/* One assessment with its idea and messages, without loading the founder's whole History (getAssessment does). */
+async function loadOneAssessment(id) {
+  const assessment = await supabase.from('assessments').select(ASSESSMENT_COLUMNS).eq('assessment_id', id).maybeSingle();
+  if (assessment.error || !assessment.data) return null;
+  const [idea, messages] = await Promise.all([
+    supabase.from('startup_ideas').select('*').eq('idea_id', assessment.data.idea_id).maybeSingle(),
+    supabase.from('messages').select('assessment_id, sender_role, content').eq('assessment_id', id).order('message_id'),
+  ]);
+  if (idea.error || !idea.data) return null;
+  return fromRows(idea.data, assessment.data, messages.data || []);
 }
 
 /* The title of a conversation, taken from what the founder wrote: the first line,

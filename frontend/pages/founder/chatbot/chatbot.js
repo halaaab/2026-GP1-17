@@ -222,7 +222,9 @@ function addAgent(text = '') {
 /* Darb's reply from the agent server, shown as it arrives.
    Three dots first, then the text grows piece by piece. Returns the full reply,
    or an error message in the founder's language when Darb could not answer. */
-async function agentAnswers(text, retry = null) {
+/* Darb's reply. When it ends an analysis (progress steps arrived), its text is held until onDone has loaded the
+   competitor cards, so "Your analysis is ready!" and the cards appear together; the steps stay on screen meanwhile. */
+async function agentAnswers(text, retry = null, onDone = null) {
   const body = addAgent();
   body.innerHTML = '<span class="typing"><i></i><i></i><i></i></span>';
   const paragraph = document.createElement('div');
@@ -241,6 +243,7 @@ async function agentAnswers(text, retry = null) {
       assessmentId: current.id,
       threadId,
       onText: (soFar) => {
+        if (analysing) return;   // an analysis: shown with its cards, below
         if (!paragraph.isConnected) body.replaceChildren(paragraph);   // the dots (and the step) make room for the text
         paragraph.innerHTML = formatReply(soFar);   // made safe inside formatReply
         scrollToEnd();
@@ -252,6 +255,11 @@ async function agentAnswers(text, retry = null) {
         showStep(body, step);
       },
     });
+    if (reply && onDone) await onDone();   // the cards are loaded before the reply is shown
+    if (reply && analysing) {
+      body.replaceChildren(paragraph);
+      paragraph.innerHTML = formatReply(reply);
+    }
     if (reply) addCopy(body, plainReply(reply));
     return reply;
   } catch (error) {
@@ -579,19 +587,22 @@ async function answer(text, about = null) {
   // the agent only sees the words, so say which startup the question is about
   const forAgent = about ? `(${t('chat.askingAbout')} ${about.name}) ${text}` : text;
 
-  busy = true;
-  const reply = await agentAnswers(forAgent, () => answer(text, about));
-  busy = false;
-
   // Was a competitor analysis just saved? For this conversation's idea, or for a different idea the founder
-  // described later in it (its own assessment, newLaterAnalyses). Its cards go under this reply.
+  // described later in it (its own assessment, newLaterAnalyses). It is loaded before the reply is shown, and its
+  // cards are drawn right under it, before anything is saved, so the founder sees the reply and the cards together.
   const wasIdea = hasIdea(current);
   let ownAnalysis = false;
   let later = [];
-  if (reply) {
+  const findAnalysis = async () => {
     ownAnalysis = await refreshAnalysis(current);
     if (!ownAnalysis) later = await newLaterAnalyses(current, analyses);
-  }
+  };
+
+  busy = true;
+  const reply = await agentAnswers(forAgent, () => answer(text, about), findAnalysis);
+  busy = false;
+  if (ownAnalysis) addCompetitors(current);
+  for (const one of later) addCompetitors(one);
   const analysisId = ownAnalysis ? current.id : later.length ? later[later.length - 1].id : '';
 
   // only Darb's real answers are saved; a failed one is shown with "Try again"
@@ -602,12 +613,7 @@ async function answer(text, about = null) {
     showHeader();
     showSidebarHistory();
   }
-  // its competitors as cards
-  if (ownAnalysis) {
-    if (!wasIdea) await becomeIdea();
-    addCompetitors(current);
-  }
-  for (const one of later) addCompetitors(one);
+  if (ownAnalysis && !wasIdea) await becomeIdea();
   if (current.score) addFollowUps();
   input.focus();
 }
