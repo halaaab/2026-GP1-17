@@ -32,7 +32,7 @@ export type PolicyOutcome = {
   candidate_key: string;
   label: FinalLabel;
   // Why the label differs from the judge's proposal, as a short code for the run log (never founder text).
-  changed_by?: 'not_a_company' | 'judge_not_competitor' | 'problem_not_shared' | 'direct_needs_same_problem_and_stated_customer';
+  changed_by?: 'not_a_company' | 'judge_not_competitor' | 'problem_not_shared' | 'label_from_answers';
   problem: JudgeAnswer;
   customer: JudgeAnswer;
   offering: JudgeAnswer;
@@ -131,13 +131,14 @@ export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: I
   // Same sector or topic only is never a competitor: a competitor shares at least part of the problem.
   if (problem.answer !== 'same' && problem.answer !== 'partly') return outcome('not_competitor', 'problem_not_shared');
 
-  // Direct needs the same problem, the same customer and a customer the founder stated; any conflict blocks it.
-  if (judge.label === 'direct') {
-    const conflicting = Object.values(answers).includes('conflicting');
-    const direct = problem.answer === 'same' && customer.answer === 'same' && profile.customer.origin === 'stated' && !conflicting;
-    if (!direct) return outcome('indirect', 'direct_needs_same_problem_and_stated_customer');
-  }
-  return outcome(judge.label);
+  // The label follows the report's definition (2.2.8) from the three answers, not the judge's own label:
+  // direct = the same problem for the same customer (a customer the founder stated), even if the offering looks
+  // different; indirect = a different customer, or a substitute (offering "different"). Any conflict blocks direct.
+  const conflicting = Object.values(answers).includes('conflicting');
+  const direct =
+    problem.answer === 'same' && customer.answer === 'same' && offering.answer !== 'different' && profile.customer.origin === 'stated' && !conflicting;
+  const label: FinalLabel = direct ? 'direct' : 'indirect';
+  return outcome(label, label === judge.label ? undefined : 'label_from_answers');
 }
 
 // ---------------------------------------------------------------------------

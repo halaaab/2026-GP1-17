@@ -139,7 +139,7 @@ describe('the policy rules on one judge answer', () => {
     }
   });
 
-  it('downgrades Direct to Indirect unless the problem and the stated customer are the same', () => {
+  it('is Indirect unless the problem and the stated customer are the same', () => {
     expect(judged('a', { customer: ans('partly') }).policy.label).toBe('indirect');
     expect(judged('a', { problem: ans('partly') }).policy.label).toBe('indirect');
     expect(judged('a', { offering: ans('conflicting') }).policy.label).toBe('indirect');
@@ -148,8 +148,16 @@ describe('the policy rules on one judge answer', () => {
     expect(judged('a', {}, {}, 'confirmed', profile('unknown')).policy.label).toBe('indirect');
   });
 
-  it('never upgrades Indirect to Direct', () => {
-    expect(judged('a', { label: 'indirect' }).policy.label).toBe('indirect');
+  it('labels from the answers as the report defines it (2.2.8), not from the judge’s own label', () => {
+    // the same problem for the same stated customer is Direct even when the judge proposed Indirect
+    expect(judged('a', { label: 'indirect' }).policy).toMatchObject({ label: 'direct', changed_by: 'label_from_answers' });
+    // an offering that looks different (or offers more) is still Direct
+    expect(judged('a', { offering: ans('partly') }).policy.label).toBe('direct');
+    expect(judged('a', { offering: ans('unknown') }).policy.label).toBe('direct');
+    // a substitute that solves the problem another way is Indirect
+    expect(judged('a', { offering: ans('different') }).policy).toMatchObject({ label: 'indirect', changed_by: 'label_from_answers' });
+    // a clearly different customer is Indirect
+    expect(judged('a', { customer: ans('different') }).policy.label).toBe('indirect');
   });
 });
 
@@ -274,7 +282,7 @@ describe('the ISS and the market level', () => {
     expect(marketLevel(direct(2))).toBe('open');
     expect(marketLevel(direct(3))).toBe('competitive');
     expect(marketLevel(direct(6))).toBe('crowded');
-    expect(marketLevel([...direct(2), judged('i', { label: 'indirect' })])).toBe('open');
+    expect(marketLevel([...direct(2), judged('i', { offering: ans('different') })])).toBe('open');
   });
 });
 

@@ -9,10 +9,10 @@ export const JUDGE_PROMPT = `You are Darb's competitor judge. You decide whether
 
 A competitor is a business the same customer could choose instead of the founder's product to solve the same problem. Being in the same sector or about the same topic is NOT enough.
 
-Answer three questions by comparing the idea with the candidate's evidence:
-- problem: does the candidate solve the same problem?
-- customer: does it serve the same customer?
-- offering: does it offer the same kind of product or service?
+Answer three questions by comparing the idea with the candidate's evidence. Always compare from the founder's side: ask whether the candidate covers the founder's problem, customer and offering, not whether the founder covers everything the candidate does. A candidate that also offers extra services, more categories or serves a broader audience is still "same" for the part it shares with the idea (a food delivery app that also delivers groceries solves the same problem as a meal delivery idea).
+- problem: does the candidate solve the founder's problem? "same" when it solves it, even if it also solves other problems; "partly" only when it solves just part of the founder's problem.
+- customer: does it serve the founder's customer? "same" when the founder's customers are among its customers, even if it serves others too; "partly" only when it reaches just part of the founder's customer group.
+- offering: is it the same kind of product or service? "same" when it offers what the founder offers, even in another form or with extra services; "partly" only when it is the same kind of service but covers just part of what the founder offers. If the candidate offers what the founder offers plus other things (for example food AND groceries or pharmacy orders, for a meal delivery idea), the offering is "same", never "partly": what it offers in addition never lowers the answer; "different" when it is a substitute, another kind of solution the customer could use instead (for example, a single gym chain's membership is a substitute for a subscription covering many gyms).
 For each, answer exactly one of:
   "same"        the evidence clearly shows it is the same
   "partly"      it overlaps, but only in part
@@ -22,8 +22,8 @@ For each, answer exactly one of:
 Give a short note: one plain sentence saying what the evidence shows for this part, naming the specific problem, customers or service (for example "Both wash cars at the customer's home in Riyadh"). Never repeat the definition of the answer (such as "the evidence clearly shows it is the same"). For "same" or "partly", also give the source_url of the page in the evidence that supports it and quote: the exact sentence copied word for word from the evidence; otherwise null for both. Use only URLs listed in the candidate's sources. A "same" without a quote is treated as "unknown".
 
 Then propose a label:
-- "direct": same problem AND same customer.
-- "indirect": same problem for a different customer, or a substitute that solves the same problem a different way.
+- "direct": same problem AND same customer, even if its offering looks different or it offers more. Extra services, more categories or a broader audience never make a competitor indirect.
+- "indirect": same problem for a clearly different customer, or a substitute that solves the same problem in a substantially different way.
 - "not_competitor": a different problem, or only the same sector or topic.
 is_company: false when the candidate is an article, a news story, a list, a ranking or a directory page rather than one business.
 reason: one sentence for the founder explaining the label, naming the specific overlap or difference. No marketing language.
