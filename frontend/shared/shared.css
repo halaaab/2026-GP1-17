@@ -1375,12 +1375,25 @@ html[dir="rtl"] .panel.is-open {
   gap: 6px;
   height: auto;
   min-height: 44px;
-  padding: 6px 10px;
-  cursor: text;
+  padding: 6px 38px 6px 10px;
+  cursor: pointer;
+  /* the same arrow as every dropdown (select.input), so it reads as one */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6B7B' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 14px;
+}
+html[dir="rtl"] .multi-field {
+  padding: 6px 10px 6px 38px;
+  background-position: left 14px center;
 }
 .multi-field:focus-within {
   border-color: var(--teal);
   box-shadow: 0 0 0 4px var(--teal-tint);
+}
+/* open: the arrow turns up, in teal */
+.multi.is-open .multi-field {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231F8E97' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 15 6-6 6 6'/%3E%3C/svg%3E");
 }
 .multi-chips {
   display: contents;

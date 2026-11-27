@@ -285,11 +285,13 @@ function makeMultiSelect(box) {
       ? matches.map((input) => `<li role="option" data-value="${safeText(input.value)}" aria-selected="${input.checked}" class="${input.checked ? 'is-chosen' : ''}">${safeText(words(input))}</li>`).join('')
       : `<li class="combo-empty">—</li>`;
     list.hidden = false;
+    widget.classList.add('is-open');
     search.setAttribute('aria-expanded', 'true');
   }
 
   function close() {
     list.hidden = true;
+    widget.classList.remove('is-open');
     search.setAttribute('aria-expanded', 'false');
     search.value = '';
   }
