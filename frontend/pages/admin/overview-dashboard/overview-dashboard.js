@@ -114,7 +114,7 @@ async function load() {
     readAll('founder_profiles', 'user_id, full_name, user_type, region, status, locale, created_at'),
     readAll('startup_ideas', 'idea_id, founder_id, sector, created_at'),
     readAll('assessments', 'assessment_id, idea_id, status, fis_score, started_at, completed_at, roadmap_generated_at'),
-    readAll('startups', 'startup_id, sector, startup_description'),
+    readAll('startups', 'startup_id, startup_description'),
     readAll('support_organizations', '*'),
     readAll('regulatory_requirements', 'requirement_id, last_verified'),
     readAll('market_indicators', 'record_id, year'),
