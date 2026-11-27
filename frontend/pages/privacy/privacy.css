@@ -1,0 +1,22 @@
+/* Privacy policy: one readable column of cards */
+.privacy {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 120px 20px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  line-height: 1.8;
+}
+
+.privacy-updated {
+  margin-top: -8px;
+}
+
+.privacy ul {
+  margin: 8px 0 0;
+  padding-inline-start: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
