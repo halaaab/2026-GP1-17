@@ -123,6 +123,40 @@ function showReadOnly() {
 async function showAssessmentCount() {
   const assessments = await getAssessments();
   document.querySelector('#assessments').textContent = assessments.filter(hasIdea).length;
+  showUsage(assessments);
+}
+
+/* ---------- Usage: the competitor analyses used today and this month ---------- */
+
+// Darb's limits, the same as the agent server's (agent-server/src/mastra/config/limits.ts): it checks them before
+// every analysis. An analysis counts when it is saved (analysed_at); a re-run of an idea on the same day, a question
+// back, a follow-up or a greeting does not count again.
+const ANALYSES_PER_DAY = 5;
+const ANALYSES_PER_MONTH = 30;
+
+// The day and the month start at midnight Saudi time (UTC+3), as on the server.
+function saudiStart(now, ofMonth) {
+  const saudi = new Date(now.getTime() + 3 * 3600_000);
+  const day = ofMonth ? 1 : saudi.getUTCDate();
+  return new Date(Date.UTC(saudi.getUTCFullYear(), saudi.getUTCMonth(), day) - 3 * 3600_000);
+}
+
+let usageList = [];   // kept so the counts are written again when the language changes
+function showUsage(assessments = usageList) {
+  usageList = assessments;
+  const now = new Date();
+  const since = (start) => assessments.filter((a) => a.analysedAt && new Date(a.analysedAt) >= start).length;
+  const rows = [
+    ['today', since(saudiStart(now, false)), ANALYSES_PER_DAY],
+    ['month', since(saudiStart(now, true)), ANALYSES_PER_MONTH],
+  ];
+  for (const [name, used, limit] of rows) {
+    const shown = Math.min(used, limit);
+    document.querySelector(`#usage-${name}`).textContent = t('profile.usageOf').replace('{used}', shown).replace('{limit}', limit);
+    const bar = document.querySelector(`#usage-${name}-bar`);
+    bar.style.width = `${Math.round((100 * shown) / limit)}%`;
+    bar.classList.toggle('bar-warn', shown >= limit);   // amber once the limit is reached
+  }
 }
 
 /* ---------- Saving the personal details ---------- */
@@ -330,6 +364,7 @@ document.querySelector('.pf-language').addEventListener('click', async (event) =
 
 document.addEventListener('darb:language', () => {
   showCountry();
+  showUsage();
   if (profile) {
     showReadOnly();
     checkChanges();

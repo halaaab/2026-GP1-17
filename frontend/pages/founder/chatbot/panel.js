@@ -9,7 +9,7 @@
    and roadmap are in assessment.result, loaded by loadResult() in shared/assessments.js.
    The "similar" tab is the Competitor Analysis: what the Competitor Agent checked and saved. */
 
-import { t } from '../../../shared/language.js';
+import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
 import {
   say, label, scoreBand, whenText, SCORE_FACTORS,
@@ -367,25 +367,39 @@ const answerOf = (part) => (part && ANSWERS.includes(part.answer) ? part.answer 
 
 /* The founder's idea as Darb understood it: the comparison below is against these parts, so the
    founder can read "the same problem" knowing which problem. Shown only when the analysis wrote it. */
+// One icon for each part of the idea: what is wrong today, who has it, what the founder offers, where
+const IDEA_ICONS = { problem: 'flag', customer: 'users', offering: 'store', market: 'pin' };
+
 function yourIdea() {
-  const summary = assessment.ideaSummary;
-  if (!summary) return '';
+  // the summary in the page's language (en / ar, written by the agent server); older ones have only the founder's
+  const saved = assessment.ideaSummary;
+  if (!saved) return '';
+  const summary = saved[getLanguage()] || saved;
   const rows = ['problem', 'customer', 'offering', 'market'].filter((part) => summary[part]);
   if (rows.length === 0) return '';
   return `
     <div class="box your-idea">
       <h3 class="box-title">${icon('bulb')} ${t('comp.yourIdea')}</h3>
       <p class="text-2 comp-overview-sub">${t('comp.yourIdea.sub')}</p>
-      ${rows.map((part) => `
-        <div class="compare-row">
-          <span class="compare-part">${t(`comp.part.short.${part}`)}</span>
-          <p dir="auto">${safe(summary[part])}</p>
-        </div>`).join('')}
+      <div class="your-idea-grid">
+        ${rows.map((part) => `
+          <div class="your-idea-part">
+            <span class="your-idea-icon">${icon(IDEA_ICONS[part])}</span>
+            <div>
+              <span class="your-idea-label">${t(`comp.part.short.${part}`)}</span>
+              <p dir="auto">${safe(summary[part])}</p>
+            </div>
+          </div>`).join('')}
+      </div>
+      <p class="your-idea-hint">${icon('info')} <span>${t('comp.yourIdea.hint')}</span></p>
     </div>`;
 }
 
 /* The overview: each competitor's three answers in short words (marks alone needed a key to read),
    with its kind of competition under its name. Short enough for a phone. */
+// One small icon for each answer, beside its word: the same, partly, different, not known
+const ANSWER_ICONS = { same: 'equal', partly: 'half', different: 'differ', unknown: 'question', conflicting: 'question' };
+
 function overview(competitors) {
   return `
     <div class="box comp-overview">
@@ -394,10 +408,17 @@ function overview(competitors) {
       <div class="comp-overview-grid">
         <span></span>${PARTS.map((part) => `<span class="comp-overview-head">${t(`comp.part.short.${part}`)}</span>`).join('')}
         ${competitors.map((c) => `
-          <span class="comp-overview-name"><bdi>${safe(c.name)}</bdi><small>${t(`comp.label.short.${c.label}`)}</small></span>
+          <span class="comp-overview-name">
+            <span class="comp-overview-rank" dir="ltr">${c.rank}</span>
+            ${logoOf(c).replace('class="initial ', 'class="initial initial-sm ')}
+            <span class="comp-overview-who">
+              <bdi>${safe(c.name)}</bdi>
+              <span class="comp-overview-label is-${c.label}">${t(`comp.label.short.${c.label}`)}</span>
+            </span>
+          </span>
           ${PARTS.map((part) => {
             const answer = answerOf(c.comparison[part]);
-            return `<span class="answer-cell"><span class="answer-word is-${answer}">${t(`comp.answer.short.${answer}`)}</span></span>`;
+            return `<span class="answer-cell"><span class="answer-word is-${answer}">${icon(ANSWER_ICONS[answer])}${t(`comp.answer.short.${answer}`)}</span></span>`;
           }).join('')}`).join('')}
       </div>
     </div>`;
@@ -433,6 +454,10 @@ function comparisonRows(c) {
   }).join('');
 }
 
+// The cards side by side share one set of rows (CSS subgrid, chatbot.css), so each part starts at the same
+// height in every card. Every card therefore has the same 12 rows; a part a competitor does not have is this empty row.
+const EMPTY_ROW = '<div class="competitor-empty" aria-hidden="true"></div>';
+
 function competitorCard(competitor, withActions = true) {
   const website = safeUrl(competitor.website) || safeUrl(competitor.source);
   const evidence = safeUrl(competitor.source);
@@ -451,9 +476,9 @@ function competitorCard(competitor, withActions = true) {
         <span class="chip ${competitor.label === 'direct' ? 'chip-risk' : 'chip-warn'}">${t(`comp.label.${competitor.label}`)}</span>
         ${competitor.evidence === 'likely' ? `<span class="chip chip-navy">${t('comp.limited')}</span>` : `<span class="chip chip-good">${t('comp.confirmed')}</span>`}
       </div>
-      ${competitor.about ? `<p class="startup-about" dir="auto">${safe(shorten(competitor.about, 220))}</p>` : ''}
-      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : ''}
-      ${score === null ? '' : `
+      ${competitor.about ? `<p class="startup-about" dir="auto">${safe(shorten(competitor.about, 220))}</p>` : EMPTY_ROW}
+      ${competitor.reason ? `<p class="competitor-reason" dir="auto">${safe(competitor.reason)}</p>` : EMPTY_ROW}
+      ${score === null ? EMPTY_ROW : `
         <div class="competitor-score">
           <span>${t('comp.similarity')}</span>
           <span class="competitor-bar"><span style="width: ${Math.max(0, Math.min(100, score))}%"></span></span>
@@ -463,14 +488,14 @@ function competitorCard(competitor, withActions = true) {
         <p class="compare-title">${t('comp.compared')}</p>
         ${comparisonRows(competitor)}
       </div>
-      ${opportunityLine(competitor)}
+      ${opportunityLine(competitor) || EMPTY_ROW}
       <p class="text-3 competitor-note">${t('comp.opp.note')}</p>
       ${withActions ? `
         <div class="startup-actions competitor-actions">
           ${website ? `<a class="btn btn-secondary btn-sm" href="${website}" target="_blank" rel="noopener noreferrer">${icon('globe')} ${t('comp.website')}</a>` : ''}
           ${evidence ? `<a class="btn btn-secondary btn-sm" href="${evidence}" target="_blank" rel="noopener noreferrer">${icon('file')} ${t('comp.evidenceShort')}</a>` : ''}
           <button type="button" class="btn btn-ghost btn-sm" data-ask="${safe(competitor.id)}">${t('similar.ask')}</button>
-        </div>` : (website ? `<p class="competitor-source" dir="ltr">${website}</p>` : '')}
+        </div>` : (website ? `<p class="competitor-source" dir="ltr">${website}</p>` : EMPTY_ROW)}
     </article>`;
 }
 

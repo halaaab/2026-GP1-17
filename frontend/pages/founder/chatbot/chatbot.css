@@ -1108,6 +1108,25 @@ body.assess-open #header-actions {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   margin-bottom: 16px;
 }
+/* The cards share one set of rows (subgrid): the description, the reason, the similarity and each comparison row
+   start at the same height in every card, so no box sits higher than the one beside it. Each card has 12 rows
+   (panel.js competitorCard; a part a competitor lacks is an empty row). */
+@supports (grid-template-rows: subgrid) {
+  .competitors .competitor {
+    display: grid;
+    grid-row: span 12;
+    grid-template-rows: subgrid;
+    row-gap: 0;
+    align-content: start;
+  }
+  .competitors .competitor > * { margin-top: 14px; }
+  .competitors .competitor > .startup-top { margin-top: 0; }
+  .competitors .competitor > .competitor-empty { margin-top: 0; }
+  .competitors .competitor-compare { display: contents; }
+  .competitors .competitor-compare > .compare-title { margin: 14px 0 0; align-self: end; }
+  .competitors .competitor-compare > .compare-row { margin-top: 0; }
+  .competitors .startup-about { align-self: start; }
+}
 .competitor-rank {
   font-size: 12px;
   font-weight: 800;
@@ -1196,19 +1215,71 @@ body.assess-open #header-actions {
 .your-idea {
   margin-bottom: 16px;
 }
-.your-idea .compare-row p {
+/* "Your idea as Darb understood it": one tile per part, with its icon */
+.your-idea-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.your-idea-part {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+}
+.your-idea-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--teal-tint);
+  color: var(--teal-text);
+}
+.your-idea-icon svg { width: 16px; height: 16px; }
+.your-idea-label {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--teal-text);
+}
+.your-idea-part p {
   margin: 0;
   font-size: 14px;
-  line-height: 1.7;
+  line-height: 1.65;
+  color: var(--text);
+}
+.your-idea-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin: 14px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.your-idea-hint svg { flex-shrink: 0; width: 14px; height: 14px; margin-top: 2px; }
+@media (max-width: 640px) {
+  .your-idea-grid { grid-template-columns: 1fr; }
+  /* on a phone the overview keeps its rank, name and answers; the logo and answer icons make room */
+  .comp-overview-grid { grid-template-columns: minmax(0, 1fr) repeat(3, 62px); column-gap: 4px; }
+  .comp-overview-name .initial,
+  .comp-overview .answer-word svg { display: none; }
 }
 .comp-overview-sub {
   margin: -4px 0 16px;
   font-size: 13px;
 }
 .comp-overview-grid {
-  max-width: 560px;   /* on a laptop the names stay close to their answers */
+  max-width: 680px;   /* on a laptop the names stay close to their answers */
   display: grid;
-  grid-template-columns: minmax(0, 1fr) repeat(3, 64px);
+  grid-template-columns: minmax(0, 1fr) repeat(3, 104px);
+  column-gap: 8px;
   align-items: stretch;
 }
 .comp-overview-head {
@@ -1224,21 +1295,45 @@ body.assess-open #header-actions {
 }
 .comp-overview-name {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  gap: 10px;
   min-width: 0;
   font-size: 14px;
   font-weight: 700;
+}
+/* the competitor's rank (1 = closest to the idea), its logo, then its name and kind */
+.comp-overview-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--navy);
+  color: #fff;
+  font-size: 11.5px;
+  font-weight: 800;
+}
+.comp-overview-who {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  min-width: 0;
 }
 .comp-overview-name bdi {
   overflow-wrap: anywhere;   /* a long name takes two lines instead of being cut */
   line-height: 1.35;
 }
-.comp-overview-name small {
-  font-size: 11.5px;
-  font-weight: 400;
-  color: var(--text-2);
+.comp-overview-label {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
 }
+.comp-overview-label.is-direct   { background: var(--risk-tint); color: var(--risk-text); }
+.comp-overview-label.is-indirect { background: var(--warn-tint); color: var(--warn-text); }
 /* the answer in a short word, in the same colours as in each card's comparison */
 .answer-cell {
   display: flex;
@@ -1246,13 +1341,19 @@ body.assess-open #header-actions {
   justify-content: center;
 }
 .answer-word {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   width: 100%;
-  padding: 4px 0;
+  padding: 5px 0;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
   text-align: center;
 }
+.answer-word svg { width: 13px; height: 13px; flex-shrink: 0; }
+.compare-row .answer-word svg { display: none; }   /* inside each card the word alone, as before */
 /* calm colours: being the same as the idea is not an error, so no red */
 .answer-word.is-same      { background: var(--pastel-3-tint); color: var(--pastel-3-text); }
 .answer-word.is-partly    { background: var(--pastel-1-tint); color: var(--pastel-1-text); }
@@ -2047,6 +2148,9 @@ body.assess-open #header-actions {
   color: var(--text-2);
 }
 .agent-steps-head svg { color: var(--teal); }
+/* "Your analysis is ready!": a tick icon before the sentence */
+.analysis-ready { display: flex; align-items: flex-start; gap: 8px; }
+.analysis-ready svg { flex: none; margin-top: 3px; color: var(--teal); }
 .agent-steps-time {
   margin-inline-start: auto;
   font-size: 12px;

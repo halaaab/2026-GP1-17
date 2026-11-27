@@ -2,6 +2,12 @@
    layout in shared/shared.css, the same one the admin's Profile uses. */
 
 /* the buttons on the side cards keep their size next to the words */
+/* Usage: analyses today and this month */
+.pf-usage { display: grid; gap: 14px; margin-top: 14px; }
+.pf-usage-row { display: grid; gap: 6px; }
+.pf-usage-line { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; }
+.pf-usage-reset { margin-top: 12px; font-size: 12px; }
+
 .profile-row .btn {
   flex-shrink: 0;
 }

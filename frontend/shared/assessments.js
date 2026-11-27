@@ -363,7 +363,8 @@ function fromRows(idea, assessment, messages) {
       text: message.content.text || '',
       about: message.content.about || '',
     })),
-    history: messages.map((message) => ({ from: message.sender_role, text: message.content.text || '' })),
+    // analysis: the assessment whose competitor cards appear under this reply (several ideas in one conversation)
+    history: messages.map((message) => ({ from: message.sender_role, text: message.content.text || '', analysis: message.content.analysis || '' })),
     threadId: assessment.thread_id || '',
     messages: messages.length,
     updated: idea.updated_at || idea.created_at,
@@ -414,7 +415,35 @@ export function hasIdea(assessment) {
 /* A conversation the founder wrote in: it is listed in History and the sidebar at once.
    Its name is the founder's first words until Darb finds the idea (becomeIdea). */
 export function isListed(assessment) {
+  if (isLaterIdea(assessment)) return false;   // it is shown inside its conversation
   return hasIdea(assessment) || assessment.messages > 0;
+}
+
+/* An idea the founder described later in another conversation: its own idea and assessment, whose thread_id is
+   that conversation's assessment id (the agent server creates it, lib/conversation-ideas.ts). It is not a
+   conversation of its own, so History lists its conversation instead. */
+export function isLaterIdea(assessment) {
+  return Boolean(assessment.threadId && assessment.threadId !== assessment.id);
+}
+
+/* After a reply: the later ideas of this conversation whose competitor analysis was just saved (a new idea, or a
+   correction of one), each loaded with its result. `shown` maps the ideas already on the page to their assessment. */
+export async function newLaterAnalyses(conversation, shown) {
+  if (!conversation || !conversation.isSaved) return [];
+  const { data, error } = await supabase.from('assessments').select('assessment_id, analysed_at').eq('thread_id', conversation.id).not('analysed_at', 'is', null).order('started_at');
+  if (error) {
+    report('check the later ideas of a conversation', error);
+    return [];
+  }
+  const fresh = (data || []).filter((row) => !shown.has(row.assessment_id) || shown.get(row.assessment_id).analysedAt !== row.analysed_at);
+  const loaded = [];
+  for (const row of fresh) {
+    const one = await getAssessment(row.assessment_id);
+    if (!one) continue;
+    await loadResult(one);
+    loaded.push(one);
+  }
+  return loaded;
 }
 
 /* The title of a conversation, taken from what the founder wrote: the first line,
@@ -506,7 +535,7 @@ export async function saveAssessment(assessment) {
               { followUp: true, about: 'the startup id it refers to' } */
 export async function saveMessage(assessment, from, content) {
   assessment.messages += 1;
-  assessment.history.push({ from, text: content.text || '' });   // so the page can draw it again
+  assessment.history.push({ from, text: content.text || '', analysis: content.analysis || '' });   // so the page can draw it again
   if (!assessment.isSaved) return;
 
   const { error } = await supabase.from('messages').insert({

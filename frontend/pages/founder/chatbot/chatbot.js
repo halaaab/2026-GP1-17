@@ -17,7 +17,7 @@ import { getAccount } from '../../../shared/auth.js';
 import {
   say, scoreBand, chatLink, loadResult, refreshAnalysis,
   getAssessment, saveAssessment, saveMessage, newAssessment,
-  showSidebarHistory, assessmentsFailed, hasIdea, isListed, titleFrom, newAnalysis,
+  showSidebarHistory, assessmentsFailed, hasIdea, isListed, titleFrom, newAnalysis, newLaterAnalyses, isLaterIdea,
 } from '../../../shared/assessments.js';
 import { askDarb } from '../../../shared/agent.js';
 import { supabase } from '../../../shared/supabase.js';
@@ -35,26 +35,37 @@ function safe(text) {
 /* Darb's reply with its simple formatting: the model writes **bold** and lists, which showed
    as stars. Only bold, bullet and numbered lists and paragraphs are turned into HTML; everything else stays text,
    because the words are made safe first. Each block gets dir="auto", so Arabic and English lines both read right. */
+const READY = /^(Your analysis is ready!|اكتمل التحليل!)(.*)$/u;
 function formatReply(text) {
-  const bold = (line) => safe(line).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // **bold**, and [name](https://…) links (the evidence link in a follow-up answer) open in a new tab
+  const bold = (line) => safe(line)
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)"'<>]+)\)/g, '<a class="link" href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
   const blocks = [];
   let list = null;   // { tag: 'ul' | 'ol', items: [] }
   const closeList = () => {
-    if (list) blocks.push(`<${list.tag} dir="auto">${list.items.map((item) => `<li>${item}</li>`).join('')}</${list.tag}>`);
+    // a numbered list that continues after a paragraph keeps its numbers (start)
+    const start = list && list.tag === 'ol' && list.start > 1 ? ` start="${list.start}"` : '';
+    if (list) blocks.push(`<${list.tag} dir="auto"${start}>${list.items.map((item) => `<li>${item}</li>`).join('')}</${list.tag}>`);
     list = null;
   };
   for (const raw of (text || '').split('\n')) {
     const line = raw.trim();
+    // a blank line between list items keeps the list going ("1." "2." "3." were each shown as "1.")
+    if (!line && list) continue;
     const bullet = line.match(/^[-*•]\s+(.*)$/);
-    const numbered = line.match(/^\d+[.)]\s+(.*)$/);
-    const item = bullet || numbered;
-    if (item) {
+    const numbered = line.match(/^(\d+)[.)]\s+(.*)$/);
+    const item = bullet ? bullet[1] : numbered ? numbered[2] : null;
+    if (item !== null) {
       const tag = bullet ? 'ul' : 'ol';
-      if (!list || list.tag !== tag) { closeList(); list = { tag, items: [] }; }
-      list.items.push(bold(item[1]));
+      if (!list || list.tag !== tag) { closeList(); list = { tag, items: [], start: numbered ? Number(numbered[1]) : 1 }; }
+      list.items.push(bold(item));
       continue;
     }
     closeList();
+    // "Your analysis is ready!" gets a tick icon instead of an emoji (older saved replies still have the ✅)
+    const ready = line.replace(/\s*✅/u, '').match(READY);
+    if (ready) { blocks.push(`<p dir="auto" class="analysis-ready">${icon('checkCircle')}<span><strong>${safe(ready[1])}</strong>${bold(ready[2])}</span></p>`); continue; }
     if (line) blocks.push(`<p dir="auto">${bold(line.replace(/^#{1,6}\s+/, ''))}</p>`);
   }
   closeList();
@@ -73,6 +84,7 @@ const input = document.querySelector('#composer-input');
 const contextBox = document.querySelector('#composer-context');
 
 let current = null;           // the assessment of this conversation (empty on the home state)
+const analyses = new Map();   // the analyses shown on the page, by assessment id (this idea and later ones)
 let askingAbout = null;       // the startup the next question is about
 let busy = false;             // true while Darb is answering
 
@@ -339,8 +351,9 @@ function addResult() {
 /* The competitor analysis inside the chat: one card per competitor (at most three), each with its
    labels, the one-sentence reason and its evidence link, then a button that opens the full analysis.
    Everything comes from the saved analysis; nothing is worked out here. */
-function addCompetitors() {
-  const competitors = (current.result && current.result.competitors) || [];
+function addCompetitors(assessment = current) {
+  analyses.set(assessment.id, assessment);   // so its button opens this idea's analysis
+  const competitors = (assessment.result && assessment.result.competitors) || [];
   if (competitors.length === 0) return;   // nothing found: Darb's message already says so
   const body = addAgent();
 
@@ -368,6 +381,7 @@ function addCompetitors() {
   open.type = 'button';
   open.className = 'btn btn-secondary btn-sm comp-chat-open';
   open.dataset.openTab = 'similar';
+  open.dataset.assessment = assessment.id;
   open.textContent = t('chat.openCompetitors');
 
   body.append(list, open);
@@ -550,20 +564,31 @@ async function answer(text, about = null) {
   const reply = await agentAnswers(forAgent, () => answer(text, about));
   busy = false;
 
-  // only Darb's real answers are saved; a failed one is shown with "Try again"
-  if (reply) await saveMessage(current, 'agent', { text: reply });
+  // Was a competitor analysis just saved? For this conversation's idea, or for a different idea the founder
+  // described later in it (its own assessment, newLaterAnalyses). Its cards go under this reply.
   const wasIdea = hasIdea(current);
+  let ownAnalysis = false;
+  let later = [];
+  if (reply) {
+    ownAnalysis = await refreshAnalysis(current);
+    if (!ownAnalysis) later = await newLaterAnalyses(current, analyses);
+  }
+  const analysisId = ownAnalysis ? current.id : later.length ? later[later.length - 1].id : '';
+
+  // only Darb's real answers are saved; a failed one is shown with "Try again"
+  if (reply) await saveMessage(current, 'agent', analysisId ? { text: reply, analysis: analysisId } : { text: reply });
   const oldTitle = current.title;
   await save();   // updates the time, so the conversation moves to the top of History
   if (current.title !== oldTitle) {   // the agent server gave the idea its formal name
     showHeader();
     showSidebarHistory();
   }
-  // a competitor analysis was just saved for this idea: show its competitors as cards
-  if (reply && await refreshAnalysis(current)) {
+  // its competitors as cards
+  if (ownAnalysis) {
     if (!wasIdea) await becomeIdea();
-    addCompetitors();
+    addCompetitors(current);
   }
+  for (const one of later) addCompetitors(one);
   if (current.score) addFollowUps();
   input.focus();
 }
@@ -615,11 +640,25 @@ async function showSaved() {
   thread.innerHTML = '';
   showChat();
 
+  // Each analysis's cards come right under the reply that announced it (several ideas in one conversation).
+  // Older conversations did not mark that reply: their own analysis is shown after the last message, as before.
+  analyses.clear();
+  const ownMarked = current.history.some((message) => message.analysis === current.id);
   for (const message of current.history) {
     if (message.from === 'user') {
       addUser(say(message.text));
     } else {
       addCopy(addAgent(say(message.text)), plainReply(say(message.text)));
+      if (message.analysis && message.analysis === current.id && current.analysedAt) {
+        if (!current.result) await loadResult(current);
+        addCompetitors(current);
+      } else if (message.analysis && message.analysis !== current.id && !analyses.has(message.analysis)) {
+        const laterIdea = await getAssessment(message.analysis);
+        if (laterIdea && laterIdea.analysedAt) {
+          await loadResult(laterIdea);
+          addCompetitors(laterIdea);
+        }
+      }
     }
   }
 
@@ -635,8 +674,8 @@ async function showSaved() {
     addRetry(body, () => answer(last.text));
   }
 
-  // the competitor analysis, if this idea has one: the same cards as when it ran
-  if (current.analysedAt) {
+  // the competitor analysis, if this idea has one and no reply above showed it: the same cards as when it ran
+  if (current.analysedAt && !ownMarked) {
     if (!current.result) await loadResult(current);
     addCompetitors();
   }
@@ -703,8 +742,12 @@ document.addEventListener('click', (event) => {
   }
 
   // anything that opens the assessment panel on a tab
+  // (a later idea's cards open that idea's analysis)
   const opener = event.target.closest('[data-open-tab]');
-  if (opener && current && (current.score || current.analysedAt)) {
+  const shownIdea = opener && opener.dataset.assessment ? analyses.get(opener.dataset.assessment) : null;
+  if (shownIdea) {
+    openPanel(shownIdea, opener.dataset.openTab);
+  } else if (opener && current && (current.score || current.analysedAt)) {
     openPanel(current, opener.dataset.openTab);
   }
 
@@ -759,6 +802,12 @@ const address = new URLSearchParams(window.location.search);
 
 if (address.get('id')) {
   current = await getAssessment(address.get('id'));
+
+  // a later idea is shown inside the conversation it was described in
+  if (current && isLaterIdea(current)) {
+    window.location.replace(chatLink(current.threadId));
+    await new Promise(() => {});   // the page is leaving
+  }
 
   if (current) {
     await showSaved();
