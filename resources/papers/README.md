@@ -25,6 +25,13 @@ PDFs are not uploaded (copyright). Each paper is linked below.
 | Davidsson, Grégoire & Lex — *Venture Idea Assessment (VIA)* | 2021 | [DOI](https://doi.org/10.1016/j.jbusvent.2021.106130) | An idea can be assessed independently of its founder |
 | Lesinskis et al. — *Digital Transformation in Entrepreneurship Education: KABADA* | 2023 | [DOI](https://doi.org/10.3390/su151310135) | Digital tool delivering evaluation with official statistics |
 
+## Competitor Identification and LLM-Based Judgment
+
+| Paper | Year | Link | Relevance to Darb |
+|---|---|---|---|
+| Hoberg et al. — *Using Representation Learning and Website Text to Identify Competitor Networks* | 2026 | [DOI](https://doi.org/10.1287/mnsc.2024.06516) | Finding candidate competitors |
+| Zheng et al. — *Judging LLM-as-a-Judge*  | 2023  |  [arXiv](https://arxiv.org/abs/2306.05685) | LLM judgment of competitors |
+
 ## Technical foundations
 
 | Paper | Year | Link | Relevance to Darb |
@@ -34,10 +41,4 @@ PDFs are not uploaded (copyright). Each paper is linked below.
 | Lundberg & Lee — *A Unified Approach to Interpreting Model Predictions* | 2017 | [NeurIPS](https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html) | SHAP for the Explainability Engine |
 | Wu et al. — *AutoGen* | 2023 | [arXiv](https://arxiv.org/abs/2308.08155) | Multi-agent framework background |
 
-## Competitor Identification and LLM-Based Judgment
-
-| Paper | Year | Link | Relevance to Darb |
-|---|---|---|---|
-| Hoberg et al. — *Using Representation Learning and Website Text to Identify Competitor Networks* | 2026 | [DOI](https://doi.org/10.1287/mnsc.2024.06516) | Finding candidate competitors |
-| Zheng et al. — *Judging LLM-as-a-Judge*  | 2023  |  [arXiv](https://arxiv.org/abs/2306.05685) | LLM judgment of competitors |
 
