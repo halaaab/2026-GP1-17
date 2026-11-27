@@ -35,6 +35,8 @@
      </div>
    ========================================================== */
 
+import { t } from './language.js';
+
 const TOAST_TIME = 3000;   // milliseconds a toast stays on screen
 
 /* The admin add / edit panels (shared.css, .edit-panel): after a page checks its form, this counts the fields
@@ -235,3 +237,132 @@ export function makeSearchable(select) {
 }
 
 document.querySelectorAll('select[data-searchable]').forEach(makeSearchable);
+
+/* ---------- Searchable dropdown with several choices ----------
+   The admin add / edit panels choose several sectors, ISIC sections or regions this way, on every page.
+   Write the check boxes as usual inside a box with data-multiselect, and its search hint as a translation key:
+     <div class="chip-choices" id="f-sector" data-multiselect data-placeholder-key="form.searchSectors">
+       <label class="check"><input type="checkbox" name="sector" value="Retail"> Retail</label> …
+     </div>
+   The check boxes stay the answer (the page reads :checked, as before) and get a change event when one is
+   picked; the box only shows them as a search field, the chosen ones as small chips with ×, and a list
+   with a tick beside each chosen one. Keyboard: arrows to move, Enter to pick, Backspace removes the last
+   chip, Escape closes. The page may rebuild the check boxes or tick them from code at any time. */
+function makeMultiSelect(box) {
+  const widget = document.createElement('div');
+  widget.className = 'multi';
+  widget.innerHTML = `
+    <div class="input multi-field">
+      <span class="multi-chips"></span>
+      <input type="text" class="multi-search" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list">
+    </div>
+    <ul class="combo-list multi-list" role="listbox" aria-multiselectable="true" hidden></ul>`;
+  const field = widget.querySelector('.multi-field');
+  const chips = widget.querySelector('.multi-chips');
+  const search = widget.querySelector('.multi-search');
+  const list = widget.querySelector('.multi-list');
+
+  box.classList.add('multi-native');
+  box.after(widget);
+  // the group's label (its legend) names the search box for screen readers
+  const legend = box.closest('fieldset')?.querySelector('legend');
+  if (legend) search.setAttribute('aria-label', legend.textContent.trim());
+
+  const boxes = () => [...box.querySelectorAll('input[type="checkbox"]')];
+  const words = (input) => input.parentElement.textContent.trim();
+  const safeText = (text) => text.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function showChips() {
+    chips.innerHTML = boxes().filter((input) => input.checked).map((input) => `
+      <span class="multi-chip">${safeText(words(input))}<button type="button" data-remove="${safeText(input.value)}" aria-label="×">×</button></span>`).join('');
+    search.placeholder = chips.children.length ? '' : t(box.dataset.placeholderKey || 'form.search');
+  }
+
+  function showList() {
+    const wanted = search.value.trim().toLowerCase();
+    const matches = boxes().filter((input) => words(input).toLowerCase().includes(wanted));
+    list.innerHTML = matches.length
+      ? matches.map((input) => `<li role="option" data-value="${safeText(input.value)}" aria-selected="${input.checked}" class="${input.checked ? 'is-chosen' : ''}">${safeText(words(input))}</li>`).join('')
+      : `<li class="combo-empty">—</li>`;
+    list.hidden = false;
+    search.setAttribute('aria-expanded', 'true');
+  }
+
+  function close() {
+    list.hidden = true;
+    search.setAttribute('aria-expanded', 'false');
+    search.value = '';
+  }
+
+  function toggle(value) {
+    const input = boxes().find((one) => one.value === value);
+    if (!input) return;
+    input.checked = !input.checked;
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    showChips();
+    if (!list.hidden) {
+      const active = list.querySelector('.is-active')?.dataset.value;
+      showList();
+      if (active) list.querySelector(`[data-value="${CSS.escape(active)}"]`)?.classList.add('is-active');
+    }
+  }
+
+  field.addEventListener('mousedown', (event) => {
+    const remove = event.target.closest('[data-remove]');
+    if (remove) {
+      event.preventDefault();
+      toggle(remove.dataset.remove);
+      return;
+    }
+    if (event.target !== search) {
+      event.preventDefault();
+      search.focus();
+    }
+  });
+  search.addEventListener('focus', showList);
+  search.addEventListener('input', showList);
+  search.addEventListener('blur', close);
+  list.addEventListener('mousedown', (event) => {
+    const item = event.target.closest('[data-value]');
+    if (!item) return;
+    event.preventDefault();   // keeps the list open to pick more
+    toggle(item.dataset.value);
+  });
+
+  search.addEventListener('keydown', (event) => {
+    const items = [...list.querySelectorAll('[data-value]')];
+    const current = list.querySelector('.is-active');
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (list.hidden) showList();
+      const position = items.indexOf(current) + (event.key === 'ArrowDown' ? 1 : -1);
+      const next = items[Math.max(0, Math.min(items.length - 1, position))];
+      current?.classList.remove('is-active');
+      next?.classList.add('is-active');
+      next?.scrollIntoView({ block: 'nearest' });
+    } else if (event.key === 'Enter') {
+      event.preventDefault();   // never sends the form
+      const pick = current || (search.value.trim() ? items[0] : null);
+      if (pick) {
+        toggle(pick.dataset.value);
+        search.value = '';
+        showList();
+      }
+    } else if (event.key === 'Backspace' && !search.value) {
+      const last = boxes().filter((input) => input.checked).pop();
+      if (last) toggle(last.value);
+    } else if (event.key === 'Escape') {
+      search.blur();
+    }
+  });
+
+  // The page rebuilds the check boxes (its language, its data) or ticks them when a panel opens
+  new MutationObserver(showChips).observe(box, { childList: true });
+  box.addEventListener('change', showChips);
+  const panel = box.closest('.panel');
+  if (panel) new MutationObserver(showChips).observe(panel, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('darb:language', () => { close(); showChips(); });
+  showChips();
+}
+
+document.querySelectorAll('[data-multiselect]').forEach(makeMultiSelect);

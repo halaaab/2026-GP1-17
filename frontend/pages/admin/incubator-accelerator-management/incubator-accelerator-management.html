@@ -123,9 +123,9 @@
             <h4 class="form-section-title" data-i18n="form.classification"></h4>
             <fieldset class="field">
               <legend class="label is-required" data-i18n="programs.sectors"></legend>
-              <!-- "All sectors" and the startups' sectors as chips (check boxes); the ticked ones are kept in the
-                   hidden box ("A; B"). The Arabic (sector_ar) is written from them. -->
-              <div class="chip-choices" id="sector-choices"></div>
+              <!-- "All sectors" and the startups' sectors: a search field with chips (ui.js, data-multiselect) over
+                   check boxes; the ticked ones are kept in the hidden box ("A; B"). sector_ar is written from them. -->
+              <div class="chip-choices" id="sector-choices" data-multiselect data-placeholder-key="form.searchSectors"></div>
               <input id="f-sector" name="sector" type="hidden">
             </fieldset>
             <div class="field">

@@ -1338,6 +1338,86 @@ html[dir="rtl"] .panel.is-open {
 .chip-choices .check:has(input:focus-visible) {
   box-shadow: 0 0 0 4px var(--teal-tint);
 }
+/* Choosing several from a long list (sectors, ISIC sections, regions): a search field with the chosen ones as
+   chips (ui.js, data-multiselect). The check boxes stay in the page, out of sight. */
+.chip-choices.multi-native {
+  display: none;
+}
+.multi {
+  position: relative;
+}
+.multi-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  height: auto;
+  min-height: 44px;
+  padding: 6px 10px;
+  cursor: text;
+}
+.multi-field:focus-within {
+  border-color: var(--teal);
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+.multi-chips {
+  display: contents;
+}
+.multi-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  max-width: 100%;
+  padding: 3px 4px 3px 10px;
+  border-radius: var(--r-pill);
+  background: var(--navy);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+html[dir="rtl"] .multi-chip {
+  padding: 3px 10px 3px 4px;
+}
+.multi-chip button {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.multi-chip button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+.multi-search {
+  flex: 1;
+  min-width: 140px;
+  height: 30px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+}
+.multi-list li[role="option"]::before {
+  content: "";
+  display: inline-block;
+  width: 16px;
+  margin-inline-end: 8px;
+}
+.multi-list li.is-chosen::before {
+  content: "✓";
+  color: var(--teal-text);
+  font-weight: 800;
+}
+.chip-choices.is-error + .multi .multi-field,
+.multi:has(~ .field-error:not([hidden])) .multi-field {
+  border-color: var(--risk);
+}
+
 /* a group with an error shown under it gets the red frame, as a field does */
 .chip-choices:has(~ .field-error:not([hidden])),
 .chip-choices.is-error {

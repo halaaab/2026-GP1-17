@@ -130,8 +130,9 @@
           <fieldset class="field">
             <legend class="label is-required" data-i18n="regAdmin.isic"></legend>
             <p class="field-hint" data-i18n="regAdmin.isicHint"></p>
-            <!-- regulatory-management.js adds "Every sector" and one chip (a check box) for each of the 20 ISIC4 sections -->
-            <div class="chip-choices" id="f-isic"></div>
+            <!-- regulatory-management.js adds "Every sector" and one check box for each of the 20 ISIC4 sections,
+                 shown as a search field with chips (ui.js, data-multiselect) -->
+            <div class="chip-choices" id="f-isic" data-multiselect data-placeholder-key="form.searchSectors"></div>
             <p class="field-error" id="f-isic-error" hidden></p>
           </fieldset>
           <div class="field">

@@ -109,19 +109,20 @@
 
         <section class="form-section">
           <h4 class="form-section-title" data-i18n="form.classification"></h4>
-          <!-- startup-management.js adds one chip (a check box) for each sector, stage and region -->
-          <fieldset class="field sm-choices">
+          <!-- startup-management.js adds one check box for each sector, region and stage. Sectors and regions
+               are long lists: a search field with chips (ui.js, data-multiselect); the few stages are chips. -->
+          <fieldset class="field">
             <legend class="label is-required" data-i18n="startups.sector"></legend>
-            <div class="chip-choices" id="f-sector"></div>
+            <div class="chip-choices" id="f-sector" data-multiselect data-placeholder-key="form.searchSectors"></div>
             <p class="field-error" id="f-sector-error" hidden></p>
           </fieldset>
-          <fieldset class="field sm-choices">
+          <fieldset class="field">
+            <legend class="label" data-i18n="startups.region"></legend>
+            <div class="chip-choices" id="f-region" data-multiselect data-placeholder-key="form.searchRegions"></div>
+          </fieldset>
+          <fieldset class="field">
             <legend class="label" data-i18n="startups.stage"></legend>
             <div class="chip-choices" id="f-stage"></div>
-          </fieldset>
-          <fieldset class="field sm-choices">
-            <legend class="label" data-i18n="startups.region"></legend>
-            <div class="chip-choices" id="f-region"></div>
           </fieldset>
           <div class="field">
             <label class="label" for="f-country" data-i18n="startupAdmin.country"></label>
