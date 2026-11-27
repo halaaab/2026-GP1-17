@@ -65,11 +65,11 @@
     </div>
 
     <!-- Add or edit one startup. startup-management.js fills it. -->
-    <aside class="panel" id="startup-panel" aria-labelledby="panel-title">
+    <aside class="panel edit-panel" id="startup-panel" aria-labelledby="panel-title">
       <div class="panel-head">
         <div>
           <h3 class="modal-title" id="panel-title"></h3>
-          <p class="text-3 sm-panel-sub">
+          <p class="panel-sub">
             <span id="panel-sub"></span>
             <a class="link" id="panel-view" target="_blank" rel="noopener" data-i18n="startupAdmin.viewAsFounder"></a>
           </p>
@@ -77,85 +77,100 @@
         <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
       </div>
 
+      <!-- The same panel as the Incubators & Accelerators and Regulatory pages (shared.css, .edit-panel) -->
       <form class="panel-body form" id="startup-form" novalidate>
-        <div class="field">
-          <label class="label is-required" for="f-startup_name" data-i18n="startupAdmin.name"></label>
-          <input class="input" id="f-startup_name" type="text" dir="auto">
-          <p class="field-error" id="f-startup_name-error" hidden></p>
-        </div>
-        <div class="field">
-          <label class="label" for="f-startup_name_ar" data-i18n="startupAdmin.nameAr"></label>
-          <input class="input" id="f-startup_name_ar" type="text" dir="rtl">
-        </div>
+        <p class="form-summary" id="form-summary" hidden></p>
 
-        <div class="field">
-          <label class="label" for="f-logo" data-i18n="startupAdmin.logo"></label>
-          <input class="input" id="f-logo" type="url" dir="ltr" placeholder="https://">
-          <p class="field-hint" data-i18n="startupAdmin.logoHint"></p>
-          <p class="field-error" id="f-logo-error" hidden></p>
-        </div>
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.basics"></h4>
+          <div class="field">
+            <label class="label" for="f-logo" data-i18n="startupAdmin.logo"></label>
+            <div class="logo-field">
+              <span class="logo-field-preview" id="logo-preview"></span>
+              <div class="logo-field-body">
+                <input class="input" id="f-logo" type="url" dir="ltr" placeholder="https://">
+                <p class="field-hint" data-i18n="startupAdmin.logoHint"></p>
+              </div>
+            </div>
+            <p class="field-error" id="f-logo-error" hidden></p>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label is-required" for="f-startup_name" data-i18n="startupAdmin.name"></label>
+              <input class="input" id="f-startup_name" type="text" dir="auto">
+              <p class="field-error" id="f-startup_name-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="f-startup_name_ar" data-i18n="startupAdmin.nameAr"></label>
+              <input class="input" id="f-startup_name_ar" type="text" dir="rtl">
+            </div>
+          </div>
+        </section>
 
-        <div class="field">
-          <label class="label" for="f-startup_description" data-i18n="startupAdmin.description"></label>
-          <textarea class="input" id="f-startup_description" dir="ltr"></textarea>
-        </div>
-        <div class="field">
-          <label class="label" for="f-startup_description_ar" data-i18n="startupAdmin.descriptionAr"></label>
-          <textarea class="input" id="f-startup_description_ar" dir="rtl"></textarea>
-          <p class="field-hint" data-i18n="startupAdmin.descriptionArHint"></p>
-        </div>
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.classification"></h4>
+          <!-- startup-management.js adds one chip (a check box) for each sector, stage and region -->
+          <fieldset class="field sm-choices">
+            <legend class="label is-required" data-i18n="startups.sector"></legend>
+            <div class="chip-choices" id="f-sector"></div>
+            <p class="field-error" id="f-sector-error" hidden></p>
+          </fieldset>
+          <fieldset class="field sm-choices">
+            <legend class="label" data-i18n="startups.stage"></legend>
+            <div class="chip-choices" id="f-stage"></div>
+          </fieldset>
+          <fieldset class="field sm-choices">
+            <legend class="label" data-i18n="startups.region"></legend>
+            <div class="chip-choices" id="f-region"></div>
+          </fieldset>
+          <div class="field">
+            <label class="label" for="f-country" data-i18n="startupAdmin.country"></label>
+            <input class="input" id="f-country" type="text" dir="ltr" list="country-list" placeholder="Saudi Arabia">
+            <datalist id="country-list"></datalist>
+            <p class="field-hint" data-i18n="startupAdmin.countryHint"></p>
+          </div>
+        </section>
 
-        <fieldset class="field sm-choices">
-          <legend class="label is-required" data-i18n="startups.sector"></legend>
-          <!-- startup-management.js adds one checkbox for each sector, stage and region -->
-          <div class="sm-choice-list" id="f-sector"></div>
-          <p class="field-error" id="f-sector-error" hidden></p>
-        </fieldset>
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.description"></h4>
+          <div class="field">
+            <label class="label" for="f-startup_description" data-i18n="startupAdmin.description"></label>
+            <textarea class="input" id="f-startup_description" dir="ltr"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="f-startup_description_ar" data-i18n="startupAdmin.descriptionAr"></label>
+            <textarea class="input" id="f-startup_description_ar" dir="rtl"></textarea>
+            <p class="field-hint" data-i18n="startupAdmin.descriptionArHint"></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-tags" data-i18n="startups.tags"></label>
+            <input class="input" id="f-tags" type="text" dir="auto" placeholder="SaaS, E-Commerce">
+            <p class="field-hint" data-i18n="startupAdmin.tagsHint"></p>
+          </div>
+        </section>
 
-        <fieldset class="field sm-choices">
-          <legend class="label" data-i18n="startups.stage"></legend>
-          <div class="sm-choice-list" id="f-stage"></div>
-        </fieldset>
-
-        <fieldset class="field sm-choices">
-          <legend class="label" data-i18n="startups.region"></legend>
-          <div class="sm-choice-list" id="f-region"></div>
-        </fieldset>
-
-
-        <div class="field">
-          <label class="label" for="f-country" data-i18n="startupAdmin.country"></label>
-          <input class="input" id="f-country" type="text" dir="ltr" list="country-list" placeholder="Saudi Arabia">
-          <datalist id="country-list"></datalist>
-          <p class="field-hint" data-i18n="startupAdmin.countryHint"></p>
-        </div>
-
-
-        <div class="field">
-          <label class="label" for="f-tags" data-i18n="startups.tags"></label>
-          <input class="input" id="f-tags" type="text" dir="auto" placeholder="SaaS, E-Commerce">
-          <p class="field-hint" data-i18n="startupAdmin.tagsHint"></p>
-        </div>
-
-        <div class="field">
-          <label class="label" for="f-website" data-i18n="startups.website"></label>
-          <input class="input" id="f-website" type="url" dir="ltr" placeholder="https://">
-          <p class="field-error" id="f-website-error" hidden></p>
-        </div>
-        <div class="field">
-          <label class="label" for="f-ecosystemsa_profile_url" data-i18n="startups.ecosystemProfile"></label>
-          <input class="input" id="f-ecosystemsa_profile_url" type="url" dir="ltr" placeholder="https://ecosystemsa.com/">
-          <p class="field-error" id="f-ecosystemsa_profile_url-error" hidden></p>
-        </div>
-        <div class="field">
-          <label class="label" for="f-description_source" data-i18n="startupAdmin.source"></label>
-          <input class="input" id="f-description_source" type="url" dir="ltr" placeholder="https://">
-          <p class="field-hint" data-i18n="startupAdmin.sourceHint"></p>
-          <p class="field-error" id="f-description_source-error" hidden></p>
-        </div>
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.links"></h4>
+          <div class="field">
+            <label class="label" for="f-website" data-i18n="startups.website"></label>
+            <input class="input" id="f-website" type="url" dir="ltr" placeholder="https://">
+            <p class="field-error" id="f-website-error" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-ecosystemsa_profile_url" data-i18n="startups.ecosystemProfile"></label>
+            <input class="input" id="f-ecosystemsa_profile_url" type="url" dir="ltr" placeholder="https://ecosystemsa.com/">
+            <p class="field-error" id="f-ecosystemsa_profile_url-error" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-description_source" data-i18n="startupAdmin.source"></label>
+            <input class="input" id="f-description_source" type="url" dir="ltr" placeholder="https://">
+            <p class="field-hint" data-i18n="startupAdmin.sourceHint"></p>
+            <p class="field-error" id="f-description_source-error" hidden></p>
+          </div>
+        </section>
       </form>
 
-      <div class="panel-foot sm-panel-foot">
+      <div class="panel-foot">
         <button type="button" class="btn btn-secondary" data-panel-close data-i18n="founders.cancel"></button>
         <button type="submit" class="btn btn-primary" form="startup-form" id="save"></button>
       </div>

@@ -37,6 +37,27 @@
 
 const TOAST_TIME = 3000;   // milliseconds a toast stays on screen
 
+/* The admin add / edit panels (shared.css, .edit-panel): after a page checks its form, this counts the fields
+   that show a problem (a red frame or a red message), writes "N fields need attention" in the form's
+   .form-summary and scrolls to the first one. words(n) gives the sentence in the page's language.
+   Returns the number of problems (0 hides the summary). */
+export function showFormSummary(form, words) {
+  const summary = form.querySelector('.form-summary');
+  const fields = [...form.querySelectorAll('.field, .form-section > fieldset')].filter((field) =>
+    field.querySelector('.is-error, .field-error:not([hidden]):not(:empty)') || field.classList.contains('is-error'));
+  const count = fields.length;
+  if (summary) {
+    summary.hidden = count === 0;
+    summary.textContent = count ? words(count) : '';
+  }
+  if (count) {
+    (summary || fields[0]).scrollIntoView({ block: 'start', behavior: 'smooth' });
+    const first = fields[0].querySelector('input:not([type="hidden"]), select, textarea');
+    if (first && first.type !== 'checkbox') first.focus({ preventScroll: true });
+  }
+  return count;
+}
+
 export function showToast(message, type = '') {
   let stack = document.querySelector('.toast-stack');
 

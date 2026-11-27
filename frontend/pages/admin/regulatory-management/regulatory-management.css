@@ -65,37 +65,7 @@
 }
 
 /* ---------- Form ---------- */
-
-/* the sector check boxes: no browser frame around the group */
-.reg-sectors {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-.reg-sectors legend {
-  margin-bottom: 8px;
-  padding: 0;
-}
-.reg-sector-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
-}
-
-/* the 20 ISIC4 sections have long names: one per line */
-.reg-isic-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.reg-sectors .field-hint {
-  margin: -2px 0 6px;
-}
-
-/* Cancel and Save share the footer equally */
-.reg-panel-foot .btn {
-  flex: 1;
-}
+/* The panel, its sections, chips, logo row and errors are the shared ones (shared.css, .edit-panel). */
 
 /* Delete pop-up: the red icon above the title, as in the design */
 .reg-delete-icon {

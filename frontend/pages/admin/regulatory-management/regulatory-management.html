@@ -62,131 +62,151 @@
     </div>
 
     <!-- Add or edit one requirement. regulatory-management.js fills it. -->
-    <aside class="panel" id="reg-panel" aria-labelledby="panel-title">
+    <aside class="panel edit-panel" id="reg-panel" aria-labelledby="panel-title">
       <div class="panel-head">
-        <h3 class="modal-title" id="panel-title"></h3>
+        <div>
+          <h3 class="modal-title" id="panel-title"></h3>
+          <p class="panel-sub" id="panel-sub"></p>
+        </div>
         <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="founders.close" id="panel-close"></button>
       </div>
 
-      <!-- The requirement's ID is not in the form: it is made when a requirement is added
+      <!-- The same panel as the Startups and Incubators & Accelerators pages (shared.css, .edit-panel).
+           The requirement's ID is not in the form: it is made when a requirement is added
            (regulatory-management.js, nextId) and only used inside the database -->
       <form class="panel-body form" id="reg-form" novalidate>
-        <div class="field">
-          <label class="label is-required" for="f-name_en" data-i18n="regAdmin.nameEn"></label>
-          <input class="input" id="f-name_en" type="text" dir="ltr">
-          <p class="field-error" id="f-name_en-error" hidden></p>
-        </div>
-        <div class="field">
-          <label class="label" for="f-name_ar" data-i18n="regAdmin.nameAr"></label>
-          <input class="input" id="f-name_ar" type="text" dir="rtl">
-        </div>
+        <p class="form-summary" id="form-summary" hidden></p>
 
-        <div class="field">
-          <label class="label" for="f-authority" data-i18n="regAdmin.authorityEn"></label>
-          <input class="input" id="f-authority" type="text" dir="ltr" list="authority-list">
-          <datalist id="authority-list"></datalist>
-        </div>
-        <div class="field">
-          <label class="label" for="f-authority_ar" data-i18n="regAdmin.authorityAr"></label>
-          <input class="input" id="f-authority_ar" type="text" dir="rtl">
-        </div>
-        <div class="field">
-          <label class="label" for="f-authority_logo" data-i18n="regAdmin.logo"></label>
-          <!-- regulatory-management.js lists the logos already in use; picking an authority fills it -->
-          <select class="input" id="f-authority_logo"></select>
-          <p class="field-hint" data-i18n="regAdmin.logoHint"></p>
-        </div>
-
-        <div class="field">
-          <label class="label" for="f-category" data-i18n="regAdmin.typeEn"></label>
-          <input class="input" id="f-category" type="text" dir="ltr" list="type-list">
-          <datalist id="type-list"></datalist>
-        </div>
-        <div class="field">
-          <label class="label" for="f-category_ar" data-i18n="regAdmin.typeAr"></label>
-          <input class="input" id="f-category_ar" type="text" dir="rtl">
-        </div>
-
-        <fieldset class="field reg-sectors">
-          <legend class="label is-required" data-i18n="regAdmin.isic"></legend>
-          <p class="field-hint" data-i18n="regAdmin.isicHint"></p>
-          <!-- regulatory-management.js adds "Every sector" and one checkbox for each of the 20 ISIC4 sections -->
-          <div class="reg-isic-list" id="f-isic"></div>
-          <p class="field-error" id="f-isic-error" hidden></p>
-        </fieldset>
-
-        <div class="field">
-          <label class="label is-required" for="f-divisions" data-i18n="regAdmin.divisions"></label>
-          <input class="input" id="f-divisions" type="text" dir="ltr" placeholder="10, 11, 56" autocomplete="off">
-          <p class="field-hint" data-i18n="regAdmin.divisionsHint"></p>
-          <p class="field-error" id="f-divisions-error" hidden></p>
-        </div>
-
-        <div class="field">
-          <label class="label" for="f-business_stage" data-i18n="reg.stage"></label>
-          <input class="input" id="f-business_stage" type="text" dir="ltr" placeholder="Pre-operation / Operation">
-          <p class="field-hint" data-i18n="regAdmin.stageHint"></p>
-        </div>
-
-        <div class="form-row">
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.basics"></h4>
           <div class="field">
-            <label class="label" for="f-mandatory" data-i18n="regAdmin.mandatory"></label>
-            <select class="input" id="f-mandatory"></select>
+            <label class="label" for="f-authority_logo" data-i18n="regAdmin.logo"></label>
+            <div class="logo-field">
+              <span class="logo-field-preview" id="logo-preview"></span>
+              <div class="logo-field-body">
+                <!-- regulatory-management.js lists the logos already in use; picking an authority fills it -->
+                <select class="input" id="f-authority_logo"></select>
+                <p class="field-hint" data-i18n="regAdmin.logoHint"></p>
+              </div>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label is-required" for="f-name_en" data-i18n="regAdmin.nameEn"></label>
+              <input class="input" id="f-name_en" type="text" dir="ltr">
+              <p class="field-error" id="f-name_en-error" hidden></p>
+            </div>
+            <div class="field">
+              <label class="label" for="f-name_ar" data-i18n="regAdmin.nameAr"></label>
+              <input class="input" id="f-name_ar" type="text" dir="rtl">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="f-authority" data-i18n="regAdmin.authorityEn"></label>
+              <input class="input" id="f-authority" type="text" dir="ltr" list="authority-list">
+              <datalist id="authority-list"></datalist>
+            </div>
+            <div class="field">
+              <label class="label" for="f-authority_ar" data-i18n="regAdmin.authorityAr"></label>
+              <input class="input" id="f-authority_ar" type="text" dir="rtl">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="f-category" data-i18n="regAdmin.typeEn"></label>
+              <input class="input" id="f-category" type="text" dir="ltr" list="type-list">
+              <datalist id="type-list"></datalist>
+            </div>
+            <div class="field">
+              <label class="label" for="f-category_ar" data-i18n="regAdmin.typeAr"></label>
+              <input class="input" id="f-category_ar" type="text" dir="rtl">
+            </div>
+          </div>
+        </section>
+
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.classification"></h4>
+          <fieldset class="field">
+            <legend class="label is-required" data-i18n="regAdmin.isic"></legend>
+            <p class="field-hint" data-i18n="regAdmin.isicHint"></p>
+            <!-- regulatory-management.js adds "Every sector" and one chip (a check box) for each of the 20 ISIC4 sections -->
+            <div class="chip-choices" id="f-isic"></div>
+            <p class="field-error" id="f-isic-error" hidden></p>
+          </fieldset>
+          <div class="field">
+            <label class="label is-required" for="f-divisions" data-i18n="regAdmin.divisions"></label>
+            <input class="input" id="f-divisions" type="text" dir="ltr" placeholder="10, 11, 56" autocomplete="off">
+            <p class="field-hint" data-i18n="regAdmin.divisionsHint"></p>
+            <p class="field-error" id="f-divisions-error" hidden></p>
           </div>
           <div class="field">
-            <label class="label" for="f-regulatory_status" data-i18n="regAdmin.status"></label>
-            <select class="input" id="f-regulatory_status"></select>
+            <label class="label" for="f-business_stage" data-i18n="reg.stage"></label>
+            <input class="input" id="f-business_stage" type="text" dir="ltr" placeholder="Pre-operation / Operation">
+            <p class="field-hint" data-i18n="regAdmin.stageHint"></p>
           </div>
-        </div>
+          <div class="form-row">
+            <div class="field">
+              <label class="label" for="f-mandatory" data-i18n="regAdmin.mandatory"></label>
+              <select class="input" id="f-mandatory"></select>
+            </div>
+            <div class="field">
+              <label class="label" for="f-regulatory_status" data-i18n="regAdmin.status"></label>
+              <select class="input" id="f-regulatory_status"></select>
+            </div>
+          </div>
+        </section>
 
-        <div class="field">
-          <label class="label" for="f-applies_when" data-i18n="regAdmin.appliesWhenEn"></label>
-          <textarea class="input" id="f-applies_when" dir="ltr"></textarea>
-        </div>
-        <div class="field">
-          <label class="label" for="f-applies_when_ar" data-i18n="regAdmin.appliesWhenAr"></label>
-          <textarea class="input" id="f-applies_when_ar" dir="rtl"></textarea>
-        </div>
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.description"></h4>
+          <div class="field">
+            <label class="label" for="f-applies_when" data-i18n="regAdmin.appliesWhenEn"></label>
+            <textarea class="input" id="f-applies_when" dir="ltr"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="f-applies_when_ar" data-i18n="regAdmin.appliesWhenAr"></label>
+            <textarea class="input" id="f-applies_when_ar" dir="rtl"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="f-what_darb_surface" data-i18n="regAdmin.guidanceEn"></label>
+            <textarea class="input" id="f-what_darb_surface" dir="ltr"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="f-what_darb_surface_ar" data-i18n="regAdmin.guidanceAr"></label>
+            <textarea class="input" id="f-what_darb_surface_ar" dir="rtl"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="f-fees_thresholds" data-i18n="regAdmin.feesEn"></label>
+            <textarea class="input" id="f-fees_thresholds" dir="ltr"></textarea>
+          </div>
+          <div class="field">
+            <label class="label" for="f-fees_thresholds_ar" data-i18n="regAdmin.feesAr"></label>
+            <textarea class="input" id="f-fees_thresholds_ar" dir="rtl"></textarea>
+          </div>
+        </section>
 
-        <div class="field">
-          <label class="label" for="f-what_darb_surface" data-i18n="regAdmin.guidanceEn"></label>
-          <textarea class="input" id="f-what_darb_surface" dir="ltr"></textarea>
-        </div>
-        <div class="field">
-          <label class="label" for="f-what_darb_surface_ar" data-i18n="regAdmin.guidanceAr"></label>
-          <textarea class="input" id="f-what_darb_surface_ar" dir="rtl"></textarea>
-        </div>
-
-        <div class="field">
-          <label class="label" for="f-fees_thresholds" data-i18n="regAdmin.feesEn"></label>
-          <textarea class="input" id="f-fees_thresholds" dir="ltr"></textarea>
-        </div>
-        <div class="field">
-          <label class="label" for="f-fees_thresholds_ar" data-i18n="regAdmin.feesAr"></label>
-          <textarea class="input" id="f-fees_thresholds_ar" dir="rtl"></textarea>
-        </div>
-
-        <div class="field">
-          <label class="label" for="f-official_source_url" data-i18n="regAdmin.sourceUrl"></label>
-          <input class="input" id="f-official_source_url" type="url" dir="ltr" placeholder="https://">
-          <p class="field-error" id="f-official_source_url-error" hidden></p>
-        </div>
-        <div class="field">
-          <label class="label" for="f-service_url" data-i18n="regAdmin.serviceUrl"></label>
-          <input class="input" id="f-service_url" type="url" dir="ltr" placeholder="https://">
-          <p class="field-error" id="f-service_url-error" hidden></p>
-        </div>
-
-        <div class="field">
-          <label class="label" for="f-last_verified" data-i18n="regAdmin.lastVerified"></label>
-          <input class="input" id="f-last_verified" type="date">
-        </div>
-
+        <section class="form-section">
+          <h4 class="form-section-title" data-i18n="form.links"></h4>
+          <div class="field">
+            <label class="label" for="f-official_source_url" data-i18n="regAdmin.sourceUrl"></label>
+            <input class="input" id="f-official_source_url" type="url" dir="ltr" placeholder="https://">
+            <p class="field-error" id="f-official_source_url-error" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-service_url" data-i18n="regAdmin.serviceUrl"></label>
+            <input class="input" id="f-service_url" type="url" dir="ltr" placeholder="https://">
+            <p class="field-error" id="f-service_url-error" hidden></p>
+          </div>
+          <div class="field">
+            <label class="label" for="f-last_verified" data-i18n="regAdmin.lastVerified"></label>
+            <input class="input" id="f-last_verified" type="date">
+          </div>
+        </section>
       </form>
 
-      <div class="panel-foot reg-panel-foot">
+      <div class="panel-foot">
         <button type="button" class="btn btn-secondary" data-panel-close data-i18n="founders.cancel"></button>
-        <button type="submit" class="btn btn-primary" form="reg-form" id="save" data-i18n="founders.save"></button>
+        <button type="submit" class="btn btn-primary" form="reg-form" id="save"></button>
       </div>
     </aside>
 

@@ -81,41 +81,6 @@
   margin-top: 12px;
 }
 
-/* ---------- Panel ---------- */
-
-.sm-panel-sub {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 4px 0 0;
-}
-.sm-panel-sub .link:not([hidden])::before {
-  content: "·";
-  margin-inline-end: 6px;
-  color: var(--text-3);
-}
-
-/* the check box groups: no browser frame around them */
-.sm-choices {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-.sm-choices legend {
-  margin-bottom: 8px;
-  padding: 0;
-}
-.sm-choice-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
-}
-
-/* Cancel and Save share the footer equally */
-.sm-panel-foot .btn {
-  flex: 1;
-}
-
 /* Delete pop-up: the red icon above the title, as in the design */
 .sm-delete-icon {
   margin-bottom: 14px;

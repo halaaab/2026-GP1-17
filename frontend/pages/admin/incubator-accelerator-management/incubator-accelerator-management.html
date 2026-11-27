@@ -66,39 +66,49 @@
     </div>
 
     <!-- Add or edit one program -->
-    <aside class="panel manage-panel" id="program-panel" aria-labelledby="panel-title">
+    <aside class="panel edit-panel" id="program-panel" aria-labelledby="panel-title">
       <div class="panel-head">
         <div>
           <h3 class="modal-title" id="panel-title"></h3>
-          <p class="text-3 manage-panel-sub" id="panel-sub"></p>
+          <p class="panel-sub" id="panel-sub"></p>
         </div>
         <button type="button" class="btn-icon" data-panel-close data-i18n-aria-label="programsAdmin.close" id="panel-close"></button>
       </div>
 
+      <!-- The same panel as the Startups and Regulatory pages (shared.css, .edit-panel). The Arabic fields
+           (migration 0012) sit next to or under their English twins; data-arabic ones show only when the table
+           has the Arabic columns (incubator-accelerator-management.js). -->
       <div class="panel-body">
         <form class="form" id="program-form" novalidate>
-          <!-- Logo: a picture the founder pages show on the program's card and page -->
-          <div class="field">
-            <span class="label is-required" id="logo-label" data-i18n="programsAdmin.f.logo"></span>
-            <div class="logo-picker" id="logo-picker">
-              <span class="logo-preview" id="logo-preview"></span>
-              <div class="logo-picker-text">
-                <div class="logo-picker-buttons">
-                  <button type="button" class="btn btn-secondary btn-sm" id="logo-choose" aria-describedby="logo-hint"></button>
-                  <button type="button" class="btn btn-ghost btn-sm" id="logo-remove" data-i18n="programsAdmin.f.logoRemove"></button>
-                </div>
-                <p class="field-hint" id="logo-hint" data-i18n="programsAdmin.f.logoHint"></p>
-                <p class="field-error" id="logo-error" hidden></p>
-              </div>
-              <input class="logo-input" id="f-logo" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="logo-label" tabindex="-1">
-            </div>
-          </div>
+          <p class="form-summary" id="form-summary" hidden></p>
 
-          <div class="field">
-            <label class="label is-required" for="f-name" data-i18n="programsAdmin.f.name"></label>
-            <input class="input" id="f-name" name="name" type="text" maxlength="200" required>
-          </div>
-          <div class="form-row">
+          <section class="form-section">
+            <h4 class="form-section-title" data-i18n="form.basics"></h4>
+            <div class="field">
+              <span class="label is-required" id="logo-label" data-i18n="programsAdmin.f.logo"></span>
+              <div class="logo-field" id="logo-picker">
+                <span class="logo-field-preview logo-preview" id="logo-preview"></span>
+                <div class="logo-field-body">
+                  <div class="logo-picker-buttons">
+                    <button type="button" class="btn btn-secondary btn-sm" id="logo-choose" aria-describedby="logo-hint"></button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="logo-remove" data-i18n="programsAdmin.f.logoRemove"></button>
+                  </div>
+                  <p class="field-hint" id="logo-hint" data-i18n="programsAdmin.f.logoHint"></p>
+                </div>
+                <input class="logo-input" id="f-logo" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="logo-label" tabindex="-1">
+              </div>
+              <p class="field-error" id="logo-error" hidden></p>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="label is-required" for="f-name" data-i18n="programsAdmin.f.name"></label>
+                <input class="input" id="f-name" name="name" type="text" maxlength="200" required>
+              </div>
+              <div class="field" data-arabic hidden>
+                <label class="label is-required" for="f-name-ar" data-i18n="programsAdmin.f.nameAr"></label>
+                <input class="input" id="f-name-ar" name="name_ar" type="text" dir="rtl" lang="ar">
+              </div>
+            </div>
             <div class="field">
               <label class="label is-required" for="f-type" data-i18n="programs.type"></label>
               <select class="input" id="f-type" name="type">
@@ -107,88 +117,91 @@
                 <option value="Incubator / Accelerator" data-i18n="programs.type.both"></option>
               </select>
             </div>
+          </section>
+
+          <section class="form-section">
+            <h4 class="form-section-title" data-i18n="form.classification"></h4>
+            <fieldset class="field">
+              <legend class="label is-required" data-i18n="programs.sectors"></legend>
+              <!-- "All sectors" and the startups' sectors as chips (check boxes); the ticked ones are kept in the
+                   hidden box ("A; B"). The Arabic (sector_ar) is written from them. -->
+              <div class="chip-choices" id="sector-choices"></div>
+              <input id="f-sector" name="sector" type="hidden">
+            </fieldset>
             <div class="field">
               <label class="label is-required" for="f-location" data-i18n="programs.region"></label>
-              <!-- the region in the Kingdom; incubator-accelerator-management.js fills the choices
-                   and saves the English and Arabic location from it -->
+              <!-- the region in the Kingdom; the script fills the choices and saves the English and Arabic location -->
               <select class="input" id="f-location" name="location"></select>
             </div>
-          </div>
-          <fieldset class="field manage-choices">
-            <legend class="label is-required" data-i18n="programs.sectors"></legend>
-            <!-- the same sectors as the startups, plus "All sectors": incubator-accelerator-management.js
-                 adds one checkbox for each and keeps the ticked ones in the hidden box ("A; B").
-                 The Arabic (sector_ar) is written from them, so it has no box of its own. -->
-            <div class="manage-choice-list" id="sector-choices"></div>
-            <input id="f-sector" name="sector" type="hidden">
-          </fieldset>
-          <div class="field">
-            <label class="label is-required" for="f-description" data-i18n="programs.about"></label>
-            <textarea class="input manage-textarea" id="f-description" name="description" rows="4"></textarea>
-          </div>
-          <div class="form-row">
+            <div class="form-row">
+              <div class="field">
+                <label class="label is-required" for="f-stage" data-i18n="programs.stage"></label>
+                <input class="input" id="f-stage" name="target_stage" type="text" data-i18n-placeholder="programsAdmin.f.stageHint">
+              </div>
+              <div class="field" data-arabic hidden>
+                <label class="label is-required" for="f-target-stage-ar" data-i18n="programsAdmin.f.stageAr"></label>
+                <input class="input" id="f-target-stage-ar" name="target_stage_ar" type="text" dir="rtl" lang="ar">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="label" for="f-duration" data-i18n="programs.duration"></label>
+                <input class="input" id="f-duration" name="program_duration" type="text" data-i18n-placeholder="programsAdmin.f.durationHint">
+              </div>
+              <div class="field" data-arabic hidden>
+                <label class="label" for="f-program-duration-ar" data-i18n="programsAdmin.f.durationAr"></label>
+                <input class="input" id="f-program-duration-ar" name="program_duration_ar" type="text" dir="rtl" lang="ar">
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h4 class="form-section-title" data-i18n="form.description"></h4>
             <div class="field">
-              <label class="label is-required" for="f-stage" data-i18n="programs.stage"></label>
-              <input class="input" id="f-stage" name="target_stage" type="text" data-i18n-placeholder="programsAdmin.f.stageHint">
+              <label class="label is-required" for="f-description" data-i18n="programs.about"></label>
+              <textarea class="input" id="f-description" name="description"></textarea>
+            </div>
+            <div class="field" data-arabic hidden>
+              <label class="label is-required" for="f-description-ar" data-i18n="programsAdmin.f.aboutAr"></label>
+              <textarea class="input" id="f-description-ar" name="description_ar" dir="rtl" lang="ar"></textarea>
             </div>
             <div class="field">
-              <label class="label" for="f-duration" data-i18n="programs.duration"></label>
-              <input class="input" id="f-duration" name="program_duration" type="text" data-i18n-placeholder="programsAdmin.f.durationHint">
+              <label class="label is-required" for="f-services" data-i18n="programs.services"></label>
+              <textarea class="input" id="f-services" name="services_support"></textarea>
+              <p class="field-hint" data-i18n="programsAdmin.f.commaHint"></p>
             </div>
-          </div>
-          <div class="field">
-            <label class="label is-required" for="f-services" data-i18n="programs.services"></label>
-            <textarea class="input manage-textarea" id="f-services" name="services_support" rows="3"></textarea>
-            <p class="field-hint" data-i18n="programsAdmin.f.commaHint"></p>
-          </div>
-          <div class="field">
-            <label class="label" for="f-funding" data-i18n="programs.funding"></label>
-            <input class="input" id="f-funding" name="funding_investment" type="text" data-i18n-placeholder="programsAdmin.f.fundingHint">
-          </div>
-          <div class="field">
-            <label class="label is-required" for="f-eligibility" data-i18n="programs.eligibility"></label>
-            <textarea class="input manage-textarea" id="f-eligibility" name="eligibility" rows="3"></textarea>
-            <p class="field-hint" data-i18n="programsAdmin.f.semicolonHint"></p>
-          </div>
-          <div class="field">
-            <label class="label is-required" for="f-website" data-i18n="programsAdmin.f.website"></label>
-            <input class="input" id="f-website" name="website" type="url" dir="ltr" placeholder="https://">
-          </div>
-          <!-- Arabic version (migration 0012). Required like the English fields (duration and
-               funding stay optional). incubator-accelerator-management.js shows this part only
-               when the Arabic columns exist. -->
-          <fieldset class="manage-arabic" id="arabic-section" hidden>
-            <legend class="manage-arabic-title" data-i18n="programsAdmin.arabic"></legend>
-            <p class="field-hint" data-i18n="programsAdmin.arabicHint"></p>
-            <div class="field">
-              <label class="label is-required" for="f-name-ar" data-i18n="programsAdmin.f.name"></label>
-              <input class="input" id="f-name-ar" name="name_ar" type="text" dir="rtl" lang="ar">
+            <div class="field" data-arabic hidden>
+              <label class="label is-required" for="f-services-support-ar" data-i18n="programsAdmin.f.servicesAr"></label>
+              <textarea class="input" id="f-services-support-ar" name="services_support_ar" dir="rtl" lang="ar"></textarea>
             </div>
             <div class="field">
-              <label class="label is-required" for="f-description-ar" data-i18n="programs.about"></label>
-              <textarea class="input manage-textarea" id="f-description-ar" name="description_ar" rows="3" dir="rtl" lang="ar"></textarea>
+              <label class="label is-required" for="f-eligibility" data-i18n="programs.eligibility"></label>
+              <textarea class="input" id="f-eligibility" name="eligibility"></textarea>
+              <p class="field-hint" data-i18n="programsAdmin.f.semicolonHint"></p>
             </div>
+            <div class="field" data-arabic hidden>
+              <label class="label is-required" for="f-eligibility-ar" data-i18n="programsAdmin.f.eligibilityAr"></label>
+              <textarea class="input" id="f-eligibility-ar" name="eligibility_ar" dir="rtl" lang="ar"></textarea>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="label" for="f-funding" data-i18n="programs.funding"></label>
+                <input class="input" id="f-funding" name="funding_investment" type="text" data-i18n-placeholder="programsAdmin.f.fundingHint">
+              </div>
+              <div class="field" data-arabic hidden>
+                <label class="label" for="f-funding-investment-ar" data-i18n="programsAdmin.f.fundingAr"></label>
+                <input class="input" id="f-funding-investment-ar" name="funding_investment_ar" type="text" dir="rtl" lang="ar">
+              </div>
+            </div>
+          </section>
+
+          <section class="form-section">
+            <h4 class="form-section-title" data-i18n="form.links"></h4>
             <div class="field">
-              <label class="label is-required" for="f-target-stage-ar" data-i18n="programs.stage"></label>
-              <input class="input" id="f-target-stage-ar" name="target_stage_ar" type="text" dir="rtl" lang="ar">
+              <label class="label is-required" for="f-website" data-i18n="programsAdmin.f.website"></label>
+              <input class="input" id="f-website" name="website" type="url" dir="ltr" placeholder="https://">
             </div>
-            <div class="field">
-              <label class="label" for="f-program-duration-ar" data-i18n="programs.duration"></label>
-              <input class="input" id="f-program-duration-ar" name="program_duration_ar" type="text" dir="rtl" lang="ar">
-            </div>
-            <div class="field">
-              <label class="label is-required" for="f-services-support-ar" data-i18n="programs.services"></label>
-              <textarea class="input manage-textarea" id="f-services-support-ar" name="services_support_ar" rows="3" dir="rtl" lang="ar"></textarea>
-            </div>
-            <div class="field">
-              <label class="label" for="f-funding-investment-ar" data-i18n="programs.funding"></label>
-              <input class="input" id="f-funding-investment-ar" name="funding_investment_ar" type="text" dir="rtl" lang="ar">
-            </div>
-            <div class="field">
-              <label class="label is-required" for="f-eligibility-ar" data-i18n="programs.eligibility"></label>
-              <textarea class="input manage-textarea" id="f-eligibility-ar" name="eligibility_ar" rows="3" dir="rtl" lang="ar"></textarea>
-            </div>
-          </fieldset>
+          </section>
         </form>
       </div>
 

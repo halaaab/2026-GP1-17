@@ -3,7 +3,7 @@
 
 import { t } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
-import { showToast } from '../../../shared/ui.js';
+import { showToast, showFormSummary } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
@@ -152,7 +152,31 @@ function showFieldError(column, key) {
 
 function clearErrors() {
   ['startup_name', 'sector', ...URL_COLUMNS].forEach((column) => showFieldError(column, ''));
+  document.querySelector('#form-summary').hidden = true;
 }
+
+// "2 fields need attention" above the form (shared.css .form-summary)
+const formProblems = (n) => (n === 1 ? t('form.oneProblem') : t('form.problems').replace('{n}', n));
+
+// The logo row's square: the picture at the address typed, or the startup's initials
+function showLogoPreview() {
+  const preview = document.querySelector('#logo-preview');
+  const address = input('logo').value.trim();
+  const name = input('startup_name').value.trim();
+  preview.textContent = '';
+  if (/^https?:\/\/\S+$/.test(address)) {
+    const picture = document.createElement('img');
+    picture.alt = '';
+    picture.src = address;
+    picture.onerror = () => { preview.textContent = initialsOf(name); };
+    preview.append(picture);
+  } else {
+    preview.textContent = initialsOf(name);
+  }
+}
+const initialsOf = (name) => (name || '?').split(/\s+/).slice(0, 2).map((word) => word[0]).join('').toUpperCase();
+input('logo').addEventListener('input', showLogoPreview);
+input('startup_name').addEventListener('input', showLogoPreview);
 
 // The boxes ticked in one group, as the database writes them: "Seed; Series A"
 function tickedText(column) {
@@ -189,6 +213,7 @@ function openForm(id) {
   });
   clearErrors();
   showFormWords();
+  showLogoPreview();
 
   panel.querySelector('.panel-body').scrollTop = 0;
   panel.classList.add('is-open');
@@ -240,7 +265,7 @@ form.addEventListener('submit', async (event) => {
     if (!isWebAddress(values[column])) problems.push([column, 'regAdmin.urlError']);
   });
   problems.forEach(([column, key]) => showFieldError(column, key));
-  if (problems.length) return;
+  if (showFormSummary(form, formProblems)) return;
 
   // the sectors and tags are saved in their own tables after the startup (saveStartupLists)
   const { sector: sectorText, tags: tagsText, ...columns } = values;

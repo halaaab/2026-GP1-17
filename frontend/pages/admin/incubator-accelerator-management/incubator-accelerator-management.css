@@ -91,115 +91,28 @@
 }
 
 /* ---------- Side panel ---------- */
+/* The panel, its sections, chips, logo row and errors are the shared ones (shared.css, .edit-panel).
+   Only the upload buttons and dragging a picture onto the logo row are this page's. */
 
-/* the form needs more room than the default panel */
-.manage-panel {
-  width: min(520px, calc(100vw - 32px));
-}
-.manage-panel .modal-title {
-  margin: 0;
-}
-.manage-panel-sub {
-  margin: 4px 0 0;
-  font-size: 12.5px;
-}
-
-/* ---------- Logo picker ---------- */
-
-.logo-picker {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 14px;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--r-md);
-  background: var(--bg-subtle);
-  transition: border-color var(--dur-fast), background var(--dur-fast);
-}
-.logo-picker.is-error {
-  border-color: var(--risk);
-  background: var(--risk-tint);
-}
-.logo-picker.is-dragging {
+#logo-picker.is-dragging {
   border-color: var(--teal);
   background: var(--teal-tint);
 }
-
-.logo-preview {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 76px;
-  height: 76px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  background: var(--bg);
-  box-shadow: var(--shadow-card);
-}
-.logo-preview img {
-  width: 100%;
-  height: 100%;
-  padding: 8px;
-  object-fit: contain;
-}
-.logo-preview .program-logo {
+.logo-field-preview .program-logo {
   width: 100%;
   height: 100%;
   border: none;
   border-radius: 0;
-  font-size: 22px;
-}
-
-.logo-picker-text {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-.logo-picker-text p {
-  margin: 0;
+  font-size: 16px;
 }
 .logo-picker-buttons {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
 }
-
 /* the real file box stays hidden; the "Upload logo" button opens it */
 .logo-input {
   display: none;
-}
-
-/* ---------- Arabic version ---------- */
-
-.manage-arabic {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  margin: 8px 0 0;
-  padding: 16px;
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--bg-subtle);
-  min-width: 0;
-}
-.manage-arabic-title {
-  padding: 0 6px;
-  font-size: 14px;
-  font-weight: 800;
-}
-.manage-arabic .field-hint {
-  margin: 0;
-}
-
-.manage-textarea {
-  height: auto;
-  min-height: 84px;
-  padding-block: 10px;
-  line-height: 1.55;
-  resize: vertical;
 }
 
 /* the red trash at the top of the delete dialog (the same as the other admin pages) */
@@ -217,21 +130,4 @@
   .manage-table {
     min-width: 0;
   }
-}
-
-/* ---------- Sector checkboxes in the form ---------- */
-
-.manage-choices {
-  margin: 0;
-  padding: 0;
-  border: none;
-}
-.manage-choices legend {
-  margin-bottom: 8px;
-  padding: 0;
-}
-.manage-choice-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 18px;
 }

@@ -4,7 +4,7 @@
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
-import { showToast } from '../../../shared/ui.js';
+import { showToast, showFormSummary } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import {
@@ -159,6 +159,7 @@ function showFieldError(column, key) {
 
 function clearErrors() {
   ['name_en', 'isic', 'divisions', 'official_source_url', 'service_url'].forEach((column) => showFieldError(column, ''));
+  document.querySelector('#form-summary').hidden = true;
 }
 
 // The two dropdowns and the ISIC4 boxes, in the page's language
@@ -200,6 +201,7 @@ function logoChoices() {
 input('authority').addEventListener('change', () => {
   const same = requirements.find((row) => row.authority === input('authority').value.trim() && row.authority_logo);
   if (same && !input('authority_logo').value) input('authority_logo').value = same.authority_logo;
+  showLogoPreview();
 });
 
 // Opens the panel to edit a requirement, or to add a new one when id is null
@@ -213,16 +215,33 @@ function openForm(id) {
   input('divisions').value = divisionsOf(row).filter((code) => code !== 'ALL').join(', ');
   clearErrors();
   showFormWords();
+  showLogoPreview();
 
   panel.querySelector('.panel-body').scrollTop = 0;
   panel.classList.add('is-open');
   input('name_en').focus();
 }
 
-// The panel title depends on add or edit
+// The panel title, the line under it and the save button depend on add or edit (as on the other admin panels)
 function showFormWords() {
-  document.querySelector('#panel-title').textContent = t(editingId ? 'regAdmin.editTitle' : 'regAdmin.addTitle');
+  const row = editingId ? findRequirement(editingId) : null;
+  document.querySelector('#panel-title').textContent = t(row ? 'regAdmin.editTitle' : 'regAdmin.addTitle');
+  document.querySelector('#panel-sub').textContent = row
+    ? t('startupAdmin.lastUpdated').replace('{date}', dateText(row.updated_at || row.created_at))
+    : t('regAdmin.addSub');
+  saveButton.textContent = t(row ? 'founders.save' : 'regAdmin.add');
 }
+
+// The logo row's square: the chosen authority logo, or the authority's initials
+function showLogoPreview() {
+  const preview = document.querySelector('#logo-preview');
+  const path = input('authority_logo').value;
+  preview.innerHTML = path
+    ? `<img src="${logoUrl({ authority_logo: path })}" alt="">`
+    : initials(input('authority').value.trim() || '?');
+}
+input('authority_logo').addEventListener('change', showLogoPreview);
+input('authority').addEventListener('input', showLogoPreview);
 
 function isWebAddress(value) {
   return !value || /^https?:\/\/\S+$/.test(value);
@@ -256,7 +275,8 @@ form.addEventListener('submit', async (event) => {
   if (!isWebAddress(values.official_source_url)) problems.push(['official_source_url', 'regAdmin.urlError']);
   if (!isWebAddress(values.service_url)) problems.push(['service_url', 'regAdmin.urlError']);
   problems.forEach(([column, key]) => showFieldError(column, key));
-  if (problems.length) return;
+  // "N fields need attention" above the form, then the first one, as on the other admin panels
+  if (showFormSummary(form, (n) => (n === 1 ? t('form.oneProblem') : t('form.problems').replace('{n}', n)))) return;
 
   const id = editingId || nextId(sections);
 

@@ -1169,6 +1169,181 @@ html[dir="rtl"] .panel.is-open {
   border-top: 1px solid var(--divider);
 }
 
+/* The admin add / edit panel: the same design on the Startups, Incubators & Accelerators and Regulatory
+   requirements pages (one width, header with a subtitle, sections, chips, logo row, errors, equal buttons).
+   <aside class="panel edit-panel">
+     <div class="panel-head"><div><h3 class="modal-title">Add startup</h3><p class="panel-sub">…</p></div> (x)</div>
+     <form class="panel-body form">
+       <p class="form-summary" hidden></p>
+       <section class="form-section"><h4 class="form-section-title">Basics</h4> …fields… </section>
+     </form>
+     <div class="panel-foot"> Cancel · Save </div>
+   </aside> */
+.panel.edit-panel {
+  width: min(480px, calc(100vw - 32px));
+}
+.edit-panel .modal-title {
+  margin: 0;
+}
+.panel-sub {
+  margin: 4px 0 0;
+  font-size: 12.5px;
+  color: var(--text-3);
+}
+.panel-sub .link:not([hidden])::before {
+  content: "·";
+  margin-inline: 6px;
+  color: var(--text-3);
+}
+/* a group of chips: no browser frame around it */
+.edit-panel fieldset.field {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+.edit-panel fieldset.field legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+.edit-panel .panel-foot .btn {
+  flex: 1;
+}
+
+/* the form's parts, each under a small title */
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+}
+.form-summary + .form-section,
+.form-section:first-child {
+  padding-top: 0;
+  border-top: none;
+}
+.form-section-title {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--teal-text);
+}
+
+/* "2 fields need attention", shown on Save above the form */
+.form-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--r-sm);
+  background: var(--risk-tint);
+  color: var(--risk-text);
+  font-size: 13px;
+  font-weight: 700;
+}
+.form-summary[hidden] {
+  display: none;
+}
+.form-summary svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+}
+
+/* The logo row: its picture (or initials) and its control */
+.logo-field {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--bg-subtle);
+}
+.logo-field.is-error {
+  border-color: var(--risk);
+  background: var(--risk-tint);
+}
+.logo-field-preview {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 800;
+}
+.logo-field-preview img {
+  width: 100%;
+  height: 100%;
+  padding: 6px;
+  object-fit: contain;
+}
+.logo-field-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.logo-field-body .input {
+  height: 38px;
+}
+
+/* Choosing several (sectors, stages, regions): chips that are ticked check boxes, on every page.
+   <div class="chip-choices"><label class="check"><input type="checkbox"> Retail</label> …</div> */
+.chip-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+}
+.chip-choices .check {
+  position: relative;
+  gap: 0;
+  padding: 6px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  color: var(--text-nav);
+  font-size: 12.5px;
+  font-weight: 700;
+  transition: background var(--dur-fast), border-color var(--dur-fast), color var(--dur-fast);
+}
+.chip-choices .check:hover {
+  border-color: var(--teal);
+}
+.chip-choices .check input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+.chip-choices .check:has(input:checked) {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+.chip-choices .check:has(input:focus-visible) {
+  box-shadow: 0 0 0 4px var(--teal-tint);
+}
+/* a group with an error shown under it gets the red frame, as a field does */
+.chip-choices:has(~ .field-error:not([hidden])),
+.chip-choices.is-error {
+  border-color: var(--risk);
+}
+
 /* ==========================================================
    11. App layout (founder and admin pages)
    layout.js builds all of this. A page only needs:

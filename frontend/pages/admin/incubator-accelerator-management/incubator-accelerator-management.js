@@ -7,7 +7,7 @@
 
 import { t, getLanguage } from '../../../shared/language.js';
 import { icon } from '../../../shared/layout.js';
-import { showToast } from '../../../shared/ui.js';
+import { showToast, showFormSummary } from '../../../shared/ui.js';
 import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
@@ -525,6 +525,7 @@ function showError(input, key) {
 }
 
 function clearErrors() {
+  document.querySelector('#form-summary').hidden = true;
   [...FIELDS, ...ARABIC].forEach((field) => showError(form.elements[field], ''));
   logoError.hidden = true;
   document.querySelector('#logo-picker').classList.remove('is-error');
@@ -577,11 +578,9 @@ form.addEventListener('input', (event) => {
 saveButton.addEventListener('click', async () => {
   const values = formValues();
 
-  const toFix = checkForm(values);
-  if (toFix) {
-    toFix.focus();
-    toFix.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    showToast(t('programsAdmin.fillRequired'), 'risk');
+  // "N fields need attention" above the form, then the first one, as on the other admin panels
+  if (checkForm(values)) {
+    showFormSummary(form, (n) => (n === 1 ? t('form.oneProblem') : t('form.problems').replace('{n}', n)));
     return;
   }
 
@@ -728,7 +727,8 @@ arabicWords = await fetch(new URL('../../../translations/ar.json', import.meta.u
 
 // After migration 0012 every row has the Arabic columns: show the Arabic part of the form
 hasArabic = programs.some((program) => 'name_ar' in program);
-document.querySelector('#arabic-section').hidden = !hasArabic;
+// the Arabic fields sit next to their English twins; they show only when the table has the Arabic columns
+document.querySelectorAll('[data-arabic]').forEach((field) => { field.hidden = !hasArabic; });
 
 fillDropdowns();
 showRows();
