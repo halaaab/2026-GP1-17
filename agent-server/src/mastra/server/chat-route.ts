@@ -15,6 +15,7 @@ import { registerApiRoute } from '@mastra/core/server';
 import type { RequestContext } from '@mastra/core/request-context';
 import { greetingIn, greetingReply } from '../lib/greeting';
 import { listenToProgress } from '../lib/progress';
+import { REPLY_RULES_KEY, type ReplyRules } from '../lib/reply-guard';
 
 export const KEEP_ALIVE_MS = 5_000;
 
@@ -81,8 +82,24 @@ export const chatRoute = registerApiRoute('/chat', {
           let pending = '';
           let afterTool = false;
           const sendText = (t: string) => send(line({ type: 'text-delta', payload: { text: t } }));
+          // When code writes the whole reply (an analysis's result, or its one question), it is known as soon as the
+          // Competitor Agent returns: the founder gets it and the end at once, instead of after the model's last step
+          // and its memory update (13 s later on one measured analysis). The run goes on to the end, so the agent's
+          // memory still saves the same reply (lib/reply-guard.ts writes it there).
+          const finishEarly = () => {
+            const rules = requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined;
+            if (!rules?.codeWritesReply || !rules.sentences.length) return;
+            sendText(rules.sentences.join('\n'));
+            send(line('[DONE]'));
+            clearInterval(keepAlive);
+            stopListening();
+            if (open) controller.close();
+            open = false;
+          };
           for await (const chunk of output.fullStream as AsyncIterable<{ type: string; payload?: { text?: string; error?: unknown; toolName?: string } }>) {
-            if (chunk.type === 'text-delta' && chunk.payload?.text) {
+            if (chunk.type === 'tool-result' && chunk.payload?.toolName === 'agent-competitorAgent') {
+              finishEarly();
+            } else if (chunk.type === 'text-delta' && chunk.payload?.text) {
               if (afterTool) sendText(chunk.payload.text);
               else pending += chunk.payload.text;
             } else if (chunk.type === 'tool-call' && chunk.payload?.toolName && chunk.payload.toolName !== 'updateWorkingMemory') {

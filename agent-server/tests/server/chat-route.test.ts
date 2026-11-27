@@ -54,6 +54,39 @@ describe('POST /chat', () => {
     expect(values.get('assessmentId')).toBe('assessment-1');
   });
 
+  // Measured: the result was saved at 56 s, and the reply ended at 69 s, after the model's last step and memory update.
+  it('ends the reply as soon as code has written it, while the run finishes in the background', async () => {
+    const values = new Map<string, unknown>([['userId', 'founder-1']]);
+    let ranToTheEnd = false;
+    const chunks: Chunk[] = [
+      { type: 'tool-call', payload: { toolName: 'agent-competitorAgent' } },
+      { type: 'tool-result', payload: { toolName: 'agent-competitorAgent' } },
+      { type: 'text-delta', payload: { text: 'Your analysis is ready! I identified 3 relevant competitors.' } },
+      { type: 'tool-call', payload: { toolName: 'updateWorkingMemory' } },
+    ];
+    const agent = {
+      stream: async () => ({
+        fullStream: (async function* () {
+          for (const chunk of chunks) {
+            // the delegation's end fills the reply rules, as lib/competitor-delegation.ts does
+            if (chunk.type === 'tool-result') values.set('darbReplyRules', { sentences: ['Your analysis is ready! I identified 3 relevant competitors.'], language: 'en', codeWritesReply: true });
+            yield chunk;
+          }
+          ranToTheEnd = true;
+        })(),
+      }),
+    };
+    const context = {
+      get: (k: string) => (k === 'requestContext' ? { get: (key: string) => values.get(key), set: (key: string, v: unknown) => values.set(key, v) } : k === 'mastra' ? { getAgent: () => agent } : undefined),
+      req: { json: async () => body },
+      json: (data: unknown, status: number) => new Response(JSON.stringify(data), { status }),
+    };
+    const raw = await (await run(context)).text();
+    expect(raw).toBe('data: {"type":"text-delta","payload":{"text":"Your analysis is ready! I identified 3 relevant competitors."}}\n\ndata: [DONE]\n\n');
+    await new Promise((r) => setTimeout(r, 10));
+    expect(ranToTheEnd).toBe(true);
+  });
+
   it('passes an agent error on to the website, then ends', async () => {
     const { context } = fakeContext('founder-1', body, [{ type: 'error', payload: { error: 'model down' } }]);
     const raw = await (await run(context)).text();
