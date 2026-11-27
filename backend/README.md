@@ -1,6 +1,6 @@
 # Backend
 
-This folder holds the Supabase project files.
+This folder holds the files of Server 2, Supabase: authentication and the PostgreSQL database (with pgvector for the startup embeddings), protected by Row Level Security.
 
 | Folder | Contents |
 |---|---|
