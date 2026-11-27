@@ -451,6 +451,7 @@ function buildPublicLayout() {
 
       <div class="public-footer-bottom">
         <span data-i18n="footer.copyright"></span>
+        <a href="${ROOT}pages/privacy/privacy.html" data-i18n="footer.privacy"></a>
       </div>
     </div>`;
 
