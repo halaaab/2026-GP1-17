@@ -16,7 +16,10 @@ describe('explain_difference', () => {
     expect(answerShape('Foodics', 'en', true)).not.toMatch(/no clear difference/);
   });
 
-  it('never lets the model add ideas of its own', () => {
-    expect(answerShape('Foodics', 'en')).toMatch(/Use only these facts\. Never add features, prices, partnerships, examples or any idea of your own/);
+  it('gives one concrete idea to test as the next step, and nothing else of its own', () => {
+    const shape = answerShape('Foodics', 'en');
+    expect(shape).toMatch(/ONE concrete new idea/);
+    expect(shape).toMatch(/One idea only, never a list/);
+    expect(shape).toMatch(/The idea in line 3 is the only suggestion of your own/);
   });
 });

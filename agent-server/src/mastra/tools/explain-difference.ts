@@ -27,11 +27,11 @@ export function answerShape(name: string, language: Language, differenceFound = 
     `Write the answer in ${language === 'ar' ? 'Arabic' : 'English'}, to the founder ("you", "your idea"), in exactly these four lines and nothing else:`,
     `1. One sentence on what ${name} already shares with the founder's idea, from shares (what it is, the problem and the customers).`,
     differenceFound
-      ? `2. "**${label.standOut}**" then one or two sentences from stand_out only: what ${name} does that the idea does not, or how the idea's focus is narrower, and why that focus can be the founder's difference.`
-      : `2. "**${label.standOut}**" then one sentence saying plainly that Darb's analysis found no clear difference yet: ${name} already offers the same core service. Do not suggest what the difference could be.`,
-    `3. "**${label.nextStep}**" then next_step, made specific to this idea's customers.`,
+      ? `2. "**${label.standOut}**" then one or two sentences from stand_out and your_idea only: what ${name} does beyond the idea, and the idea's own focus (its customers and offering from your_idea), and why that sharper focus can be the founder's difference.`
+      : `2. "**${label.standOut}**" then one sentence saying plainly that Darb's analysis found no clear difference yet: ${name} already offers the same core service, so the founder's difference has to come from their focus (your_idea). Do not suggest what the difference could be.`,
+    `3. "**${label.nextStep}**" then ONE concrete new idea for a feature or service the founder could test to stand out from ${name}: built for the customers in your_idea and aimed at the gap in stand_out (what ${name} does not focus on). Say it as an idea to test with those customers (next_step), in one or two sentences. One idea only, never a list, and never a claim that it will succeed or that ${name} lacks it.`,
     `4. One sentence inviting the founder to describe a feature they have in mind, so Darb can check it against ${name} and the other competitors.`,
-    'Use only these facts. Never add features, prices, partnerships, examples or any idea of your own. No emoji, no closing offer.',
+    'Lines 1 and 2 use only these facts. The idea in line 3 is the only suggestion of your own: no other features, prices, partnerships or examples anywhere. No emoji, no closing offer.',
   ].join('\n');
 }
 
@@ -45,6 +45,7 @@ export const explainDifferenceTool = createTool({
     competitor: z.string().optional(),
     facts: z
       .object({
+        your_idea: z.array(z.string()),
         shares: z.array(z.string()),
         stand_out: z.array(z.string()),
         next_step: z.string(),
@@ -69,9 +70,12 @@ export const explainDifferenceTool = createTool({
       const later = await laterIdeas(assessment.assessment_id).catch(() => []);
       const all = [assessment, ...later].reverse();
       const competitors: StoredResult['competitors'] = [];
+      const ideaOf = new Map<StoredResult['competitors'][number], string>(); // each competitor's idea (idea_id)
       for (const one of all) {
         const stored = await loadStoredResult(one.assessment_id);
-        if (stored.analysed_at) competitors.push(...stored.competitors);
+        if (!stored.analysed_at) continue;
+        competitors.push(...stored.competitors);
+        for (const c of stored.competitors) ideaOf.set(c, one.idea_id);
       }
       if (!competitors.length) return { status: 'not_analysed' as const };
 
@@ -94,8 +98,18 @@ export const explainDifferenceTool = createTool({
       const shown = language === 'ar' && arabicName ? { ...match, name: arabicName } : match;
       // The facts, all from the saved analysis: what it is and what it shares, and where the idea differs.
       const notes = shown.comparison ?? null;
-      const kind = shown.opportunity ?? 'no_clear_difference';
+      // A difference sentence the judge wrote is a difference, even when every part was answered "same" (the
+      // opportunity was then "no clear difference", and the founder was told so beside "it also delivers groceries").
+      const hasDifference = Boolean(shown.difference?.trim());
+      const kind = hasDifference && (shown.opportunity ?? 'no_clear_difference') === 'no_clear_difference' ? 'possible_difference' : (shown.opportunity ?? 'no_clear_difference');
       const opportunity = OPPORTUNITY_TEXT[kind];
+      // The founder's own idea as Darb understood it (startup_ideas.idea_summary, in their language): its focus.
+      const { data: ideaRow } = await getSupabase().from('startup_ideas').select('idea_summary').eq('idea_id', ideaOf.get(match) ?? '').maybeSingle();
+      const summary = (ideaRow?.idea_summary ?? null) as Record<string, unknown> | null;
+      const ideaParts = ((summary?.[language] as Record<string, string | null> | undefined) ?? summary ?? {}) as Record<string, string | null>;
+      const yourIdea = (['customer', 'offering', 'market'] as const)
+        .filter((part) => typeof ideaParts[part] === 'string' && ideaParts[part])
+        .map((part) => `${part}: ${ideaParts[part]}`);
       const shares = [shown.description, shown.reason, notes?.problem?.answer === 'same' ? notes.problem.note : null, notes?.offering?.answer === 'same' ? notes.offering.note : null]
         .filter((t): t is string => Boolean(t && t.trim()));
       const standOut = [
@@ -103,14 +117,14 @@ export const explainDifferenceTool = createTool({
         notes?.customer && notes.customer.answer !== 'same' ? notes.customer.note : null,
         notes?.offering && notes.offering.answer !== 'same' ? notes.offering.note : null,
         notes?.problem && notes.problem.answer !== 'same' ? notes.problem.note : null,
-        opportunity.text?.[language] ?? null,
+        hasDifference ? null : (opportunity.text?.[language] ?? null),
       ].filter((t): t is string => Boolean(t && t.trim()));
       if (rules) rules.language = language;
       return {
         status: 'ok' as const,
         competitor: shown.name,
-        facts: { shares, stand_out: [...new Set(standOut)], next_step: opportunity.next[language] },
-        how_to_answer: answerShape(shown.name, language, kind !== 'no_clear_difference' && kind !== 'not_enough_evidence'),
+        facts: { your_idea: yourIdea, shares, stand_out: [...new Set(standOut)], next_step: opportunity.next[language] },
+        how_to_answer: answerShape(shown.name, language, hasDifference || (kind !== 'no_clear_difference' && kind !== 'not_enough_evidence')),
       };
     } catch (error) {
       console.error('explain_difference failed:', error);
