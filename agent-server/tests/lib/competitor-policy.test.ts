@@ -140,7 +140,7 @@ describe('the policy rules on one judge answer', () => {
   });
 
   it('is Indirect unless the problem and the stated customer are the same', () => {
-    expect(judged('a', { customer: ans('partly') }).policy.label).toBe('indirect');
+    expect(judged('a', { customer: ans('different') }).policy.label).toBe('indirect');
     expect(judged('a', { problem: ans('partly') }).policy.label).toBe('indirect');
     expect(judged('a', { offering: ans('conflicting') }).policy.label).toBe('indirect');
     // an inferred or unknown customer can never produce Direct
@@ -156,8 +156,9 @@ describe('the policy rules on one judge answer', () => {
     expect(judged('a', { offering: ans('unknown') }).policy.label).toBe('direct');
     // a substitute that solves the problem another way is Indirect
     expect(judged('a', { offering: ans('different') }).policy).toMatchObject({ label: 'indirect', changed_by: 'label_from_answers' });
-    // a clearly different customer is Indirect
+    // a clearly different customer is Indirect; an overlapping (broader) customer group is still Direct
     expect(judged('a', { customer: ans('different') }).policy.label).toBe('indirect');
+    expect(judged('a', { customer: ans('partly') }).policy.label).toBe('direct');
   });
 });
 

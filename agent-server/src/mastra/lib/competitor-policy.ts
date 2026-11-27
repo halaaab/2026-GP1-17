@@ -132,11 +132,15 @@ export function applyPolicy(judge: JudgeOutput, candidate: Candidate, profile: I
   if (problem.answer !== 'same' && problem.answer !== 'partly') return outcome('not_competitor', 'problem_not_shared');
 
   // The label follows the report's definition (2.2.8) from the three answers, not the judge's own label:
-  // direct = the same problem for the same customer (a customer the founder stated), even if the offering looks
-  // different; indirect = a different customer, or a substitute (offering "different"). Any conflict blocks direct.
+  // direct = the same problem for the founder's customer (a customer the founder stated), even if the offering looks
+  // different; indirect = a clearly different customer, or a substitute (offering "different"). Any conflict blocks
+  // direct. A customer group that overlaps ("partly") is the founder's customer too: a founder targeting busy families
+  // and Hungerstation serving everyone in Riyadh compete for the same people (the judge answers "partly" when the
+  // competitor's customers are broader, whatever its instructions say).
   const conflicting = Object.values(answers).includes('conflicting');
+  const sharesCustomer = customer.answer === 'same' || customer.answer === 'partly';
   const direct =
-    problem.answer === 'same' && customer.answer === 'same' && offering.answer !== 'different' && profile.customer.origin === 'stated' && !conflicting;
+    problem.answer === 'same' && sharesCustomer && offering.answer !== 'different' && profile.customer.origin === 'stated' && !conflicting;
   const label: FinalLabel = direct ? 'direct' : 'indirect';
   return outcome(label, label === judge.label ? undefined : 'label_from_answers');
 }
