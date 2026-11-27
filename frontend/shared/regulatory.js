@@ -272,7 +272,7 @@ export function siteName(url) {
   }
 }
 
-/* A date like "8 Sep 2026" / "8 سبتمبر 2026" */
+/* A date like "" / "8 سبتمبر 2026" */
 export function dateText(date) {
   return new Date(date).toLocaleDateString(getLanguage() === 'ar' ? 'ar-SA-u-ca-gregory-nu-latn' : 'en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',

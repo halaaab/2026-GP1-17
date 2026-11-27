@@ -31,7 +31,7 @@ describe('queries: written by the AI, checked by code', () => {
   it('uses the website’s own name when no part of the title matches it', () => {
     expect(nameFromTitle('Gyms In Riyadh', 'gymnation.com')).toBe('Gymnation');
     expect(nameFromTitle('Some page', 'core-life.com')).toBe('Core Life');
-    // The part before the ending, not the longest part (18 Nov 2026: "eshq.coffee" was shown as "Coffee").
+    // The part before the ending, not the longest part ("eshq.coffee" was shown as "Coffee").
     expect(nameFromTitle('متجر عشق القهوة المختصة', 'eshq.coffee')).toBe('Eshq');
     expect(siteName('eshq.coffee')).toBe('eshq');
     expect(siteName('ksa.puregymarabia.com')).toBe('puregymarabia');
@@ -65,7 +65,7 @@ describe('Task 5: searching the web', () => {
     expect(out.candidates.map((c) => c.domain)).toEqual(['gymy.sa']);
   });
 
-  it('a directory or classifieds site is never a company (Haraj, Bluepages: D6, 16 Nov 2026)', async () => {
+  it('a directory or classifieds site is never a company (Haraj, Bluepages: D6)', async () => {
     const out = await searchWeb({ profile_text: PROFILE }, {
       writeQueries: writer([[{ text: 'gym subscription Riyadh', language: 'en' }]]),
       search: async () => [

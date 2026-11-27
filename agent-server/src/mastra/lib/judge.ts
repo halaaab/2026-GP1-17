@@ -1,4 +1,4 @@
-// The judge (design §9): reads the idea profile and ONE candidate together, and answers whether they solve the same
+// The judge: reads the idea profile and ONE candidate together, and answers whether they solve the same
 // problem, for the same customer, with the same offering. One candidate per call, for accuracy and consistency.
 // It only proposes a label: the policy rules in lib/competitor-policy.ts decide what is shown, and code writes every number.
 import { API_TIMEOUT_MS } from '../config/limits';
@@ -99,7 +99,7 @@ export function judgeMessage(profile: IdeaProfile, candidate: Candidate, referen
 }
 
 // Judges one candidate. Throws when OpenAI fails or the answer does not match JudgeOutput;
-// the caller skips that candidate with the note judge_call_failed (design §12).
+// the caller skips that candidate with the note judge_call_failed.
 export async function judgeCandidate(
   profile: IdeaProfile,
   candidate: Candidate,

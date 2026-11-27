@@ -49,7 +49,7 @@ describe('buildIdeaProfile', () => {
     expect(sent.messages[1].content).toBe('تطبيق يربط المطاعم بالمزارع');
   });
 
-  it("a founder's idea gets the rule against inventing the offering; Darb's startup list does not (16 Nov 2026)", async () => {
+  it("a founder's idea gets the rule against inventing the offering; Darb's startup list does not", async () => {
     const fetchMock = fakeOpenAI(answer);
     await buildIdeaProfile('An AI app for restaurants', { founderIdea: true });
     await buildIdeaProfile('A Saudi startup that sells vegetables to restaurants.');

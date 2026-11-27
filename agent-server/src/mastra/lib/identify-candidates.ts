@@ -1,10 +1,9 @@
 // Task 7: turns raw search results into a clean list of companies (the shared Candidate format).
-// Logic approved by Hala on 13 Nov 2026; design: Darb_Competitor_Agent_Design §6 (Identification).
 //
 //   1. Clean every link: lowercase, no "www.", no tracking parts, so the same site is recognised.
 //   2. Clean every name for comparing: no legal words (company, LLC, شركة, مؤسسة ...), unified Arabic letters.
 //   3. What is not a company's own site becomes evidence, not a company: news, social media, government,
-//      directory and reference pages (encyclopedias, document sites, official tourism sites) (14 Nov 2026).
+// directory and reference pages (encyclopedias, document sites, official tourism sites).
 //      News titles are also returned as leads (e.g. "GetMuv raises $1.5 million"), so the agent can look for that
 //      company's own site. Only the Saudi App Store (/sa/) counts as an app store page. A company's own site is
 //      always kept, even when its page is a list (a list there is usually the company's own product, e.g. a gym
@@ -77,7 +76,7 @@ export function cleanLink(url: string): string | null {
 }
 
 // ---------------------------------------------------------------------------
-// Kinds of sites, from the source groups of the domain audit (design §5). Every site not listed is treated as
+// Kinds of sites, from the source groups of the domain audit. Every site not listed is treated as
 // a company's own site.
 // ---------------------------------------------------------------------------
 

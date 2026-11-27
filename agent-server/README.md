@@ -163,7 +163,7 @@ Mastra's own data (memory, threads, live traces) is in Supabase, in the `mastra`
 | Darb's personality (identity, Arabic and English style, behaviour, reference replies) | `src/mastra/config/darb-persona.ts` |
 | A tool's code | `src/mastra/tools/`, one file per tool |
 | Tavily search | `src/mastra/tools/web-search.ts` |
-| Approved websites | `src/mastra/config/approved-domains.ts` |
+| Excluded websites | `src/mastra/config/excluded-sources.ts` |
 | Which AI model each agent uses | `src/mastra/config/models.ts` |
 | Usage limits (judge calls, time, daily and monthly analyses) | `src/mastra/config/limits.ts` |
 | ISS weights, market-level cut-offs, ISS words | `src/mastra/config/scoring.ts` |

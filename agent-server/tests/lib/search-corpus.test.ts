@@ -100,7 +100,7 @@ describe('the candidates for the judge', () => {
   });
 });
 
-describe('same idea, same result (design §4, §12)', () => {
+describe('same idea, same result', () => {
   const IDEA = '22222222-2222-4222-8222-222222222222';
   const rows = [row('ST_073', '1pass', 0.8, 'gym subscription'), row('ST_002', 'Beta', 0.3, 'food')];
 

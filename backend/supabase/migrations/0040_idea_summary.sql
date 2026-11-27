@@ -1,5 +1,5 @@
 -- =========================================================
--- 0040 — The founder's idea in their own language, shown above the competitor comparison (Member 1, 18 Nov 2026)
+-- 0040 — The founder's idea in their own language, shown above the competitor comparison
 -- Run once in Supabase: SQL Editor → paste → Run, after 0039. (Safe to run again.)
 --
 -- The comparison says, for each competitor, whether it solves the same problem, for the same customer, with the

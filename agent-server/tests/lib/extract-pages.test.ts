@@ -135,7 +135,7 @@ describe('Task 6: reading companies’ own pages', () => {
   });
 });
 
-describe('the Contact page link (read by code only, 16 Nov 2026)', () => {
+describe('the Contact page link (read by code only)', () => {
   it('finds a Contact page in English or Arabic, on the same site only', () => {
     expect(findLink('https://foodics.com', '[Contact us](/contact) [Blog](/blog)', CONTACT_WORDS)).toBe('https://foodics.com/contact');
     expect(findLink('https://x.sa', '[تواصل معنا](https://x.sa/ar/support)', CONTACT_WORDS)).toBe('https://x.sa/ar/support');

@@ -1,4 +1,4 @@
-// What Darb is doing right now, for the founder's screen (Hala, 18 Nov 2026): "Understanding your idea…",
+// What Darb is doing right now, for the founder's screen: "Understanding your idea…",
 // "Checking the companies…". Each step of the Competitor Agent reports here when it really starts, and the website's
 // chat route (server/chat-route.ts) passes it on to that founder's open conversation. Nothing is saved.
 export const PROGRESS_STEPS = ['understanding', 'searching_list', 'checking_companies', 'searching_web', 'comparing', 'finishing'] as const;

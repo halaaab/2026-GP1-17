@@ -1,4 +1,4 @@
-// The conversation's name and the founder's idea in their own language (Hala, 18 Nov 2026).
+// The conversation's name and the founder's idea in their own language.
 //   - The name: "ابي اسوي بنك رقمي يقدم خدمات…" is how a founder types, not a name to come back to. Once Darb understands
 //     the idea, a short formal name is written, such as "بنك رقمي للتسوق الإلكتروني" (startup_ideas.idea_name).
 //   - The summary: the comparison says whether each competitor solves the same problem for the same customer with the

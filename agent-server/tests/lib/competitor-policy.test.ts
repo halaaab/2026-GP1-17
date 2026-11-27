@@ -19,7 +19,7 @@ import {
   type Judged,
 } from '../../src/mastra/lib/competitor-policy';
 
-describe('displayName (18 Nov 2026)', () => {
+describe('displayName', () => {
   it('shows the name in the founder\'s language when the company has one, else its main name', () => {
     expect(displayName({ name: 'Mrsool', name_aliases: ['مرسول'] }, 'ar')).toBe('مرسول');
     expect(displayName({ name: 'Mrsool', name_aliases: ['مرسول'] }, 'en')).toBe('Mrsool');
@@ -193,7 +193,7 @@ describe('competitive opportunities (four fixed rules)', () => {
 });
 
 describe('the policy gate and ranking', () => {
-  it('shows the strongest overlap first, then Confirmed before Likely (18 Nov 2026)', () => {
+  it('shows the strongest overlap first, then Confirmed before Likely', () => {
     const ranked = rankCompetitors(
       [
         judged('likely100', {}, {}, 'likely'),
@@ -287,7 +287,7 @@ describe('the Result', () => {
     expect(result.competitors[0]).toMatchObject({ label: 'direct', evidence_status: 'confirmed', description: 'a supplies restaurants with fresh produce.', opportunity: 'no_clear_difference' });
   });
 
-  it('keeps the proof sentence only when it is really on the competitor’s own page (18 Nov 2026)', () => {
+  it('keeps the proof sentence only when it is really on the competitor’s own page', () => {
     const shown = buildResult({ handoff, profile: profile(), judged: [judged('a')], runNotes: [], usage }).competitors[0];
     expect(shown.comparison.problem).toEqual({ answer: 'same', note: 'Same.', quote: QUOTE, source_url: 'https://www.a.sa/about' });
 
@@ -328,12 +328,12 @@ describe('the Result', () => {
   });
 });
 
-describe('the company name inside the card sentences (18 Nov 2026)', () => {
+describe('the company name inside the card sentences', () => {
   const lugmety = { name: 'Lugmety', name_aliases: ['لقمتي', 'Lugmety App'], domain: 'lugmety.com' };
   it('uses the card name in an Arabic card', () => {
     expect(withCardName('تتناول Lugmety مشكلة توصيل الطعام، و Lugmety App متاح في الرياض.', lugmety, 'لقمتي')).toBe('تتناول لقمتي مشكلة توصيل الطعام، و لقمتي متاح في الرياض.');
     expect(withCardName('يقدم lugmety وجبات', lugmety, 'لقمتي')).toBe('يقدم لقمتي وجبات');
-    // the card name already contains the other name: it is not doubled (live run, 18 Nov 2026)
+    // the card name already contains the other name: it is not doubled (live run)
     const d360 = { name: 'D360', name_aliases: ['بنك D360'], domain: 'd360.com' };
     expect(withCardName('يقدم بنك D360 خدمات، و D360 متوافق مع الشريعة.', d360, 'بنك D360')).toBe('يقدم بنك D360 خدمات، و بنك D360 متوافق مع الشريعة.');
   });

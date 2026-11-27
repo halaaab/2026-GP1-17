@@ -3,7 +3,7 @@
 // and finalize_result builds the Result from it in code. The model only ever sees short summaries, never this state.
 //
 //   Understand  sets profile, ideaEmbedding, and clarification when the idea is too vague to search
-//   Discover / Identify / Validate (Member 1) add candidates, count tavilyCalls, raise notes and log a "discover" step
+// Discover / Identify / Validate add candidates, count tavilyCalls, raise notes and log a "discover" step
 //   Judge       adds judged answers and counts judgeCalls
 import type { Candidate, IdeaProfile, JudgeOutput, NoteCode, RunLogStep } from '../schemas/competitor';
 import type { Clarification } from './understand';
@@ -16,7 +16,7 @@ export type RunState = {
   ideaEmbedding: number[] | null;
   // Set when the idea lacks the problem or the offering: finalize_result then asks this one question.
   clarification: Clarification | null;
-  // Set by the delegation hook when the founder has used their analyses: nothing is searched (design §12).
+  // Set by the delegation hook when the founder has used their analyses: nothing is searched.
   limitNote: NoteCode | null;
   candidates: Map<string, Candidate>; // by candidate_key
   judged: Map<string, JudgeOutput>; // by candidate_key

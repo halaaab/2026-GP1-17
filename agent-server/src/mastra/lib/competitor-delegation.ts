@@ -4,23 +4,23 @@
 //   onDelegationStart     before the Competitor Agent runs: checks the handoff the supervisor wrote against the
 //                         Handoff schema, and adds assessment_id and idea_id from the server, never from the model.
 //                         Code also sets the founder's language from their message, and drops known_facts the
-//                         founder never said (design §4: stated facts only).
-//   messageFilter         the Competitor Agent sees only the handoff, not the founder's chat (design §2).
+// founder never said (stated facts only).
+// messageFilter the Competitor Agent sees only the handoff, not the founder's chat.
 //   onDelegationComplete  after it runs: takes the Result from finalize_result, checks it with the Result schema
 //                         (or builds a valid fallback), and adds the notes as sentences in the founder's language.
 //                         The supervisor sees only this, never the Competitor Agent's own text. It also tells the
 //                         reply guard (lib/reply-guard.ts) what the founder must see, and writes one run log line.
 //
 // Also decided here, in code:
-//   limits         a founder who used their daily or monthly analyses gets the limit note; nothing is searched (§12)
+// limits a founder who used their daily or monthly analyses gets the limit note; nothing is searched
 //   clarification  the founder sees the Competitor Agent's question word for word, and when the supervisor forgets
-//                  to send their answer on the next call, the hook adds it from the question it remembers (§4)
+// to send their answer on the next call, the hook adds it from the question it remembers
 //   what-if        runs only after the founder answered Darb's confirmation question; it becomes a new assessment
 //                  linked to this one, and the founder gets an exact before → after comparison (lib/what-if.ts)
 //   no "new" twice a conversation's analysis is never replaced by a "new" one: a changed idea is a what-if and a
 //                  correction is a rerun.
 // There is no consent step: an idea, or a question about who already does it, is analysed right away. Whether the
-// founder's message is that is read by the Conversational Agent, never by a word list (Hala, 22 Nov 2026).
+// founder's message is that is read by the Conversational Agent, never by a word list.
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
 import { z } from 'zod';
 import { Handoff, Result, RunLog } from '../schemas/competitor';
@@ -37,7 +37,7 @@ import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
 export const COMPETITOR_AGENT_ID = 'competitor-agent';
 
-// Most steps the Competitor Agent may take in one run: one, the analyse_idea call (Hala, 16 Nov 2026). Only the
+// Most steps the Competitor Agent may take in one run: one, the analyse_idea call. Only the
 // tool's Result is used, so its closing "Done." line was dropped: it took 13 of the 38 s of a vague idea's answer.
 export const COMPETITOR_MAX_STEPS = 1;
 
@@ -98,7 +98,7 @@ export function withoutEmptyFields(value: unknown): unknown {
 }
 
 // Analogy words in front of a reference ("like Mrsool", "مثل طلبات") are removed, so the name matches the company
-// (K3 of the Sprint 2 evaluation, 23 Nov 2026: "like Mrsool" never matched "Mrsool", which was then shown).
+// ("like Mrsool" never matched "Mrsool", which was then shown).
 const ANALOGY_WORDS = /^\s*(?:(?:just\s+)?(?:like|similar\s+to|same\s+as|such\s+as|as|a\s+version\s+of|مثل|زي|زيّ|شبه|على\s+غرار|نفس)\s+|كـ\s*)/i;
 export function referenceName(text: string): string {
   return text.replace(ANALOGY_WORDS, '').replace(/^["'“”«»]+|["'“”«»]+$/g, '').trim();
@@ -117,7 +117,7 @@ export function analogiesIn(text: string): string[] {
 
 // The name lists of the supervisor's handoff, made safe before the check: a single name written as text becomes a list
 // (instead of rejecting the delegation and costing a retry), references lose their analogy words, and a company
-// the founder used as an analogy is never also checked as a named competitor (the analogy rule wins, design §6).
+// the founder used as an analogy is never also checked as a named competitor (the analogy rule wins).
 export function withNamesCleaned(value: unknown, founderText = ''): unknown {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return value;
   const v = { ...(value as Record<string, unknown>) };
@@ -127,7 +127,7 @@ export function withNamesCleaned(value: unknown, founderText = ''): unknown {
   // The founder's own words decide what is an analogy, not the model's lists or its rewrite of the idea: every name the
   // founder puts right after an analogy word ("like Mrsool but only for groceries", "مثل طلبات بس للصيدليات") is a
   // reference. In the K3 re-runs the model sometimes listed Mrsool only as a named competitor, or rewrote the idea
-  // without it, so Mrsool was shown (23 Nov 2026).
+  // without it, so Mrsool was shown.
   const analogies = analogiesIn(founderText);
   if (analogies.length) v.references = [...new Set([...(Array.isArray(v.references) ? v.references : []), ...analogies])];
   const refs = new Set((Array.isArray(v.references) ? v.references : []).filter((r): r is string => typeof r === 'string').map((r) => r.toLowerCase()));
@@ -189,7 +189,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   if (isWhatIf && !written.data.scenario_label) {
     return reject('A what-if needs scenario_label: a short name for the change in the founder\'s language, such as "Jeddah instead of Riyadh".');
   }
-  // Darb asked a question, and the founder answered it with a clear yes (persona eval, 18 Nov 2026: any earlier question
+  // Darb asked a question, and the founder answered it with a clear yes (any earlier question
   // from Darb, such as "anything else you'd like to explore?", let "what if I targeted teachers?" run at once).
   if (isWhatIf && (!askedBeforeLatestReply(ctx.messages as ModelMessageLike[]) || !isAffirmative(said.at(-1) ?? ''))) {
     return reject(
@@ -199,7 +199,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
 
   const mode = written.data.mode;
   // A conversation's original analysis is never replaced by a "new" one: a changed idea is a what-if (kept beside it),
-  // and a correction is a rerun (persona eval, 18 Nov 2026: a confirmed what-if was sent as "new").
+  // and a correction is a rerun (a confirmed what-if was sent as "new").
   if (mode === 'new' && (await analysedAt(assessment.assessment_id))) {
     return reject(
       'This conversation already has an analysis. For a changed version of the idea ("what if…"), delegate with mode "what_if" and scenario_label. For a correction of the idea, delegate with mode "rerun". For a question about the results, use get_competitor_result.',
@@ -295,7 +295,7 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
   const tools = ctx.result?.subAgentToolResults ?? [];
   const called = tools.find((r) => r.toolName === 'analyse_idea' || r.toolName === 'finalize_result');
   let checked = Result.safeParse(called && !called.isError ? called.result : undefined);
-  // The analysis always runs, in code, even when the agent did not call it (Hala, 16 Nov 2026). The agent has one
+  // The analysis always runs, in code, even when the agent did not call it. The agent has one
   // step and the delegation does not pass its "tool required" setting on, so it sometimes wrote a line instead of
   // calling analyse_idea; earlier it also called its memory tool instead of finalize_result. When nothing ran, the
   // whole analysis runs here; when it ran and failed, finalize_result builds the result from what was gathered.
@@ -331,12 +331,12 @@ export async function onCompetitorDelegationComplete(ctx: DelegationCompleteCont
   if (started.replyRules) {
     started.replyRules.language = started.handoff.language;
     if (question) {
-      // A question to ask: the founder sees exactly that one question, written by code (design §4).
+      // A question to ask: the founder sees exactly that one question, written by code.
       started.replyRules.sentences = [question];
       started.replyRules.codeWritesReply = true;
     } else if (result.competitors.length > 0 && !started.whatIf?.created) {
       // Cards are shown under the reply: code writes the whole reply, so the model never lists the competitors again
-      // (Hala, 16 Nov 2026). Only one sentence and the notes (Hala, 18 Nov 2026: the score, the market and the
+      // Only one sentence and the notes are shown (the score, the market and the
       // opportunities made the reply crowded; the cards and the analysis panel already show them).
       // A what-if has no cards, so the model still lists its competitors in text.
       const language = started.handoff.language;

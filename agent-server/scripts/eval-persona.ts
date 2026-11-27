@@ -150,7 +150,7 @@ const C: Conversation[] = [
     ],
   },
 
-  // ----- Asking who already does the idea, in words that never say "competitor" (Hala, 22 Nov 2026) -----
+  // ----- Asking who already does the idea, in words that never say "competitor" -----
   {
     id: 'K1-en',
     title: 'Idea and "is anyone already doing this?" in one message',
@@ -250,7 +250,7 @@ async function main() {
       const turns: TurnRecord[] = [];
 
       for (const turn of conversation.turns) {
-        // A technical error: the idea cannot be read, so the run ends with "analysis incomplete" (design §12).
+        // A technical error: the idea cannot be read, so the run ends with "analysis incomplete".
         understandIdeaTool.execute = turn.fail
           ? (async (_input: unknown, context: { requestContext?: { get: (k: string) => unknown; set: (k: string, v: unknown) => void } }) => {
               logStep(getRunState(context?.requestContext), { capability: 'understand', outcome: 'failed', duration_ms: 0, detail: 'profile_failed' });

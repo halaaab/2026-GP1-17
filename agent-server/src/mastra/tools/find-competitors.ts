@@ -1,6 +1,6 @@
-// Tool (Task 11): Member 1's whole part in one step: Darb's list, the web when needed, a clean list of companies,
+// Tool (Task 11): the whole part in one step: Darb's list, the web when needed, a clean list of companies,
 // and the four validity checks, within 15 Tavily calls (lib/find-competitors.ts).
-//   - In the Competitor Agent, it runs after understand_idea (Member 2) and uses its profile and the handoff the
+// - In the Competitor Agent, it runs after understand_idea and uses its profile and the handoff the
 //     delegation hook checked, never what the model passes. It puts the valid companies in the run state for
 //     judge_candidates and finalize_result (lib/competitor-run.ts), and the model sees only a short summary.
 //     Nothing is searched when understand_idea asked a clarification question, failed, or the founder is at their limit.
@@ -78,7 +78,7 @@ async function runInAgent(ctx: RequestContextLike, handoff: Handoff) {
       idea_text: handoff.idea_text,
       idea_id: handoff.idea_id,
       language: handoff.language,
-      idea_profile: state.profile, // understand_idea's profile: the idea is read once (design §4)
+      idea_profile: state.profile, // understand_idea's profile: the idea is read once
       founder_startup: handoff.founder_startup,
       references: handoff.references,
       onProgress: (step) => reportProgress(handoff.assessment_id, step),
@@ -96,9 +96,9 @@ async function runInAgent(ctx: RequestContextLike, handoff: Handoff) {
   };
 }
 
-// The version the Competitor Agent is given (Hala, 16 Nov 2026): it takes no input at all. With the Studio version's
+// The version the Competitor Agent is given: it takes no input at all. With the Studio version's
 // optional fields, the model sometimes passed its own idea profile, which failed the input check, so the tool ran
-// twice (4 of 16 runs in the Sprint 2 test). The work is the same.
+// twice (4 of 16 runs). The work is the same.
 export const findCompetitorsAgentTool = createTool({
   id: 'find_competitors',
   description:

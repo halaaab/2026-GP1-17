@@ -1,12 +1,12 @@
-// Child agent of the Conversational Agent (Mastra supervisor pattern, design §2).
+// Child agent of the Conversational Agent (Mastra supervisor pattern).
 // It never talks to the founder and only sees the handoff the supervisor sends (lib/competitor-delegation.ts).
 // Its only output that counts is finalize_result's, checked against the Result schema.
 //
 // The four capabilities, in order:
-//   understand_idea   (Member 2) the idea profile, and the one clarification question when the idea is too vague
-//   find_competitors  (Member 1, Task 11) Darb's list, the web when needed and the four validity checks, in code
-//   judge_candidates  (Member 2) whether each valid company competes with the idea
-//   finalize_result   (Member 2) the guardrails, the ranking and the saved result, in code
+// understand_idea the idea profile, and the one clarification question when the idea is too vague
+// find_competitors Darb's list, the web when needed and the four validity checks, in code
+// judge_candidates whether each valid company competes with the idea
+// finalize_result the guardrails, the ranking and the saved result, in code
 import { Agent } from '@mastra/core/agent';
 import { CHAT_MODEL } from '../config/models';
 import { COMPETITOR_AGENT_ID, COMPETITOR_MAX_STEPS } from '../lib/competitor-delegation';

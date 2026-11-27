@@ -1,6 +1,6 @@
 // Builds the Competitor Agent's Result in code. For now (the foundation), no capability is built yet,
 // so every run returns an empty result with the note "capability_pending". The guardrails that will later
-// check, rank and gate competitors (design §9, §10) belong here too.
+// check, rank and gate competitors belong here too.
 import { Result, type Handoff, type IdeaProfile, type NoteCode } from '../schemas/competitor';
 
 // The idea profile from what the founder stated, before the Understand capability exists.
@@ -41,7 +41,7 @@ export function pendingResult(handoff: Handoff, run: RunInfo): Result {
   return emptyResult(handoff, ['capability_pending'], 'complete', run);
 }
 
-// Used when a run did not return a valid Result: still a valid Result, never a crash (design §12).
+// Used when a run did not return a valid Result: still a valid Result, never a crash.
 export function fallbackResult(handoff: Handoff | null, run: RunInfo): Result {
   return emptyResult(handoff, ['analysis_incomplete'], 'partial', run);
 }

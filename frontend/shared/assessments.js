@@ -411,8 +411,8 @@ export function hasIdea(assessment) {
   return Boolean(assessment.analysedAt || assessment.score);
 }
 
-/* A conversation the founder wrote in: it is listed in History and the sidebar at once, like ChatGPT
-   (Hala, 18 Nov 2026). Its name is the founder's first words until Darb finds the idea (becomeIdea). */
+/* A conversation the founder wrote in: it is listed in History and the sidebar at once.
+   Its name is the founder's first words until Darb finds the idea (becomeIdea). */
 export function isListed(assessment) {
   return hasIdea(assessment) || assessment.messages > 0;
 }
@@ -449,7 +449,7 @@ export async function saveAssessment(assessment) {
   if (assessment.score && !assessment.completedAt) assessment.completedAt = now;
   if (assessment.roadmapShown && !assessment.roadmapAt) assessment.roadmapAt = now;
 
-  // The agent server names the idea formally once it understands it ("بنك رقمي للتسوق الإلكتروني", 18 Nov 2026).
+  // The agent server names the idea formally once it understands it ("بنك رقمي للتسوق الإلكتروني").
   // A name in the database that this page did not write is that formal name: it is kept, never overwritten.
   if (assessment.isSaved) {
     const { data: row } = await supabase.from('startup_ideas').select('idea_name').eq('idea_id', assessment.ideaId).maybeSingle();

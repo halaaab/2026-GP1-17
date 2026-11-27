@@ -16,7 +16,7 @@
      });
      // reply = the full text of Darb's answer
 
-   It uses the server's chat route: POST /chat (17 Nov 2026; before, Mastra's own
+   It uses the server's chat route: POST /chat (before, Mastra's own
    /api/agents/conversationalAgent/stream). The answer comes back as a stream of small
    "data: {...}" lines (server-sent events); the pieces of text are the lines whose
    type is "text-delta". Lines starting with ":" only keep the connection alive.

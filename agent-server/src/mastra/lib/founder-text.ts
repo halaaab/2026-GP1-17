@@ -2,7 +2,7 @@
 //   detectLanguage   is this text Arabic or English?
 //   conversationLanguage  the language Darb keeps: a message changes it only when it is clearly written in the other
 //                    language, so a city, a company name or "ok" never switches the reply
-//   keepStatedFacts  keeps only the known_facts the founder really said (design §4: stated facts only).
+// keepStatedFacts keeps only the known_facts the founder really said (stated facts only).
 //   isDecline, isAffirmative  a clear "no / not now", and a clear yes to Darb's what-if question
 import type { Handoff, Language } from '../schemas/competitor';
 
@@ -14,7 +14,7 @@ export function detectLanguage(text: string): Language | null {
   return arabic >= latin ? 'ar' : 'en';
 }
 
-// The language a message is clearly written in, or null when it is too short or only names (Hala, 18 Nov 2026):
+// The language a message is clearly written in, or null when it is too short or only names:
 //   Arabic   at least 2 Arabic words, so an Arabic message with English terms ("SaaS", "POS") stays Arabic
 //   English  at least 3 English words and at most one Arabic word
 //   null     anything shorter: "Jeddah", "ok", "STC", "نعم"
@@ -104,7 +104,7 @@ export function isDecline(text: string): boolean {
   return DECLINE_EN.test(t) || DECLINE_AR.test(t);
 }
 
-// A clear yes to Darb's what-if question: a short agreement or "start / go ahead" (persona eval, 18 Nov 2026).
+// A clear yes to Darb's what-if question: a short agreement or "start / go ahead".
 const YES_EN = /^(yes|yeah|yep|yup|sure|ok|okay|of course|definitely|absolutely|please|go ahead|go for it|let'?s|start|do it|sounds good|why not|alright|all right)\b|\b(go ahead|let'?s (do it|start|go|begin|get started)|start (it|the analysis)|run it|do it|yes please)\b/;
 const YES_AR = /^(اي|ايه|ايوه|ايوا|اكيد|نعم|اجل|تمام|طيب|يلا|ابدا|ابدء|موافق|ماشي|حلو|زين|اوكي|اوك|بالتاكيد|طبعا|ياليت|يا ليت|ليش لا|شغل|شغله|حلل|خلنا نبدا|نبدا)(\s|$|[،,.!؟?])|(ابدا|ابدء|يلا نبدا|خلنا نبدا|شغله|شغل التحليل|حلل المنافسين)/;
 

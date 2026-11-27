@@ -1,6 +1,6 @@
 // Tool (Task 2): finds the 15 startups in Darb's list closest to an idea, by meaning and by keywords
 // (lib/search-corpus.ts). With an idea_id, the idea's profile is saved the first time and reused after,
-// so the same idea always gives the same list (design §4, §12). Registered for Studio's Tools tab.
+// so the same idea always gives the same list. Registered for Studio's Tools tab.
 import { createTool } from '@mastra/core/tools';
 import { z } from 'zod';
 import { embedTexts, toPgVector } from '../lib/embeddings';

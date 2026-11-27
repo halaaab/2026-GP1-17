@@ -1,10 +1,10 @@
-// The Competitor Agent's results in Supabase (design §11, migration 0032), written and read only by code:
+// The Competitor Agent's results in Supabase (migration 0032), written and read only by code:
 //
 //   saveResult        replaces the assessment's competitors (similar_startup_results, with their links in
 //                     result_sources) and saves its ISS, basis, market level, notes and analysed_at.
-//                     Only Darb's own outputs are saved, never page text (design §5).
+// Only Darb's own outputs are saved, never page text.
 //   loadStoredResult  what was saved, for follow-up questions (PBI 36) and the result screen
-//   analysisLimit     the founder's daily and monthly analysis limits (design §12), counted from analysed_at
+// analysisLimit the founder's daily and monthly analysis limits, counted from analysed_at
 import { MAX_ANALYSES_PER_DAY, MAX_ANALYSES_PER_MONTH } from '../config/limits';
 import { OPPORTUNITY_KINDS, type NoteCode, type OpportunityKind, type Result, type ResultCompetitor } from '../schemas/competitor';
 import { getSupabase } from './supabase';
@@ -39,7 +39,7 @@ export function readOpportunity(stored: string | null | undefined, comparison: {
 }
 
 // One saved row per competitor shown. A web competitor has no startup_id, but always a name and a page.
-// Its evidence links go in the result_sources table (one row per link, Hala's migration 0033), not in this row.
+// Its evidence links go in the result_sources table (one row per link, migration 0033), not in this row.
 export function resultRows(assessmentId: string, competitors: readonly ResultCompetitor[]) {
   return competitors.map((c) => ({
     assessment_id: assessmentId,

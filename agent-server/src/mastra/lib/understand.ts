@@ -1,4 +1,4 @@
-// The Understand capability's rules (design §4 "Idea template", PBI 34), decided in code:
+// The Understand capability's rules ("Idea template", PBI 34), decided in code:
 //
 //   understandText   what is profiled: the founder's idea, plus their answer when this is a re-call after a question
 //   withStatedFacts  the facts the founder stated always win over what the profile model read
@@ -10,7 +10,7 @@ type MissingField = 'problem' | 'offering';
 export type Clarification = { question: string; missing_field: MissingField };
 
 // One question per case. When both are missing, one question asks for both (the product first, as PBI 34 says).
-// Written in Darb's voice (config/darb-persona.ts, Hala, 18 Nov 2026).
+// Written in Darb's voice (config/darb-persona.ts).
 export const CLARIFY_QUESTIONS: Record<MissingField | 'both', Record<Language, string>> = {
   problem: {
     en: 'Thanks for sharing! What problem does your idea solve, and who is it for?',

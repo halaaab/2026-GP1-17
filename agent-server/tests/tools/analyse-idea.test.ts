@@ -1,4 +1,4 @@
-// Tests for analyse_idea: the Competitor Agent's four steps in a fixed order, in code (16 Nov 2026).
+// Tests for analyse_idea: the Competitor Agent's four steps in a fixed order, in code.
 // The four tools are replaced by fakes that record when they run: nothing is searched or paid for.
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 

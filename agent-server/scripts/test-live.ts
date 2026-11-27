@@ -81,7 +81,7 @@ async function main() {
     // 4. Streamed, as the website receives it: a rewrite must never show the founder two replies.
     checkReply('Streamed', await stream(`live-test-stream-${Date.now()}`, 'Healthy lunch boxes delivered to offices in Dammam every day.'), 'en');
 
-    // 5. A vague idea: the Competitor Agent asks one question instead of searching (design §4, PBI 34).
+    // 5. A vague idea: the Competitor Agent asks one question instead of searching (PBI 34).
     const vague = await say(`live-test-vague-${Date.now()}`, 'I want to start a business in the food sector.');
     check('Vague idea: delegated to the Competitor Agent', vague.calls.some((c) => /competitor/i.test(c)), vague.calls.join(', '));
     // 6. A what-if after an idea: Darb restates it and asks first (it uses one of the founder's analyses).

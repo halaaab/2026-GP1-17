@@ -1,4 +1,4 @@
-// Tests for the real-browser page reader when the browser cannot start (18 Nov 2026).
+// Tests for the real-browser page reader when the browser cannot start.
 // On Render, Chromium was missing: opening it failed, and the timer that closes the browser after a minute
 // failed again with no handler, which stopped the whole server (502 for every founder until it restarted).
 // Here Playwright is a fake whose browser never starts: nothing is downloaded or opened.

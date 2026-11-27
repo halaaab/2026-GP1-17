@@ -1,11 +1,11 @@
-// The Competitor Agent's contracts, in one place (design: Darb_Competitor_Agent_Design, Version 4).
+// The Competitor Agent's contracts, in one place.
 // Every agent, tool and test imports these shapes, so a field is defined only once.
 //
-//   Handoff      Conversational Agent → Competitor Agent   (design §4)
-//   IdeaProfile  the idea broken into parts, built by the agent        (design §4, §16)
-//   Candidate    a possible competitor, from discovery/validation to the judge (design §6, §7, §8)
-//   JudgeOutput  the judge's answer for one candidate                  (design §9)
-//   Result       Competitor Agent → Conversational Agent               (design §10, §11)
+// Handoff Conversational Agent → Competitor Agent
+// IdeaProfile the idea broken into parts, built by the agent
+// Candidate a possible competitor, from discovery/validation to the judge
+// JudgeOutput the judge's answer for one candidate
+// Result Competitor Agent → Conversational Agent
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
@@ -37,11 +37,11 @@ export type Origin = z.infer<typeof Origin>;
 export const Answer = z.enum(['same', 'partly', 'different', 'unknown', 'conflicting']);
 export type Answer = z.infer<typeof Answer>;
 
-// The result of one validity check (design §7).
+// The result of one validity check.
 export const CheckOutcome = z.enum(['pass', 'fail', 'unknown']);
 export type CheckOutcome = z.infer<typeof CheckOutcome>;
 
-// Where a piece of evidence came from (source registry groups, design §5).
+// Where a piece of evidence came from (source registry groups).
 export const SourceType = z.enum(['official_site', 'app_store', 'ecosystem', 'news', 'government']);
 export type SourceType = z.infer<typeof SourceType>;
 
@@ -59,7 +59,7 @@ export const CandidateSource = z.enum(['corpus', 'web']);
 export type CandidateSource = z.infer<typeof CandidateSource>;
 
 // ---------------------------------------------------------------------------
-// a) Handoff: Conversational Agent → Competitor Agent (design §4)
+// a) Handoff: Conversational Agent → Competitor Agent
 // ---------------------------------------------------------------------------
 
 export const Handoff = z
@@ -90,7 +90,7 @@ export const Handoff = z
 export type Handoff = z.infer<typeof Handoff>;
 
 // ---------------------------------------------------------------------------
-// b) Idea profile (design §4 idea template, §16 embedded text)
+// b) Idea profile
 // ---------------------------------------------------------------------------
 
 // One core part of the idea. "unknown" has no value; every other origin has one.
@@ -126,10 +126,10 @@ export const IdeaProfile = z
 export type IdeaProfile = z.infer<typeof IdeaProfile>;
 
 // ---------------------------------------------------------------------------
-// c) Candidate: from discovery/validation to the judge (design §6, §7, §8)
+// c) Candidate: from discovery/validation to the judge
 // ---------------------------------------------------------------------------
 
-// confirmed / likely / unconfirmed (design §8). Only confirmed and likely are ever shown.
+// confirmed / likely / unconfirmed. Only confirmed and likely are ever shown.
 export const EvidenceStatus = z.enum(['confirmed', 'likely', 'unconfirmed']);
 export type EvidenceStatus = z.infer<typeof EvidenceStatus>;
 
@@ -155,9 +155,9 @@ export const Candidate = z
     name_aliases: z.array(z.string().min(1)),
     website: z.string().min(1).nullable(),
     domain: z.string().min(1).nullable(),
-    // Page text or corpus profile shown to the judge. Used live only, never stored (Tavily terms, design §5).
+    // Page text or corpus profile shown to the judge. Used live only, never stored (Tavily terms).
     evidence_text: z.string(),
-    // Shown on the competitor card (design §11, §15). A short description in Darb's own words (never copied page
+    // Shown on the competitor card. A short description in Darb's own words (never copied page
     // text, Tavily terms) and the city or region. A candidate with no description is never shown.
     description: z.string().min(1).nullable().optional(),
     city_region: z.string().min(1).nullable().optional(),
@@ -173,7 +173,7 @@ export const Candidate = z
 export type Candidate = z.infer<typeof Candidate>;
 
 // ---------------------------------------------------------------------------
-// d) Judge output: one candidate per call (design §9)
+// d) Judge output: one candidate per call
 // ---------------------------------------------------------------------------
 
 export const JudgeAnswer = z
@@ -181,7 +181,7 @@ export const JudgeAnswer = z
     answer: Answer,
     note: z.string(),
     source_url: z.url().optional(),
-    // The exact sentence from the evidence that supports the answer (explainer §4). Code checks it is really there.
+    // The exact sentence from the evidence that supports the answer. Code checks it is really there.
     quote: z.string().trim().min(1).optional(),
   })
   .strict();
@@ -199,16 +199,16 @@ export const JudgeOutput = z
     offering: JudgeAnswer,
     label: JudgeLabel, // only a proposal: code applies the policy rules
     reason: z.string().trim().min(1), // one founder-facing sentence
-    // One sentence on how the idea differs from this candidate, or "none" (competitive opportunities, explainer §6).
+    // One sentence on how the idea differs from this candidate, or "none" (competitive opportunities).
     difference: z.string().trim().min(1).optional(),
-    // The card's one-line description in the founder's language (18 Nov 2026: Arabic chats showed English cards).
+    // The card's one-line description in the founder's language (Arabic chats showed English cards).
     description: z.string().trim().min(1).optional(),
   })
   .strict();
 export type JudgeOutput = z.infer<typeof JudgeOutput>;
 
 // ---------------------------------------------------------------------------
-// e) Result: Competitor Agent → Conversational Agent (design §10, §11)
+// e) Result: Competitor Agent → Conversational Agent
 // ---------------------------------------------------------------------------
 
 export const ResultStatus = z.enum(['complete', 'partial', 'needs_clarification']);
@@ -217,27 +217,27 @@ export type ResultStatus = z.infer<typeof ResultStatus>;
 // Notes are codes, never sentences: the supervisor turns them into Arabic or English (lib/competitor-notes.ts).
 export const NOTE_CODES = [
   'capability_pending', // this part of the agent is not built yet
-  'none_found', // no confirmed competitors in our sources (design §10)
+  'none_found', // no confirmed competitors in our sources
   'fewer_than_three',
   'only_indirect',
   'customer_unknown', // ISS on problem and offering only (iss_basis = problem_offering_only)
-  'web_search_failed', // Tavily slow or down: partial results (design §12)
-  'judge_call_failed', // a failed judge call skipped a candidate (design §12)
-  'web_changed', // the web changed since the stored result (design §12)
-  'temporarily_unavailable', // OpenAI or Tavily spending limit reached (design §12)
+  'web_search_failed', // Tavily slow or down: partial results
+  'judge_call_failed', // a failed judge call skipped a candidate
+  'web_changed', // the web changed since the stored result
+  'temporarily_unavailable', // OpenAI or Tavily spending limit reached
   'analysis_incomplete', // the run did not return a valid result; code returned this instead
-  'daily_limit_reached', // the founder used today's analyses (design §12); nothing was searched
-  'monthly_limit_reached', // the founder used this month's analyses (design §12); nothing was searched
-  'time_limit_reached', // the run hit its overall time limit: only what was checked in time is shown (design §12)
+  'daily_limit_reached', // the founder used today's analyses; nothing was searched
+  'monthly_limit_reached', // the founder used this month's analyses; nothing was searched
+  'time_limit_reached', // the run hit its overall time limit: only what was checked in time is shown
 ] as const;
 export const NoteCode = z.enum(NOTE_CODES);
 export type NoteCode = z.infer<typeof NoteCode>;
 
 // quote and source_url: the sentence from the competitor's own source that proves the answer, kept only when code
-// found it word for word in the evidence (Hala, 18 Nov 2026: shown on the card, so the founder sees the proof).
+// found it word for word in the evidence (shown on the card, so the founder sees the proof).
 export const ComparisonCell = z.object({ answer: Answer, note: z.string(), quote: z.string().min(1).optional(), source_url: z.url().optional() }).strict();
 
-// Competitive opportunities (explainer §6): four fixed rules in code turn the judge's answers into one of these,
+// Competitive opportunities: four fixed rules in code turn the judge's answers into one of these,
 // each with a fixed next step. Darb never says "where you will win".
 export const OPPORTUNITY_KINDS = ['proven_difference', 'possible_customer_difference', 'possible_difference', 'no_clear_difference', 'not_enough_evidence'] as const;
 export const OpportunityKind = z.enum(OPPORTUNITY_KINDS);
@@ -268,7 +268,7 @@ export const ResultCompetitor = z
   });
 export type ResultCompetitor = z.infer<typeof ResultCompetitor>;
 
-// The design's per-run cap: 15 Tavily calls per idea (design §5, §12).
+// The design's per-run cap: 15 Tavily calls per idea.
 export const MAX_TAVILY_CALLS = 15;
 
 export const Result = z
@@ -313,8 +313,8 @@ export const Result = z
 export type Result = z.infer<typeof Result>;
 
 // ---------------------------------------------------------------------------
-// f) Run log: one line per Competitor Agent run (design §11 usage, §12 tracing, §18 shared log format)
-// Ids, codes and timings only: never the founder's idea text (idea privacy, design §5).
+// f) Run log: one line per Competitor Agent run (usage)
+// Ids, codes and timings only: never the founder's idea text (idea privacy).
 // ---------------------------------------------------------------------------
 
 export const CAPABILITIES = ['understand', 'discover', 'identify', 'validate', 'judge', 'analyze', 'guardrails'] as const;
