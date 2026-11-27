@@ -1,21 +1,25 @@
-// Live end-to-end test: a real chat with the real agents, OpenAI and Supabase.
+// Live end-to-end test: a real chat with the real agents, OpenAI, Tavily and Supabase.
 // Run with: npm run test:live -- <username of a test founder>
-// It creates a test idea, describes it in English, in Arabic, and once more streamed like the website, prints PASS or FAIL for each check,
-// then deletes its test data. It costs a fraction of a cent of OpenAI credit and takes under a minute.
+// Each conversation gets its own test idea and assessment, as on the website, and all of them are deleted at the end.
+// It prints PASS or FAIL for each check. It costs a few cents of OpenAI and Tavily credit and takes a few minutes.
 //
-// Foundation checks (Competitor Agent, final design): describing an idea makes the Conversational Agent delegate
-// to the Competitor Agent, no form comes first, and the founder sees the capability_pending note in their language.
-// Understand check: a vague idea makes the Competitor Agent ask the founder one question instead.
+// Idea checks: describing an idea makes the Conversational Agent delegate to the Competitor Agent right away, and the
+// reply carries every sentence the founder must see, in their language, never the agent's working memory.
+// Understand check: a vague idea (even only a sector) is delegated too; the Competitor Agent asks the founder one question.
+// No-idea check: a founder who names nothing is answered by Darb itself, without delegating.
 // What-if check: a what-if is never run on first mention; Darb asks the founder to confirm it first.
+// Different idea check: a different idea in a conversation that already has an analysis is not analysed there;
+// Darb tells the founder, in one exact sentence, to open a new conversation for it.
 import { RequestContext } from '@mastra/core/request-context';
-import { NOTE_TEXT } from '../src/mastra/lib/competitor-notes';
-import { replyProblems } from '../src/mastra/lib/reply-guard';
+import { NEW_IDEA_TEXT } from '../src/mastra/lib/competitor-notes';
+import { REPLY_RULES_KEY, replyProblems, type ReplyRules } from '../src/mastra/lib/reply-guard';
 import { getSupabase } from '../src/mastra/lib/supabase';
 
 process.loadEnvFile('.env');
 const { mastra } = await import('../src/mastra/index');
 
 type Step = { toolCalls?: { payload?: { toolName: string } }[] };
+type Reply = { text: string; calls: string[]; hookErrors: unknown[]; rules?: ReplyRules };
 const results: { check: string; ok: boolean; detail: string }[] = [];
 const check = (name: string, ok: boolean, detail = '') => {
   results.push({ check: name, ok, detail });
@@ -26,74 +30,110 @@ async function main() {
   const username = process.argv[2];
   if (!username) throw new Error('Give the username of a test founder: npm run test:live -- <username>');
   const supabase = getSupabase();
-
-  // 1. A fresh test idea and assessment.
   const { data: user } = await supabase.from('founders').select('user_id').eq('username', username).maybeSingle();
   if (!user) throw new Error(`No user with the username "${username}".`);
-  const { data: idea, error: ideaError } = await supabase.from('startup_ideas').insert({ founder_id: user.user_id, idea_name: 'Test idea (live test)' }).select('idea_id').single();
-  if (ideaError) throw ideaError;
-  const { data: assessment, error: assessmentError } = await supabase.from('assessments').insert({ idea_id: idea.idea_id, language: 'en', status: 'in_progress' }).select('assessment_id').single();
-  if (assessmentError) throw assessmentError;
-  console.log(`Test assessment ${assessment.assessment_id}\n`);
+
+  // 1. Each conversation gets a fresh test idea and assessment, as the website does for each new conversation.
+  const ideaIds: string[] = [];
+  async function newAssessment(): Promise<string> {
+    const { data: idea, error: ideaError } = await supabase.from('startup_ideas').insert({ founder_id: user!.user_id, idea_name: 'Test idea (live test)' }).select('idea_id').single();
+    if (ideaError) throw ideaError;
+    ideaIds.push(idea.idea_id);
+    const { data: assessment, error } = await supabase.from('assessments').insert({ idea_id: idea.idea_id, language: 'en', status: 'in_progress' }).select('assessment_id').single();
+    if (error) throw error;
+    return assessment.assessment_id;
+  }
 
   const agent = mastra.getAgent('conversationalAgent');
-  async function say(thread: string, message: string) {
+  function contextFor(assessmentId: string) {
     const requestContext = new RequestContext();
     requestContext.set('userId', user!.user_id);
-    requestContext.set('assessmentId', assessment!.assessment_id);
-    const reply = await agent.generate(message, { requestContext, memory: { thread, resource: user!.user_id } });
-    const calls = ((reply.steps ?? []) as Step[]).flatMap((s) => s.toolCalls ?? []).map((c) => c.payload?.toolName ?? '');
-    const hookErrors = (requestContext.get('__mastra_delegationHookErrors') as unknown[] | undefined) ?? [];
+    requestContext.set('assessmentId', assessmentId);
+    return requestContext;
+  }
+  const toolCalls = (steps: Step[]) => steps.flatMap((s) => s.toolCalls ?? []).map((c) => c.payload?.toolName ?? '');
+  const hookErrorsOf = (requestContext: RequestContext) => (requestContext.get('__mastra_delegationHookErrors') as unknown[] | undefined) ?? [];
+
+  async function say(chat: { thread: string; assessmentId: string }, message: string): Promise<Reply> {
+    const requestContext = contextFor(chat.assessmentId);
+    const reply = await agent.generate(message, { requestContext, memory: { thread: chat.thread, resource: user!.user_id } });
+    const calls = toolCalls((reply.steps ?? []) as Step[]);
     console.log(`> ${message}\n< ${reply.text.replace(/\n/g, ' ')}\n  tools: ${calls.join(', ') || 'none'}\n`);
-    return { text: reply.text, calls, hookErrors };
+    return { text: reply.text, calls, hookErrors: hookErrorsOf(requestContext), rules: requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined };
   }
 
-  // The founder must see the exact note, in their language, and never the agent's working memory.
-  function checkReply(label: string, reply: { text: string; calls: string[]; hookErrors: unknown[] }, language: 'en' | 'ar') {
-    const note = NOTE_TEXT.capability_pending[language];
-    check(`${label}: delegated to the Competitor Agent`, reply.calls.some((c) => /competitor/i.test(c)), reply.calls.join(', '));
-    check(`${label}: the delegation checks raised no error`, reply.hookErrors.length === 0, JSON.stringify(reply.hookErrors));
-    const problems = replyProblems(reply.text, { sentences: [note], language });
-    check(`${label}: exact note, ${language === 'ar' ? 'Arabic' : 'English'} reply, no working memory`, problems.length === 0, problems.join(' | '));
-    check(`${label}: the note appears once`, reply.text.split(note).length === 2);
-  }
-
-  async function stream(thread: string, message: string) {
-    const requestContext = new RequestContext();
-    requestContext.set('userId', user!.user_id);
-    requestContext.set('assessmentId', assessment!.assessment_id);
-    const output = await agent.stream(message, { requestContext, memory: { thread, resource: user!.user_id } });
+  async function stream(chat: { thread: string; assessmentId: string }, message: string): Promise<Reply> {
+    const requestContext = contextFor(chat.assessmentId);
+    const output = await agent.stream(message, { requestContext, memory: { thread: chat.thread, resource: user!.user_id } });
     let text = '';
     for await (const piece of output.textStream) text += piece; // what the website receives, piece by piece
-    const calls = ((await output.steps) as Step[]).flatMap((s) => s.toolCalls ?? []).map((c) => c.payload?.toolName ?? '');
-    const hookErrors = (requestContext.get('__mastra_delegationHookErrors') as unknown[] | undefined) ?? [];
+    const calls = toolCalls((await output.steps) as Step[]);
     console.log(`> ${message}  (streamed)\n< ${text.replace(/\n/g, ' ')}\n  tools: ${calls.join(', ') || 'none'}\n`);
-    return { text, calls, hookErrors };
+    return { text, calls, hookErrors: hookErrorsOf(requestContext), rules: requestContext.get(REPLY_RULES_KEY) as ReplyRules | undefined };
+  }
+
+  async function newChat(label: string) {
+    return { thread: `live-test-${label}-${Date.now()}`, assessmentId: await newAssessment() };
+  }
+
+  // The founder must see every sentence the analysis gave, in their language, and never the agent's working memory.
+  function checkReply(label: string, reply: Reply, language: 'en' | 'ar') {
+    check(`${label}: delegated to the Competitor Agent`, reply.calls.some((c) => /competitor/i.test(c)), reply.calls.join(', '));
+    check(`${label}: the delegation checks raised no error`, reply.hookErrors.length === 0, JSON.stringify(reply.hookErrors));
+    const problems = replyProblems(reply.text, { sentences: reply.rules?.sentences ?? [], language });
+    check(`${label}: every required sentence, ${language === 'ar' ? 'Arabic' : 'English'} reply, no working memory`, problems.length === 0, problems.join(' | '));
+  }
+
+  async function analysedAt(assessmentId: string) {
+    const { data } = await supabase.from('assessments').select('analysed_at').eq('assessment_id', assessmentId).single();
+    return (data?.analysed_at as string | null) ?? null;
+  }
+
+  // How many assessments the idea of this conversation has: a what-if that ran adds one.
+  async function assessmentsOfIdea(assessmentId: string) {
+    const { data } = await supabase.from('assessments').select('idea_id').eq('assessment_id', assessmentId).single();
+    const { count } = await supabase.from('assessments').select('assessment_id', { count: 'exact', head: true }).eq('idea_id', data!.idea_id);
+    return count ?? 0;
   }
 
   try {
     // 2. English: an idea in one message.
-    checkReply('English', await say(`live-test-en-${Date.now()}`, 'I want to build an app that lets restaurants in Riyadh order fresh vegetables directly from local farms.'), 'en');
+    const english = await newChat('en');
+    checkReply('English', await say(english, 'I want to build an app that lets restaurants in Riyadh order fresh vegetables directly from local farms.'), 'en');
 
-    // 3. Arabic: the same kind of idea, in a new conversation.
-    checkReply('Arabic', await say(`live-test-ar-${Date.now()}`, 'فكرتي تطبيق يساعد المطاعم في الرياض تطلب خضار طازجة من المزارع المحلية مباشرة.'), 'ar');
+    // 3. Different idea in the same conversation: not analysed here; the founder is told to open a new conversation.
+    const before = await analysedAt(english.assessmentId);
+    const other = await say(english, 'I have another idea: a mobile app to book a car wash at home in Jeddah.');
+    check('Different idea: the analysis was not replaced', before !== null && (await analysedAt(english.assessmentId)) === before, `${before}`);
+    check('Different idea: tells the founder to open a new conversation', other.text.includes(NEW_IDEA_TEXT.en), other.text);
+    check('Different idea: no what-if or correction question', !/what.?if|instead|change any|correct/i.test(other.text.replace(NEW_IDEA_TEXT.en, '')), other.text);
 
-    // 4. Streamed, as the website receives it: a rewrite must never show the founder two replies.
-    checkReply('Streamed', await stream(`live-test-stream-${Date.now()}`, 'Healthy lunch boxes delivered to offices in Dammam every day.'), 'en');
+    // 4. Arabic: the same kind of idea, in its own conversation.
+    checkReply('Arabic', await say(await newChat('ar'), 'فكرتي تطبيق يساعد المطاعم في الرياض تطلب خضار طازجة من المزارع المحلية مباشرة.'), 'ar');
 
-    // 5. A vague idea: the Competitor Agent asks one question instead of searching (PBI 34).
-    const vague = await say(`live-test-vague-${Date.now()}`, 'I want to start a business in the food sector.');
+    // 5. Streamed, as the website receives it: a rewrite must never show the founder two replies.
+    checkReply('Streamed', await stream(await newChat('stream'), 'Healthy lunch boxes delivered to offices in Dammam every day.'), 'en');
+
+    // 6. A vague idea: delegated too; the Competitor Agent asks one question instead of searching (PBI 34).
+    const vague = await say(await newChat('vague'), 'I want to start a business in the food sector.');
     check('Vague idea: delegated to the Competitor Agent', vague.calls.some((c) => /competitor/i.test(c)), vague.calls.join(', '));
-    // 6. A what-if after an idea: Darb restates it and asks first (it uses one of the founder's analyses).
-    const whatIfThread = `live-test-what-if-${Date.now()}`;
-    await say(whatIfThread, 'An app that gives people one subscription to many gyms in Riyadh.');
-    const whatIf = await say(whatIfThread, 'What if I targeted Jeddah instead?');
-    check('What-if: asks the founder to confirm first', /[?؟]/.test(whatIf.text) && !whatIf.text.includes(NOTE_TEXT.capability_pending.en), whatIf.text);
+    check('Vague idea: asks one question, in English', /[?؟]/.test(vague.text) && !/[\u0600-\u06FF]/.test(vague.text), vague.text);
+    // A founder with no idea at all is not delegated: Darb helps them find one (reference conversation "A founder without an idea yet").
+    const noIdea = await say(await newChat('no-idea'), "I'd love to start a business, but I don't have an idea yet.");
+    check('No idea yet: not delegated, Darb asks itself', !noIdea.calls.some((c) => /competitor/i.test(c)) && /[?؟]/.test(noIdea.text), noIdea.text);
+    check('No idea yet: English reply', !/[\u0600-\u06FF]/.test(noIdea.text), noIdea.text);
 
-    check('Vague idea: asks one question, shows no note', /[?؟]/.test(vague.text) && !vague.text.includes(NOTE_TEXT.capability_pending.en), vague.text);
+    // 7. A what-if after an idea: Darb restates it and asks first (it uses one of the founder's analyses).
+    const whatIfChat = await newChat('what-if');
+    await say(whatIfChat, 'An app that gives people one subscription to many gyms in Riyadh.');
+    const runsBefore = await assessmentsOfIdea(whatIfChat.assessmentId);
+    const whatIf = await say(whatIfChat, 'What if I targeted Jeddah instead?');
+    // The server's confirmation check may refuse a first what-if attempt; what matters is that none was run.
+    check('What-if: asks the founder to confirm first, runs nothing yet', /[?؟]/.test(whatIf.text) && (await assessmentsOfIdea(whatIfChat.assessmentId)) === runsBefore, whatIf.text);
+    check('What-if: not mistaken for a different idea', !whatIf.text.includes(NEW_IDEA_TEXT.en), whatIf.text);
   } finally {
-    // 4. Clean up: deleting the test idea deletes its assessment with it.
-    await supabase.from('startup_ideas').delete().eq('idea_id', idea.idea_id);
+    // 8. Clean up: deleting a test idea deletes its assessments (and any what-if) with it.
+    for (const ideaId of ideaIds) await supabase.from('startup_ideas').delete().eq('idea_id', ideaId);
     console.log('\nTest data deleted.');
   }
 

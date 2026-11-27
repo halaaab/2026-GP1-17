@@ -7,6 +7,7 @@ const { competitorAgent } = await import('../../src/mastra/agents/competitor-age
 const { conversationalAgent } = await import('../../src/mastra/agents/conversational-agent');
 const { COMPETITOR_MAX_STEPS, competitorDelegation } = await import('../../src/mastra/lib/competitor-delegation');
 const { RequestContext } = await import('@mastra/core/request-context');
+const { NEW_IDEA_TEXT } = await import('../../src/mastra/lib/competitor-notes');
 
 // Tool names look like similarity_search: lowercase words joined by underscores, ending in a known suffix.
 const TOOL_NAME = /\b[a-z]+(?:_[a-z]+)*_(?:search|competitors|candidates|analysis|details|if|idea|profile|survival|result)\b/g;
@@ -51,6 +52,17 @@ describe('Conversational Agent', () => {
   it('decides at temperature 0, so the same message gets the same decision', async () => {
     const options = await conversationalAgent.getDefaultOptions();
     expect(options.modelSettings).toMatchObject({ temperature: 0 });
+  });
+
+  it('sends a different idea to a new conversation with the exact sentence, never replacing the analysis', async () => {
+    const instructions = await instructionsOf(conversationalAgent);
+    expect(instructions).toContain('8. A different idea after an analysis');
+    expect(instructions).toContain(NEW_IDEA_TEXT.en);
+    expect(instructions).toContain(NEW_IDEA_TEXT.ar);
+  });
+
+  it('delegates a vague idea that names only a sector', async () => {
+    expect(await instructionsOf(conversationalAgent)).toContain('"a business in the food sector", "تطبيق للأندية الرياضية") is still an idea, also when it names only a sector');
   });
 
   it('is connected to the survival prediction', async () => {

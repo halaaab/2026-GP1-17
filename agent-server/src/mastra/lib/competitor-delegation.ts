@@ -17,8 +17,9 @@
 // to send their answer on the next call, the hook adds it from the question it remembers
 //   what-if        runs only after the founder answered Darb's confirmation question; it becomes a new assessment
 //                  linked to this one, and the founder gets an exact before → after comparison (lib/what-if.ts)
-//   no "new" twice a conversation's analysis is never replaced by a "new" one: a changed idea is a what-if and a
-//                  correction is a rerun.
+//   no "new" twice a conversation's analysis is never replaced by a "new" one: a changed idea is a what-if, a
+//                  correction is a rerun, and a different idea is sent to a new conversation (NEW_IDEA_TEXT; live
+// test, a different idea was run as a "rerun" and replaced the first idea's analysis).
 // There is no consent step: an idea, or a question about who already does it, is analysed right away. Whether the
 // founder's message is that is read by the Conversational Agent, never by a word list.
 import type { DelegationCompleteContext, DelegationConfig, DelegationStartContext, DelegationStartResult } from '@mastra/core/agent';
@@ -31,7 +32,7 @@ import { fallbackResult } from './competitor-result';
 import { newRunState, RUN_STATE_KEY, type RunState } from './competitor-run';
 import { analysedAt, analysisLimit, loadStoredResult, type StoredResult } from './competitor-store';
 import { askedBeforeLatestReply, compareResults, comparisonSentences, createWhatIf, removeWhatIf } from './what-if';
-import { cardsSentence, noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
+import { cardsSentence, NEW_IDEA_TEXT, noteSentences, opportunitySentences, summarySentences } from './competitor-notes';
 import { conversationLanguage, isAffirmative, keepStatedFacts } from './founder-text';
 import { REPLY_RULES_KEY, type ReplyRules } from './reply-guard';
 
@@ -202,7 +203,7 @@ export async function onCompetitorDelegationStart(ctx: DelegationStartContext): 
   // and a correction is a rerun (a confirmed what-if was sent as "new").
   if (mode === 'new' && (await analysedAt(assessment.assessment_id))) {
     return reject(
-      'This conversation already has an analysis. For a changed version of the idea ("what if…"), delegate with mode "what_if" and scenario_label. For a correction of the idea, delegate with mode "rerun". For a question about the results, use get_competitor_result.',
+      `This conversation already has an analysis. For a changed version of the idea ("what if…"), delegate with mode "what_if" and scenario_label. For a correction of the idea, delegate with mode "rerun". For a question about the results, use get_competitor_result. If the founder described a different idea (a different product or business, not a change of the one already analysed), do not delegate again in any mode: reply with only this sentence in the founder's language, word for word: "${NEW_IDEA_TEXT.en}" / "${NEW_IDEA_TEXT.ar}"`,
     );
   }
 

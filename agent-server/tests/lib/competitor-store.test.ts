@@ -71,7 +71,7 @@ const { RUN_STATE_KEY, newRunState } = await import('../../src/mastra/lib/compet
 const { finalizeResultTool, HANDOFF_KEY, STARTED_AT_KEY } = await import('../../src/mastra/tools/finalize-result');
 const { getCompetitorResultTool } = await import('../../src/mastra/tools/get-competitor-result');
 const { judgeCandidatesTool } = await import('../../src/mastra/tools/judge-candidates');
-const { NOTE_TEXT } = await import('../../src/mastra/lib/competitor-notes');
+const { NOTE_TEXT, NEW_IDEA_TEXT } = await import('../../src/mastra/lib/competitor-notes');
 const { CLARIFY_QUESTIONS } = await import('../../src/mastra/lib/understand');
 const { MAX_ANALYSES_PER_DAY, MAX_ANALYSES_PER_MONTH, RUN_TIME_LIMIT_MS } = await import('../../src/mastra/config/limits');
 const { Result } = await import('../../src/mastra/schemas/competitor');
@@ -512,6 +512,17 @@ describe('an idea is analysed right away, without asking the founder first', () 
     const { decision } = await startWith(idea, [{ role: 'user', content: 'Find my competitors again for teachers' }]);
     expect(decision?.proceed).toBe(false);
     expect(decision?.rejectionReason).toMatch(/what_if/);
+    db.analysedAt = null;
+  });
+
+  // Live test, a different idea in the same conversation was run as a "rerun" and replaced the first
+  // idea's analysis. The rejection now names that case and the exact sentence that sends the founder to a new conversation.
+  it('tells the agent to send a different idea to a new conversation, in the founder’s words of both languages', async () => {
+    db.analysedAt = NOW;
+    const { decision } = await startWith(idea, [{ role: 'user', content: 'I have another idea: a car wash app in Jeddah' }]);
+    expect(decision?.proceed).toBe(false);
+    expect(decision?.rejectionReason).toContain(NEW_IDEA_TEXT.en);
+    expect(decision?.rejectionReason).toContain(NEW_IDEA_TEXT.ar);
     db.analysedAt = null;
   });
 

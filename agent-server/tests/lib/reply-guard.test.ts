@@ -6,6 +6,7 @@ import { contentWords, detectLanguage, isStated, keepStatedFacts } from '../../s
 import { REPLY_RULES_KEY, replyGuard, replyProblems, type ReplyRules } from '../../src/mastra/lib/reply-guard';
 import { NOTE_TEXT } from '../../src/mastra/lib/competitor-notes';
 import { RunLog } from '../../src/mastra/schemas/competitor';
+import { ARABIC_STYLE, ENGLISH_STYLE, REFERENCE_CONVERSATIONS, personaInstructions } from '../../src/mastra/config/darb-persona';
 
 const EN = NOTE_TEXT.capability_pending.en;
 const AR = NOTE_TEXT.capability_pending.ar;
@@ -87,6 +88,41 @@ describe('the reply guard processor', () => {
     const { out, rules } = start('فكرتي تطبيق للمطاعم');
     expect(rules).toEqual({ sentences: [], language: null, codeWritesReply: false });
     expect(JSON.stringify(out)).toContain('Write your whole reply in Arabic');
+  });
+
+  // Live test, given both languages, the model copied the Arabic reference reply to an English founder
+  // ("I don't have an idea yet", Arabic 3 times in 8). The style guide now reaches the model in the founder's language only.
+  function instructionsSent(founderSays: string) {
+    const instructions = `${personaInstructions()}\n\nOperational rules…`;
+    const out = replyGuard.processInput({
+      messages: [user(founderSays)],
+      systemMessages: [{ role: 'system', content: instructions }],
+      requestContext: new RequestContext(),
+    } as never) as { systemMessages: { content: string }[] };
+    return out.systemMessages[0].content;
+  }
+  const noIdea = REFERENCE_CONVERSATIONS.find((c) => c.situation === 'A founder without an idea yet')!;
+
+  it('gives an English founder the style guide and reference replies in English only', () => {
+    const sent = instructionsSent("I'd love to start a business, but I don't have an idea yet.");
+    expect(sent).toContain(ENGLISH_STYLE);
+    expect(sent).not.toContain(ARABIC_STYLE);
+    expect(sent).toContain(noIdea.en.darb);
+    expect(sent).not.toContain(noIdea.ar.darb);
+    expect(sent).toContain('Operational rules…'); // the rest of the instructions is kept
+  });
+
+  it('gives an Arabic founder the style guide and reference replies in Arabic only', () => {
+    const sent = instructionsSent('ودي أبدأ مشروع بس ما عندي فكرة');
+    expect(sent).toContain(ARABIC_STYLE);
+    expect(sent).not.toContain(ENGLISH_STYLE);
+    expect(sent).toContain(noIdea.ar.darb);
+    expect(sent).not.toContain(noIdea.en.darb);
+  });
+
+  it('keeps both languages when the founder’s language is not clear yet', () => {
+    const out = replyGuard.processInput({ messages: [user('👋')], systemMessages: [{ role: 'system', content: personaInstructions() }], requestContext: new RequestContext() } as never);
+    expect(JSON.stringify(out)).not.toContain('Write your whole reply in');
   });
 
   it('lets the model’s reply stream unchanged when code does not write the reply', async () => {
