@@ -2,7 +2,7 @@
 // Only this tool's output reaches the Conversational Agent (lib/competitor-delegation.ts), never the agent's own text,
 // so no competitor, label, score or status can be invented or changed by a model on the way back.
 //
-// It applies the guardrails (validity checks, policy gate, ranking, ISS, market level; design §9, §10,
+// It applies the guardrails (validity checks, policy gate, ranking, ISS, market level;,
 // lib/competitor-policy.ts) to what the run gathered (lib/competitor-run.ts). Until a Discover step has run
 // (not built yet), it returns the "capability_pending" result.
 import { createTool } from '@mastra/core/tools';
@@ -48,7 +48,7 @@ export const finalizeResultTool = createTool({
     if (state.limitNote) return limitResult(state.profile ?? profileFromKnownFacts(handoff.data), state.limitNote, usage());
     // The idea could not be read (OpenAI failed): the analysis did not finish, and the founder can retry.
     if (state.steps.some((s) => s.capability === 'understand' && s.outcome === 'failed')) return fallbackResult(handoff.data, run);
-    // The idea lacks the problem or the offering: ask the one question Understand chose (design §4, PBI 34).
+    // The idea lacks the problem or the offering: ask the one question Understand chose (PBI 34).
     if (state.clarification && state.profile) return clarificationResult(state.profile, state.clarification, usage());
 
     // No search has run (Discover is not built yet): saying "no competitors found" would not be true.
@@ -74,7 +74,7 @@ export const finalizeResultTool = createTool({
         runNotes: [...state.notes],
         usage: usage(),
       });
-      // Saved for follow-up questions, the result screen, History and the report (design §11). A failed save is
+      // Saved for follow-up questions, the result screen, History and the report. A failed save is
       // logged, and the founder still sees the result.
       let saved = 'saved';
       try {

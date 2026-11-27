@@ -1,12 +1,12 @@
-// The website's chat route: POST /chat (Hala, 17 Nov 2026).
+// The website's chat route: POST /chat.
 // Mastra's own route (/api/agents/conversationalAgent/stream) sends the website everything the agents do, including
 // the Competitor Agent's whole run: about 197 KB for one analysis, in 126 pieces of up to 36 KB, over 30 seconds,
 // for a reply of one sentence. On a phone (5G, Safari) that long, heavy answer was cut and the founder saw
-// "Darb could not reach its assistant", although the server had answered (live test, 17 Nov 2026).
+// "Darb could not reach its assistant", although the server had answered.
 // This route runs the same Conversational Agent, with the same login check, and sends only what the website uses:
 //   data: {"type":"text-delta","payload":{"text":"..."}}   the reply, piece by piece
 //   data: {"type":"error","payload":{"message":"..."}}      the agent stopped with an error
-//   data: {"type":"status","payload":{"step":"..."}}       what Darb is doing now (lib/progress.ts, 18 Nov 2026)
+// data: {"type":"status","payload":{"step":"..."}} what Darb is doing now (lib/progress.ts)
 //   data: [DONE]                                            the end
 // A conversation that opens with only a greeting ("hi", "السلام عليكم") is answered at once from code (lib/greeting.ts).
 // and a short ": still working" line every 5 seconds, so a phone or a proxy never sees a silent connection.
@@ -74,8 +74,8 @@ export const chatRoute = registerApiRoute('/chat', {
         const stopListening = listenToProgress(assessmentId, (step) => send(line({ type: 'status', payload: { step } })));
         try {
           const output = await agent.stream(text, { requestContext, memory: { thread: threadId, resource: userId } });
-          // The model's words are held until it is clear whether it calls a tool (K3 of the Sprint 2 evaluation,
-          // 23 Nov 2026): before delegating it sometimes wrote "Please hold on…" or praised the idea, and that text
+          // The model's words are held until it is clear whether it calls a tool:
+          // before delegating it sometimes wrote "Please hold on…" or praised the idea, and that text
           // reached the founder glued to the result sentence. Text written before a tool call is dropped; the answer
           // after it (written by code for an analysis) is sent at once; a reply without any tool is sent at the end.
           let pending = '';

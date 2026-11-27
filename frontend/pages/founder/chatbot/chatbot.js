@@ -32,7 +32,7 @@ function safe(text) {
   return box.innerHTML;
 }
 
-/* Darb's reply with its simple formatting (Hala, 18 Nov 2026): the model writes **bold** and lists, which showed
+/* Darb's reply with its simple formatting: the model writes **bold** and lists, which showed
    as stars. Only bold, bullet and numbered lists and paragraphs are turned into HTML; everything else stays text,
    because the words are made safe first. Each block gets dir="auto", so Arabic and English lines both read right. */
 function formatReply(text) {
@@ -214,7 +214,7 @@ async function agentAnswers(text, retry = null) {
         paragraph.innerHTML = formatReply(soFar);   // made safe inside formatReply
         scrollToEnd();
       },
-      // What Darb is doing now, under the dots, until the reply starts (18 Nov 2026)
+      // What Darb is doing now, under the dots, until the reply starts
       onStatus: (step) => {
         analysing = true;
         if (paragraph.isConnected) return;   // the reply has started
@@ -226,7 +226,7 @@ async function agentAnswers(text, retry = null) {
   } catch (error) {
     console.error('Chat: Darb could not answer:', error.message);
     // The connection dropped while the analysis was running (a phone locks its screen or switches apps during the
-    // wait, live test 18 Nov 2026): the server still finishes and saves it, so the page waits for the saved result
+    // wait): the server still finishes and saves it, so the page waits for the saved result
     // instead of asking the founder to start the whole analysis again.
     if (analysing && error.kind !== 'signin') {
       const saved = await waitForAnalysis(body);
@@ -247,7 +247,7 @@ async function agentAnswers(text, retry = null) {
   }
 }
 
-/* What Darb is doing while it analyses (Hala, 18 Nov 2026), like Claude and ChatGPT: one line per step with its icon,
+/* What Darb is doing while it analyses: one line per step with its icon,
    the current step turning, the finished ones ticked, and the seconds so far. Steps appear when they really start
    (the web search runs only when Darb's list is not enough). Nothing is saved: the reply replaces it. */
 const STEP_ICONS = {
@@ -517,7 +517,7 @@ async function becomeIdea() {
   const idea = said.reduce((longest, text) => (text.length > longest.length ? text : longest), '');
   if (idea) {
     current.idea = idea;
-    // the founder's words name it only while it has no formal name from the agent server yet (18 Nov 2026)
+    // the founder's words name it only while it has no formal name from the agent server yet
     if (current.title === titleFrom(said[0] || '')) current.title = titleFrom(idea);
   }
   await save();
@@ -529,7 +529,7 @@ async function becomeIdea() {
    about = the startup the question is about (from "Ask about it" in the panel) */
 async function talk(text, about = null) {
   addUser(text, about);
-  // The founder's message is saved at once, before Darb answers (17 Nov 2026): a refresh or a failed
+  // The founder's message is saved at once, before Darb answers: a refresh or a failed
   // answer never removes it. A failed answer gets "Try again", which asks again without a second copy.
   const first = !isListed(current);
   await saveMessage(current, 'user', { text, about: about ? about.id : '' });

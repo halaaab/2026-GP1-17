@@ -1,4 +1,4 @@
-// Tests for the website's chat route, POST /chat (17 Nov 2026): it sends only Darb's reply text, never the agents'
+// Tests for the website's chat route, POST /chat: it sends only Darb's reply text, never the agents'
 // steps, and only to a signed-in founder. The agent is a fake that streams like Mastra's: nothing is paid for.
 import { describe, expect, it } from 'vitest';
 import { chatRoute } from '../../src/mastra/server/chat-route';
@@ -60,7 +60,7 @@ describe('POST /chat', () => {
     expect(raw).toBe('data: {"type":"error","payload":{"message":"The agent stopped with an error"}}\n\ndata: [DONE]\n\n');
   });
 
-  it('passes on what Darb is doing for this conversation only, while the reply is being made (18 Nov 2026)', async () => {
+  it('passes on what Darb is doing for this conversation only, while the reply is being made', async () => {
     const { context } = fakeContext('founder-1', body, [
       { type: 'tool-call', payload: { toolName: 'competitorAgent' } },
       { type: 'text-delta', payload: { text: 'Done.' } },
@@ -92,7 +92,7 @@ describe('POST /chat', () => {
     expect((await run(fakeContext('founder-1', { text: 'hi' }, []).context)).status).toBe(400);
   });
 
-  it('welcomes a conversation that opens with a greeting at once, without the agent (18 Nov 2026)', async () => {
+  it('welcomes a conversation that opens with a greeting at once, without the agent', async () => {
     const { context, calls } = fakeContext('founder-1', { ...body, text: 'السلام عليكم' }, []);
     const raw = await (await run(context)).text();
     expect(raw).toMatch(/^data: \{"type":"text-delta","payload":\{"text":"وعليكم السلام ورحمة الله وبركاته 👋/);
@@ -107,7 +107,7 @@ describe('POST /chat', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('drops what the model writes before calling a tool, and sends a reply without tools in full (K3, 23 Nov 2026)', async () => {
+  it('drops what the model writes before calling a tool, and sends a reply without tools in full (K3)', async () => {
     const before = fakeContext('founder-1', body, [
       { type: 'text-delta', payload: { text: 'Please hold on while I gather the information.' } },
       { type: 'tool-call', payload: { toolName: 'agent-competitorAgent' } },

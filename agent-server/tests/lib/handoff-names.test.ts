@@ -1,4 +1,4 @@
-// Tests for the handoff's name lists (K3 of the Sprint 2 evaluation, 23 Nov 2026): "like Mrsool" must exclude Mrsool.
+// Tests for the handoff's name lists: "like Mrsool" must exclude Mrsool.
 import { describe, expect, it } from 'vitest';
 import { analogiesIn, referenceName, withNamesCleaned } from '../../src/mastra/lib/competitor-delegation';
 
@@ -22,7 +22,7 @@ describe('withNamesCleaned', () => {
     expect(withNamesCleaned({ named_competitors: ['Careem', 'Uber'], references: ['like Talabat'] })).toEqual({ named_competitors: ['Careem', 'Uber'], references: ['Talabat'] });
   });
 
-  it("takes the analogy from the founder's own words, even when the model leaves it out (K3 re-runs, 23 Nov 2026)", () => {
+  it("takes the analogy from the founder's own words, even when the model leaves it out (K3 re-runs)", () => {
     const said = 'My startup is Nana. We deliver groceries to homes in Riyadh within an hour, like Mrsool but only for groceries.';
     // the model rewrote the idea without "like Mrsool" and listed Mrsool only as a named competitor
     expect(withNamesCleaned({ idea_text: 'Deliver groceries to homes in Riyadh within an hour.', named_competitors: ['Mrsool'] }, said))

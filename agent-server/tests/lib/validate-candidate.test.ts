@@ -1,5 +1,5 @@
 // Tests for Task 8, the four validity checks and the evidence status. Fake pages, a fake AI and a fake reader:
-// no Tavily, no OpenAI, no database. The real cases (8-A to 8-L) are run in Studio and compared with Hala's labels.
+// no Tavily, no OpenAI, no database. The real cases (8-A to 8-L) are run in Studio and compared with the team's labels.
 import { describe, expect, it, vi } from 'vitest';
 import {
   aiSignals,
@@ -153,7 +153,7 @@ describe('the four checks and the evidence status (Hala’s rules)', () => {
   });
 });
 
-describe('Active: app updates, news dates and the copyright year (Hala, 14 Nov 2026)', () => {
+describe('Active: app updates, news dates and the copyright year', () => {
   const s = (check: string, kind: string, signal = kind) => ({ check, kind, signal, quote: 'q', url: 'u', by: 'code' }) as never;
   const others = [s('real_entity', 'channel'), s('real_entity', 'name'), s('real_entity', 'identity', 'company email'), s('saudi_reach', 'strong', '.sa domain')];
 
@@ -284,7 +284,7 @@ describe('the whole step', () => {
     });
     const askAi = ai(none);
     await validateCompanies([{ name: 'X', website: 'https://x.sa' }], { read, askAi }, NOW);
-    // One page per AI call (15 Nov 2026): 3 pages, so 3 calls, and the About page only once.
+    // One page per AI call: 3 pages, so 3 calls, and the About page only once.
     expect(askAi.mock.calls).toHaveLength(3);
     expect(askAi.mock.calls.filter((c) => ((c as unknown[])[1] as { url: string }[])[0].url === 'https://x.sa/about')).toHaveLength(1);
   });
@@ -301,7 +301,7 @@ describe('the whole step', () => {
     expect(answer.same_product?.answer).toBe('same'); // "different" only when no page says "same"
   });
 
-  it('keeps the company name the AI read only if it is really on the page (18 Nov 2026, eshq.coffee)', async () => {
+  it('keeps the company name the AI read only if it is really on the page (eshq.coffee)', async () => {
     const pages = [{ url: 'https://eshq.coffee/ar', text: 'متجر عشق القهوة المختصة سجل تجاري 2055127142' }];
     const askAi = vi.fn(async () => ({ ...none, name_ar: 'عشق القهوة', name_en: 'Eshq Coffee' }));
     const answer = await askEachPage(askAi, 'Coffee', pages);
@@ -309,7 +309,7 @@ describe('the whole step', () => {
     expect(answer.name_en).toBe(''); // not written on the page: never a guess or a transliteration
   });
 
-  it('reads the VAT certificate behind a badge, and its legal name makes the company Confirmed (Hala, 14 Nov 2026)', async () => {
+  it('reads the VAT certificate behind a badge, and its legal name makes the company Confirmed', async () => {
     const names = parseCrNamesFile(
       `# ${JSON.stringify({ quarter: 'Q3', as_of: '2026-09-30', companies: 1, ambiguous: 0, cities: ['جده'] })}\n${nameFingerprint(normalizeLegalName('شركة النوادي التفاعلية لتقنية المعلومات')).toString(16)},7007504611,0`,
     );
@@ -341,7 +341,7 @@ describe('the whole step', () => {
     expect(out.results[0].notes).not.toContain('legal_name_city_conflict');
   });
 
-  it("a customer's company name in a testimonial is never the legal name (Aajil, 15 Nov 2026)", async () => {
+  it("a customer's company name in a testimonial is never the legal name (Aajil)", async () => {
     const read = reader({ 'https://aajil.sa': 'شاهد التجربة ليث مؤمني الرئيس التنفيذي • شركة النوادي التفاعلية لتقنية المعلومات [اقرأ القصة كاملة]' });
     const out = await validateCompanies([{ name: 'Aajil', website: 'https://aajil.sa' }], { read, askAi: ai(none), crNames: ONE_NAME() }, NOW);
     expect(out.results[0].cr).toBeNull();
@@ -475,7 +475,7 @@ describe('the whole step', () => {
     expect(out.results[0].notes).toContain('site_down');
   });
 
-  it('a site that did not answer in time is not "down": Active stays unknown and nothing is saved (Dinar, 15 Nov 2026)', async () => {
+  it('a site that did not answer in time is not "down": Active stays unknown and nothing is saved (Dinar)', async () => {
     const save = vi.fn();
     const readRaw = async (url: string) => ({ status: 'down' as const, url, reason: 'no answer' });
     const out = await validateCompanies([{ name: 'Dinar', website: 'https://www.dinar.sa', startup_id: 'ST_181' }], { read: reader({}), askAi: ai(none), readRaw, save }, NOW);
@@ -497,7 +497,7 @@ describe('the whole step', () => {
     expect(save).toHaveBeenCalledWith('ST_181', expect.objectContaining({ validation_status: 'fail' }));
   });
 
-  // Darb reads the company's own pages itself first (15 Nov 2026): the same page gives the same result every run.
+  // Darb reads the company's own pages itself first: the same page gives the same result every run.
   const FULL = (extra: string) => `${'Gyms in Riyadh. '.repeat(40)} ${extra}`;
   const direct = (pages: Record<string, string>) => {
     const asked: string[] = [];

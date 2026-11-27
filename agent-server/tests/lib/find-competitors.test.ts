@@ -1,4 +1,4 @@
-// Tests for Task 11, Member 1's whole part (test plan TC-11.1 to TC-11.6, TC-11.11, TC-11.12, TC-11.14).
+// Tests for Task 11, the whole part (test plan TC-11.1 to TC-11.6, TC-11.11, TC-11.12, TC-11.14).
 // Fake list, fake web, fake pages and a fake AI: nothing is sent, paid for or saved.
 import { describe, expect, it, vi } from 'vitest';
 import { addToRunState, CLOSE_SIMILARITY, findCompetitors, type FindDeps } from '../../src/mastra/lib/find-competitors';
@@ -125,7 +125,7 @@ describe('Task 11: Darb’s list, the web when needed, and the checks', () => {
     expect(out.not_shown).toContainEqual(expect.objectContaining({ source: 'web', why: "already in Darb's list" }));
   });
 
-  it('a startup from Darb’s list below 0.55 is not checked or passed on (N1: Unifonic 0.45, 16 Nov 2026)', async () => {
+  it('a startup from Darb’s list below 0.55 is not checked or passed on (N1: Unifonic 0.45)', async () => {
     const d = deps([row('ST_073', '1pass', 0.84), row('ST_021', 'Unifonic', 0.45)]);
     const out = await findCompetitors({ idea_text: 'x', idea_profile: PROFILE, web: 'off' }, d, NOW);
     expect(out.companies.map((c) => c.name)).toEqual(['1pass']);
@@ -166,7 +166,7 @@ describe('Task 11: Darb’s list, the web when needed, and the checks', () => {
     expect((await findCompetitors({ idea_text: 'x', idea_profile: PROFILE, web: 'always' }, always, NOW)).web.searched).toBe(true);
   });
 
-  it('in the agent: the valid companies go to the run state as strict Candidates, ready for the judge (Member 2)', async () => {
+  it('in the agent: the valid companies go to the run state as strict Candidates, ready for the judge', async () => {
     const stored = new Map([['ST_073', { validation_status: 'pass', evidence_status: 'confirmed', validated_at: '2026-11-01T00:00:00Z' }]]);
     const out = await findCompetitors({ idea_text: 'x', idea_profile: PROFILE, web: 'always' }, deps([row('ST_073', '1pass', 0.84)], [{ url: 'https://gymy.sa', title: 'GymY - gym pass' }], stored), NOW);
     const state = newRunState();

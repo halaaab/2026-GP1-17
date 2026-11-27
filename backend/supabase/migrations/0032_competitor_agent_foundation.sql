@@ -1,5 +1,5 @@
 -- =========================================================
--- 0032 — Competitor Agent foundation (design: Darb_Competitor_Agent_Design, Version 4, §11 and §16)
+-- 0032 — Competitor Agent foundation
 -- Run once in Supabase: SQL Editor → paste → Run, after 0031.
 -- NOT APPLIED YET: review first.
 --
@@ -20,7 +20,7 @@ begin;
 -- 1. similar_startup_results
 -- ---------------------------------------------------------
 
--- 1a. result_id becomes a uuid (design §11). No other table points to it.
+-- 1a. result_id becomes a uuid. No other table points to it.
 alter table public.similar_startup_results drop constraint similar_startup_results_pkey;
 alter table public.similar_startup_results drop column result_id;
 alter table public.similar_startup_results
@@ -76,13 +76,13 @@ alter table public.assessments
 -- 3. startups (the corpus)
 -- ---------------------------------------------------------
 alter table public.startups
-  add column profile_text      text,                        -- the structured profile, in English (design §16)
-  add column name_aliases      text[] not null default '{}', -- Arabic/English spellings, for name matching (design §6)
+  add column profile_text      text,                        -- the structured profile, in English
+  add column name_aliases      text[] not null default '{}', -- Arabic/English spellings, for name matching
   add column validation_status text check (validation_status in ('pass', 'fail')), -- null: not checked yet
-  add column validated_at      timestamptz;                 -- a check is valid for 90 days (design §8)
+  add column validated_at      timestamptz;                 -- a check is valid for 90 days
 
 comment on column public.startups.embedding is
-  'Embedding of the structured profile (profile_text), not of the raw description. Design §16.';
+  'Embedding of the structured profile (profile_text), not of the raw description.';
 comment on column public.startups.profile_text is
   'Structured profile (problem, customer, offering, market, keywords in Arabic and English), written in English.';
 
@@ -90,12 +90,12 @@ comment on column public.startups.profile_text is
 -- ---------------------------------------------------------
 -- 4. startup_ideas
 -- ---------------------------------------------------------
--- The embedding of the structured idea profile, computed once per idea and reused (design §3, §4, §16).
+-- The embedding of the structured idea profile, computed once per idea and reused.
 -- Same model and size as startups.embedding.
 alter table public.startup_ideas
   add column embedding extensions.vector(1536);
 
 comment on column public.startup_ideas.embedding is
-  'Embedding of the structured idea profile, same model as startups.embedding. Design §16.';
+  'Embedding of the structured idea profile, same model as startups.embedding.';
 
 commit;

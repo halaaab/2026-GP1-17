@@ -1,15 +1,15 @@
 // Task 6: reads the homepage and the About page of companies' own websites, with Tavily Extract.
-// Logic approved by Hala on 13 Nov 2026; design: Darb_Competitor_Agent_Design §5 (targeted page extraction).
+// Only the targeted pages are read.
 //
 //   1. Links on excluded sites (config/excluded-sources.ts) are never opened: "skipped".
 //   2. Repeats are removed, so no page is paid for twice. The page read is exactly the link given (only tracking
-//      parts removed): "www.dinar.sa" and "dinar.sa" can serve different pages (fix of 14 Nov 2026). The cleaned link
+// parts removed): "www.dinar.sa" and "dinar.sa" can serve different pages. The cleaned link
 //      (Task 7: no "www.") is used only to recognise the same page twice, and as the page's name in the output.
 //   3. One Tavily request reads all the homepages together (one call per 20 links), in "advanced" mode.
 //   4. In each homepage, a link on the same site named like an About page is found; one more request reads
 //      all the About pages together. So a batch of up to 20 companies costs at most 2 Tavily calls.
 //   5. Each link gets its own result: read, failed (with the reason) or skipped. One broken link never
-//      stops the others. Page text is used during the run only: it is never saved (Tavily terms, design §5).
+// stops the others. Page text is used during the run only: it is never saved (Tavily terms).
 import { tavily } from '@tavily/core';
 import { isExcludedSite } from '../config/excluded-sources';
 import { cleanLink, siteOf } from './identify-candidates';
@@ -17,12 +17,12 @@ import { cleanLink, siteOf } from './identify-candidates';
 // Most characters kept from one page, so one huge page cannot crowd out the rest.
 export const MAX_PAGE_CHARS = 15_000;
 // For a longer page: the start (what the company does) and the end (the footer: CR or VAT number, address,
-// phone) are kept, so a footer number still reaches Task 8 (approved 13 Nov 2026).
+// phone) are kept, so a footer number still reaches Task 8.
 const FOOTER_CHARS = 3_000;
 const GAP = '\n\n[…]\n\n';
 
 // Picture tags carry no information ("![Image 47: horse shoe Shape](https://…avif)"), so they are removed before
-// a page is cut, leaving room for more real text (approved 14 Nov 2026). A picture that is a link keeps its link
+// a page is cut, leaving room for more real text. A picture that is a link keeps its link
 // (an App Store badge, a VAT certificate), because the link itself is evidence for the validity checks (Task 8).
 // Empty links and runs of blank lines are removed too.
 export function withoutImages(text: string): string {
@@ -70,7 +70,7 @@ export function tavilyExtract(): ExtractFunction {
   const apiKey = process.env.TAVILY_API_KEY;
   if (!apiKey) throw new Error('TAVILY_API_KEY must be set in .env');
   const client = tavily({ apiKey });
-  // Always "advanced" (approved 13 Nov 2026): it runs the page's scripts like a browser. "basic" saw nothing
+  // Always "advanced": it runs the page's scripts like a browser. "basic" saw nothing
   // on script-built sites such as 1pass.app, and retrying would use more of the 15 Tavily calls per idea.
   return (urls) => client.extract(urls, { extractDepth: 'advanced', format: 'markdown', timeout: 30 });
 }
@@ -93,7 +93,7 @@ export function readableLink(url: string): string | null {
   return !given.endsWith('/') && text.endsWith('/') && link.pathname === '/' && !link.search ? text.slice(0, -1) : text;
 }
 
-// Names a Contact page goes by (Hala, 16 Nov 2026): big companies keep their email, phone and address there.
+// Names a Contact page goes by: big companies keep their email, phone and address there.
 export const CONTACT_WORDS = /\bcontact\b|contact-?us|تواصل معنا|اتصل بنا|اتصل|تواصل/i;
 
 // The About page of a homepage: a link on the same site whose text or address looks like "About".

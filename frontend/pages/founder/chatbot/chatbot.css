@@ -334,7 +334,7 @@ body[data-page="chatbot"] .app-header {
   color: var(--text-3);
 }
 
-/* Darb's reply with its formatting: paragraphs, bold words and lists (18 Nov 2026) */
+/* Darb's reply with its formatting: paragraphs, bold words and lists */
 .agent-text {
   display: flex;
   flex-direction: column;
@@ -1191,7 +1191,7 @@ body.assess-open #header-actions {
   list-style: none;
 }
 
-/* The comparison overview (18 Nov 2026): each competitor's three answers as marks, small enough for a phone */
+/* The comparison overview: each competitor's three answers as marks, small enough for a phone */
 .comp-overview,
 .your-idea {
   margin-bottom: 16px;
@@ -1253,7 +1253,7 @@ body.assess-open #header-actions {
   font-weight: 700;
   text-align: center;
 }
-/* calm colours: being the same as the idea is not an error, so no red (Hala, 18 Nov 2026) */
+/* calm colours: being the same as the idea is not an error, so no red */
 .answer-word.is-same      { background: var(--pastel-3-tint); color: var(--pastel-3-text); }
 .answer-word.is-partly    { background: var(--pastel-1-tint); color: var(--pastel-1-text); }
 .answer-word.is-different { background: var(--bg-muted); color: var(--text-nav); }
@@ -2030,7 +2030,7 @@ body.assess-open #header-actions {
   }
 }
 
-/* What Darb is doing now, under the typing dots (18 Nov 2026) */
+/* What Darb is doing now, under the typing dots */
 /* What Darb is doing while it analyses: one line per step, the current one turning, the finished ones ticked */
 .agent-steps {
   display: flex;

@@ -1,26 +1,25 @@
 // Task 8: is each company real, active and serving Saudi Arabia? Four checks, then an evidence status.
-// Design: Darb_Competitor_Agent_Design §7 (valid competitor) and §8 (evidence status). Logic approved by Hala on
-// 14 Nov 2026, with three decisions:
+// The checks follow three decisions:
 //   1. A site that cannot be read falls back to the company's Saudi App Store page, when one is known.
 //   2. Confirmed ONLY when a CR number on the company's own pages matches the Ministry of Commerce list
 //      (the design's "or two independent sources agree" route is not used). Otherwise Likely at most.
 //   3. The Arabic version of the site (/ar) is read too: a CR number can be on one language version only.
-//   5. Legal name (Hala, 14 Nov 2026): the legal name a company writes on its pages (its VAT certificate, its footer,
+// 5. Legal name: the legal name a company writes on its pages (its VAT certificate, its footer,
 //      "شركة …") is cleaned (Arabic spelling differences) and checked against the names of active companies in the
 //      Ministry of Commerce list (lib/cr-names.ts). Exactly one company with that name, and no conflicting city:
 //      it counts like a CR number match, so the company can be Confirmed. A VAT certificate linked on the site is
 //      read (not trusted by its link name): its VAT number and legal name are evidence.
-//   6. Thin sites (Hala, 14 Nov 2026): a site that gives under 500 characters gets the note "page_mostly_empty";
+// 6. Thin sites: a site that gives under 500 characters gets the note "page_mostly_empty";
 //      in the monthly re-check only, one news search on its name, whose recent dates count for Active.
 //      The city check of decision 5 uses the company's own address only (a city it serves is no conflict).
-//   4. Active (Hala, 14 Nov 2026): every date that can help counts: the App Store or Google Play page (its last
+// 4. Active: every date that can help counts: the App Store or Google Play page (its last
 //      update), news articles about the company (their dates, from the web search), dated content on its own site,
 //      and the copyright year. Because many sites update the copyright year by themselves, the copyright year
-//      counts only together with a working offering (design §7 to be updated to match).
+// counts only together with a working offering.
 //
 //   1. Read the company's pages: homepage, About page, Arabic homepage, a linked certificate, its app's store text.
 //      Darb's server reads them itself first (raw-page.ts), so the same page gives the same result every run;
-//      Tavily (Task 6) reads only what that could not get (15 Nov 2026).
+// Tavily (Task 6) reads only what that could not get.
 //   2. Signals. Code finds what it can find exactly (the name, email on the company's own domain, +966, CR and VAT
 //      numbers next to their words, SAR prices, Saudi cities, .sa domain, Saudi App Store, Arabic text). The AI
 //      answers the rest (real offering, "coming soon", dated content, a Saudi address), always quoting the page;
@@ -51,7 +50,7 @@ export type CompanyToValidate = {
   app_store_url?: string | null; // its Saudi App Store or Google Play page, if known (read for its last update)
   news?: { url: string; title: string | null; published_date?: string | null }[]; // news pages from the web search
   // What the company is known to do (its description in Darb's list): the AI compares it with what the site sells,
-  // so a site that belongs to another company is caught (fix of 14 Nov 2026: abwaab.sa is "شركة موقع ابواب", not
+  // so a site that belongs to another company is caught (fix of abwaab.sa is "شركة موقع ابواب", not
   // the e-learning app Abwaab).
   description?: string | null;
 };
@@ -101,7 +100,7 @@ export function nameOnPage(names: string[], text: string): string | null {
   return null;
 }
 
-// The App Store's seller name as identity for Real entity (Hala, 15 Nov 2026). Apple shows a company account's legal
+// The App Store's seller name as identity for Real entity. Apple shows a company account's legal
 // entity name as the seller, checked through its D-U-N-S number (lib/app-stores.ts), so it is evidence that a legal
 // company stands behind the app. It counts only when:
 //   1. the app is the company's own: the one linked on its site, or saved for it in Darb's list (appOf, below);
@@ -218,7 +217,7 @@ export function codeSignals(company: CompanyToValidate, pages: PageText[], domai
 }
 
 // ---------------------------------------------------------------------------
-// 2c. Active: the copyright year and news dates (Hala, 14 Nov 2026)
+// 2c. Active: the copyright year and news dates
 // ---------------------------------------------------------------------------
 
 const COPYRIGHT = /(©|\(c\)|copyright|جميع الحقوق محفوظة|حقوق (?:الطبع|النشر)(?: والنشر)? محفوظة|الحقوق محفوظة)/gi;
@@ -227,8 +226,8 @@ const COPYRIGHT = /(©|\(c\)|copyright|جميع الحقوق محفوظة|حقو
 export function copyrightYear(pages: PageText[]): { year: number; quote: string; url: string } | null {
   let best: { year: number; quote: string; url: string } | null = null;
   for (const p of pages) {
-    // An app store page's copyright is the store's ("Copyright © 2026 Apple Inc."), never the company's (fix of
-    // 14 Nov 2026, Bayut). The app's own update date counts instead, as dated content.
+    // An app store page's copyright is the store's ("Copyright © 2026 Apple Inc."), never the company's (for
+    // example Bayut). The app's own update date counts instead, as dated content.
     if (/^https?:\/\/(apps\.apple\.com|play\.google\.com)\//i.test(p.url)) continue;
     for (const m of p.text.matchAll(COPYRIGHT)) {
       const around = p.text.slice(Math.max(0, m.index! - 30), m.index! + m[0].length + 40);
@@ -247,7 +246,7 @@ export function dateInLink(url: string): string | null {
   return m ? `${m[1]}-${m[2]}${m[3] ? `-${m[3]}` : ''}` : null;
 }
 
-// Tavily gives dates as "2026-09-01" or as "Tue, 01 Sep 2026 00:00:00 GMT" (news): both become "2026-09-01".
+// Tavily gives dates as "2026-09-01" or as "Tue, 00:00:00 GMT" (news): both become "2026-09-01".
 export function isoDate(date: string | null | undefined): string | null {
   if (!date) return null;
   if (/^\d{4}-\d{2}/.test(date)) return date.slice(0, 10);
@@ -284,11 +283,11 @@ export type AiAnswer = {
   // Only when an expected product is given: does the site sell it? "different" only when the pages clearly show
   // another business.
   same_product?: { answer: 'same' | 'different' | 'unclear'; quote: string; page: number };
-  // One sentence in the AI's own words: what the company offers (shown on the competitor card, design §11).
-  // Never copied from the page (Tavily terms). Empty when the page does not say (Hala, 16 Nov 2026).
+  // One sentence in the AI's own words: what the company offers (shown on the competitor card).
+  // Never copied from the page (Tavily terms). Empty when the page does not say.
   description?: string;
   // The business's own short name as written on the pages, in Arabic and in Latin letters ("" when not written).
-  // Code keeps a name only if it is really on the page (Hala, 18 Nov 2026: eshq.coffee was shown as "Coffee",
+  // Code keeps a name only if it is really on the page (eshq.coffee was shown as "Coffee",
   // from its web address, while its pages say "عشق القهوة").
   name_ar?: string;
   name_en?: string;
@@ -349,7 +348,7 @@ const AI_SCHEMA = {
   },
 };
 
-// Reading up to ~45,000 characters of pages takes longer than a short prompt: 60 seconds (fix of 14 Nov 2026,
+// Reading up to ~45,000 characters of pages takes longer than a short prompt: 60 seconds (fix of,
 // 1pass timed out at 40).
 const SIGNAL_TIMEOUT_MS = 60_000;
 
@@ -370,7 +369,7 @@ export function openAiSignals(): AskAi {
         messages: [
           { role: 'system', content: SIGNAL_PROMPT },
           // No "Expected product" line when there is none: "none given" made the small model report nothing at all
-          // (fix of 15 Nov 2026: Aajil, 0 offering signals without it, 5 with a description).
+          // (Aajil, 0 offering signals without it, 5 with a description).
           { role: 'user', content: `Company: ${companyName}${expected?.trim() ? `\nExpected product: ${expected.trim()}` : ''}\n\n${pages.map((p, i) => `[${i + 1}] ${p.url}\n${p.text}`).join('\n\n')}${expected?.trim() ? `\n\nReminder, the expected product: ${expected.trim()}` : ''}` },
         ],
         response_format: { type: 'json_schema', json_schema: { name: 'signals', strict: true, schema: AI_SCHEMA } },
@@ -382,7 +381,7 @@ export function openAiSignals(): AskAi {
   };
 }
 
-// The AI reads each page on its own, all at the same time, and the answers are put together (fix of 15 Nov 2026).
+// The AI reads each page on its own, all at the same time, and the answers are put together.
 // Given Aajil's 4 pages at once (26,000 characters), the small model found no offering at all; given its homepage
 // alone, it found "Get started", its limits and "3,000+ businesses served". A short text gives a surer answer.
 // Same product: "different" only when no page says "same" (an About page can say little about the product).
@@ -439,7 +438,7 @@ export const FOUNDED = /found(?:ed|ing)|establish(?:ed|ment)|\best\.|\bsince\s+(
 
 // Part of an address: a district, street, building, postal code or P.O. box.
 // ("office" is left out: "a regional office in Riyadh" is a sentence, not an address.)
-// The Arabic words count only as whole words, with و, ب or ال in front at most (Hala, 15 Nov 2026): "حي" was found
+// The Arabic words count only as whole words, with و, ب or ال in front at most: "حي" was found
 // inside "الحين" ("now") in Aajil's slogan, and "طريق" would be inside "بطريقة" ("in a way").
 const AR_WORD = (words: string) => `(?<![\u0600-\u06FF])(?:[وب])?(?:ال)?(?:${words})(?![\u0600-\u06FF])`;
 const ADDRESS_PART = new RegExp(
@@ -456,26 +455,26 @@ export function aiSignals(answer: AiAnswer, pages: PageText[], now: Date): Signa
   const signals: Signal[] = [];
   const page = (n: number) => pages[n - 1];
   // The quote must be on a page that was read: the one the AI named, or, when it named the wrong page number, another
-  // (fix of 14 Nov 2026: the AI quoted abwaab.sa/ar, page 2, as page 1). Its link is the page it is really on.
+  // (the AI quoted abwaab.sa/ar, page 2, as page 1). Its link is the page it is really on.
   const keep = (n: number, quote: string, s: Omit<Signal, 'by' | 'quote' | 'url'>) => {
     const on = quoteIsOnPage(quote, page(n)) ? page(n) : pages.find((p) => quoteIsOnPage(quote, p));
-    // One quote counts for one signal of a check (fix of 15 Nov 2026: Aajil's price was also given as a review).
+    // One quote counts for one signal of a check (Aajil's price was also given as a review).
     if (signals.some((x) => x.check === s.check && x.quote === squash(quote))) return;
     if (on) signals.push({ ...s, quote: squash(quote), url: on.url, by: 'ai' });
   };
   for (const o of answer.offering) keep(o.page, o.quote, { check: 'real_offering', signal: o.signal, kind: 'positive' });
   for (const b of answer.blocking) keep(b.page, b.quote, { check: b.signal === 'closed or discontinued' ? 'active' : 'real_offering', signal: b.signal, kind: 'blocking' });
   for (const d of answer.dated) {
-    if (/©|copyright|حقوق/i.test(d.quote)) continue; // a copyright year alone never counts (design §7)
-    if (FOUNDED.test(d.quote)) continue; // a founding year says nothing about now (fix of 14 Nov 2026: Aajil, "2022 سنة التأسيس")
-    if (!quoteHasItsYear(d.date, d.quote)) continue; // the date must come from the quote, not be made up (fix of 14 Nov 2026)
+    if (/©|copyright|حقوق/i.test(d.quote)) continue; // a copyright year alone never counts
+    if (FOUNDED.test(d.quote)) continue; // a founding year says nothing about now (Aajil, "2022 سنة التأسيس")
+    if (!quoteHasItsYear(d.date, d.quote)) continue; // the date must come from the quote, not be made up
     keep(d.page, d.quote, { check: 'active', signal: `dated content (${d.date})`, kind: isWithin12Months(d.date, now) ? 'positive' : 'blocking' });
   }
   for (const a of answer.saudi_address) {
-    // A real address: a district, street, building or postal code (fix of 15 Nov 2026). A city alone ("Jeddah, Saudi
+    // A real address: a district, street, building or postal code. A city alone ("Jeddah, Saudi
     // Arabia", "Riyadh, KSA") is not an address: code already counts it as "Saudi city mentioned", a weak signal.
     if (!ADDRESS_PART.test(a.quote)) continue;
-    // ...and it must be in Saudi Arabia: a Saudi city or the country named (fix of 15 Nov 2026: the AI gave
+    // ...and it must be in Saudi Arabia: a Saudi city or the country named (the AI once gave
     // Yourparts' Cairo office, "…البساتين - القاهرة", as a Saudi address).
     if (!SAUDI_CITIES.test(a.quote) && !SAUDI_COUNTRY.test(a.quote)) continue;
     keep(a.page, a.quote, { check: 'saudi_reach', signal: 'Saudi address', kind: 'strong' });
@@ -498,7 +497,7 @@ export function decide(signals: Signal[], anyPageRead: boolean, cr: CrCheck | nu
   const channel = of('real_entity', 'channel').length > 0;
   const name = of('real_entity', 'name').length > 0;
   const identity = new Set(of('real_entity', 'identity').map((s) => s.signal));
-  // Its site selling something else than the startup it should be fails (fix of 14 Nov 2026, Abwaab).
+  // Its site selling something else than the startup it should be fails (Abwaab).
   const different = of('real_entity', 'blocking');
   const real_entity: Outcome = !channel ? 'unknown' : !name || different.length ? 'fail' : identity.size >= 1 ? 'pass' : 'unknown';
 
@@ -510,7 +509,7 @@ export function decide(signals: Signal[], anyPageRead: boolean, cr: CrCheck | nu
   // 3. Active: 1 dated signal within 12 months (an app update, a news article, dated content on its site), or a
   // copyright year from this year or last year together with a working offering. Closed, or only older dates, fails.
   // A current copyright year is weak, but it is not a sign of being closed: with it, older dates give unknown, never
-  // fail (Hala, 14 Nov 2026).
+  // fail.
   const recent = of('active', 'positive').length;
   const copyright = of('active', 'weak').length > 0;
   const closed = of('active').some((s) => s.signal === 'closed or discontinued');
@@ -526,7 +525,7 @@ export function decide(signals: Signal[], anyPageRead: boolean, cr: CrCheck | nu
   const saudi_reach: Outcome = strong.size >= 1 || weak.size >= 2 ? 'pass' : anyPageRead ? 'fail' : 'unknown';
 
   const allPass = [real_entity, real_offering, active, saudi_reach].every((o) => o === 'pass');
-  // Hala's decision 2: Confirmed only with a CR number that matches the Ministry of Commerce list.
+  // Decision 2: Confirmed only with a CR number that matches the Ministry of Commerce list.
   const evidence_status: EvidenceStatus = allPass && cr?.result === 'match' ? 'confirmed' : allPass ? 'likely' : 'unconfirmed';
 
   const reasons: Record<CheckName, string> = {
@@ -594,7 +593,7 @@ export type ValidateDeps = {
 
 export type NewsItem = { url: string; title: string | null; published_date?: string | null };
 
-// A site that gives less text than this was not really read (fix of 14 Nov 2026): Aajil's site is built by
+// A site that gives less text than this was not really read: Aajil's site is built by
 // JavaScript, and Tavily got 223 characters, without its footer ("© 2026 Aajil") or its news banner.
 export const THIN_TEXT = 500;
 
@@ -625,7 +624,7 @@ const CITY_NAMES: [RegExp, string][] = [
   [/tabuk|تبوك/i, 'تبوك'], [/abha|أبها|ابها/i, 'ابها'], [/buraydah|بريدة/i, 'بريده'], [/jubail|الجبيل/i, 'الجبيل'], [/khamis mushait|خميس مشيط/i, 'خميس مشيط'],
 ];
 // The cities in the company's own address: right after "عنوان المركز الرئيسي", "المدينة :", "head office",
-// "address"… (fix of 14 Nov 2026). A city only mentioned on a page is a city it serves, not where it is registered:
+// "address"…. A city only mentioned on a page is a city it serves, not where it is registered:
 // 1pass is registered in Jeddah and lists gyms in Riyadh. PDF text is also searched once repaired.
 const ADDRESS_WORDS = /(عنوان|المقر الرئيسي|المدين[ةه]\s*:|head\s*office|headquarter\w*|registered\s+(?:office|address)|\baddress\b)/gi;
 export function addressCitiesOn(pages: PageText[]): Set<string> {
@@ -665,7 +664,7 @@ export function arabicPage(website: string): string | null {
 
 type Read = Awaited<ReturnType<ReadPages>>;
 
-// A server's error page is not the company's page (fix of 15 Nov 2026: for Shgardi, Tavily gave Cloudflare's
+// A server's error page is not the company's page (fix of for Shgardi, Tavily gave Cloudflare's
 // "Error 1016, Origin DNS error" page, so its closed site looked like it worked).
 export const ERROR_PAGE = /cloudflare is currently unable to resolve|origin dns error|web server is down|error code:? 5\d\d|\b(?:502 bad gateway|503 service unavailable|504 gateway time-?out)\b|this site can.t be reached|domain (?:is )?for sale/i;
 const isErrorPage = (text: string) => ERROR_PAGE.test(text.slice(0, 2000));
@@ -673,14 +672,14 @@ const isErrorPage = (text: string) => ERROR_PAGE.test(text.slice(0, 2000));
 // A page that does not exist (404, 410) is not sent to Tavily: Tavily would not find it either.
 const missing = (r: RawPage | null) => r?.status === 'skipped' && /HTTP 4(04|10)/.test(r.reason);
 
-// Each page gets at most this long (Hala, 16 Nov 2026). Pages are read side by side, so the slowest site set the time
+// Each page gets at most this long. Pages are read side by side, so the slowest site set the time
 // for every company: one slow homepage took 60 of the 89 s of a run (plain read twice, then the browser twice can
 // take about 113 s). A page not read in time goes to the backup reader (Tavily) like a blocked page.
 export const PAGE_BUDGET_MS = 25_000;
 const withinBudget = <T>(work: Promise<T | null>): Promise<T | null> =>
   Promise.race([work, new Promise<null>((done) => setTimeout(() => done(null), PAGE_BUDGET_MS).unref?.())]);
 
-// Darb's server reads each page itself first (Hala, 15 Nov 2026): the same page gives the same text every run, so
+// Darb's server reads each page itself first: the same page gives the same text every run, so
 // the same company gets the same result. Tavily reads only the pages this could not get (blocked, robots.txt says
 // no, down, or a JavaScript site that gives almost no text). The About page of a page read directly is found on it
 // and read directly too.
@@ -689,7 +688,7 @@ export async function readOwnPages(urls: string[], deps: ValidateDeps, options: 
   if (!deps.readRaw) return { ...(urls.length ? await deps.read(urls, options) : { pages: [], failed: [], tavily_calls: 0 }), raws };
   const minText = options.minText ?? THIN_TEXT;
   // The plain read first; a page it could not use (almost no text, or a server error such as Bayut's 503 to robots)
-  // is opened in a real browser, which runs the site's JavaScript (lib/browser-page.ts, 15 Nov 2026).
+  // is opened in a real browser, which runs the site's JavaScript (lib/browser-page.ts).
   const readOne = async (u: string): Promise<RawPage | null> => {
     const plain = await deps.readRaw!(u).catch(() => null);
     const usable = plain?.status === 'ok' && !isErrorPage(plain.text) && squash(plain.text).length >= minText;
@@ -772,7 +771,7 @@ export async function validateCompanies(
   );
   const certOf = list.map((_c, i) => certificateLinkOn([...pagesOf(first, sites[i]), ...rawPages[i]]));
   // Its Contact page, read by Darb's server only (free, never Tavily): big companies keep their email, phone and
-  // address there, not on the homepage (Foodics, Cura and Gathern had none on it; Hala, 16 Nov 2026).
+  // address there, not on the homepage (Foodics, Cura and Gathern had none on it).
   const contactOf = list.map((_c, i) => {
     for (const p of [...rawPages[i], ...pagesOf(first, sites[i])]) {
       const link = findAboutLink(p.url, p.text, CONTACT_WORDS);
@@ -843,8 +842,8 @@ export async function validateCompanies(
       } else if (facts) notes.push('app_not_listed');
       // Its website no longer works: Tavily read nothing, and the server found no such domain or got a server error, twice.
       // A site that did not answer in time (twice) is not proof it closed: Dinar did not answer once and loaded two
-      // minutes later (15 Nov 2026). So "no answer" leaves Active unknown, and the result is not saved (Hala, 15 Nov 2026).
-      // "Connection refused" too: the server is there but refused Darb at that moment (Larat, D5; Hala, 16 Nov 2026).
+      // minutes later. So "no answer" leaves Active unknown, and the result is not saved.
+      // "Connection refused" too: the server is there but refused Darb at that moment (Larat, D5).
       const raw = raws[i];
       if (raw?.status === 'down' && !pagesOf(first, sites[i]).length) {
         if (raw.reason === 'no answer' || raw.reason === 'connection refused') notes.push('site_not_answering');
@@ -907,9 +906,9 @@ export async function validateCompanies(
       if (signals.some((x) => x.signal === 'a different company or product')) notes.push('different_company');
       let decided = decide(signals, codePages.length > 0, cr);
       // Before failing Active only because of an old copyright year, the monthly re-check looks for recent news:
-      // a fail removes a startup from the search (Hala, 14 Nov 2026: Dinar's footer still says © 2024).
+      // a fail removes a startup from the search (Dinar's footer still says © 2024).
       // It also does when no date was found at all (Active unknown), whatever the reason: Aajil's site gives plenty of
-      // text, but its "© 2026" is added by JavaScript in the browser, so Darb sees no date (Hala, 14 Nov 2026).
+      // text, but its "© 2026" is added by JavaScript in the browser, so Darb sees no date.
       const activeBlockers = signals.filter((x) => x.check === 'active' && x.kind === 'blocking');
       const copyrightOnly = decided.active === 'fail' && activeBlockers.length > 0 && activeBlockers.every((x) => x.signal.startsWith('copyright year'));
       const newsChecked = !!found[i];

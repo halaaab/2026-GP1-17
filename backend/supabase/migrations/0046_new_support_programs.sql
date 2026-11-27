@@ -1,8 +1,8 @@
 -- =========================================================
 -- 0046 — 19 more incubators and accelerators in the explorer (18 → 37)
--- Applied to Supabase on 22 Nov 2026, after 0045.
+-- Applied to Supabase on, after 0045.
 --
--- The programs come from the EcosystemSA directory and were checked on 21–22 Nov 2026 against
+-- The programs come from the EcosystemSA directory and were checked on 21– against
 -- each program's official page, saudi-accelerators.com and news (the checked spreadsheet and the
 -- Dataset Description are kept with the team's documents). Only the 19 marked "Add" are here.
 -- Each row's corrections from the check are applied (names, durations, funding terms); a field

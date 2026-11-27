@@ -48,7 +48,7 @@ describe('the re-check', () => {
     expect(save).toHaveBeenCalledWith('ST_999', { validation_status: 'fail', evidence_status: null, validated_at: NOW.toISOString() });
   });
 
-  it('a site that did not answer is "not saved", so it stays due for the next run (Dinar, 15 Nov 2026)', async () => {
+  it('a site that did not answer is "not saved", so it stays due for the next run (Dinar)', async () => {
     const save = vi.fn();
     const nothing: ReadPages = async (urls) => ({ pages: [], failed: urls.map((url) => ({ url })), tavily_calls: 1 });
     const readRaw = async (url: string) => ({ status: 'down' as const, url, reason: 'no answer' });

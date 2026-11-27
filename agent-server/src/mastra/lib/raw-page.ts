@@ -1,4 +1,4 @@
-// The company's own pages read directly by Darb's server (Hala, 14 and 15 Nov 2026): its homepage, Arabic page,
+// The company's own pages read directly by Darb's server: its homepage, Arabic page,
 // About page and a linked VAT or CR certificate (PDF). Tavily's reads changed from run to run (1pass's certificate
 // was read at 19:00 and failed at 21:04), and often left out a site's footer (Dinar's CR number). A page read
 // directly gives the same text every run, so the same company gets the same result. Tavily now reads only what

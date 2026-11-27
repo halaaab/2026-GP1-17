@@ -1,8 +1,8 @@
 -- =========================================================
 -- 0047 — Fill the empty fields of the 19 programs added in 0046
--- Applied to Supabase on 23 Nov 2026, after 0046.
+-- Applied to Supabase on, after 0046.
 --
--- Every value was checked on 23 Nov 2026 against the program's official page or its owner's
+-- Every value was against the program's official page or its owner's
 -- official site (links and quotes are kept with the team's documents). Where an official Arabic
 -- page exists its wording is used; otherwise the Arabic is a translation of the English.
 -- Left empty on purpose: the NCA Cybersecurity Accelerator's target stage (no official page names one).

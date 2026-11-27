@@ -1,4 +1,4 @@
-// Tests for the conversation's formal name (18 Nov 2026): only a short, clean name is used.
+// Tests for the conversation's formal name: only a short, clean name is used.
 import { describe, expect, it } from 'vitest';
 import { cleanPart, cleanTitle } from '../../src/mastra/lib/idea-title';
 

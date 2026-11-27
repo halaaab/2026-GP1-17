@@ -446,7 +446,7 @@ describe('the summary and opportunity sentences (written in code)', async () => 
   });
 });
 
-describe('the customer-partly rule (explainer §6, rule 2)', async () => {
+describe('the customer-partly rule (rule 2)', async () => {
   const { opportunitySentences, OPPORTUNITY_TEXT } = await import('../../src/mastra/lib/competitor-notes');
   it('uses its fixed message, not the judge’s sentence, and the next step "Interview your target customers"', () => {
     const competitors = [{ ...competitor(1), opportunity: 'possible_customer_difference' as const, difference: 'Some judge sentence.' }];
@@ -457,7 +457,7 @@ describe('the customer-partly rule (explainer §6, rule 2)', async () => {
 });
 
 // ---------------------------------------------------------------------------
-// No consent step (Hala, 22 Nov 2026): an idea, or a question about who already does it, is analysed right away.
+// No consent step: an idea, or a question about who already does it, is analysed right away.
 // ---------------------------------------------------------------------------
 
 describe('an idea is analysed right away, without asking the founder first', () => {

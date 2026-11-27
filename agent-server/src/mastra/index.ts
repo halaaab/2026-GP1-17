@@ -28,7 +28,7 @@ import { judgeCandidatesTool } from './tools/judge-candidates';
 import { understandIdeaTool } from './tools/understand-idea';
 import { predictSurvivalTool } from './tools/predict-survival';
 
-// Safety net (18 Nov 2026): an error from background work that nothing handled is written to the log instead of
+// Safety net: an error from background work that nothing handled is written to the log instead of
 // stopping the server. Node's default stops the whole process, so every founder got 502 until it restarted.
 process.on('unhandledRejection', (reason) => {
   console.error('An error was not handled (the server keeps running):', reason);

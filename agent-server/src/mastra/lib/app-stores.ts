@@ -1,4 +1,4 @@
-// The company's app, read by code (Hala, 14 Nov 2026): is it listed, and when was it last updated?
+// The company's app, read by code: is it listed, and when was it last updated?
 // Tavily gives App Store and Google Play pages without their dates (Apple's version history has none in its text,
 // and a Google Play page comes back as headings only), and the AI missed "Install" and "Updated on" (Testahel,
 // PureGym KSA). So code reads them from the stores directly, for free:
@@ -7,7 +7,7 @@
 // A listed app = the product can be downloaded now (Real offering). Its last update = a date for Active.
 import { htmlToText, type FetchLike } from './raw-page';
 
-// text: the app's own words in the store (its description, release notes, seller), read like a page (15 Nov 2026).
+// text: the app's own words in the store (its description, release notes, seller), read like a page.
 // seller: the App Store's seller name. For a company's developer account, Apple shows the legal entity's name there,
 // after checking it through its D-U-N-S number (Dun & Bradstreet); no trade names, DBAs or branches. A one-person
 // account shows the person's own name (developer.apple.com/support/enrollment, /support/D-U-N-S). Used for Real entity
@@ -54,7 +54,7 @@ export async function readAppFacts(url: string, fetchFn: FetchLike = fetch as un
   return null;
 }
 
-// The company's own app when its site does not link it (Hala, 16 Nov 2026): Apple's Saudi store is searched by the
+// The company's own app when its site does not link it: Apple's Saudi store is searched by the
 // company's name (free), and an app counts only when its seller's website is the company's own domain, so a
 // look-alike app from someone else never counts. Foodics, Cura and Gathern had no app link Darb could read, so
 // they stayed Unconfirmed. Returns the app's Saudi store link, or null.

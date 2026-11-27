@@ -1,5 +1,5 @@
-// Config: sites Darb never searches or reads (Hala's list, 14 Nov 2026), from the legal policy in the design
-// (§5): public pages only, nothing behind a login or paywall, no site that forbids automated access, company
+// Config: sites Darb never searches or reads, from the legal policy:
+// public pages only, nothing behind a login or paywall, no site that forbids automated access, company
 // facts only (never personal data).
 //
 // These are EXACT hostnames ("www." is ignored): excluding google.com does not exclude play.google.com.
@@ -24,9 +24,9 @@ export const EXCLUDED_SOURCES = [
 
 export const isExcludedSite = (site: string) => EXCLUDED_SOURCES.includes(site.toLowerCase().replace(/^www\./, ''));
 
-// Directories and classifieds (Hala, 16 Nov 2026): Saudi sites that list other businesses or people's ads, so they
+// Directories and classifieds: Saudi sites that list other businesses or people's ads, so they
 // pass the four checks but do not offer the product themselves. They are never taken as companies from the web
-// search. Seen in the Task 11 runs: Haraj (people reselling gym subscriptions) and Bluepages (a business directory)
+// search. Seen: Haraj (people reselling gym subscriptions) and Bluepages (a business directory)
 // came out as Confirmed gym competitors (D6). Exact hostnames, like the list above.
 export const DIRECTORY_SITES = ['haraj.com.sa', 'bluepages.com.sa', 'tripadvisor.com'];
 

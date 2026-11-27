@@ -1,4 +1,4 @@
-// A greeting that opens a conversation is answered at once, in code (Hala, 18 Nov 2026: "hi" took 20 to 30 seconds).
+// A greeting that opens a conversation is answered at once, in code ("hi" took 20 to 30 seconds).
 // The whole Conversational Agent run (its memory in the database, the model, then saving) took about 5 seconds
 // before the first word and about 11 seconds in all on a laptop, for a sentence that is always the same kind of welcome.
 // Only a message that is nothing but a greeting, and only the first message of a conversation, is answered here;

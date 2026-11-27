@@ -65,7 +65,7 @@ describe('Conversational Agent', () => {
     expect(await instructionsOf(conversationalAgent)).toContain('No assessment has been started');
   });
 
-  it('never asks the founder to fill in a form before delegating (design §4)', async () => {
+  it('never asks the founder to fill in a form before delegating', async () => {
     const text = await instructionsOf(conversationalAgent);
     expect(text).toContain('Do not judge yourself whether the idea is too vague, and never ask your own questions about the idea');
     expect(text).not.toContain('ISIC4 divisions (code');
