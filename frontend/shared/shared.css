@@ -1282,6 +1282,12 @@ html[dir="rtl"] .panel.is-open {
   font-size: 13px;
   font-weight: 800;
 }
+/* no picture yet: the initials on teal, as on the Incubators & Accelerators panel */
+.logo-field-preview:not(.has-image) {
+  border-color: transparent;
+  background: var(--teal-tint);
+  color: var(--teal-text);
+}
 .logo-field-preview img {
   width: 100%;
   height: 100%;
@@ -1297,6 +1303,22 @@ html[dir="rtl"] .panel.is-open {
 }
 .logo-field-body .input {
   height: 38px;
+}
+.logo-field-body .field-hint {
+  margin: 0;
+}
+.logo-picker-buttons {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+/* the real file box stays hidden; the "Upload logo" button opens it */
+.logo-input {
+  display: none;
+}
+.logo-field.is-dragging {
+  border-color: var(--teal);
+  background: var(--teal-tint);
 }
 
 /* Choosing several (sectors, stages, regions): chips that are ticked check boxes, on every page.

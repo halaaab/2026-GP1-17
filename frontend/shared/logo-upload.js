@@ -13,12 +13,14 @@
      const address = await logo.save(id);   // on Save: the new address, the old one, or null when removed
    ========================================================== */
 import { t } from './language.js';
-import { icon } from './layout.js';
 import { supabase } from './supabase.js';
 
 const TYPES = ['image/png', 'image/jpeg', 'image/webp'];
 const MAX_BYTES = 5 * 1024 * 1024;   // what an admin may pick; it is shrunk before upload
 const SIZE = 400;                    // the longest side of the uploaded logo, in pixels
+
+// the same arrow-up icon as the Incubators & Accelerators panel
+const UPLOAD = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M5 20h14"/></svg>';
 
 const safe = (text) => String(text).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -49,7 +51,7 @@ export function makeLogoUpload({ bucket, row, preview, choose, remove, file, err
     const shown = logo.preview || (logo.removed ? '' : addressOf(logo.current));
     previewEl.classList.toggle('has-image', Boolean(shown));
     previewEl.innerHTML = shown ? `<img src="${safe(shown)}" alt="">` : safe(initials() || '?');
-    chooseEl.innerHTML = `${icon('download')}<span>${t(shown ? 'programsAdmin.f.logoReplace' : 'programsAdmin.f.logoUpload')}</span>`;
+    chooseEl.innerHTML = `${UPLOAD}<span>${t(shown ? 'programsAdmin.f.logoReplace' : 'programsAdmin.f.logoUpload')}</span>`;
     removeEl.hidden = !shown;
   }
 

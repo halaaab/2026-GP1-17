@@ -92,27 +92,14 @@
 
 /* ---------- Side panel ---------- */
 /* The panel, its sections, chips, logo row and errors are the shared ones (shared.css, .edit-panel).
-   Only the upload buttons and dragging a picture onto the logo row are this page's. */
+   Only the initials inside the logo square are this page's. */
 
-#logo-picker.is-dragging {
-  border-color: var(--teal);
-  background: var(--teal-tint);
-}
 .logo-field-preview .program-logo {
   width: 100%;
   height: 100%;
   border: none;
   border-radius: 0;
   font-size: 16px;
-}
-.logo-picker-buttons {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-/* the real file box stays hidden; the "Upload logo" button opens it */
-.logo-input {
-  display: none;
 }
 
 /* the red trash at the top of the delete dialog (the same as the other admin pages) */
