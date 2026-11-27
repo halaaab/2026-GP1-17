@@ -77,7 +77,7 @@ function fillDropdowns() {
     return found;
   };
 
-  // the dropdown's name ("Sector", no number) shows while nothing is chosen, then "All …" and
+  // "All sectors" (no number) shows while nothing is chosen, the same words as on every page, then "All …" and
   // each choice, the same as the Regulatory Requirements Explorer
   const fill = (select, nameKey, values) => {
     const chosen = select.value;
@@ -92,29 +92,25 @@ function fillDropdowns() {
   const otherPlaces = [...regions.keys()].filter((region) => !SAUDI_REGIONS.includes(region)).sort();
   const stages = STAGES.filter((stage) => startups.some((row) => listOf(row, 'stage').includes(stage)));
 
-  // the sectors are the 20 ISIC4 sections of GASTAT's classification, A to U, each with its count
-  fill(sectorFilter, 'startups.sector', ISIC_CODES);
-  fill(regionFilter, 'startups.region', [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces]);
-  fill(stageFilter, 'startups.stage', stages);
+  // the sectors are the 20 ISIC4 sections of GASTAT's classification, A to U
+  // only the sectors that have startups: without counts beside the choices, an empty one would show nothing
+  fill(sectorFilter, 'filter.allSectors', ISIC_CODES.filter((code) => startups.some((row) => listOf(row, 'isic').includes(code))));
+  fill(regionFilter, 'filter.allRegions', [...SAUDI_REGIONS.filter((region) => regions.has(region)), ...otherPlaces]);
+  fill(stageFilter, 'filter.allStages', stages);
 }
 
-/* Each dropdown says how many startups each choice has. The numbers follow the search and
-   the OTHER filters: "All regions (N)" is how many startups fit the other filters, and each
-   region is how many of those are in that region. A choice with none shows (0).
-   The dropdown's name (the first, hidden option) has no number. */
+/* The words of each dropdown's choices, in the page's language. No counts beside them (Hala: the
+   numbers like "(513)" made the filters noisy), the same as on every other page. */
 const DROPDOWNS = [
-  { select: sectorFilter, column: 'isic', allKey: 'startups.allSectors' },
-  { select: regionFilter, column: 'region', allKey: 'startups.allRegions' },
-  { select: stageFilter, column: 'stage', allKey: 'startups.allStages' },
+  { select: sectorFilter, column: 'isic', allKey: 'filter.allSectors' },
+  { select: regionFilter, column: 'region', allKey: 'filter.allRegions' },
+  { select: stageFilter, column: 'stage', allKey: 'filter.allStages' },
 ];
 
 function showCounts() {
   DROPDOWNS.forEach(({ select, column, allKey }) => {
-    const fitting = startups.filter((row) => matches(row, column));
     select.querySelectorAll('option:not([hidden])').forEach((option) => {
-      const count = option.value ? fitting.filter((row) => listOf(row, column).includes(option.value)).length : fitting.length;
-      const words = option.value ? label(column, option.value) : t(allKey);
-      option.textContent = `${words} (${count})`;
+      option.textContent = option.value ? label(column, option.value) : t(allKey);
     });
   });
 }

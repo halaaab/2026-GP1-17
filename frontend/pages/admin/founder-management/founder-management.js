@@ -418,7 +418,7 @@ search.addEventListener('input', showRows);
 // The type dropdown, and one dropdown per question of the chosen type
 function showTypeFilters() {
   const typeSelect = document.querySelector('#type-filter');
-  typeSelect.innerHTML = `<option value="">${t('founders.allTypes')}</option>`
+  typeSelect.innerHTML = `<option value="">${t('filter.allTypes')}</option>`
     + TYPES.map((type) => `<option value="${type}">${t(TYPE_LABELS[type])}</option>`).join('');
   typeSelect.value = typeFilter;
 

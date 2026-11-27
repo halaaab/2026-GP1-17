@@ -239,8 +239,9 @@ export function authorityColors(rows) {
 }
 
 /* Fills a filter dropdown, keeping what was chosen (call it again when the language changes).
-     nameKey  shown while nothing is chosen, e.g. "Sector" (it is not in the open list)
-     allKey   the first choice in the list, e.g. "All sectors": shows everything again
+     nameKey  the dropdown's name, for screen readers (its aria-label)
+     allKey   shown while nothing is chosen, and the first choice in the list: "All sectors", the same words on
+              every page (translations filter.*)
      options  [value, words] pairs
    Both "nothing chosen" and "All" have the value '', so a page only checks select.value. */
 export function fillFilter(select, nameKey, allKey, options) {
@@ -248,7 +249,7 @@ export function fillFilter(select, nameKey, allKey, options) {
   const pickedAll = select.selectedIndex === 1;
 
   select.innerHTML = '';
-  const name = new Option(t(nameKey), '');
+  const name = new Option(t(allKey), '');
   name.hidden = true;
   select.add(name);
   select.add(new Option(t(allKey), ''));

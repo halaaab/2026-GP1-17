@@ -58,9 +58,9 @@ const input = (column) => document.querySelector(`#f-${column}`);
 
 function fillFilters() {
   const pairs = (column, order) => allValues(startups, column, order).map((value) => [value, label(KINDS[column], value)]);
-  fillFilter(filters.sector, 'startups.sector', 'startups.allSectors', pairs('sector', SECTORS).sort((a, b) => a[1].localeCompare(b[1])));
-  fillFilter(filters.stage, 'startups.stage', 'startups.allStages', pairs('stage', STAGES));
-  fillFilter(filters.region, 'startups.region', 'startups.allRegions', pairs('region', REGIONS));
+  fillFilter(filters.sector, 'startups.sector', 'filter.allSectors', pairs('sector', SECTORS).sort((a, b) => a[1].localeCompare(b[1])));
+  fillFilter(filters.stage, 'startups.stage', 'filter.allStages', pairs('stage', STAGES));
+  fillFilter(filters.region, 'startups.region', 'filter.allRegions', pairs('region', REGIONS));
 }
 
 function fits(row) {

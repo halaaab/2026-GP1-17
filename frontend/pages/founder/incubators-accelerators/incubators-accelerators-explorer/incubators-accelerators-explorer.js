@@ -82,22 +82,17 @@ function showTotals() {
     + total(count('accelerator'), t('programs.accelerators'), TYPE_ICON.accelerator);
 }
 
-/* Each dropdown says how many programs each choice has, the same way as the Startup Explorer.
-   The numbers follow the search and the OTHER filters: "All sectors (N)" is how many programs
-   fit the other filters, and each sector is how many of those fit that sector too
-   (a program open to all sectors counts in every sector). A choice with none shows (0).
-   The dropdown's name (the first, hidden option) has no number. */
+/* The words of each dropdown's choices, in the page's language. No counts beside them, the same as on every
+   other page. */
 function showCounts() {
   const dropdowns = [
     { select: typeFilter, filter: 'type', fits: fitsType, words: (option) => t(option.dataset.label) },
-    { select: sectorFilter, filter: 'sector', fits: fitsSector, words: (option) => (option.value ? sectorName({}, option.value) : t('programs.allSectors')) },
-    { select: regionFilter, filter: 'region', fits: fitsRegion, words: (option) => (option.value ? label('region', option.value) : t('programs.allRegions')) },
+    { select: sectorFilter, filter: 'sector', fits: fitsSector, words: (option) => (option.value ? sectorName({}, option.value) : t('filter.allSectors')) },
+    { select: regionFilter, filter: 'region', fits: fitsRegion, words: (option) => (option.value ? label('region', option.value) : t('filter.allRegions')) },
   ];
-  dropdowns.forEach(({ select, filter, fits, words }) => {
-    const fitting = programs.filter((program) => matches(program, filter));
+  dropdowns.forEach(({ select, words }) => {
     select.querySelectorAll('option:not([hidden])').forEach((option) => {
-      const count = fitting.filter((program) => fits(program, option.value)).length;
-      option.textContent = `${words(option)} (${count})`;
+      option.textContent = words(option);
     });
   });
 }
@@ -180,11 +175,11 @@ function fillDropdowns() {
   const sectors = [...ISIC_CODES, ...others];
   const regions = SAUDI_REGIONS.filter((region) => programs.some((program) => regionOf(program) === region));
 
-  fill(sectorFilter, 'programs.sector', sectors);
-  fill(regionFilter, 'programs.region', regions);
+  fill(sectorFilter, 'filter.allSectors', sectors);
+  fill(regionFilter, 'filter.allRegions', regions);
 }
 
-/* Fills a dropdown: its name ("Focus sector", no number) shows while nothing is chosen,
+/* Fills a dropdown: "All sectors" (no number, the same words on every page) shows while nothing is chosen,
    then "All …" and each choice, the same as the Regulatory Requirements Explorer */
 function fill(select, nameKey, values) {
   const chosen = select.value;

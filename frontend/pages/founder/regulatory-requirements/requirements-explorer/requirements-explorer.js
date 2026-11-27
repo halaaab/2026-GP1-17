@@ -67,7 +67,7 @@ function showTotals() {
 function fillSelect(select, nameKey, allKey, options) {
   const chosen = select.value;
   const pickedAll = select.selectedIndex === 1;
-  select.innerHTML = `<option value="" hidden>${t(nameKey)}</option><option value="">${t(allKey)}</option>`
+  select.innerHTML = `<option value="" hidden>${t(allKey)}</option><option value="">${t(allKey)}</option>`
     + options.map(([value]) => `<option value="${safe(value)}"></option>`).join('');
   if (chosen && options.some(([value]) => value === chosen)) select.value = chosen;
   else select.selectedIndex = pickedAll ? 1 : 0;
@@ -75,29 +75,25 @@ function fillSelect(select, nameKey, allKey, options) {
 
 function fillDropdowns() {
   const authorities = [...new Set(requirements.map((row) => row.authority).filter(Boolean))].map((value) => [value]);
-  fillSelect(authorityFilter, 'reg.authority', 'reg.allAuthorities', authorities);
+  fillSelect(authorityFilter, 'reg.authority', 'filter.allAuthorities', authorities);
   // the sector filter lists the 20 ISIC4 sections (GASTAT's SSIC), in their official order
-  fillSelect(sectorFilter, 'reg.isic', 'reg.isicAll', ISIC_SECTIONS.map((section) => [section.code]));
-  fillSelect(stageFilter, 'reg.stage', 'reg.allStages', allStages(requirements).map((value) => [value]));
+  fillSelect(sectorFilter, 'reg.isic', 'filter.allSectors', ISIC_SECTIONS.map((section) => [section.code]));
+  fillSelect(stageFilter, 'reg.stage', 'filter.allStages', allStages(requirements).map((value) => [value]));
 }
 
-/* The words in each dropdown, with how many requirements each choice has. The numbers
-   follow the other filters, so they always say what choosing that option would show. */
+/* The words in each dropdown, in the page's language. No counts beside them, the same as on every other page. */
 function showCounts() {
-  const write = (select, allKey, ignore, fits, words) => {
-    const fitting = requirements.filter((row) => matches(row, ignore));
+  const write = (select, allKey, _ignore, _fits, words) => {
     [...select.options].forEach((option, index) => {
-      if (index === 0) return;   // the name ("Sector") has no number
-      const text = index === 1 ? t(allKey) : words(option.value);
-      const count = index === 1 ? fitting.length : fitting.filter((row) => fits(row, option.value)).length;
-      option.textContent = `${text} (${count})`;
+      if (index === 0) return;   // "All …" while nothing is chosen, written by fillSelect
+      option.textContent = index === 1 ? t(allKey) : words(option.value);
     });
   };
 
   const authorityWords = new Map(requirements.map((row) => [row.authority, field(row, 'authority')]));
-  write(authorityFilter, 'reg.allAuthorities', 'authority', (row, value) => row.authority === value, (value) => authorityWords.get(value) || value);
-  write(sectorFilter, 'reg.isicAll', 'sector', fitsIsic, isicText);
-  write(stageFilter, 'reg.allStages', 'stage', (row, value) => stagesOf(row).includes(value), (value) => label('stage', value));
+  write(authorityFilter, 'filter.allAuthorities', 'authority', (row, value) => row.authority === value, (value) => authorityWords.get(value) || value);
+  write(sectorFilter, 'filter.allSectors', 'sector', fitsIsic, isicText);
+  write(stageFilter, 'filter.allStages', 'stage', (row, value) => stagesOf(row).includes(value), (value) => label('stage', value));
 
   // authorities from A to Z in the page's language
   const chosen = authorityFilter.value;

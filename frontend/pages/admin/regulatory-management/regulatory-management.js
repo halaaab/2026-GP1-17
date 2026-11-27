@@ -71,11 +71,11 @@ function pairs(columnEn, columnName) {
 }
 
 function fillFilters() {
-  fillFilter(filters.authority, 'reg.authority', 'reg.allAuthorities', pairs('authority', 'authority'));
+  fillFilter(filters.authority, 'reg.authority', 'filter.allAuthorities', pairs('authority', 'authority'));
   // the same 20 ISIC4 sections as the Regulatory Explorer
-  fillFilter(filters.sector, 'reg.isic', 'reg.isicAll', ISIC_SECTIONS.map((section) => [section.code, isicText(section.code)]));
-  fillFilter(filters.type, 'regAdmin.type', 'regAdmin.allTypes', pairs('category', 'category'));
-  fillFilter(filters.stage, 'reg.stage', 'reg.allStages', allStages(requirements).map((s) => [s, label('stage', s)]));
+  fillFilter(filters.sector, 'reg.isic', 'filter.allSectors', ISIC_SECTIONS.map((section) => [section.code, isicText(section.code)]));
+  fillFilter(filters.type, 'regAdmin.type', 'filter.allTypes', pairs('category', 'category'));
+  fillFilter(filters.stage, 'reg.stage', 'filter.allStages', allStages(requirements).map((s) => [s, label('stage', s)]));
 }
 
 function fits(row) {
