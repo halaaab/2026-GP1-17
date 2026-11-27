@@ -46,8 +46,8 @@ On Windows, if PowerShell says "running scripts is disabled on this system", wri
 | Agent | Job |
 |---|---|
 | Conversational Agent | The supervisor and the only agent that talks to the founder. It decides what each message is (a new idea, a follow-up, a what-if or something else), delegates to the Competitor Agent and presents its checked result. It runs at temperature 0, so the same message gets the same decision. |
-| Competitor Agent | A child agent of the Conversational Agent. Understands the idea (or asks one question when it is too vague) and returns a checked result. Discover, Identify and Validate (Member 1) are being built; until a search has run it returns the note `capability_pending`. |
-| Founder Roadmap Agent | Builds the ordered roadmap of regulatory and practical steps. |
+| Competitor Agent | A child agent of the Conversational Agent (Release 1). Understands the idea (or asks one question when it is too vague), shortlists comparable ventures from Darb's verified Saudi startups by embedding similarity, searches the web only when that list is not enough, checks that each company is real, active and serving Saudi Arabia (including the Ministry of Commerce's active registrations), uses an LLM judge grounded in quoted evidence to label it a direct or indirect competitor, and computes the ISS, the market level and competitive opportunities with fixed rules. |
+| Founder Roadmap Agent | Release 2: builds the ordered roadmap of regulatory and practical steps. Its file exists but it is not connected to the Conversational Agent yet. |
 
 ## How the agents connect
 
@@ -58,11 +58,13 @@ talks to the founder.
 ```
 Conversational Agent  (talks to the founder, temperature 0)
  ├── competitor-agent  → Competitor Agent   (child agent)
- │                        ├── understand_idea   (the idea profile; one question when it is too vague)
- │                        ├── judge_candidates  (ready; connected together with Discover)
- │                        └── finalize_result   (builds the Result in code and saves it)
+ │                        └── analyse_idea      (runs the four steps in a fixed order, in code)
+ │                             ├── understand_idea   (the idea profile; one question when it is too vague)
+ │                             ├── find_competitors  (Darb's startups, the web when needed, the four validity checks)
+ │                             ├── judge_candidates  (direct or indirect competitor, from quoted evidence)
+ │                             └── finalize_result   (builds the Result in code and saves it)
  ├── get_competitor_result  (follow-up questions, from the saved result, never a new search)
- └── predict_survival
+ └── predict_survival       (Release 2: answers "not available yet" until the ML service is connected)
 ```
 
 The shapes they exchange are in `src/mastra/schemas/competitor.ts`: Handoff, IdeaProfile, Candidate, JudgeOutput and Result.
