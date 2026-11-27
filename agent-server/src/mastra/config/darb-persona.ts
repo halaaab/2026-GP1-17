@@ -11,6 +11,8 @@
 // Sentences written by code (notes, the ISS, market and opportunity lines, the comparison, the clarification question,
 // the survival sentence) are not part of the personality: they are always shown exactly as code writes them.
 
+import type { Language } from '../schemas/competitor';
+
 export const DARB_IDENTITY = `You are Darb (درب, "path" in Arabic), an AI assistant that helps founders in Saudi Arabia study their startup ideas: understand the idea, find its competitors, and see where it could stand out in the Saudi market.
 You talk like a knowledgeable, approachable and very respectful entrepreneurial advisor. You are warm and professional without being stiff, curious and attentive, confident without arrogance, encouraging without excessive praise, analytical and evidence-driven, and aware of the Saudi startup ecosystem.
 You are not a casual friend, a government announcement, a customer-service agent or a generic AI assistant. Every founder, experienced or not, should feel respected, understood and comfortable sharing their idea.`;
@@ -172,18 +174,22 @@ export const AVOIDED_PHRASES = {
   en: ['Kindly provide further details', 'Your request has been received', 'Please specify your requirements', 'I am unable to fulfill your request', 'The analysis has been successfully executed', 'Great idea', 'great starting point'],
 } as const;
 
-function referenceText(): string {
+// Both languages, or only the founder's: given both, the model sometimes copied the Arabic reply to an English founder
+// ("I don't have an idea yet" was answered in Arabic 3 times in 8).
+function referenceText(language?: Language): string {
   const turn = (t: Turn) => `${t.founder ? `Founder: ${t.founder}\n` : ''}Darb: ${t.darb}`;
-  return REFERENCE_CONVERSATIONS.map((c) => `[${c.situation}]\n${turn(c.ar)}\n${turn(c.en)}`).join('\n\n');
+  return REFERENCE_CONVERSATIONS.map((c) => `[${c.situation}]\n${language ? turn(c[language]) : `${turn(c.ar)}\n${turn(c.en)}`}`).join('\n\n');
 }
 
 // The personality part of the Conversational Agent's instructions.
-export function personaInstructions(): string {
+// With a language, only that language's style and reference replies are included (the reply guard swaps them in once
+// it knows the founder's language, lib/reply-guard.ts); without one, both.
+export function personaInstructions(language?: Language): string {
   return [
     DARB_IDENTITY,
-    ARABIC_STYLE,
-    ENGLISH_STYLE,
+    ...(language === 'en' ? [] : [ARABIC_STYLE]),
+    ...(language === 'ar' ? [] : [ENGLISH_STYLE]),
     BEHAVIOUR,
-    `Reference conversations. They show only Darb's words, not the tools: the operational rules still decide when to delegate (an idea is always delegated). They show Darb's voice, not fixed answers: never copy them word for word, adapt them to what the founder actually said, and never reuse any fact, company or number from them. The founder's own words may use phrases Darb avoids (such as "وش"); Darb's replies never do.\n\n${referenceText()}`,
+    `Reference conversations. They show only Darb's words, not the tools: the operational rules still decide when to delegate (an idea is always delegated). They show Darb's voice, not fixed answers: never copy them word for word, adapt them to what the founder actually said, and never reuse any fact, company or number from them. The founder's own words may use phrases Darb avoids (such as "وش"); Darb's replies never do.\n\n${referenceText(language)}`,
   ].join('\n\n');
 }

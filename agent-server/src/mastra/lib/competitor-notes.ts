@@ -3,6 +3,14 @@
 import { ISS_BANDS } from '../config/scoring';
 import type { Language, NoteCode, OpportunityKind, Result } from '../schemas/competitor';
 
+// A conversation analyses one idea. When the founder describes a different idea after its analysis, Darb gives this
+// sentence instead of analysing it there, so each idea keeps its own results and History entry. "New conversation"
+// is the name of the website's sidebar button (frontend translations, nav.newAssessment).
+export const NEW_IDEA_TEXT: Record<Language, string> = {
+  en: 'Each idea gets its own conversation in Darb. To analyse this new idea, open a New conversation from the sidebar and describe it there.',
+  ar: 'لكل فكرة محادثتها الخاصة في درب. لتحليل هذه الفكرة الجديدة، افتح «محادثة جديدة» من القائمة الجانبية واكتبها هناك.',
+};
+
 export const NOTE_TEXT: Record<NoteCode, Record<Language, string>> = {
   capability_pending: {
     en: "Darb's competitor search is still being built, so no competitors can be shown yet.",

@@ -16,6 +16,7 @@
 import type { MastraDBMessage } from '@mastra/core/memory';
 import type { Processor } from '@mastra/core/processors';
 import type { Language } from '../schemas/competitor';
+import { personaInstructions } from '../config/darb-persona';
 import { conversationLanguage, detectLanguage } from './founder-text';
 
 export const REPLY_RULES_KEY = 'darbReplyRules';
@@ -84,9 +85,15 @@ export const replyGuard = {
     const language = conversationLanguage(said);
     if (!language) return messages;
     const name = language === 'ar' ? 'Arabic' : 'English';
+    // The style guide in the founder's language only, so the model never copies a reference reply in the other one.
+    const bothLanguages = personaInstructions();
+    const oneLanguage = personaInstructions(language);
+    const withOneLanguage = systemMessages.map((m) =>
+      m.role === 'system' && typeof m.content === 'string' && m.content.includes(bothLanguages) ? { ...m, role: 'system' as const, content: m.content.replace(bothLanguages, oneLanguage) } : m,
+    );
     return {
       messages,
-      systemMessages: [...systemMessages, { role: 'system' as const, content: `The founder's latest message is in ${name}. Write your whole reply in ${name}.` }],
+      systemMessages: [...withOneLanguage, { role: 'system' as const, content: `The founder's latest message is in ${name}. Write your whole reply in ${name}.` }],
     };
   },
 
