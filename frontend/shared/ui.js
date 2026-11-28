@@ -368,12 +368,3 @@ function makeMultiSelect(box) {
 }
 
 document.querySelectorAll('[data-multiselect]').forEach(makeMultiSelect);
-
-/* The admin add / edit panels never offer the browser's remembered answers (Chrome's autofill showed what was typed
-   for an earlier startup, program or requirement, or by another admin on the same computer). */
-document.querySelectorAll('.edit-panel').forEach((panel) => {
-  panel.querySelectorAll('form').forEach((form) => form.setAttribute('autocomplete', 'off'));
-  panel.querySelectorAll('input:not([type="checkbox"]):not([type="file"]):not([type="hidden"]), textarea').forEach((field) => {
-    field.setAttribute('autocomplete', 'off');
-  });
-});
