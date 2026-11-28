@@ -46,9 +46,18 @@ PDFs are not uploaded (copyright). Each paper is linked below.
 
 | Paper | Year | Link | Relevance to Darb |
 |---|---|---|---|
-| Breiman — *Random Forests* | 2001 | [DOI](https://doi.org/10.1023/A:1010933404324) | Candidate survival model |
-| Chen & Guestrin — *XGBoost* | 2016 | [DOI](https://doi.org/10.1145/2939672.2939785) | Candidate survival model |
-| Lundberg & Lee — *A Unified Approach to Interpreting Model Predictions* | 2017 | [NeurIPS](https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html) | SHAP for the Explainability Engine |
+| Wang et al. — *A Survey on Large Language Model Based Autonomous Agents* | 2024 | [DOI](https://link.springer.com/article/10.1007/s11704-024-40231-1) | AI agent and LLM definition |
+| Schick et al. — *Toolformer* | 2023 | [NeurIPS](https://proceedings.neurips.cc/paper_files/paper/2023/file/d842425e4bf79ba039352da0f658a906-Paper-Conference.pdf) | Tool calling |
 | Wu et al. — *AutoGen* | 2023 | [arXiv](https://arxiv.org/abs/2308.08155) | Multi-agent framework background |
+| Kotsiantis — Supervised Machine Learning: A Review of Classification Techniques | 2007 | [Informatica](https://informatica.si/index.php/informatica/article/view/148) | Supervised machine learning definition |
+| scikit-learn — LogisticRegression documentation | n.d. | [Docs](https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html) | Logistic regression baseline |
+| Chen & Guestrin — *XGBoost* | 2016 | [DOI](https://doi.org/10.1145/2939672.2939785) | Candidate survival model |
+| LightGBM — LightGBM documentation | n.d. | [Docs](https://lightgbm.readthedocs.io/en/latest/) | Candidate survival model |
+| He & Garcia — Learning from Imbalanced Data | 2009 | [DOI](https://doi.org/10.1109/TKDE.2008.239) | Class imbalance in survival data |
+| Keilwagen et al. — Area under Precision-Recall Curves for Weighted and Unweighted Data | 2014 | [PLOS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0092209) | PR-AUC evaluation metric |
+| Barredo Arrieta et al. — Explainable Artificial Intelligence (XAI): Concepts, Taxonomies, Opportunities and Challenges toward Responsible AI | 2019 | [arXiv](https://arxiv.org/abs/1910.10045) | Explainable AI definition |
+| Lundberg & Lee — *A Unified Approach to Interpreting Model Predictions* | 2017 | [NeurIPS](https://papers.nips.cc/paper/2017/hash/8a20a8621978632d76c43dfd28b67767-Abstract.html) | SHAP for the Explainability Engine |
+| Lundberg et al. — Consistent Individualized Feature Attribution for Tree Ensembles | 2018 | [arXiv](https://arxiv.org/abs/1802.03888) | TreeSHAP for the Explainability Engine |
+| Reimers & Gurevych — Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks | 2019 | [arXiv](https://arxiv.org/abs/1908.10084) | Vector embeddings and cosine similarity |
 
 
