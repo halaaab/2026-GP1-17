@@ -32,6 +32,16 @@ PDFs are not uploaded (copyright). Each paper is linked below.
 | Hoberg et al. — *Using Representation Learning and Website Text to Identify Competitor Networks* | 2026 | [DOI](https://doi.org/10.1287/mnsc.2024.06516) | Finding candidate competitors |
 | Zheng et al. — *Judging LLM-as-a-Judge*  | 2023  |  [arXiv](https://arxiv.org/abs/2306.05685) | LLM judgment of competitors |
 
+## Saudi Startup and SME Ecosystem
+
+| Paper | Year | Link | Relevance to Darb |
+|---|---|---|---|
+| Monsha'at — *Enterprises' Classification* | 2023 | [Website](https://www.monshaat.gov.sa/en/SMEs-definition) | SME definition |
+| Shepherd & Patzelt — *Managing New Ventures* | 2021 | [DOI](https://link.springer.com/chapter/10.1007/978-3-030-78935-0_4) | Business definition |
+| Ministry of Commerce — *Start your business* | 2023 | [Website](https://mc.gov.sa/en/Pages/Start-your-project.aspx) | Business requirements in Saudi Arabia |
+| Vonoga & Zvaigzne — *Theoretical Aspects of the Concept Start-up in the Literature* | 2022 | [PDF](https://www.scitepress.org/publishedPapers/2022/113454/pdf/index.html) | Startup definition |
+| Shepherd et al. — *Creating New Ventures: A Review and Research Agenda* | 2021 | [PDF](https://openaccess.city.ac.uk/id/eprint/23448/1/review%20paper%20start%20up%20final.pdf) | Founder definition |
+
 ## Technical foundations
 
 | Paper | Year | Link | Relevance to Darb |
