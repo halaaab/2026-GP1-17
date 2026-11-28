@@ -259,24 +259,19 @@ function partsOf(text, kind) {
 }
 
 /* Saves a program's sectors and services, each English part with the Arabic part in the same place.
-   Returns 'mismatch' when the English and Arabic lists do not have the same number of parts,
-   the database error when saving failed, or null when it worked. */
-/* True when an Arabic list has a different number of items than its English list.
-   Checked before anything is saved, so a wrong form never leaves a half-saved program. */
-export function listsMismatch(values) {
-  return [['sector', 'sector_ar', 'sector'], ['services_support', 'services_support_ar', 'service']]
-    .some(([en, ar, kind]) => {
-      const arabic = partsOf(values[ar], kind);
-      return arabic.length > 0 && arabic.length !== partsOf(values[en], kind).length;
-    });
-}
-
+   Returns the database error when saving failed, or null when it worked. */
 export async function saveProgramLists(programId, values) {
   const lists = [
     { table: 'organization_sectors', column: 'sector', en: partsOf(values.sector, 'sector'), ar: partsOf(values.sector_ar, 'sector') },
     { table: 'organization_services', column: 'service', en: partsOf(values.services_support, 'service'), ar: partsOf(values.services_support_ar, 'service') },
   ];
-  if (lists.some((list) => list.ar.length && list.ar.length !== list.en.length)) return 'mismatch';
+  // Each item is stored as an English and Arabic pair, in order. The lists need not have the same number of items:
+  // extra Arabic items are kept on the last pair (never lost), and an item without Arabic shows its English.
+  lists.forEach((list) => {
+    if (list.en.length && list.ar.length > list.en.length) {
+      list.ar = [...list.ar.slice(0, list.en.length - 1), list.ar.slice(list.en.length - 1).join('، ')];
+    }
+  });
 
   for (const list of lists) {
     const removed = await supabase.from(list.table).delete().eq('support_org_id', programId);

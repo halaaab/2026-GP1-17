@@ -12,7 +12,7 @@ import { supabase } from '../../../shared/supabase.js';
 import { showErrorPage } from '../../../shared/errors.js';
 import '../../../shared/guard.js';
 import {
-  getPrograms, saveProgramLists, listsMismatch, programType, sectorList, sectorName, isOpenToAll, regionOf, clean, detailsLink,
+  getPrograms, saveProgramLists, programType, sectorList, sectorName, isOpenToAll, regionOf, clean, detailsLink,
   text, arabicOf, logoOf, logoHtml, LOGO_BUCKET, ARABIC_FIELDS, TYPE_CHIP,
 } from '../../founder/incubators-accelerators/programs.js?v=4';
 import { SAUDI_REGIONS, ISIC_CODES, label } from '../../../shared/startups.js?v=4';
@@ -47,7 +47,7 @@ const OPEN_TO_ALL = 'All sectors';
 // The form's fields, named like the table's columns
 const FIELDS = ['name', 'type', 'location', 'sector', 'description', 'target_stage', 'program_duration', 'services_support', 'funding_investment', 'eligibility', 'website'];
 
-// Every field must be filled except these two (the logo is required too)
+// Every field must be filled except these two (the logo is optional)
 const OPTIONAL = ['program_duration', 'funding_investment'];
 const REQUIRED = FIELDS.filter((field) => !OPTIONAL.includes(field));
 
@@ -531,10 +531,6 @@ function clearErrors() {
   document.querySelector('#logo-picker').classList.remove('is-error');
 }
 
-function hasLogo() {
-  return Boolean(logo.file || (logo.current && !logo.removed));
-}
-
 /* Checks every required field and shows what is missing.
    Returns the first field to fix, or null when the form is complete. */
 function checkForm(values) {
@@ -559,14 +555,7 @@ function checkForm(values) {
       if (key && !first) first = input;
     });
   }
-
-  const logoMissing = !hasLogo();
-  document.querySelector('#logo-picker').classList.toggle('is-error', logoMissing);
-  if (logoMissing) {
-    logoError.textContent = t('programsAdmin.logoRequired');
-    logoError.hidden = false;
-    first = document.querySelector('#logo-choose');
-  }
+  // the logo is optional, as on the other admin panels: without one, the founder pages show the initials
   return first;
 }
 
@@ -593,12 +582,6 @@ saveButton.addEventListener('click', async () => {
   // A new program gets its id here, so its logo can be uploaded under it first
   const programId = selectedId || crypto.randomUUID();
   const oldLogoPath = logoPath(logo.current);
-  // an Arabic list must have as many items as its English list; checked before anything is saved
-  if (listsMismatch(values)) {
-    saveButton.classList.remove('is-loading');
-    showToast(t('programsAdmin.listsMismatch'), 'risk');
-    return;
-  }
 
   let uploaded = null;
 
@@ -631,10 +614,6 @@ saveButton.addEventListener('click', async () => {
   const listResult = result.error ? null : await saveProgramLists(programId, lists);
   saveButton.classList.remove('is-loading');
 
-  if (listResult === 'mismatch') {
-    showToast(t('programsAdmin.listsMismatch'), 'risk');
-    return;
-  }
   if (!result.error && listResult) result.error = listResult;
   if (result.error) {
     console.error('save program:', result.error.message);
